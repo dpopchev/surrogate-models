@@ -1,0 +1,6 @@
+.venv
+.jupyter/lab/workspaces/
+.jupyter/runtime/
+notebooks/.ipynb_checkpoints/
+.jupyter/
+notebooks/.virtual_documents/
