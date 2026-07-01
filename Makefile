@@ -214,6 +214,13 @@ LAB_FIXTURES_DIR     := etc/jupyter/user-settings
 PERSONAL_LAB_DIR     ?= $(HOME)/.myjupyter-settings
 PERSONAL_LAB_SRC     := $(PERSONAL_LAB_DIR)/user-settings
 
+# IPython kernel startup scripts (autoreload, inline plotting, ...) applied to
+# EVERY kernel: JupyterLab, VSCode, terminal. Default IPYTHON_DIR is what VSCode
+# reads; override with `make ipython-startup IPYTHON_DIR=...` if you relocate it.
+IPYTHON_DIR          ?= $(HOME)/.ipython
+IPYTHON_STARTUP      := $(IPYTHON_DIR)/profile_default/startup
+PERSONAL_IPY_SRC     := $(PERSONAL_LAB_DIR)/ipython/startup
+
 
 LAB_PACKAGES := \
 				jupyterlab \
@@ -317,6 +324,39 @@ lab-config-personal: $(LAB_STAMP) lab-config | $(JUPYTER_DIR) ## Overlay ~/.myju
 		printf "$(BOLD)$(GREEN)[DONE]$(RESET) personal overlay applied from %s\n" "$(PERSONAL_LAB_SRC)" >&2
 
 # -----------------------------------------------------------------------------
+# IPython startup scripts (~/.myjupyter-settings/ipython/startup -> IPython profile)
+# Runs on every kernel start: JupyterLab, VSCode, terminal. No-op if src absent.
+# -----------------------------------------------------------------------------
+
+.PHONY: ipython-startup
+ipython-startup: ## Symlink ~/.myjupyter-settings/ipython/startup/*.py into the IPython profile (all kernels, incl. VSCode)
+	@if [ ! -d "$(PERSONAL_IPY_SRC)" ]; then \
+		printf "$(BOLD)$(YELLOW)[WARN]$(RESET) %s not found -- skipping ipython startup link\n" "$(PERSONAL_IPY_SRC)" >&2; \
+		exit 0; \
+	fi
+	@dest="$(IPYTHON_STARTUP)"; \
+	if [ -z "$$dest" ] || [ "$$dest" = "/" ]; then \
+		printf "$(BOLD)$(RED)[FAIL]$(RESET) IPYTHON_STARTUP resolved to '%s' -- aborting\n" "$$dest" >&2; \
+		exit 1; \
+	fi; \
+	mkdir -p "$$dest"; \
+	src="$(abspath $(PERSONAL_IPY_SRC))"; \
+	find "$$src" -maxdepth 1 -type f -name '*.py' | while read -r f; do \
+		base="$$(basename "$$f")"; \
+		ln -sfn "$$f" "$$dest/$$base"; \
+		printf "$(BOLD)$(GREEN)[LINK]$(RESET) %s -> %s\n" "$$base" "$$dest/$$base" >&2; \
+	done; \
+	printf "$(BOLD)$(GREEN)[DONE]$(RESET) ipython startup linked from %s\n" "$$src" >&2
+
+.PHONY: ipython-startup-clean
+ipython-startup-clean: ## Remove symlinked *.py from the IPython profile startup dir (leaves real files)
+	@dest="$(IPYTHON_STARTUP)"; \
+	if [ -d "$$dest" ]; then \
+		find "$$dest" -maxdepth 1 -type l -name '*.py' -delete; \
+	fi
+	@$(call log_ok,ipython startup symlinks removed)
+
+# -----------------------------------------------------------------------------
 # Git filter for clean notebook diffs
 # -----------------------------------------------------------------------------
 
@@ -331,7 +371,7 @@ lab-hooks: $(LAB_STAMP) $(NOTEBOOKS_GITATTR) ## Install nbstripout git filter + 
 # -----------------------------------------------------------------------------
 
 .PHONY: lab
-lab: $(LAB_STAMP) lab-config-personal | $(NOTEBOOKS_DIR) ## Run JupyterLab rooted at notebooks/
+lab: $(LAB_STAMP) lab-config-personal ipython-startup | $(NOTEBOOKS_DIR) ## Run JupyterLab rooted at notebooks/
 	@$(call log_info,Starting JupyterLab at http://$(LAB_HOST):$(LAB_PORT) root=$(NOTEBOOKS_DIR)/)
 	@JUPYTER_CONFIG_DIR=$(abspath $(JUPYTER_DIR)) \
 		$(PYLAB) \
