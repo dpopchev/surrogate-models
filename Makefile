@@ -107,7 +107,7 @@ PYINSTALL := $(PYMANAGER) pip install
 PYRUN     := $(PYMANAGER) run python
 PYTEST    := $(PYMANAGER) run pytest
 PYMYPY    := $(PYMANAGER) run mypy
-PYIMPORTS := $(PYMANAGER) run lint-imports
+PYIMPORTS := $(PYMANAGER) run lint-imports --cache-dir $(VAR)/cache/import-linter
 PYBUILD   := $(PYMANAGER) build
 PYAPP     := $(PYMANAGER) run python -m surrogate_models
 
