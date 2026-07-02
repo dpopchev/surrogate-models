@@ -125,7 +125,6 @@ PYMANAGER := uv
 # re-fires; uv >= 0.11 refuses to replace a non-empty venv without it.
 PYVENV    := $(PYMANAGER) venv --clear
 PYSYNC    := $(PYMANAGER) sync
-PYINSTALL := $(PYMANAGER) pip install
 PYRUN     := $(PYMANAGER) run python
 PYTEST    := $(PYMANAGER) run pytest -o cache_dir=$(VAR)/cache/pytest
 PYMYPY    := $(PYMANAGER) run mypy src $(TESTS_DIR)
@@ -219,12 +218,6 @@ sync: venv | $(VAR) ## Sync dependencies into .venv from the lockfile
 	@$(PYSYNC)
 	@$(call log_ok,dependencies synced)
 
-.PHONY: install
-install: venv | $(VAR) ## Install the project into .venv
-	@$(call log_info,Installing project with $(PYINSTALL))
-	@$(PYINSTALL) -e .
-	@$(call log_ok,project installed)
-
 .PHONY: venv-clean
 venv-clean: ## Remove .venv (venvs are not relocatable -- rebuild after moving/renaming the project)
 	@$(call log_info,Removing $(VENV))
@@ -312,7 +305,6 @@ $(VAR):
 NOTEBOOKS_DIR        := notebooks
 NOTEBOOKS_GITATTR    := $(NOTEBOOKS_DIR)/.gitattributes
 JUPYTER_DIR          := $(VAR)/jupyter
-LAB_STAMP            := $(VENV)/.lab-installed
 LAB_GROUP            := lab
 LAB_PORT             ?= 8888
 LAB_HOST             ?= 127.0.0.1
@@ -344,14 +336,17 @@ PYNBSTRIP := $(PYMANAGER) run nbstripout
 # Install
 # -----------------------------------------------------------------------------
 
+# Stampless and idempotent: the lockfile is the single source of truth. The
+# guarded `uv add` fires once per project (group absent from pyproject); after
+# that every run is a fast no-op `uv sync --group lab`. A plain `make sync`
+# prunes the lab packages (exact sync); the next lab target restores them.
 .PHONY: lab-install
-lab-install: $(LAB_STAMP) ## Install JupyterLab + vim + LSP into .venv (group: lab)
-
-$(LAB_STAMP): $(firstword $(MAKEFILE_LIST)) | venv $(VAR)
-	@$(call log_info,Adding $(words $(LAB_PACKAGES)) packages to dependency-group [$(LAB_GROUP)])
-	@$(PYMANAGER) add --group $(LAB_GROUP) $(LAB_PACKAGES)
-	@$(PYMANAGER) sync --group $(LAB_GROUP)
-	@mkdir -p $(dir $@) && touch $@
+lab-install: | venv $(VAR) ## Sync JupyterLab + vim + LSP into .venv (records group [lab] on first use)
+	@if ! grep -q '^$(LAB_GROUP) = \[' $(PYPROJECT) 2>/dev/null; then \
+		$(call log_info,Recording $(words $(LAB_PACKAGES)) packages in dependency-group [$(LAB_GROUP)]); \
+		$(PYMANAGER) add --group $(LAB_GROUP) --no-sync $(LAB_PACKAGES); \
+	fi
+	@$(PYSYNC) --group $(LAB_GROUP)
 	@$(call log_ok,JupyterLab toolchain ready)
 
 # -----------------------------------------------------------------------------
@@ -402,7 +397,7 @@ $(LAB_USER_DIR)/%.jupyterlab-settings: $(LAB_FIXTURES_DIR)/%.jupyterlab-settings
 # -----------------------------------------------------------------------------
 
 .PHONY: lab-config-personal
-lab-config-personal: $(LAB_STAMP) lab-config | $(JUPYTER_DIR) ## Overlay ~/.myjupyter-settings onto .jupyter/lab/user-settings
+lab-config-personal: lab-config | $(JUPYTER_DIR) ## Overlay ~/.myjupyter-settings onto .jupyter/lab/user-settings
 	@if [ ! -d "$(PERSONAL_LAB_SRC)" ]; then \
 		printf "$(BOLD)$(YELLOW)[WARN]$(RESET) %s not found -- skipping personal overlay\n" "$(PERSONAL_LAB_SRC)" >&2; \
 		exit 0; \
@@ -464,7 +459,7 @@ ipython-startup-clean: ## Remove symlinked *.py from the IPython profile startup
 # -----------------------------------------------------------------------------
 
 .PHONY: lab-hooks
-lab-hooks: $(LAB_STAMP) $(NOTEBOOKS_GITATTR) ## Install nbstripout git filter + notebooks/.gitattributes
+lab-hooks: lab-install $(NOTEBOOKS_GITATTR) ## Install nbstripout git filter + notebooks/.gitattributes
 	@$(call log_info,Installing nbstripout git filter)
 	@$(PYNBSTRIP) --install
 	@$(call log_ok,nbstripout hook active in $(CURDIR))
@@ -474,7 +469,7 @@ lab-hooks: $(LAB_STAMP) $(NOTEBOOKS_GITATTR) ## Install nbstripout git filter + 
 # -----------------------------------------------------------------------------
 
 .PHONY: lab
-lab: $(LAB_STAMP) lab-config-personal ipython-startup | $(NOTEBOOKS_DIR) ## Run JupyterLab rooted at notebooks/
+lab: lab-install lab-config-personal ipython-startup | $(NOTEBOOKS_DIR) ## Run JupyterLab rooted at notebooks/
 	@$(call log_info,Starting JupyterLab at http://$(LAB_HOST):$(LAB_PORT) root=$(NOTEBOOKS_DIR)/)
 	@JUPYTER_CONFIG_DIR=$(abspath $(JUPYTER_DIR)) \
 		$(PYLAB) \
@@ -493,6 +488,6 @@ lab-config-clean: ## Wipe linked user-settings (forces re-link on next lab-confi
 	@$(call log_ok,$(LAB_USER_DIR) wiped)
 
 .PHONY: lab-clean
-lab-clean: lab-config-clean ## Drop install stamp + linked settings
-	@rm -f $(LAB_STAMP)
-	@$(call log_ok,lab stamp removed)
+lab-clean: lab-config-clean ## Drop linked settings + prune lab packages from .venv (exact sync)
+	@$(PYSYNC)
+	@$(call log_ok,lab toolchain pruned from $(VENV))
