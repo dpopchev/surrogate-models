@@ -94,22 +94,107 @@ PYTHON_VERSION_FILE := .python-version
 VENV                := .venv
 VENV_STAMP          := $(VENV)/pyvenv.cfg
 GITIGNORE           := .gitignore
+PYPROJECT           := pyproject.toml
 VAR                 := var
+DATA_DIR            := data
+SCRIPTS_DIR         := scripts/utils
+TESTS_DIR           := tests
+
+# Project name from pyproject [project].name; falls back to the directory name
+# so a bare Makefile dropped into an empty dir can scaffold itself (Bootstrap).
+# PACKAGE is the importable module name (PEP 503 dashes -> underscores).
+PROJECT := $(strip $(firstword $(shell sed -nE 's/^name *= *"([^"]+)".*/\1/p' $(PYPROJECT) 2>/dev/null)))
+ifeq ($(PROJECT),)
+PROJECT := $(notdir $(CURDIR))
+endif
+PACKAGE := $(subst -,_,$(PROJECT))
 
 # Consolidate bytecode caches into var/ for make-driven python runs; IDE-driven
 # runs are caught by the __pycache__/ gitignore. CPython requires an absolute path.
 export PYTHONPYCACHEPREFIX := $(abspath $(VAR))/pycache
 
+# Redirect tool state into var/ via env/flags so this Makefile alone keeps ANY
+# uv project's tree clean -- no [tool.*] cache settings required in pyproject.
+# This repo's pyproject sets the same paths so IDE-driven runs match.
+export COVERAGE_FILE  := $(abspath $(VAR))/coverage/.coverage
+export MYPY_CACHE_DIR := $(abspath $(VAR))/cache/mypy
+export RUFF_CACHE_DIR := $(abspath $(VAR))/cache/ruff
+
 PYMANAGER := uv
-PYVENV    := $(PYMANAGER) venv
+# --clear: a .python-version change makes the venv stamp stale and this recipe
+# re-fires; uv >= 0.11 refuses to replace a non-empty venv without it.
+PYVENV    := $(PYMANAGER) venv --clear
 PYSYNC    := $(PYMANAGER) sync
 PYINSTALL := $(PYMANAGER) pip install
 PYRUN     := $(PYMANAGER) run python
-PYTEST    := $(PYMANAGER) run pytest
-PYMYPY    := $(PYMANAGER) run mypy
+PYTEST    := $(PYMANAGER) run pytest -o cache_dir=$(VAR)/cache/pytest
+PYMYPY    := $(PYMANAGER) run mypy src $(TESTS_DIR)
 PYIMPORTS := $(PYMANAGER) run lint-imports --cache-dir $(VAR)/cache/import-linter
 PYBUILD   := $(PYMANAGER) build
-PYAPP     := $(PYMANAGER) run python -m surrogate_models
+PYAPP     := $(PYMANAGER) run python -m $(PACKAGE)
+
+# =============================================================================
+### Bootstrap
+# =============================================================================
+
+# New project: copy this Makefile into an empty dir and run `make init` --
+# the dependency chain scaffolds pyproject + src layout via `uv init`, records
+# the dev toolchain, builds the venv, installs everything from the lockfile,
+# and lays out the workspace dirs. Existing projects: init is a no-op refresh.
+
+# Baseline dev toolchain recorded in dependency-group [dev] at scaffold time.
+DEV_PACKAGES := \
+				pytest \
+				pytest-cov \
+				mypy \
+				pyright \
+				ruff \
+				import-linter \
+				nbstripout
+
+UV_INIT_FLAGS ?= --lib
+
+.PHONY: init
+init: venv sync | $(VAR) $(DATA_DIR) $(SCRIPTS_DIR) $(TESTS_DIR) ## Bootstrap dev env -- scaffold if new, venv + editable project + dev deps + workspace dirs
+	@$(call log_ok,dev environment ready -- run 'make test' to verify)
+
+# Fires only when pyproject.toml is absent; never touches an existing project.
+# --no-sync: record deps + lock only -- `make sync` performs the install.
+$(PYPROJECT):
+	@$(call log_info,Scaffolding uv project '$(PROJECT)' ($(UV_INIT_FLAGS)))
+	@$(PYMANAGER) init $(UV_INIT_FLAGS) --name $(PROJECT)
+	@$(call log_info,Recording dev toolchain in dependency-group [dev])
+	@$(PYMANAGER) add --group dev --no-sync $(DEV_PACKAGES)
+	@$(call log_ok,$(PYPROJECT) scaffolded)
+
+# Written by `uv init` during scaffold. Make stats this file before the
+# scaffold recipe runs, so re-check at recipe time; error only for hand-rolled
+# repos without a pin -- never hardcode a Python version here.
+$(PYTHON_VERSION_FILE): | $(PYPROJECT)
+	@if [ ! -e $@ ]; then \
+		$(call log_err,$@ missing -- run '$(PYMANAGER) python pin <version>'); \
+		exit 1; \
+	fi
+
+# Workspace dirs surrounding the package: raw data and throwaway diagnostics.
+# Neither is git-ignored here -- data/ tracking is a per-dataset decision.
+$(DATA_DIR) $(SCRIPTS_DIR):
+	@mkdir -p $@
+	@$(call log_ok,$@/ ready)
+
+# Seeded with an import smoke test so test and typecheck are green from minute
+# one (mypy errors on a directory without .py files). Fires only when tests/
+# is absent -- existing suites are never touched.
+$(TESTS_DIR):
+	@mkdir -p $@
+	@printf '%s\n' \
+		'import importlib' \
+		'' \
+		'' \
+		'def test_package_imports() -> None:' \
+		'    assert importlib.import_module("$(PACKAGE)")' \
+		> $@/test_smoke.py
+	@$(call log_ok,$@/ ready with import smoke test)
 
 # =============================================================================
 ### Virtual Environment
@@ -153,7 +238,7 @@ venv-clean: ## Remove .venv (venvs are not relocatable -- rebuild after moving/r
 .PHONY: test
 test: | $(VAR) ## Run the full test suite (doctests + coverage)
 	@$(call log_info,Running tests with coverage)
-	@$(PYTEST) --cov=surrogate_models --cov-report=term-missing
+	@$(PYTEST) --cov=$(PACKAGE) --cov-report=term-missing
 	@$(call log_ok,tests passed)
 
 .PHONY: test-quick
@@ -167,10 +252,14 @@ typecheck: ## Static type-check src with mypy
 	@$(call log_ok,types clean)
 
 .PHONY: lint-imports
-lint-imports: ## Check onion-ring import contracts with import-linter
-	@$(call log_info,Checking import contracts)
-	@$(PYIMPORTS)
-	@$(call log_ok,imports clean)
+lint-imports: ## Check onion-ring import contracts (skips when unconfigured)
+	@if ! grep -q '^\[tool\.importlinter\]' $(PYPROJECT) 2>/dev/null; then \
+		$(call log_warn,no [tool.importlinter] section in $(PYPROJECT) -- skipping); \
+	else \
+		$(call log_info,Checking import contracts); \
+		$(PYIMPORTS); \
+		$(call log_ok,imports clean); \
+	fi
 
 .PHONY: lint
 lint: lint-imports ## Lint, format-check (ruff) and import contracts
@@ -191,7 +280,7 @@ format: ## Auto-format and fix lint with ruff (src + tests)
 # =============================================================================
 
 .PHONY: run
-run: ## Run the surrogate_models package (python -m surrogate_models) and show its help menu
+run: ## Run the package (python -m PACKAGE) and show its help menu
 	@$(PYAPP) --help
 
 # =============================================================================
@@ -210,9 +299,10 @@ dist:
 	@$(call add_line,$@,$(GITIGNORE))
 
 # Order-only prerequisite for state producers: consolidated var/ dir, git-ignored.
+# Subdirs pre-created for tools that won't mkdir their own (coverage data file).
 # One-command wipe of all ephemeral state: rm -rf var/
 $(VAR):
-	@mkdir -p $@
+	@mkdir -p $@/cache $@/coverage
 	@$(call add_line,$(VAR)/,$(GITIGNORE))
 
 # =============================================================================
