@@ -1,6 +1,5 @@
 .venv
-.jupyter/lab/workspaces/
-.jupyter/runtime/
+__pycache__/
 notebooks/.ipynb_checkpoints/
-.jupyter/
 notebooks/.virtual_documents/
+var/
