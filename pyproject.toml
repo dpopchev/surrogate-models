@@ -1,18 +1,100 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "regression-surrogate-pde-solver"
+name = "surrogate-models"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14.5"
-dependencies = []
+dependencies = [
+    "lightning>=2.6.5",
+    "torch>=2.12.1",
+]
 
 [dependency-groups]
+# Default group: installed automatically by `uv sync` / `make sync`.
+# CLI quality stack. pyright is here for editor LSP (see [tool.pyright]).
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=5.0",
+    "mypy>=1.11",
+    "pyright>=1.1.380",
+    "ruff>=0.6",
+    "import-linter>=2.0",
+    # In the default group so the notebook git filter (installed by `make
+    # lab-hooks`) survives `make sync` pruning the opt-in lab group.
+    "nbstripout>=0.9.1",
+]
 lab = [
     "jupyter-lsp>=2.3.1",
     "jupyterlab>=4.6.0",
     "jupyterlab-lsp>=5.3.0",
     "jupyterlab-vim>=4.1.4",
-    "nbstripout>=0.9.1",
     "python-lsp-ruff>=2.3.1",
     "python-lsp-server[all]>=1.14.0",
 ]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# --- Consolidated ephemeral state under var/ (mirrors Makefile VAR) ---
+# egg-info redirected out of src/ into var/ so the source tree stays clean.
+[tool.distutils.egg_info]
+egg_base = "var"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+cache_dir = "var/cache/pytest"
+
+[tool.coverage.run]
+source = ["surrogate_models"]
+branch = true
+data_file = "var/coverage/.coverage"
+
+[tool.coverage.report]
+show_missing = true
+
+# CLI type-check gate (make typecheck). Editor LSP uses pyright below.
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+cache_dir = "var/cache/mypy"
+
+# Editor LSP type checker; resolves against the top-level .venv.
+[tool.pyright]
+include = ["src", "tests"]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "standard"
+
+[tool.ruff]
+src = ["src", "tests"]
+line-length = 88
+cache-dir = "var/cache/ruff"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.importlinter]
+root_package = "surrogate_models"
+include_external_packages = true
+
+# Placeholder contract (always passes) so `make lint-imports` is green until the
+# onion-ring layers exist. Replace with real layer/independence contracts.
+[[tool.importlinter.contracts]]
+name = "no unexpected web-framework imports (placeholder)"
+type = "forbidden"
+source_modules = ["surrogate_models"]
+forbidden_modules = ["django", "flask"]
+
