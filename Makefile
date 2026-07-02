@@ -94,6 +94,11 @@ PYTHON_VERSION_FILE := .python-version
 VENV                := .venv
 VENV_STAMP          := $(VENV)/pyvenv.cfg
 GITIGNORE           := .gitignore
+VAR                 := var
+
+# Consolidate bytecode caches into var/ for make-driven python runs; IDE-driven
+# runs are caught by the __pycache__/ gitignore. CPython requires an absolute path.
+export PYTHONPYCACHEPREFIX := $(abspath $(VAR))/pycache
 
 PYMANAGER := uv
 PYVENV    := $(PYMANAGER) venv
@@ -104,7 +109,7 @@ PYTEST    := $(PYMANAGER) run pytest
 PYMYPY    := $(PYMANAGER) run mypy
 PYIMPORTS := $(PYMANAGER) run lint-imports
 PYBUILD   := $(PYMANAGER) build
-PYAPP     := $(PYMANAGER) run regression_surrogate_pde_solver
+PYAPP     := $(PYMANAGER) run python -m surrogate_models
 
 # =============================================================================
 ### Virtual Environment
@@ -124,25 +129,31 @@ $(VENV_STAMP): $(PYTHON_VERSION_FILE)
 	@$(call log_ok,$(VENV) ready)
 
 .PHONY: sync
-sync: venv ## Sync dependencies into .venv from the lockfile
+sync: venv | $(VAR) ## Sync dependencies into .venv from the lockfile
 	@$(call log_info,Syncing dependencies with $(PYSYNC))
 	@$(PYSYNC)
 	@$(call log_ok,dependencies synced)
 
 .PHONY: install
-install: venv ## Install the projeck into .venv
+install: venv | $(VAR) ## Install the project into .venv
 	@$(call log_info,Installing project with $(PYINSTALL))
 	@$(PYINSTALL) -e .
 	@$(call log_ok,project installed)
+
+.PHONY: venv-clean
+venv-clean: ## Remove .venv (venvs are not relocatable -- rebuild after moving/renaming the project)
+	@$(call log_info,Removing $(VENV))
+	@rm -rf $(VENV)
+	@$(call log_ok,$(VENV) removed -- run 'make sync' then 'make lab-hooks' to rebuild)
 
 # =============================================================================
 ### Quality
 # =============================================================================
 
 .PHONY: test
-test: ## Run the full test suite (doctests + coverage)
+test: | $(VAR) ## Run the full test suite (doctests + coverage)
 	@$(call log_info,Running tests with coverage)
-	@$(PYTEST) --cov=regression_surrogate_pde_solver --cov-report=term-missing
+	@$(PYTEST) --cov=surrogate_models --cov-report=term-missing
 	@$(call log_ok,tests passed)
 
 .PHONY: test-quick
@@ -180,7 +191,7 @@ format: ## Auto-format and fix lint with ruff (src + tests)
 # =============================================================================
 
 .PHONY: run
-run: ## Start the regression_surrogate_pde_solver package (uv run regression_surrogate_pde_solver) and show its help menu
+run: ## Run the surrogate_models package (python -m surrogate_models) and show its help menu
 	@$(PYAPP) --help
 
 # =============================================================================
@@ -198,13 +209,19 @@ dist:
 	@mkdir -p $@
 	@$(call add_line,$@,$(GITIGNORE))
 
+# Order-only prerequisite for state producers: consolidated var/ dir, git-ignored.
+# One-command wipe of all ephemeral state: rm -rf var/
+$(VAR):
+	@mkdir -p $@
+	@$(call add_line,$(VAR)/,$(GITIGNORE))
+
 # =============================================================================
 ### JupyterLab
 # =============================================================================
 
 NOTEBOOKS_DIR        := notebooks
 NOTEBOOKS_GITATTR    := $(NOTEBOOKS_DIR)/.gitattributes
-JUPYTER_DIR          := .jupyter
+JUPYTER_DIR          := $(VAR)/jupyter
 LAB_STAMP            := $(VENV)/.lab-installed
 LAB_GROUP            := lab
 LAB_PORT             ?= 8888
@@ -228,8 +245,7 @@ LAB_PACKAGES := \
 				jupyterlab-lsp \
 				jupyter-lsp \
 				python-lsp-server[all] \
-				python-lsp-ruff \
-				nbstripout
+				python-lsp-ruff
 
 PYLAB     := $(PYMANAGER) run jupyter lab
 PYNBSTRIP := $(PYMANAGER) run nbstripout
@@ -239,14 +255,13 @@ PYNBSTRIP := $(PYMANAGER) run nbstripout
 # -----------------------------------------------------------------------------
 
 .PHONY: lab-install
-lab-install: $(LAB_STAMP) ## Install JupyterLab + vim + LSP + nbstripout into .venv (group: lab)
+lab-install: $(LAB_STAMP) ## Install JupyterLab + vim + LSP into .venv (group: lab)
 
-$(LAB_STAMP): $(firstword $(MAKEFILE_LIST)) | venv
+$(LAB_STAMP): $(firstword $(MAKEFILE_LIST)) | venv $(VAR)
 	@$(call log_info,Adding $(words $(LAB_PACKAGES)) packages to dependency-group [$(LAB_GROUP)])
 	@$(PYMANAGER) add --group $(LAB_GROUP) $(LAB_PACKAGES)
 	@$(PYMANAGER) sync --group $(LAB_GROUP)
 	@mkdir -p $(dir $@) && touch $@
-	@$(call add_line,.jupyter/,$(GITIGNORE))
 	@$(call log_ok,JupyterLab toolchain ready)
 
 # -----------------------------------------------------------------------------
@@ -274,10 +289,8 @@ $(NOTEBOOKS_GITATTR): | $(NOTEBOOKS_DIR)
 # Jupyter config dir
 # -----------------------------------------------------------------------------
 
-$(JUPYTER_DIR):
+$(JUPYTER_DIR): | $(VAR)
 	@mkdir -p $@
-	@$(call add_line,$(JUPYTER_DIR)/lab/,$(GITIGNORE))
-	@$(call add_line,$(JUPYTER_DIR)/runtime/,$(GITIGNORE))
 
 # -----------------------------------------------------------------------------
 # Project fixtures (optional; empty if etc/jupyter/user-settings/ doesn't exist)
