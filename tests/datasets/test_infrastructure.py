@@ -3,7 +3,10 @@
 factory_datasetid mints identity from a UUID, so it is nondeterministic and lives
 in the shell, never the domain. save_dataset is the path-first persistence port:
 it writes a certified Dataset to path/{dataset_id}.parquet and folds any OSError
-onto the failure rail as a DATASET_SAVE_FAILED cause. One assert per test.
+onto the failure rail as a DATASET_SAVE_FAILED cause. find_dataset_frame is the
+path-first read port: it reads path/{dataset_id}.parquet back into a bare frame
+(the read model) and folds any OSError as a DATASET_READ_FAILED cause. One assert
+per test.
 """
 
 from pathlib import Path
@@ -11,7 +14,11 @@ from pathlib import Path
 import pandas as pd
 
 from surrogate_models.datasets.domain import Dataset, DatasetID
-from surrogate_models.datasets.infrastructure import factory_datasetid, save_dataset
+from surrogate_models.datasets.infrastructure import (
+    factory_datasetid,
+    find_dataset_frame,
+    save_dataset,
+)
 from surrogate_models.railway_adts import Ok
 
 
@@ -43,3 +50,14 @@ def test_save_dataset_wraps_write_failure_as_error(tmp_path: Path) -> None:
     blocker.write_text("a file standing where a directory is needed")
     dataset = Dataset(DatasetID("abc12345"), pd.DataFrame({"x": [1]}))
     assert save_dataset(blocker, dataset).unwrap_err().code == "DATASET_SAVE_FAILED"
+
+
+def test_find_dataset_frame_reads_back_the_written_frame(tmp_path: Path) -> None:
+    frame = pd.DataFrame({"x": [1, 2, 3]})
+    frame.to_parquet(tmp_path / "abc12345.parquet")
+    assert find_dataset_frame(tmp_path, DatasetID("abc12345")).unwrap().equals(frame)
+
+
+def test_find_dataset_frame_wraps_missing_file_as_error(tmp_path: Path) -> None:
+    missing = find_dataset_frame(tmp_path, DatasetID("missing0"))
+    assert missing.unwrap_err().code == "DATASET_READ_FAILED"
