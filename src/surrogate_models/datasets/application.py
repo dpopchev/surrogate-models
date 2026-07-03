@@ -25,10 +25,15 @@ from surrogate_models.railway_adts import ErrorInfo, Result
 # --- (1) Commands ---
 
 # Injected ports (DIP via callables): the shell supplies these at the composition
-# root. DatasetIdFn mints identity (Factory prefix dropped); SaveDatasetFn persists
-# a certified Dataset, yielding nothing on success and an ErrorInfo on failure.
+# root. DatasetIdFn mints identity (Factory prefix dropped); the write side binds
+# the aggregate PAIR SaveDatasetFn / LoadDatasetFn. SaveDatasetFn persists a
+# certified Dataset (nothing on success, an ErrorInfo on failure); LoadDatasetFn
+# HYDRATES the whole Dataset back from the store -- re-certified on the way in (the
+# trust boundary) -- so a command can load -> transition -> save the SAME aggregate.
+# It returns domain objects, never a DTO: LOAD an aggregate to act on it.
 DatasetIdFn = Callable[[], DatasetID]
 SaveDatasetFn = Callable[[Dataset], Result[None, ErrorInfo]]
+LoadDatasetFn = Callable[[DatasetID], Result[Dataset, ErrorInfo]]
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -97,4 +102,57 @@ def handle_make_dataset(
 
 
 # --- (2) Queries ---
+
+# Read-side port (DIP via callables): FindDatasetFn returns the read model keyed by
+# DatasetID -- a bare pandas DataFrame ready for projection -- BYPASSING the Dataset
+# aggregate and its certification. FIND a view to show it (the read counterpart of
+# LoadDatasetFn's LOAD-to-act-on-it). A bare frame is a legal query DTO at the I/O
+# boundary; a lookup miss or read failure folds into an ErrorInfo cause. Never
+# returns a domain aggregate -- that would be the read-model bypass smell (CQRS_004).
+FindDatasetFn = Callable[[DatasetID], Result[pd.DataFrame, ErrorInfo]]
+
+
+@dataclass(frozen=True, slots=True)
+class GetDataset:
+    """Query: fetch the stored frame for ``dataset_id`` as the read model.
+
+    Carries only edge data -- the identity to look up. Unlike a write command it
+    holds no DataFrame, so default value equality is safe (no ambiguous elementwise
+    ``==`` to sidestep). The read port is injected into the handler, not the query.
+    """
+
+    dataset_id: DatasetID
+
+
+# The union of every datasets read query -- one member today, dispatched by
+# match/case at the delivery edge. Grows as queries are added (no base class).
+type DatasetQuery = GetDataset
+
+
+@dataclass(frozen=True, slots=True)
+class FailGetDataset:
+    """Failure of handle_get_dataset, carrying its structured ``cause``.
+
+    The read-boundary ``ErrorInfo`` folds into one application error, so the failure
+    crosses UP the ring as a serializable descriptor -- never a lower-layer
+    exception type.
+    """
+
+    cause: ErrorInfo
+
+
+def handle_get_dataset(
+    *, find: FindDatasetFn, query: GetDataset
+) -> Result[pd.DataFrame, FailGetDataset]:
+    """Fetch the stored frame for ``query.dataset_id`` as the read model.
+
+    Binds the injected ``FindDatasetFn`` and returns its bare DataFrame on the
+    success rail -- the read model DTO, ready for projection -- never the Dataset
+    aggregate (loading an aggregate only to show it is the read-model bypass smell,
+    CQRS_004). A read-boundary ``ErrorInfo`` folds into ``FailGetDataset``. Pure
+    railway composition -- no branching on the ``Result``.
+    """
+    return find(query.dataset_id).fmap_err(FailGetDataset)
+
+
 # --- (3) Projections ---

@@ -1,18 +1,25 @@
-"""Tests for the datasets application -- the handle_make_dataset command handler.
+"""Tests for the datasets application -- the make/get dataset handlers.
 
-The handler mints an id, certifies the frame via the domain make_dataset, and
-persists through an injected SaveDatasetFn -- returning Ok(DatasetID) on success,
-or Err(FailMadeDataset) folding either the schema failure or the save failure into
-one ErrorInfo cause. Dependencies (new_id, save) are hand-written stubs; frames are
-hand-written. One assert per test.
+handle_make_dataset (write) mints an id, certifies the frame via the domain
+make_dataset, and persists through an injected SaveDatasetFn -- returning
+Ok(DatasetID) on success, or Err(FailMadeDataset) folding either the schema
+failure or the save failure into one ErrorInfo cause. handle_get_dataset (read)
+binds an injected FindDatasetFn to return the stored frame as the read model DTO,
+or Err(FailGetDataset) wrapping the read ErrorInfo -- never the Dataset aggregate.
+Dependencies (new_id, save, find) are hand-written stubs; frames are hand-written.
+One assert per test.
 """
 
 import pandas as pd
 
 from surrogate_models.datasets.application import (
+    FailGetDataset,
     FailMadeDataset,
+    FindDatasetFn,
+    GetDataset,
     MakeDataset,
     SaveDatasetFn,
+    handle_get_dataset,
     handle_make_dataset,
 )
 from surrogate_models.datasets.domain import Dataset, DatasetID
@@ -113,4 +120,63 @@ def test_handle_make_dataset_save_fail_wraps_errorinfo() -> None:
     result = handle_make_dataset(
         save=_save_err(cause), new_id=_fixed_id, cmd=MakeDataset(_typed_frame())
     )
+    assert result.unwrap_err().cause == cause
+
+
+# --- Queries: handle_get_dataset returns the stored frame as a read model ---
+
+
+def _find_ok(frame: pd.DataFrame) -> FindDatasetFn:
+    """A find port that reports the given frame for any id (a read hit)."""
+
+    def find(dataset_id: DatasetID) -> Result[pd.DataFrame, ErrorInfo]:
+        return Ok(frame)
+
+    return find
+
+
+def _find_recording(seen: list[DatasetID], frame: pd.DataFrame) -> FindDatasetFn:
+    """A find port that records the id it was asked for, then reports the frame."""
+
+    def find(dataset_id: DatasetID) -> Result[pd.DataFrame, ErrorInfo]:
+        seen.append(dataset_id)
+        return Ok(frame)
+
+    return find
+
+
+def _find_err(error: ErrorInfo) -> FindDatasetFn:
+    """A find port that fails with a fixed ErrorInfo (a read boundary error)."""
+
+    def find(dataset_id: DatasetID) -> Result[pd.DataFrame, ErrorInfo]:
+        return Err(error)
+
+    return find
+
+
+def test_handle_get_dataset_returns_found_frame() -> None:
+    frame = _typed_frame()
+    result = handle_get_dataset(find=_find_ok(frame), query=GetDataset(FIXED_ID))
+    assert result.unwrap() is frame
+
+
+def test_handle_get_dataset_queries_by_requested_id() -> None:
+    seen: list[DatasetID] = []
+    handle_get_dataset(
+        find=_find_recording(seen, _typed_frame()), query=GetDataset(FIXED_ID)
+    )
+    assert seen[0] == FIXED_ID
+
+
+def test_handle_get_dataset_err_is_failgetdataset() -> None:
+    result = handle_get_dataset(
+        find=_find_err(ErrorInfo(code="DATASET_READ_FAILED", message="No such file")),
+        query=GetDataset(FIXED_ID),
+    )
+    assert isinstance(result.unwrap_err(), FailGetDataset)
+
+
+def test_handle_get_dataset_read_fail_wraps_errorinfo() -> None:
+    cause = ErrorInfo(code="DATASET_READ_FAILED", message="No such file")
+    result = handle_get_dataset(find=_find_err(cause), query=GetDataset(FIXED_ID))
     assert result.unwrap_err().cause == cause
