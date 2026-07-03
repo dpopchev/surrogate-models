@@ -13,13 +13,32 @@ from pathlib import Path
 
 import pandas as pd
 
-from surrogate_models.datasets.domain import Dataset, DatasetID
+from surrogate_models.datasets.domain import Dataset, DatasetID, make_dataset
 from surrogate_models.datasets.infrastructure import (
     factory_datasetid,
     find_dataset_frame,
+    read_neutron_stars_frame,
     save_dataset,
 )
 from surrogate_models.railway_adts import Ok
+
+ONE_BATCH = """\
+# x1 = 0.005, x2 = 1000.0, beta = 0.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
+rhoc Pc M
+5.89e14 5.0e-05 0.56
+6.06e14 5.5e-05 0.59
+"""
+
+TWO_BATCH = """\
+# x1 = 0.005, x2 = 1000.0, beta = 0.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
+rhoc Pc M
+5.89e14 5.0e-05 0.56
+6.06e14 5.5e-05 0.59
+# x1 = 0.005, x2 = 1000.0, beta = 6.4, Lambda = 0.7, Pc = 7e-05, choice_theory = 31
+rhoc Pc M
+7.10e14 7.0e-05 0.71
+7.50e14 7.5e-05 0.75
+"""
 
 
 def test_factory_datasetid_is_eight_characters() -> None:
@@ -61,3 +80,40 @@ def test_find_dataset_frame_reads_back_the_written_frame(tmp_path: Path) -> None
 def test_find_dataset_frame_wraps_missing_file_as_error(tmp_path: Path) -> None:
     missing = find_dataset_frame(tmp_path, DatasetID("missing0"))
     assert missing.unwrap_err().code == "DATASET_READ_FAILED"
+
+
+def test_read_neutron_stars_frame_appends_pc_init_from_comment(tmp_path: Path) -> None:
+    source = tmp_path / "neutron-stars.dat"
+    source.write_text(ONE_BATCH)
+    frame = read_neutron_stars_frame(source).unwrap()
+    assert (frame["pc_init"] == 5e-05).all()
+
+
+def test_read_neutron_stars_frame_concatenates_batches_with_per_batch_pc_init(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "neutron-stars.dat"
+    source.write_text(TWO_BATCH)
+    frame = read_neutron_stars_frame(source).unwrap()
+    assert list(frame["pc_init"]) == [5e-05, 5e-05, 7e-05, 7e-05]
+
+
+def test_read_neutron_stars_frame_yields_certifiable_frame(tmp_path: Path) -> None:
+    source = tmp_path / "neutron-stars.dat"
+    source.write_text(ONE_BATCH)
+    frame = read_neutron_stars_frame(source).unwrap()
+    assert make_dataset(DatasetID("nstars00"), frame).is_ok()
+
+
+def test_read_neutron_stars_frame_wraps_missing_file_as_error(tmp_path: Path) -> None:
+    missing = read_neutron_stars_frame(tmp_path / "absent.dat")
+    assert missing.unwrap_err().code == "NEUTRON_STARS_READ_FAILED"
+
+
+def test_read_neutron_stars_frame_wraps_malformed_batch_as_error(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "neutron-stars.dat"
+    source.write_text("# x1 = 0.005, beta = 0.4\nrhoc M\n5.89e14 0.56\n")
+    failure = read_neutron_stars_frame(source)
+    assert failure.unwrap_err().code == "NEUTRON_STARS_READ_FAILED"

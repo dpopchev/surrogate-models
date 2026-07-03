@@ -11,6 +11,9 @@ and further adapters are added as the context grows.
 
 from __future__ import annotations
 
+import io
+import re
+from collections.abc import Iterator
 from pathlib import Path
 from uuid import uuid4
 
@@ -18,6 +21,8 @@ import pandas as pd
 
 from surrogate_models.datasets.domain import Dataset, DatasetID
 from surrogate_models.railway_adts import fmap_error, safe
+
+_PC_PATTERN = re.compile(r"\bPc\s*=\s*([0-9.eE+-]+)")
 
 
 def factory_datasetid() -> DatasetID:
@@ -69,3 +74,66 @@ def find_dataset_frame(path: Path, dataset_id: DatasetID) -> pd.DataFrame:
     recoverable read failure -- symmetric with :func:`save_dataset`.
     """
     return pd.read_parquet(path / f"{dataset_id}.parquet")
+
+
+@safe(
+    (OSError, ValueError),
+    fmap_error(lambda cause: cause, code="NEUTRON_STARS_READ_FAILED"),
+)
+def read_neutron_stars_frame(path: Path) -> pd.DataFrame:
+    """Digest the raw concatenated neutron-stars ``.dat`` at ``path`` into one frame.
+
+    The ingest reader. The file is a run of batches, each ``[# comment, header row,
+    data rows...]``: the comment carries the batch parameters (``x1``, ``x2``,
+    ``beta``, ``Lambda``, ``Pc``, ``choice_theory``); the header names the columns;
+    the rows are whitespace-separated numbers. Five of the six comment params are
+    already reproduced verbatim as constant columns, so ONLY ``Pc`` is appended --
+    as ``pc_init``, because the data's own ``Pc`` column is the RUNNING central
+    pressure and the comment's ``Pc`` is its per-batch initial value.
+
+    ``@safe`` makes this the railway boundary: on success the wrapped call returns
+    ``Ok(frame)``. Both a read fault (``OSError`` -- missing/unreadable file) and a
+    parse fault (``ValueError`` -- a batch comment with no ``Pc``, an unparseable
+    row) are caught and folded into an ``Err`` carrying code
+    ``NEUTRON_STARS_READ_FAILED``. The ``ValueError`` arm is broader than the
+    ``OSError``-only save/find precedent on purpose: a corrupt incoming file is a
+    recoverable ingest failure, not a boot fault, so its structured cause must cross
+    UP rather than crash the process.
+    """
+    frames = [_read_batch(batch) for batch in _iter_batches(path.read_text())]
+    return pd.concat(frames, ignore_index=True)
+
+
+def _iter_batches(text: str) -> Iterator[str]:
+    """Yield each batch's raw text -- the ``#`` comment line down to its last data row.
+
+    Batches are delimited by ``#`` comment lines, so a new batch opens on every
+    ``#``-prefixed line and the running group is flushed before it. Empty input
+    yields nothing, so the caller's ``pd.concat`` fails loudly (ValueError) on a file
+    with no batches -- folded onto the ingest rail like any other parse fault.
+    """
+    batch: list[str] = []
+    for line in text.splitlines():
+        if line.startswith("#") and batch:
+            yield "\n".join(batch)
+            batch = []
+        batch.append(line)
+    if batch:
+        yield "\n".join(batch)
+
+
+def _read_batch(batch: str) -> pd.DataFrame:
+    """Parse one batch's ``[# comment, header row, data rows...]`` into a frame.
+
+    The comment's ``Pc`` becomes the constant ``pc_init`` column (its per-batch
+    initial central pressure); the header + data rows parse as whitespace-separated
+    numbers. A comment with no ``Pc`` is malformed input -> ``ValueError``, which the
+    caller's ``@safe`` folds onto the ingest rail.
+    """
+    comment, _, body = batch.partition("\n")
+    match = _PC_PATTERN.search(comment)
+    if match is None:
+        raise ValueError(f"batch comment missing Pc: {comment!r}")
+    frame = pd.read_csv(io.StringIO(body), sep=r"\s+")
+    frame["pc_init"] = float(match.group(1))
+    return frame

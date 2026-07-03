@@ -32,9 +32,16 @@ class DatasetsSettings(BaseModel):
     ``var/`` state root so a fresh checkout has a working, ephemeral location with
     no setup; override it per environment via the TOML file or the
     ``SURROGATE_MODELS__DATASETS__PATH`` variable.
+
+    ``neutron_stars_source`` points at the raw concatenated neutron-stars ``.dat``
+    file the ingest reader digests. It is ``None`` by default: the app boots without
+    it (ingest is an on-demand action, not a boot dependency, per the configuration
+    gate). Set it via the TOML file or the
+    ``SURROGATE_MODELS__DATASETS__NEUTRON_STARS_SOURCE`` variable when ingesting.
     """
 
     path: Path = Path("var/data/surrogate_models/datasets")
+    neutron_stars_source: Path | None = None
 
 
 class Settings(BaseSettings):

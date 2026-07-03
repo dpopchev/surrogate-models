@@ -16,6 +16,7 @@ import pytest
 from surrogate_models.config import get_settings
 
 DATASETS_PATH_ENV = "SURROGATE_MODELS__DATASETS__PATH"
+NEUTRON_STARS_SOURCE_ENV = "SURROGATE_MODELS__DATASETS__NEUTRON_STARS_SOURCE"
 TOML_FILE = "surrogate_models.toml"
 
 
@@ -29,6 +30,7 @@ def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
     would bleed one test's configuration into the next.
     """
     monkeypatch.delenv(DATASETS_PATH_ENV, raising=False)
+    monkeypatch.delenv(NEUTRON_STARS_SOURCE_ENV, raising=False)
     monkeypatch.chdir(tmp_path)
     get_settings.cache_clear()
     yield
@@ -59,3 +61,13 @@ def test_env_takes_precedence_over_toml(
 
 def test_get_settings_is_cached() -> None:
     assert get_settings() is get_settings()
+
+
+def test_neutron_stars_source_defaults_to_none() -> None:
+    assert get_settings().datasets.neutron_stars_source is None
+
+
+def test_env_overrides_neutron_stars_source(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(NEUTRON_STARS_SOURCE_ENV, "/data/neutron-stars.dat")
+    source = get_settings().datasets.neutron_stars_source
+    assert source == Path("/data/neutron-stars.dat")
