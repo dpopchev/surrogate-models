@@ -3,3 +3,5 @@ __pycache__/
 notebooks/.ipynb_checkpoints/
 notebooks/.virtual_documents/
 var/
+data/black-holes/
+data/neutron-stars/
