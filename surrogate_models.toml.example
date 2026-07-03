@@ -1,0 +1,10 @@
+# Example configuration file for surrogate_models.
+#
+# Copy to `surrogate_models.toml` and adjust (the real file is gitignored). Each
+# [section] is a config section; its keys are that section's fields. OS env and
+# .env override these values (see .env.example); these in turn override the
+# built-in defaults.
+
+[datasets]
+# Where the datasets bounded context persists datasets (parquet).
+path = "var/data/surrogate_models/datasets"
