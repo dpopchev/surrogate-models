@@ -8,3 +8,5 @@
 [datasets]
 # Where the datasets bounded context persists datasets (parquet).
 path = "var/data/surrogate_models/datasets"
+# Raw concatenated neutron-stars .dat file the ingest reader digests.
+neutron_stars_source = "data/neutron-stars/neutron-stars.dat"

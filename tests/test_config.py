@@ -63,8 +63,9 @@ def test_get_settings_is_cached() -> None:
     assert get_settings() is get_settings()
 
 
-def test_neutron_stars_source_defaults_to_none() -> None:
-    assert get_settings().datasets.neutron_stars_source is None
+def test_neutron_stars_source_defaults_under_data() -> None:
+    source = get_settings().datasets.neutron_stars_source
+    assert source == Path("data/neutron-stars/neutron-stars.dat")
 
 
 def test_env_overrides_neutron_stars_source(monkeypatch: pytest.MonkeyPatch) -> None:

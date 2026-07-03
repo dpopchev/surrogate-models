@@ -34,14 +34,17 @@ class DatasetsSettings(BaseModel):
     ``SURROGATE_MODELS__DATASETS__PATH`` variable.
 
     ``neutron_stars_source`` points at the raw concatenated neutron-stars ``.dat``
-    file the ingest reader digests. It is ``None`` by default: the app boots without
-    it (ingest is an on-demand action, not a boot dependency, per the configuration
-    gate). Set it via the TOML file or the
-    ``SURROGATE_MODELS__DATASETS__NEUTRON_STARS_SOURCE`` variable when ingesting.
+    file the ingest reader digests. It defaults to
+    ``data/neutron-stars/neutron-stars.dat`` -- the in-use location today, relative
+    to the project root (the gitignored ``data/`` tree). Having a default is safe:
+    it is not a boot dependency -- nothing reads the file at boot, only the
+    on-demand ingest reader touches it (and folds a missing file onto the failure
+    rail). Override it via the TOML file or the
+    ``SURROGATE_MODELS__DATASETS__NEUTRON_STARS_SOURCE`` variable.
     """
 
     path: Path = Path("var/data/surrogate_models/datasets")
-    neutron_stars_source: Path | None = None
+    neutron_stars_source: Path = Path("data/neutron-stars/neutron-stars.dat")
 
 
 class Settings(BaseSettings):
