@@ -118,3 +118,15 @@ ignore_imports = [
     "surrogate_models.datasets.infrastructure -> surrogate_models.datasets.domain",
 ]
 
+# --- composition-root seal: __main__ wires rings, never reaches a domain ---
+# The composition root may import application + infrastructure (and config) only;
+# it must NEVER import a context's domain DIRECTLY. It reaches domain TRANSITIVELY
+# through those rings, so allow_indirect_imports keeps the app/infra -> domain
+# chain legal and bars only a direct __main__ -> *.domain edge.
+[[tool.importlinter.contracts]]
+name = "composition root never imports a domain directly"
+type = "forbidden"
+source_modules = ["surrogate_models.__main__"]
+forbidden_modules = ["surrogate_models.*.domain"]
+allow_indirect_imports = true
+
