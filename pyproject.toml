@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.14.5"
 dependencies = [
     "lightning>=2.6.5",
+    "pandas>=3.0.3",
     "torch>=2.12.1",
 ]
 
@@ -26,6 +27,7 @@ dev = [
     # In the default group so the notebook git filter (installed by `make
     # lab-hooks`) survives `make sync` pruning the opt-in lab group.
     "nbstripout>=0.9.1",
+    "pandas-stubs>=3.0.3.260530",
 ]
 lab = [
     "jupyter-lsp>=2.3.1",
@@ -90,11 +92,27 @@ select = ["E", "F", "I"]
 root_package = "surrogate_models"
 include_external_packages = true
 
-# Placeholder contract (always passes) so `make lint-imports` is green until the
-# onion-ring layers exist. Replace with real layer/independence contracts.
+# --- datasets bounded context: onion-ring direction + domain privacy ---
+# Within the context, application and infrastructure are independent siblings that
+# may import domain; domain (the base) may import neither.
 [[tool.importlinter.contracts]]
-name = "no unexpected web-framework imports (placeholder)"
+name = "datasets onion: domain is the sealed base of its context"
+type = "layers"
+containers = ["surrogate_models.datasets"]
+layers = [
+    "application | infrastructure",
+    "domain",
+]
+
+# datasets.domain is private to its context: only its own application and
+# infrastructure may import it -- nothing else in the tree.
+[[tool.importlinter.contracts]]
+name = "datasets.domain is private to its context"
 type = "forbidden"
-source_modules = ["surrogate_models"]
-forbidden_modules = ["django", "flask"]
+source_modules = ["surrogate_models.**"]
+forbidden_modules = ["surrogate_models.datasets.domain"]
+ignore_imports = [
+    "surrogate_models.datasets.application -> surrogate_models.datasets.domain",
+    "surrogate_models.datasets.infrastructure -> surrogate_models.datasets.domain",
+]
 
