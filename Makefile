@@ -138,33 +138,117 @@ PYAPP     := $(PYMANAGER) run python -m $(PACKAGE)
 
 # New project: copy this Makefile into an empty dir and run `make init` --
 # the dependency chain scaffolds pyproject + src layout via `uv init`, records
-# the dev toolchain, builds the venv, installs everything from the lockfile,
-# and lays out the workspace dirs. Existing projects: init is a no-op refresh.
+# the dev toolchain (ensure-dev), seeds the preferred [tool.*] config (config),
+# builds the venv, installs from the lockfile, and lays out the workspace dirs.
+# Migrate an existing project: `make init` conforms it in place -- ensure-dev
+# and config are guarded (fill-gaps), so they add only what is missing and are
+# a no-op once the project already matches. This Makefile IS the config source;
+# nothing else travels with it.
 
 # Baseline dev toolchain recorded in dependency-group [dev] at scaffold time.
 DEV_PACKAGES := \
 				pytest \
 				pytest-cov \
+				pytest-datadir \
+				pytest-datafiles \
+				logassert \
 				mypy \
 				pyright \
 				ruff \
 				import-linter \
 				nbstripout
 
-UV_INIT_FLAGS ?= --lib
+UV_INIT_FLAGS ?= --lib --build-backend setuptools
 
 .PHONY: init
-init: venv sync | $(VAR) $(DATA_DIR) $(SCRIPTS_DIR) $(TESTS_DIR) ## Bootstrap dev env -- scaffold if new, venv + editable project + dev deps + workspace dirs
+init: config sync | $(VAR) $(DATA_DIR) $(SCRIPTS_DIR) $(TESTS_DIR) ## Bootstrap/migrate dev env -- scaffold if new, conform pyproject, venv + install + workspace dirs
 	@$(call log_ok,dev environment ready -- run 'make test' to verify)
 
 # Fires only when pyproject.toml is absent; never touches an existing project.
-# --no-sync: record deps + lock only -- `make sync` performs the install.
+# Scaffold ONLY -- the dev toolchain (ensure-dev) and tool config (config) are
+# recorded by separate guarded steps, so `make init` also conforms an existing
+# project instead of skipping everything once pyproject already exists.
 $(PYPROJECT):
 	@$(call log_info,Scaffolding uv project '$(PROJECT)' ($(UV_INIT_FLAGS)))
 	@$(PYMANAGER) init $(UV_INIT_FLAGS) --name $(PROJECT)
-	@$(call log_info,Recording dev toolchain in dependency-group [dev])
-	@$(PYMANAGER) add --group dev --no-sync $(DEV_PACKAGES)
 	@$(call log_ok,$(PYPROJECT) scaffolded)
+
+# Record the baseline dev toolchain in dependency-group [dev]. Guarded on the
+# group header so it fires once per project (fresh OR migrated) and is a cheap
+# no-op after. --no-sync: record + lock only; `make sync` performs the install.
+.PHONY: ensure-dev
+ensure-dev: | $(PYPROJECT) ## Record dev toolchain in [dev] if absent (idempotent)
+	@if grep -q '^dev = \[' $(PYPROJECT) 2>/dev/null; then \
+		$(call log_info,dependency-group [dev] present -- skipping); \
+	else \
+		$(call log_info,Recording $(words $(DEV_PACKAGES)) packages in dependency-group [dev]); \
+		$(PYMANAGER) add --group dev --no-sync $(DEV_PACKAGES); \
+		$(call log_ok,dependency-group [dev] recorded); \
+	fi
+
+# Seed the preferred [tool.*] config carried inline below. FILL-GAPS ONLY: a
+# section already present in pyproject is left untouched, so migrating a project
+# never clobbers its local tweaks. Package-name-bearing lines are substituted
+# from $(PACKAGE) at inject time -- never hardcoded, so this stays portable.
+.PHONY: config
+config: ensure-dev ## Seed preferred [tool.*] config into pyproject (fill-gaps, idempotent)
+	@_ins() { \
+		hdr="$$1"; shift; \
+		if grep -q "^\[$$hdr\]" $(PYPROJECT) 2>/dev/null; then \
+			$(call log_info,[$$hdr] present -- skipping); \
+			return 0; \
+		fi; \
+		printf '%s\n' '' "$$@" >> $(PYPROJECT); \
+		$(call log_ok,[$$hdr] injected); \
+	}; \
+	_ins 'tool.setuptools.packages.find' \
+		'[tool.setuptools.packages.find]' \
+		'where = ["src"]'; \
+	_ins 'tool.distutils.egg_info' \
+		'[tool.distutils.egg_info]' \
+		'egg_base = "$(VAR)"'; \
+	_ins 'tool.pytest.ini_options' \
+		'[tool.pytest.ini_options]' \
+		'testpaths = ["$(TESTS_DIR)"]' \
+		'addopts = "--strict-markers"' \
+		'cache_dir = "$(VAR)/cache/pytest"'; \
+	_ins 'tool.coverage.run' \
+		'[tool.coverage.run]' \
+		'source = ["$(PACKAGE)"]' \
+		'branch = true' \
+		'data_file = "$(VAR)/coverage/.coverage"'; \
+	_ins 'tool.coverage.report' \
+		'[tool.coverage.report]' \
+		'show_missing = true'; \
+	_ins 'tool.mypy' \
+		'[tool.mypy]' \
+		'strict = true' \
+		'files = ["src", "$(TESTS_DIR)"]' \
+		'cache_dir = "$(VAR)/cache/mypy"'; \
+	_ins 'tool.pyright' \
+		'[tool.pyright]' \
+		'include = ["src", "$(TESTS_DIR)"]' \
+		'venvPath = "."' \
+		'venv = "$(VENV)"' \
+		'typeCheckingMode = "standard"'; \
+	_ins 'tool.ruff' \
+		'[tool.ruff]' \
+		'src = ["src", "$(TESTS_DIR)"]' \
+		'line-length = 88' \
+		'cache-dir = "$(VAR)/cache/ruff"'; \
+	_ins 'tool.ruff.lint' \
+		'[tool.ruff.lint]' \
+		'select = ["E", "F", "I"]'; \
+	_ins 'tool.importlinter' \
+		'[tool.importlinter]' \
+		'root_package = "$(PACKAGE)"' \
+		'include_external_packages = true' \
+		'' \
+		'[[tool.importlinter.contracts]]' \
+		'name = "no web framework imports (placeholder)"' \
+		'type = "forbidden"' \
+		'source_modules = ["$(PACKAGE)"]' \
+		'forbidden_modules = ["django", "flask"]'
 
 # Written by `uv init` during scaffold. Make stats this file before the
 # scaffold recipe runs, so re-check at recipe time; error only for hand-rolled
@@ -213,7 +297,7 @@ $(VENV_STAMP): $(PYTHON_VERSION_FILE)
 	@$(call log_ok,$(VENV) ready)
 
 .PHONY: sync
-sync: venv | $(VAR) ## Sync dependencies into .venv from the lockfile
+sync: venv ensure-dev | $(VAR) ## Sync dependencies into .venv from the lockfile
 	@$(call log_info,Syncing dependencies with $(PYSYNC))
 	@$(PYSYNC)
 	@$(call log_ok,dependencies synced)
