@@ -1,19 +1,56 @@
-# regression-surrogate-pde-solver
+# surrogate-models
 
-Machine-learning regression surrogates that approximate solutions to partial
-differential equations (PDEs), packaged as `regression_surrogate_pde_solver`.
+Machine-learning surrogate models over scientific datasets, packaged as
+`surrogate_models`.
 
 ## Overview
 
-A surrogate model replaces an expensive numerical PDE solve with a fast learned
-approximation. This repository hosts that work: data preparation, model training,
-and evaluation for regression-based PDE surrogates, developed under a strict
-functional-core / onion-architecture discipline with test-driven development.
+A surrogate model replaces an expensive numerical solve with a fast learned
+approximation. This repository hosts that work -- data preparation, model
+training, and evaluation -- developed under a strict functional-core /
+onion-architecture discipline with test-driven development.
 
-Status: early scaffold. The toolchain (uv, Make, JupyterLab) and project
-conventions are in place. The `regression_surrogate_pde_solver` package, its `src/` tree, and the test
-suite are not implemented yet; `main.py` is a placeholder. Commands below are
-split into what runs today and what activates once the package lands.
+Status: the toolchain (uv, Make, JupyterLab) and project conventions are in place,
+and the first bounded context is live. The `datasets` context ingests raw
+neutron-star `.dat` output into typed, schema-certified frames and exposes a
+one-call public loader, `load_neutron_stars`. The `python -m surrogate_models`
+command-line entry point is still a placeholder; the library API below works
+today.
+
+## Public API
+
+Load the neutron-stars dataset as a pandas `DataFrame` with one call:
+
+```python
+from surrogate_models import load_neutron_stars
+
+df = load_neutron_stars()
+```
+
+`load_neutron_stars()` is get-or-build with read-through caching:
+
+1. It looks for a stored `neutron-stars` dataset under `datasets.path`
+   (the parquet store) and returns it if present.
+2. On a miss, it digests the raw source at `datasets.neutron_stars_source`,
+   persists the certified dataset to the store, then returns the freshly read
+   frame.
+
+The returned frame carries every column from the raw batches plus a `pc_init`
+column -- each batch's initial central pressure, taken from its comment header.
+On failure (for example a missing source file) the call raises.
+
+### Configuration
+
+Settings resolve highest-priority first: OS environment (and `.env`), then
+`surrogate_models.toml`, then the built-in defaults. Variables are prefixed
+`SURROGATE_MODELS__` and nest into sections with the same `__` delimiter.
+
+| Variable                                       | Default                                | Purpose                                              |
+|------------------------------------------------|----------------------------------------|------------------------------------------------------|
+| `SURROGATE_MODELS__DATASETS__PATH`             | `var/data/surrogate_models/datasets`   | Where certified datasets are persisted (parquet)     |
+| `SURROGATE_MODELS__DATASETS__NEUTRON_STARS_SOURCE` | `data/neutron-stars/neutron-stars.dat` | Raw concatenated neutron-stars `.dat` the loader digests |
+
+See `.env.example` and `surrogate_models.toml.example` for a copy-ready template.
 
 ## Prerequisites
 
@@ -29,23 +66,18 @@ virtual environment for you.
 ## Getting Started
 
 ```sh
-git clone <repo-url> regression-surrogate-pde-solver
-cd regression-surrogate-pde-solver
+git clone <repo-url> surrogate-models
+cd surrogate-models
 
-make venv     # create .venv with Python 3.14.5 (from .python-version)
-make sync     # sync dependencies from uv.lock into .venv
+make venv       # create .venv with Python 3.14.5 (from .python-version)
+make sync       # sync dependencies from uv.lock into .venv
+make install    # install the project into .venv (editable)
 ```
 
 List every available task with its description:
 
 ```sh
 make help
-```
-
-Run the current placeholder entry point as a sanity check:
-
-```sh
-uv run python main.py     # prints: Hello from regression-surrogate-pde-solver!
 ```
 
 ## JupyterLab
@@ -68,46 +100,54 @@ make lab LAB_HOST=0.0.0.0 LAB_PORT=9000
 
 ## Make Targets
 
-Available now:
-
-| Target            | Purpose                                                  |
-|-------------------|----------------------------------------------------------|
-| `make help`       | List all targets with descriptions                       |
-| `make venv`       | Build `.venv` from `.python-version`                      |
-| `make sync`       | Sync dependencies from `uv.lock`                          |
-| `make lab-install`| Install the JupyterLab toolchain (group: `lab`)          |
-| `make lab-hooks`  | Install the nbstripout git filter                        |
-| `make lab`        | Run JupyterLab rooted at `notebooks/`                     |
-
-Active once the `regression_surrogate_pde_solver` package and tests exist:
-
 | Target              | Purpose                                                |
 |---------------------|--------------------------------------------------------|
+| `make help`         | List all targets with descriptions                     |
+| `make venv`         | Build `.venv` from `.python-version`                    |
+| `make sync`         | Sync dependencies from `uv.lock`                        |
 | `make install`      | Install the project into `.venv` (editable)            |
-| `make run`          | Start the `regression_surrogate_pde_solver` entry point and show its help    |
-| `make test`         | Run the test suite with coverage                        |
+| `make run`          | Start the `surrogate_models` entry point (placeholder) |
+| `make test`         | Run the test suite with coverage                       |
 | `make test-quick`   | Run the test suite quietly (per TDD cycle)             |
-| `make typecheck`    | Static type-check `src/` with mypy                      |
+| `make typecheck`    | Static type-check `src/` with mypy                     |
 | `make lint`         | Ruff lint + format check + import contracts            |
-| `make lint-imports` | Check onion-ring import contracts with import-linter    |
-| `make format`       | Auto-format and fix lint with ruff                      |
+| `make lint-imports` | Check onion-ring import contracts with import-linter   |
+| `make format`       | Auto-format and fix lint with ruff                     |
 | `make build`        | Build sdist + wheel into `dist/` (tests must pass)     |
+| `make lab-install`  | Install the JupyterLab toolchain (group: `lab`)        |
+| `make lab-hooks`    | Install the nbstripout git filter                      |
+| `make lab`          | Run JupyterLab rooted at `notebooks/`                  |
 
 ## Project Layout
 
 ```
 .
-|-- main.py            # placeholder entry point
-|-- Makefile           # task runner (environment, quality, build, JupyterLab)
-|-- pyproject.toml     # project metadata and dependency groups
-|-- .python-version    # pinned interpreter (3.14.5)
-|-- uv.lock            # resolved dependency lockfile
-`-- notebooks/         # JupyterLab exploration (outputs stripped on commit)
+|-- src/surrogate_models/
+|   |-- __init__.py           # public API (re-exports load_neutron_stars)
+|   |-- __main__.py           # placeholder CLI entry point
+|   |-- config.py             # app-wide settings shell (pydantic-settings)
+|   |-- datasets/             # datasets bounded context
+|   |   |-- domain.py         # functional core: Dataset, DatasetID, smart constructors
+|   |   |-- application.py    # CQRS handlers (make / get dataset)
+|   |   |-- infrastructure.py # imperative shell: parquet I/O, .dat ingest
+|   |   `-- __main__.py       # context root + load_neutron_stars facade
+|   `-- railway_adts/         # Result / Option / @safe railway primitives
+|-- tests/                    # mirror of src/, test-first
+|-- Makefile                  # task runner (environment, quality, build, JupyterLab)
+|-- pyproject.toml            # project metadata, dependency groups, import contracts
+|-- .python-version           # pinned interpreter (3.14.5)
+`-- notebooks/                # JupyterLab exploration (outputs stripped on commit)
 ```
 
 ## Development
 
 The codebase follows an onion architecture with bounded contexts under
-`src/regression_surrogate_pde_solver/`, built test-first. Once the package lands, the quality gates run
-as: `make format`, `make lint`, `make typecheck`, then `make test`. The build
-gate (`make build`) requires a green test suite before producing artifacts.
+`src/surrogate_models/`, built test-first. Each context splits into a pure
+`domain` core, an `application` layer of CQRS handlers wired over injected
+callables, and an `infrastructure` shell that owns all I/O; the composition root
+(`__main__.py`) wires the rings and never reaches a domain directly. Import
+direction is enforced by import-linter contracts (`make lint-imports`).
+
+The quality gates run as: `make format`, `make lint`, `make typecheck`, then
+`make test`. The build gate (`make build`) requires a green test suite before
+producing artifacts.
