@@ -13,7 +13,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from surrogate_models.datasets.domain import Dataset, DatasetID, make_dataset
+from surrogate_models.datasets.domain import (
+    Dataset,
+    DatasetID,
+    make_dataset,
+    make_datasetid,
+)
 from surrogate_models.datasets.infrastructure import (
     factory_datasetid,
     find_dataset_frame,
@@ -51,6 +56,10 @@ def test_factory_datasetid_is_lowercase_hex() -> None:
 
 def test_factory_datasetid_mints_distinct_ids() -> None:
     assert factory_datasetid() != factory_datasetid()
+
+
+def test_factory_datasetid_output_certifies_via_make_datasetid() -> None:
+    assert make_datasetid(factory_datasetid()).is_ok() is True
 
 
 def test_save_dataset_returns_ok_on_success(tmp_path: Path) -> None:

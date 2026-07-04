@@ -12,7 +12,9 @@ from surrogate_models.datasets.domain import (
     Dataset,
     DatasetID,
     DatasetMissingSchema,
+    InvalidDatasetID,
     make_dataset,
+    make_datasetid,
 )
 
 DATASET_ID = DatasetID("abc12345")
@@ -72,3 +74,41 @@ def test_make_dataset_err_carries_the_offending_frame() -> None:
 
 def test_make_dataset_err_on_zero_column_frame() -> None:
     assert make_dataset(DATASET_ID, pd.DataFrame()).is_err() is True
+
+
+# --- make_datasetid: the sole str -> DatasetID smart constructor ---
+#
+# Validity rule: a non-empty, filesystem-safe stem (``^[A-Za-z0-9._-]+$``), since
+# the id becomes the ``{id}.parquet`` filename. Anything else -> Err(InvalidDatasetID).
+
+
+def test_make_datasetid_ok_on_valid_id() -> None:
+    assert make_datasetid("neutron-stars").is_ok() is True
+
+
+def test_make_datasetid_ok_returns_the_id() -> None:
+    assert make_datasetid("neutron-stars").unwrap() == DatasetID("neutron-stars")
+
+
+def test_make_datasetid_ok_on_hex_mint_output() -> None:
+    assert make_datasetid("abc12345").is_ok() is True
+
+
+def test_make_datasetid_err_on_empty_string() -> None:
+    assert make_datasetid("").is_err() is True
+
+
+def test_make_datasetid_err_on_whitespace() -> None:
+    assert make_datasetid("  ").is_err() is True
+
+
+def test_make_datasetid_err_on_path_separator() -> None:
+    assert make_datasetid("nested/id").is_err() is True
+
+
+def test_make_datasetid_err_is_invalid_datasetid() -> None:
+    assert isinstance(make_datasetid("").unwrap_err(), InvalidDatasetID)
+
+
+def test_make_datasetid_err_carries_the_offending_string() -> None:
+    assert make_datasetid("bad id").unwrap_err().dataset_id == "bad id"

@@ -123,6 +123,56 @@ def test_handle_make_dataset_save_fail_wraps_errorinfo() -> None:
     assert result.unwrap_err().cause == cause
 
 
+# --- id policy: a requested id wins; an empty id mints via new_id; invalid rejects ---
+
+
+def test_handle_make_dataset_uses_requested_id() -> None:
+    result = handle_make_dataset(
+        save=_save_ok([]),
+        new_id=_fixed_id,
+        cmd=MakeDataset(_typed_frame(), dataset_id="neutron-stars"),
+    )
+    assert result.unwrap() == "neutron-stars"
+
+
+def test_handle_make_dataset_saves_under_requested_id() -> None:
+    saved: list[Dataset] = []
+    handle_make_dataset(
+        save=_save_ok(saved),
+        new_id=_fixed_id,
+        cmd=MakeDataset(_typed_frame(), dataset_id="neutron-stars"),
+    )
+    assert saved[0].dataset_id == "neutron-stars"
+
+
+def test_handle_make_dataset_mints_when_no_id_requested() -> None:
+    result = handle_make_dataset(
+        save=_save_ok([]),
+        new_id=_fixed_id,
+        cmd=MakeDataset(_typed_frame(), dataset_id=""),
+    )
+    assert result.unwrap() == FIXED_ID
+
+
+def test_handle_make_dataset_err_on_invalid_id() -> None:
+    result = handle_make_dataset(
+        save=_save_ok([]),
+        new_id=_fixed_id,
+        cmd=MakeDataset(_typed_frame(), dataset_id="bad id"),
+    )
+    assert result.unwrap_err().cause.code == "INVALID_DATASET_ID"
+
+
+def test_handle_make_dataset_invalid_id_does_not_save() -> None:
+    saved: list[Dataset] = []
+    handle_make_dataset(
+        save=_save_ok(saved),
+        new_id=_fixed_id,
+        cmd=MakeDataset(_typed_frame(), dataset_id="bad id"),
+    )
+    assert saved == []
+
+
 # --- Queries: handle_get_dataset returns the stored frame as a read model ---
 
 
@@ -180,3 +230,38 @@ def test_handle_get_dataset_read_fail_wraps_errorinfo() -> None:
     cause = ErrorInfo(code="DATASET_READ_FAILED", message="No such file")
     result = handle_get_dataset(find=_find_err(cause), query=GetDataset(FIXED_ID))
     assert result.unwrap_err().cause == cause
+
+
+# --- Queries: the id is a bare str re-wrapped by the domain make_datasetid ---
+
+
+def test_handle_get_dataset_accepts_bare_string_id() -> None:
+    seen: list[DatasetID] = []
+    handle_get_dataset(
+        find=_find_recording(seen, _typed_frame()),
+        query=GetDataset(dataset_id="neutron-stars"),
+    )
+    assert seen[0] == "neutron-stars"
+
+
+def test_handle_get_dataset_err_on_invalid_id() -> None:
+    result = handle_get_dataset(
+        find=_find_ok(_typed_frame()), query=GetDataset(dataset_id="bad id")
+    )
+    assert isinstance(result.unwrap_err(), FailGetDataset)
+
+
+def test_handle_get_dataset_invalid_id_does_not_query() -> None:
+    seen: list[DatasetID] = []
+    handle_get_dataset(
+        find=_find_recording(seen, _typed_frame()),
+        query=GetDataset(dataset_id=""),
+    )
+    assert seen == []
+
+
+def test_handle_get_dataset_invalid_id_cause_code() -> None:
+    result = handle_get_dataset(
+        find=_find_ok(_typed_frame()), query=GetDataset(dataset_id="")
+    )
+    assert result.unwrap_err().cause.code == "INVALID_DATASET_ID"

@@ -12,6 +12,7 @@ certification.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import NewType
 
@@ -20,6 +21,39 @@ import pandas as pd
 from surrogate_models.railway_adts import Err, Ok, Result
 
 DatasetID = NewType("DatasetID", str)
+
+_DATASET_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
+def make_datasetid(dataset_id: str) -> Result[DatasetID, InvalidDatasetID]:
+    """Certify a candidate ``dataset_id`` string into a DatasetID, or reject it.
+
+    The SOLE way to build a DatasetID -- so every DatasetID in the system has
+    passed this check. Pure and total: validate + wrap, no minting. A valid id is a
+    non-empty, filesystem-safe stem (``^[A-Za-z0-9._-]+$``), because the id becomes
+    the ``{id}.parquet`` filename downstream; anything else (blank, whitespace, a
+    path separator) returns ``Err(InvalidDatasetID)`` carrying the offending string.
+
+    The mint-if-absent fallback is deliberately NOT here: a read never mints, and
+    generating a fresh id is nondeterministic (shell) work. The write handler owns
+    that policy -- ``make_datasetid(cmd.dataset_id or new_id())``.
+    """
+    if _DATASET_ID_PATTERN.match(dataset_id):
+        return Ok(DatasetID(dataset_id))
+    return Err(InvalidDatasetID(dataset_id))
+
+
+@dataclass(frozen=True, slots=True)
+class InvalidDatasetID:
+    """Validation failure: a candidate id is not a valid DatasetID.
+
+    Carries the offending ``dataset_id`` string -- the value that failed
+    certification -- per the boundary rule that a pure validation failure holds the
+    offending value. Plain value equality is safe here (it wraps a ``str``, not a
+    DataFrame), so the default ``eq`` stands.
+    """
+
+    dataset_id: str
 
 
 @dataclass(frozen=True, slots=True, eq=False)

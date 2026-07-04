@@ -25,13 +25,16 @@ from surrogate_models.railway_adts import fmap_error, safe
 _PC_PATTERN = re.compile(r"\bPc\s*=\s*([0-9.eE+-]+)")
 
 
-def factory_datasetid() -> DatasetID:
-    """Mint a fresh DatasetID from a UUID's first 8 hex characters.
+def factory_datasetid() -> str:
+    """Mint a fresh candidate id STRING from a UUID's first 8 hex characters.
 
-    Nondeterministic, hence in the shell (never the domain). 8 hex characters =
-    32 bits of identity -- ample for surrogate-model datasets.
+    Nondeterministic, hence in the shell (never the domain). Returns a bare ``str``
+    -- a candidate the domain ``make_datasetid`` certifies and wraps into a
+    ``DatasetID`` (the sole constructor); the shell never mints the domain type
+    itself. 8 hex characters = 32 bits of identity -- ample for surrogate-model
+    datasets, and always a valid id under ``make_datasetid``'s stem rule.
     """
-    return DatasetID(uuid4().hex[:8])
+    return uuid4().hex[:8]
 
 
 @safe(OSError, fmap_error(lambda cause: cause, code="DATASET_SAVE_FAILED"))
