@@ -10,7 +10,10 @@ Dependencies (new_id, save, find) are hand-written stubs; frames are hand-writte
 One assert per test.
 """
 
+import logging
+
 import pandas as pd
+import pytest
 
 from surrogate_models.datasets.application import (
     FailGetDataset,
@@ -173,6 +176,31 @@ def test_handle_make_dataset_invalid_id_does_not_save() -> None:
     assert saved == []
 
 
+# --- boundary logging: the _fail_* lifters log the domain rejection at warning ---
+
+
+def test_handle_make_dataset_logs_invalid_id_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.WARNING):
+        handle_make_dataset(
+            save=_save_ok([]),
+            new_id=_fixed_id,
+            cmd=MakeDataset(_typed_frame(), dataset_id="bad id"),
+        )
+    assert any("bad id" in record.getMessage() for record in caplog.records)
+
+
+def test_handle_make_dataset_logs_schema_reject_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.WARNING):
+        handle_make_dataset(
+            save=_save_ok([]), new_id=_fixed_id, cmd=MakeDataset(_object_frame())
+        )
+    assert any("schema" in record.getMessage() for record in caplog.records)
+
+
 # --- Queries: handle_get_dataset returns the stored frame as a read model ---
 
 
@@ -265,3 +293,13 @@ def test_handle_get_dataset_invalid_id_cause_code() -> None:
         find=_find_ok(_typed_frame()), query=GetDataset(dataset_id="")
     )
     assert result.unwrap_err().cause.code == "INVALID_DATASET_ID"
+
+
+def test_handle_get_dataset_logs_invalid_id_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.WARNING):
+        handle_get_dataset(
+            find=_find_ok(_typed_frame()), query=GetDataset(dataset_id="bad id")
+        )
+    assert any("bad id" in record.getMessage() for record in caplog.records)

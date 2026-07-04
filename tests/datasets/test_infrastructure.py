@@ -184,3 +184,13 @@ def test_read_neutron_stars_frame_heals_object_dtype_from_header_only_batch(
     source.write_text(HEADER_ONLY_BATCH_MIX)
     frame = read_neutron_stars_frame(source).unwrap()
     assert all(str(dtype) != "object" for dtype in frame.dtypes)
+
+
+def test_read_neutron_stars_frame_logs_ingest_summary(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    source = tmp_path / "neutron-stars.dat"
+    source.write_text(ONE_BATCH)
+    with caplog.at_level(logging.INFO):
+        read_neutron_stars_frame(source)
+    assert "ingested" in caplog.text

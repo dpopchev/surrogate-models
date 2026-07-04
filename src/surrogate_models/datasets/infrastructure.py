@@ -55,6 +55,7 @@ def save_dataset(path: Path, dataset: Dataset) -> None:
     missing parquet engine) is left to propagate: that is a boot/config fault, not
     a recoverable save failure.
     """
+    logger.debug("persisting dataset %s under %s", dataset.dataset_id, path)
     target = path / f"{dataset.dataset_id}.parquet"
     target.parent.mkdir(parents=True, exist_ok=True)
     dataset.frame.to_parquet(target)
@@ -79,6 +80,7 @@ def find_dataset_frame(path: Path, dataset_id: DatasetID) -> pd.DataFrame:
     missing parquet engine) propagates: that is a boot/config fault, not a
     recoverable read failure -- symmetric with :func:`save_dataset`.
     """
+    logger.debug("reading dataset %s from %s", dataset_id, path)
     return pd.read_parquet(path / f"{dataset_id}.parquet")
 
 
@@ -123,6 +125,7 @@ def read_neutron_stars_frame(path: Path) -> pd.DataFrame:
     purpose: a corrupt incoming file is a recoverable ingest failure, not a boot
     fault, so its structured cause must cross UP rather than crash the process.
     """
+    logger.info("digesting neutron-stars source %s", path)
     batches = list(_iter_batches(path.read_text()))
     empty = [_batch_comment(batch) for batch in batches if not _has_body(batch)]
     if empty:
@@ -134,6 +137,12 @@ def read_neutron_stars_frame(path: Path) -> pd.DataFrame:
         )
     frames = [_read_batch(batch) for batch in batches if _has_body(batch)]
     combined = pd.concat(frames, ignore_index=True)
+    logger.info(
+        "ingested %d rows from %d populated batch(es) of %s",
+        len(combined),
+        len(frames),
+        path,
+    )
     return pd.DataFrame(
         {name: pd.to_numeric(column) for name, column in combined.items()}
     )

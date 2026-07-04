@@ -9,6 +9,7 @@ environment (env overrides + cache clear) exactly as tests/test_config.py does.
 One assert per test.
 """
 
+import logging
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -21,6 +22,8 @@ from surrogate_models.railway_adts import UnwrapError
 
 DATASETS_PATH_ENV = "SURROGATE_MODELS__DATASETS__PATH"
 NEUTRON_STARS_SOURCE_ENV = "SURROGATE_MODELS__DATASETS__NEUTRON_STARS_SOURCE"
+LOGGING_LEVEL_ENV = "SURROGATE_MODELS__LOGGING__LEVEL"
+LOGGING_FILE_ENV = "SURROGATE_MODELS__LOGGING__FILE"
 
 ONE_BATCH = """\
 # x1 = 0.005, x2 = 1000.0, beta = 0.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
@@ -34,16 +37,30 @@ rhoc Pc M
 def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
     """Give each test a clean, deterministic settings environment.
 
-    Drops both datasets env vars, moves into an empty working directory (so no real
-    .env / surrogate_models.toml is discovered), and clears the process-global
-    get_settings cache before and after so no configuration bleeds across tests.
+    Drops both datasets env vars, points the log file at ``tmp_path`` (so
+    get_settings, which load_neutron_stars calls, never touches ``/var`` while
+    configuring logging), moves into an empty working directory (so no real .env /
+    surrogate_models.toml is discovered), and clears the process-global get_settings
+    cache before and after so no configuration bleeds across tests. On teardown it
+    strips any handler get_settings attached to the root logger and restores its
+    level, since configure-on-get mutates that process-global logger.
     """
     monkeypatch.delenv(DATASETS_PATH_ENV, raising=False)
     monkeypatch.delenv(NEUTRON_STARS_SOURCE_ENV, raising=False)
+    monkeypatch.delenv(LOGGING_LEVEL_ENV, raising=False)
+    monkeypatch.setenv(LOGGING_FILE_ENV, str(tmp_path / "log" / "surrogate_models.log"))
     monkeypatch.chdir(tmp_path)
+    root = logging.getLogger()
+    saved_handlers = root.handlers[:]
+    saved_level = root.level
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
+    for handler in root.handlers[:]:
+        if handler not in saved_handlers:
+            root.removeHandler(handler)
+            handler.close()
+    root.setLevel(saved_level)
 
 
 def test_load_neutron_stars_returns_stored_frame(
@@ -89,3 +106,28 @@ def test_load_neutron_stars_raises_when_source_missing(
     monkeypatch.setenv(NEUTRON_STARS_SOURCE_ENV, str(source))
     with pytest.raises(UnwrapError):
         load_neutron_stars()
+
+
+def test_load_neutron_stars_logs_build_when_absent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    store = tmp_path / "store"
+    source = tmp_path / "neutron-stars.dat"
+    source.write_text(ONE_BATCH)
+    monkeypatch.setenv(DATASETS_PATH_ENV, str(store))
+    monkeypatch.setenv(NEUTRON_STARS_SOURCE_ENV, str(source))
+    with caplog.at_level(logging.INFO):
+        load_neutron_stars()
+    assert any("building" in record.getMessage() for record in caplog.records)
+
+
+def test_load_neutron_stars_stored_frame_skips_build_log(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    store = tmp_path / "store"
+    store.mkdir()
+    pd.DataFrame({"x": [1, 2, 3]}).to_parquet(store / "neutron-stars.parquet")
+    monkeypatch.setenv(DATASETS_PATH_ENV, str(store))
+    with caplog.at_level(logging.INFO):
+        load_neutron_stars()
+    assert not any("building" in record.getMessage() for record in caplog.records)

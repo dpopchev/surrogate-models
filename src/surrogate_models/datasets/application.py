@@ -10,6 +10,7 @@ query handlers are added under TDD, kept as ordered CQRS sections.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -24,6 +25,8 @@ from surrogate_models.datasets.domain import (
     make_datasetid,
 )
 from surrogate_models.railway_adts import ErrorInfo, Result
+
+logger = logging.getLogger(__name__)
 
 # --- (1) Commands ---
 
@@ -79,8 +82,11 @@ def _fail_from_schema(_error: DatasetMissingSchema) -> FailMadeDataset:
 
     The offending frame stays in the domain error; the boundary reports a stable
     ``code`` plus message, never the domain type -- the railway analogue of
-    ``raise FailMadeDataset from DatasetMissingSchema``.
+    ``raise FailMadeDataset from DatasetMissingSchema``. This lifter is also the
+    boundary where the pure domain's schema decision becomes observable, so the
+    rejection is logged here (the domain core stays free of logging).
     """
+    logger.warning("dataset frame rejected: no clear column schema")
     return FailMadeDataset(
         ErrorInfo(
             code="DATASET_MISSING_SCHEMA",
@@ -94,8 +100,12 @@ def _fail_make_from_invalid_id(error: InvalidDatasetID) -> FailMadeDataset:
 
     The offending id string stays in the domain error; the boundary reports a
     stable ``code`` plus message -- symmetric with the read side's
-    :func:`_fail_get_from_invalid_id`.
+    :func:`_fail_get_from_invalid_id`. The rejection is logged here at the boundary
+    (the domain core stays free of logging).
     """
+    logger.warning(
+        "dataset id rejected on write: %r is not a valid id", error.dataset_id
+    )
     return FailMadeDataset(
         ErrorInfo(
             code="INVALID_DATASET_ID",
@@ -179,8 +189,12 @@ def _fail_get_from_invalid_id(error: InvalidDatasetID) -> FailGetDataset:
 
     The offending id string stays in the domain error; the boundary reports a
     stable ``code`` plus message, never the domain type -- symmetric with
-    :func:`_fail_from_schema` on the write side.
+    :func:`_fail_from_schema` on the write side. The rejection is logged here at the
+    boundary (the domain core stays free of logging).
     """
+    logger.warning(
+        "dataset id rejected on read: %r is not a valid id", error.dataset_id
+    )
     return FailGetDataset(
         ErrorInfo(
             code="INVALID_DATASET_ID",

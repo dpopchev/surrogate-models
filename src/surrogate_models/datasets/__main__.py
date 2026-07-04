@@ -12,6 +12,7 @@ from the top-level package: read the stored frame, else ingest -> persist -> re-
 
 from __future__ import annotations
 
+import logging
 from functools import partial
 
 import pandas as pd
@@ -33,6 +34,8 @@ from surrogate_models.datasets.infrastructure import (
 )
 from surrogate_models.railway_adts import ErrorInfo, Result
 
+logger = logging.getLogger(__name__)
+
 _NEUTRON_STARS_ID = "neutron-stars"
 
 
@@ -51,6 +54,7 @@ def _read(settings: Settings) -> Result[pd.DataFrame, ErrorInfo]:
     An absent parquet folds to ``Err(DATASET_READ_FAILED)`` -- the miss the caller's
     ``or_else`` recovers into a build.
     """
+    logger.debug("reading stored neutron-stars frame from %s", settings.datasets.path)
     find = partial(find_dataset_frame, settings.datasets.path)
     query = GetDataset(dataset_id=_NEUTRON_STARS_ID)
     return handle_get_dataset(find=find, query=query).fmap_err(_cause)
@@ -63,6 +67,10 @@ def _build(settings: Settings) -> Result[pd.DataFrame, ErrorInfo]:
     the fixed ``neutron-stars`` id via the write handler, then read the just-saved
     frame back. Every failure (ingest, certify/save) folds to ``ErrorInfo``.
     """
+    logger.info(
+        "stored neutron-stars frame absent; building from source %s",
+        settings.datasets.neutron_stars_source,
+    )
     return (
         read_neutron_stars_frame(settings.datasets.neutron_stars_source)
         .and_then(
