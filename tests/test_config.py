@@ -38,7 +38,7 @@ def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
 
 
 def test_datasets_path_defaults_under_var_data() -> None:
-    assert get_settings().datasets.path == Path("var/data/surrogate_models/datasets")
+    assert get_settings().datasets.path == Path("/var/data/surrogate_models/datasets")
 
 
 def test_env_overrides_datasets_path(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -65,7 +65,7 @@ def test_get_settings_is_cached() -> None:
 
 def test_neutron_stars_source_defaults_under_data() -> None:
     source = get_settings().datasets.neutron_stars_source
-    assert source == Path("data/neutron-stars/neutron-stars.dat")
+    assert source == Path("/data/neutron-stars/neutron-stars.dat")
 
 
 def test_env_overrides_neutron_stars_source(monkeypatch: pytest.MonkeyPatch) -> None:
