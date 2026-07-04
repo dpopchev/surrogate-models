@@ -12,6 +12,7 @@ and further adapters are added as the context grows.
 from __future__ import annotations
 
 import io
+import logging
 import re
 from collections.abc import Iterator
 from pathlib import Path
@@ -21,6 +22,8 @@ import pandas as pd
 
 from surrogate_models.datasets.domain import Dataset, DatasetID
 from surrogate_models.railway_adts import fmap_error, safe
+
+logger = logging.getLogger(__name__)
 
 _PC_PATTERN = re.compile(r"\bPc\s*=\s*([0-9.eE+-]+)")
 
@@ -94,17 +97,60 @@ def read_neutron_stars_frame(path: Path) -> pd.DataFrame:
     as ``pc_init``, because the data's own ``Pc`` column is the RUNNING central
     pressure and the comment's ``Pc`` is its per-batch initial value.
 
+    A run that produced zero stars appears as an EMPTY batch -- its ``#`` parameter
+    comment immediately followed by the next batch's comment, with no header/data
+    rows. Such a batch is SKIPPED (it contributes no rows) and logged at ``warning``
+    naming the dropped comments, so the empty runs stay a visible data-quality signal
+    rather than silently vanishing -- or crashing the ingest (feeding ``pd.read_csv``
+    an empty body raises ``EmptyDataError``, which is exactly what an unfiltered empty
+    batch used to do).
+
+    A related run prints its column HEADER but no data rows; ``pd.read_csv`` types
+    that 0-row batch's columns as ``object``, and ``pd.concat`` then upcasts the
+    shared columns of the whole frame to ``object`` -- which the domain's schema
+    certification rejects. The final ``pd.to_numeric`` pass HEALS this: every column
+    is a number, so coercion restores the explicit ``float64``/``int64`` dtype
+    losslessly. Its default ``errors="raise"`` keeps the rail honest -- a genuinely
+    non-numeric column raises ``ValueError`` and folds onto the ingest failure below
+    rather than being silently blanked to ``NaN``.
+
     ``@safe`` makes this the railway boundary: on success the wrapped call returns
     ``Ok(frame)``. Both a read fault (``OSError`` -- missing/unreadable file) and a
     parse fault (``ValueError`` -- a batch comment with no ``Pc``, an unparseable
-    row) are caught and folded into an ``Err`` carrying code
-    ``NEUTRON_STARS_READ_FAILED``. The ``ValueError`` arm is broader than the
-    ``OSError``-only save/find precedent on purpose: a corrupt incoming file is a
-    recoverable ingest failure, not a boot fault, so its structured cause must cross
-    UP rather than crash the process.
+    row, a non-numeric column, or a file with no populated batches at all) are caught
+    and folded into an ``Err`` carrying code ``NEUTRON_STARS_READ_FAILED``. The
+    ``ValueError`` arm is broader than the ``OSError``-only save/find precedent on
+    purpose: a corrupt incoming file is a recoverable ingest failure, not a boot
+    fault, so its structured cause must cross UP rather than crash the process.
     """
-    frames = [_read_batch(batch) for batch in _iter_batches(path.read_text())]
-    return pd.concat(frames, ignore_index=True)
+    batches = list(_iter_batches(path.read_text()))
+    empty = [_batch_comment(batch) for batch in batches if not _has_body(batch)]
+    if empty:
+        logger.warning(
+            "read_neutron_stars_frame skipped %d empty batch(es) "
+            "(comment with no data rows): %s",
+            len(empty),
+            empty,
+        )
+    frames = [_read_batch(batch) for batch in batches if _has_body(batch)]
+    combined = pd.concat(frames, ignore_index=True)
+    return pd.DataFrame(
+        {name: pd.to_numeric(column) for name, column in combined.items()}
+    )
+
+
+def _has_body(batch: str) -> bool:
+    """True iff the batch carries header/data rows below its ``#`` comment line.
+
+    An empty (comment-only) batch has nothing after the first newline; feeding its
+    empty body to ``pd.read_csv`` raises ``EmptyDataError``, so the reader drops it.
+    """
+    return bool(batch.partition("\n")[2].strip())
+
+
+def _batch_comment(batch: str) -> str:
+    """The batch's leading ``#`` comment line (its parameters), for diagnostics."""
+    return batch.partition("\n")[0]
 
 
 def _iter_batches(text: str) -> Iterator[str]:

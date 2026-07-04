@@ -9,9 +9,11 @@ path-first read port: it reads path/{dataset_id}.parquet back into a bare frame
 per test.
 """
 
+import logging
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from surrogate_models.datasets.domain import (
     Dataset,
@@ -43,6 +45,34 @@ rhoc Pc M
 rhoc Pc M
 7.10e14 7.0e-05 0.71
 7.50e14 7.5e-05 0.75
+"""
+
+# A comment-only batch (a run that produced zero stars: its `#` parameter comment is
+# immediately followed by the next batch's comment, with no header/data rows). The
+# real neutron-stars.dat has 36 of these; each fed pd.read_csv an empty string ->
+# EmptyDataError. The reader must SKIP such batches and parse the rest.
+EMPTY_BATCH_BETWEEN = """\
+# x1 = 0.005, x2 = 1000.0, beta = 0.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
+rhoc Pc M
+5.89e14 5.0e-05 0.56
+# x1 = 0.005, x2 = 1000.0, beta = 50.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
+# x1 = 0.005, x2 = 1000.0, beta = 6.4, Lambda = 0.7, Pc = 7e-05, choice_theory = 31
+rhoc Pc M
+7.10e14 7.0e-05 0.71
+"""
+
+# A batch that emitted its header but ZERO data rows (a run that printed the column
+# header yet produced no stars). pd.read_csv on a header-only body yields a 0-row,
+# all-object frame; concatenated with the populated (float) batches it upcasts the
+# shared columns to object -- which make_dataset rejects (DATASET_MISSING_SCHEMA).
+# The real neutron-stars.dat has 203 such batches. The reader must heal the dtype.
+HEADER_ONLY_BATCH_MIX = """\
+# x1 = 0.005, x2 = 1000.0, beta = 0.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
+rhoc Pc M
+5.89e14 5.0e-05 0.56
+6.06e14 5.5e-05 0.59
+# x1 = 0.005, x2 = 1000.0, beta = 6.4, Lambda = 0.7, Pc = 7e-05, choice_theory = 31
+rhoc Pc M
 """
 
 
@@ -126,3 +156,31 @@ def test_read_neutron_stars_frame_wraps_malformed_batch_as_error(
     source.write_text("# x1 = 0.005, beta = 0.4\nrhoc M\n5.89e14 0.56\n")
     failure = read_neutron_stars_frame(source)
     assert failure.unwrap_err().code == "NEUTRON_STARS_READ_FAILED"
+
+
+def test_read_neutron_stars_frame_skips_empty_comment_only_batch(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "neutron-stars.dat"
+    source.write_text(EMPTY_BATCH_BETWEEN)
+    frame = read_neutron_stars_frame(source).unwrap()
+    assert list(frame["pc_init"]) == [5e-05, 7e-05]
+
+
+def test_read_neutron_stars_frame_warns_on_skipped_empty_batch(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    source = tmp_path / "neutron-stars.dat"
+    source.write_text(EMPTY_BATCH_BETWEEN)
+    with caplog.at_level(logging.WARNING):
+        read_neutron_stars_frame(source)
+    assert "beta = 50.4" in caplog.text
+
+
+def test_read_neutron_stars_frame_heals_object_dtype_from_header_only_batch(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "neutron-stars.dat"
+    source.write_text(HEADER_ONLY_BATCH_MIX)
+    frame = read_neutron_stars_frame(source).unwrap()
+    assert all(str(dtype) != "object" for dtype in frame.dtypes)
