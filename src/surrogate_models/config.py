@@ -13,6 +13,7 @@ between cases (never reload the module).
 
 from __future__ import annotations
 
+import logging
 from functools import lru_cache
 from pathlib import Path
 
@@ -23,6 +24,32 @@ from pydantic_settings import (
     SettingsConfigDict,
     TomlConfigSettingsSource,
 )
+
+logger = logging.getLogger(__name__)
+
+# Tag stamped on the one root handler this module installs, so a later
+# _configure_logging call recognises and removes ITS OWN handler (never a caller's)
+# before attaching a fresh one -- the idempotency hinge under a cleared settings cache.
+_LOG_HANDLER_MARKER = "_surrogate_models_managed"
+_LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s %(message)s"
+
+
+def _require_absolute(value: Path) -> Path:
+    """Reject a relative path -- shape only, never a filesystem stat.
+
+    A relative value resolves against the process working directory, the exact bug
+    the absolute defaults exist to prevent; catching it here turns a silent
+    wrong-directory miss into an immediate, clear config error. Shared by every path
+    field's validator (datasets paths and the log file). Existence is deliberately
+    NOT checked (that is I/O and belongs to the point-of-use railway, not config
+    construction).
+    """
+    if not value.is_absolute():
+        raise ValueError(
+            f"must be an absolute path (resolves against the working "
+            f"directory otherwise): {value!s}"
+        )
+    return value
 
 
 class DatasetsSettings(BaseModel):
@@ -58,20 +85,50 @@ class DatasetsSettings(BaseModel):
     @field_validator("path", "neutron_stars_source", mode="after")
     @classmethod
     def _must_be_absolute(cls, value: Path) -> Path:
-        """Reject a relative dataset path -- shape only, never a filesystem stat.
+        """Reject a relative dataset path -- delegates to :func:`_require_absolute`."""
+        return _require_absolute(value)
 
-        A relative value resolves against the process working directory, the exact
-        bug the absolute defaults exist to prevent; catching it here turns a silent
-        wrong-directory miss into an immediate, clear config error. Existence is
-        deliberately NOT checked (that is I/O and belongs to the point-of-use railway,
-        not config construction).
+
+class LoggingSettings(BaseModel):
+    """Configuration for application-wide logging, applied on ``get_settings()``.
+
+    ``level`` is the root logger threshold; it defaults to ``INFO`` and accepts any
+    standard level name (case-insensitive, normalised to upper case). ``file`` is the
+    single destination the root logger writes to; it defaults to the absolute,
+    filesystem-rooted ``/var/data/surrogate_models/log/surrogate_models.log`` so it
+    resolves identically regardless of the process working directory -- a relative
+    default would break under a notebook subdirectory, exactly the bug the datasets
+    paths already guard against. Override either per environment via the TOML file or
+    the matching ``SURROGATE_MODELS__LOGGING__*`` variable.
+
+    Only the SHAPE is validated here (a known level name, an absolute path) -- pure,
+    no filesystem I/O. Actually opening the file and attaching the handler is a side
+    effect, so it lives in :func:`_configure_logging`, driven from ``get_settings``.
+    """
+
+    level: str = "INFO"
+    file: Path = Path("/var/data/surrogate_models/log/surrogate_models.log")
+
+    @field_validator("level", mode="after")
+    @classmethod
+    def _known_level(cls, value: str) -> str:
+        """Normalise to an upper-case level name, rejecting an unknown one.
+
+        Pure shape check -- no logger is touched. ``getLevelNamesMapping`` is the
+        authoritative set of names the stdlib accepts (``INFO``, ``DEBUG``,
+        ``WARNING``, ...); anything else is a configuration typo caught at
+        construction rather than a silent fall-through to the default level.
         """
-        if not value.is_absolute():
-            raise ValueError(
-                f"must be an absolute path (resolves against the working "
-                f"directory otherwise): {value!s}"
-            )
-        return value
+        name = value.strip().upper()
+        if name not in logging.getLevelNamesMapping():
+            raise ValueError(f"unknown log level: {value!r}")
+        return name
+
+    @field_validator("file", mode="after")
+    @classmethod
+    def _file_must_be_absolute(cls, value: Path) -> Path:
+        """Reject a relative log-file path -- delegates to :func:`_require_absolute`."""
+        return _require_absolute(value)
 
 
 class Settings(BaseSettings):
@@ -92,6 +149,7 @@ class Settings(BaseSettings):
     )
 
     datasets: DatasetsSettings = DatasetsSettings()
+    logging: LoggingSettings = LoggingSettings()
 
     @classmethod
     def settings_customise_sources(
@@ -117,12 +175,52 @@ class Settings(BaseSettings):
         )
 
 
+def _configure_logging(config: LoggingSettings) -> None:
+    """Apply ``config`` to the root logger: set the level, attach ONE file handler.
+
+    Idempotent: any handler a previous call installed (tagged with
+    ``_LOG_HANDLER_MARKER``) is removed before a fresh one is attached, so repeated
+    ``get_settings()`` calls -- e.g. a test suite clearing the cache -- never stack
+    duplicate handlers. FILE-ONLY by design: no console handler is added. If the log
+    file cannot be created (unprovisioned directory, no permission) the ``OSError``
+    is swallowed with a warning and logging degrades to the stdlib handler of last
+    resort rather than crashing at ``get_settings`` time -- symmetric with the config
+    philosophy of folding missing-path I/O onto a rail, never a boot crash.
+    """
+    root = logging.getLogger()
+    root.setLevel(config.level)
+    for handler in list(root.handlers):
+        if getattr(handler, _LOG_HANDLER_MARKER, False):
+            root.removeHandler(handler)
+            handler.close()
+    try:
+        config.file.parent.mkdir(parents=True, exist_ok=True)
+        handler = logging.FileHandler(config.file)
+    except OSError as cause:
+        logger.warning(
+            "log file %s is unavailable (%s); logging degrades to the handler "
+            "of last resort",
+            config.file,
+            cause,
+        )
+        return
+    setattr(handler, _LOG_HANDLER_MARKER, True)
+    handler.setFormatter(logging.Formatter(_LOG_FORMAT))
+    root.addHandler(handler)
+    logger.info("logging configured: level=%s file=%s", config.level, config.file)
+
+
 @lru_cache
 def get_settings() -> Settings:
     """Return the process-wide ``Settings``, built once and cached.
 
     The sole constructor of ``Settings``: reading env + files is done here so the
     rest of the program receives an immutable, already-resolved configuration.
-    Clear the cache with ``get_settings.cache_clear()`` in tests.
+    Configuring logging is a process-wide side effect, so it too rides this
+    once-per-process seat -- ``_configure_logging`` applies the resolved
+    ``logging`` section to the root logger right after the settings are built. Clear
+    the cache with ``get_settings.cache_clear()`` in tests.
     """
-    return Settings()
+    settings = Settings()
+    _configure_logging(settings.logging)
+    return settings

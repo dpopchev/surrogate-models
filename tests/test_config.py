@@ -8,15 +8,19 @@ surrogate_models.toml on disk (nor the Makefile's exported .env) leaks in. One
 assert per test.
 """
 
+import logging
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from surrogate_models.config import get_settings
 
 DATASETS_PATH_ENV = "SURROGATE_MODELS__DATASETS__PATH"
 NEUTRON_STARS_SOURCE_ENV = "SURROGATE_MODELS__DATASETS__NEUTRON_STARS_SOURCE"
+LOGGING_LEVEL_ENV = "SURROGATE_MODELS__LOGGING__LEVEL"
+LOGGING_FILE_ENV = "SURROGATE_MODELS__LOGGING__FILE"
 TOML_FILE = "surrogate_models.toml"
 
 
@@ -24,17 +28,31 @@ TOML_FILE = "surrogate_models.toml"
 def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
     """Give each test a clean, deterministic settings environment.
 
-    Drops the datasets-path env var, moves into an empty working directory (so no
-    real .env / surrogate_models.toml is discovered), and clears the get_settings
-    cache before and after -- the cache is process-global, so an un-cleared entry
-    would bleed one test's configuration into the next.
+    Drops the datasets env vars, points the log file at ``tmp_path`` (so
+    get_settings never touches ``/var`` and never opens a shared file), moves into
+    an empty working directory (so no real .env / surrogate_models.toml is
+    discovered), and clears the get_settings cache before and after -- the cache is
+    process-global, so an un-cleared entry would bleed one test's configuration into
+    the next. On teardown it also strips any handler get_settings attached to the
+    root logger and restores the root level, since configure-on-get mutates that
+    process-global logger.
     """
     monkeypatch.delenv(DATASETS_PATH_ENV, raising=False)
     monkeypatch.delenv(NEUTRON_STARS_SOURCE_ENV, raising=False)
+    monkeypatch.delenv(LOGGING_LEVEL_ENV, raising=False)
+    monkeypatch.setenv(LOGGING_FILE_ENV, str(tmp_path / "log" / "surrogate_models.log"))
     monkeypatch.chdir(tmp_path)
+    root = logging.getLogger()
+    saved_handlers = root.handlers[:]
+    saved_level = root.level
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
+    for handler in root.handlers[:]:
+        if handler not in saved_handlers:
+            root.removeHandler(handler)
+            handler.close()
+    root.setLevel(saved_level)
 
 
 def test_datasets_path_defaults_under_var_data() -> None:
@@ -72,3 +90,58 @@ def test_env_overrides_neutron_stars_source(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setenv(NEUTRON_STARS_SOURCE_ENV, "/data/neutron-stars.dat")
     source = get_settings().datasets.neutron_stars_source
     assert source == Path("/data/neutron-stars.dat")
+
+
+def test_logging_level_defaults_info() -> None:
+    assert get_settings().logging.level == "INFO"
+
+
+def test_env_overrides_logging_level(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(LOGGING_LEVEL_ENV, "debug")
+    assert get_settings().logging.level == "DEBUG"
+
+
+def test_unknown_logging_level_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(LOGGING_LEVEL_ENV, "bogus")
+    with pytest.raises(ValidationError):
+        get_settings()
+
+
+def test_logging_file_defaults_under_var_log(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(LOGGING_FILE_ENV, raising=False)
+    assert get_settings().logging.file == Path(
+        "/var/data/surrogate_models/log/surrogate_models.log"
+    )
+
+
+def test_env_overrides_logging_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    target = tmp_path / "custom" / "app.log"
+    monkeypatch.setenv(LOGGING_FILE_ENV, str(target))
+    assert get_settings().logging.file == target
+
+
+def test_relative_logging_file_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(LOGGING_FILE_ENV, "relative/app.log")
+    with pytest.raises(ValidationError):
+        get_settings()
+
+
+def test_get_settings_configures_root_level(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(LOGGING_LEVEL_ENV, "WARNING")
+    get_settings()
+    assert logging.getLogger().level == logging.WARNING
+
+
+def test_get_settings_does_not_stack_file_handlers(tmp_path: Path) -> None:
+    expected = str(tmp_path / "log" / "surrogate_models.log")
+    get_settings()
+    get_settings.cache_clear()
+    get_settings()
+    ours = [
+        handler
+        for handler in logging.getLogger().handlers
+        if getattr(handler, "baseFilename", None) == expected
+    ]
+    assert len(ours) == 1
