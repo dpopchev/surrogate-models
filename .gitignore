@@ -8,3 +8,4 @@ data/black-holes/
 data/neutron-stars/
 .env
 surrogate_models.toml
+*.png
