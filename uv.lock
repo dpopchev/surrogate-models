@@ -2693,6 +2693,7 @@ dev = [
     { name = "ruff" },
 ]
 lab = [
+    { name = "ipython" },
     { name = "jupyter-lsp" },
     { name = "jupyterlab" },
     { name = "jupyterlab-lsp" },
@@ -2724,6 +2725,7 @@ dev = [
     { name = "ruff", specifier = ">=0.6" },
 ]
 lab = [
+    { name = "ipython", specifier = ">=9.15.0" },
     { name = "jupyter-lsp", specifier = ">=2.3.1" },
     { name = "jupyterlab", specifier = ">=4.6.0" },
     { name = "jupyterlab-lsp", specifier = ">=5.3.0" },
