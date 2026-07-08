@@ -15,8 +15,10 @@ and two bounded contexts are live. The `datasets` context ingests raw
 neutron-star `.dat` output into typed, schema-certified frames and exposes a
 one-call public loader, `load_neutron_stars`. The `mlmodels` context manages
 training as a thin vertical slice: you GIVE it a model -- an injected PyTorch
-Lightning module -- and it runs training behind the imperative shell and writes a
-checkpoint, exercised end to end today with a stub regressor (the real
+Lightning module -- and it runs training behind the imperative shell under a
+certified configuration (epochs, learning rate, batch size, optimizer) and writes
+a checkpoint, streaming a live progress bar with per-step loss for interactive
+runs. It is exercised end to end today with a stub regressor (the real
 neutron-stars surrogate is the next slice). The `python -m surrogate_models`
 command-line entry point is still a placeholder; the library API below works
 today.
