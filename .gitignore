@@ -1,5 +1,6 @@
 .venv
 .state-file.md
+.claude/settings.local.json
 __pycache__/
 notebooks/.ipynb_checkpoints/
 notebooks/.virtual_documents/
