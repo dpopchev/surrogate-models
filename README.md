@@ -11,9 +11,13 @@ training, and evaluation -- developed under a strict functional-core /
 onion-architecture discipline with test-driven development.
 
 Status: the toolchain (uv, Make, JupyterLab) and project conventions are in place,
-and the first bounded context is live. The `datasets` context ingests raw
+and two bounded contexts are live. The `datasets` context ingests raw
 neutron-star `.dat` output into typed, schema-certified frames and exposes a
-one-call public loader, `load_neutron_stars`. The `python -m surrogate_models`
+one-call public loader, `load_neutron_stars`. The `mlmodels` context manages
+training as a thin vertical slice: you GIVE it a model -- an injected PyTorch
+Lightning module -- and it runs training behind the imperative shell and writes a
+checkpoint, exercised end to end today with a stub regressor (the real
+neutron-stars surrogate is the next slice). The `python -m surrogate_models`
 command-line entry point is still a placeholder; the library API below works
 today.
 
@@ -49,6 +53,7 @@ Settings resolve highest-priority first: OS environment (and `.env`), then
 |------------------------------------------------|----------------------------------------|------------------------------------------------------|
 | `SURROGATE_MODELS__DATASETS__PATH`             | `var/data/surrogate_models/datasets`   | Where certified datasets are persisted (parquet)     |
 | `SURROGATE_MODELS__DATASETS__NEUTRON_STARS_SOURCE` | `data/neutron-stars/neutron-stars.dat` | Raw concatenated neutron-stars `.dat` the loader digests |
+| `SURROGATE_MODELS__MLMODELS__CHECKPOINT_DIR`   | `var/data/surrogate_models/checkpoints` | Where a training run writes its Lightning `.ckpt`    |
 
 See `.env.example` and `surrogate_models.toml.example` for a copy-ready template.
 
@@ -131,6 +136,11 @@ make lab LAB_HOST=0.0.0.0 LAB_PORT=9000
 |   |   |-- application.py    # CQRS handlers (make / get dataset)
 |   |   |-- infrastructure.py # imperative shell: parquet I/O, .dat ingest
 |   |   `-- __main__.py       # context root + load_neutron_stars facade
+|   |-- mlmodels/             # mlmodels (training) bounded context
+|   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig
+|   |   |-- application.py    # CQRS handler (train run) over injected build_model / train
+|   |   |-- infrastructure.py # imperative shell: Lightning Trainer adapter + stub model
+|   |   `-- __main__.py       # context root + train_stub_run facade
 |   `-- railway_adts/         # Result / Option / @safe railway primitives
 |-- tests/                    # mirror of src/, test-first
 |-- Makefile                  # task runner (environment, quality, build, JupyterLab)

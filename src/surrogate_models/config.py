@@ -131,6 +131,28 @@ class LoggingSettings(BaseModel):
         return _require_absolute(value)
 
 
+class MLModelsSettings(BaseModel):
+    """Configuration for the mlmodels bounded context.
+
+    ``checkpoint_dir`` is where a training run writes its Lightning checkpoint
+    (``.ckpt``). It defaults to the absolute, filesystem-rooted
+    ``/var/data/surrogate_models/checkpoints`` so it resolves identically regardless
+    of the process working directory -- the same working-directory guard the datasets
+    paths use. It is created on first train (``mkdir(parents=True)``), so it need not
+    preexist. Override per environment via the TOML file or the matching
+    ``SURROGATE_MODELS__MLMODELS__CHECKPOINT_DIR`` variable. Only the SHAPE is
+    validated here (an absolute path) -- pure, no filesystem I/O.
+    """
+
+    checkpoint_dir: Path = Path("/var/data/surrogate_models/checkpoints")
+
+    @field_validator("checkpoint_dir", mode="after")
+    @classmethod
+    def _must_be_absolute(cls, value: Path) -> Path:
+        """Reject a relative checkpoint path -- see :func:`_require_absolute`."""
+        return _require_absolute(value)
+
+
 class Settings(BaseSettings):
     """The app-wide configuration, composed of one section per bounded context.
 
@@ -150,6 +172,7 @@ class Settings(BaseSettings):
 
     datasets: DatasetsSettings = DatasetsSettings()
     logging: LoggingSettings = LoggingSettings()
+    mlmodels: MLModelsSettings = MLModelsSettings()
 
     @classmethod
     def settings_customise_sources(

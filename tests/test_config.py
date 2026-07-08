@@ -21,6 +21,7 @@ DATASETS_PATH_ENV = "SURROGATE_MODELS__DATASETS__PATH"
 NEUTRON_STARS_SOURCE_ENV = "SURROGATE_MODELS__DATASETS__NEUTRON_STARS_SOURCE"
 LOGGING_LEVEL_ENV = "SURROGATE_MODELS__LOGGING__LEVEL"
 LOGGING_FILE_ENV = "SURROGATE_MODELS__LOGGING__FILE"
+MLMODELS_CHECKPOINT_DIR_ENV = "SURROGATE_MODELS__MLMODELS__CHECKPOINT_DIR"
 TOML_FILE = "surrogate_models.toml"
 
 
@@ -41,6 +42,7 @@ def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
     monkeypatch.delenv(NEUTRON_STARS_SOURCE_ENV, raising=False)
     monkeypatch.delenv(LOGGING_LEVEL_ENV, raising=False)
     monkeypatch.setenv(LOGGING_FILE_ENV, str(tmp_path / "log" / "surrogate_models.log"))
+    monkeypatch.delenv(MLMODELS_CHECKPOINT_DIR_ENV, raising=False)
     monkeypatch.chdir(tmp_path)
     root = logging.getLogger()
     saved_handlers = root.handlers[:]
@@ -145,3 +147,22 @@ def test_get_settings_does_not_stack_file_handlers(tmp_path: Path) -> None:
         if getattr(handler, "baseFilename", None) == expected
     ]
     assert len(ours) == 1
+
+
+def test_mlmodels_checkpoint_dir_defaults_under_var_data() -> None:
+    assert get_settings().mlmodels.checkpoint_dir == Path(
+        "/var/data/surrogate_models/checkpoints"
+    )
+
+
+def test_env_overrides_mlmodels_checkpoint_dir(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(MLMODELS_CHECKPOINT_DIR_ENV, "/srv/custom/ckpt")
+    assert get_settings().mlmodels.checkpoint_dir == Path("/srv/custom/ckpt")
+
+
+def test_relative_mlmodels_checkpoint_dir_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(MLMODELS_CHECKPOINT_DIR_ENV, "relative/ckpt")
+    with pytest.raises(ValidationError):
+        get_settings()

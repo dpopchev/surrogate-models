@@ -121,6 +121,30 @@ ignore_imports = [
     "surrogate_models.datasets.infrastructure -> surrogate_models.datasets.domain",
 ]
 
+# --- mlmodels bounded context: onion-ring direction + domain privacy ---
+# Within the context, application and infrastructure are independent siblings that
+# may import domain; domain (the base) may import neither.
+[[tool.importlinter.contracts]]
+name = "mlmodels onion: domain is the sealed base of its context"
+type = "layers"
+containers = ["surrogate_models.mlmodels"]
+layers = [
+    "application | infrastructure",
+    "domain",
+]
+
+# mlmodels.domain is private to its context: only its own application and
+# infrastructure may import it -- nothing else in the tree.
+[[tool.importlinter.contracts]]
+name = "mlmodels.domain is private to its context"
+type = "forbidden"
+source_modules = ["surrogate_models.**"]
+forbidden_modules = ["surrogate_models.mlmodels.domain"]
+ignore_imports = [
+    "surrogate_models.mlmodels.application -> surrogate_models.mlmodels.domain",
+    "surrogate_models.mlmodels.infrastructure -> surrogate_models.mlmodels.domain",
+]
+
 # --- composition-root seal: __main__ wires rings, never reaches a domain ---
 # The composition root may import application + infrastructure (and config) only;
 # it must NEVER import a context's domain DIRECTLY. It reaches domain TRANSITIVELY
@@ -129,7 +153,10 @@ ignore_imports = [
 [[tool.importlinter.contracts]]
 name = "composition root never imports a domain directly"
 type = "forbidden"
-source_modules = ["surrogate_models.__main__"]
+source_modules = [
+    "surrogate_models.__main__",
+    "surrogate_models.mlmodels.__main__",
+]
 forbidden_modules = ["surrogate_models.*.domain"]
 allow_indirect_imports = true
 
