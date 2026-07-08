@@ -25,18 +25,35 @@ logger = logging.getLogger(__name__)
 _STUB_RUN_ID = "stub-run"
 
 
-def train_stub_run() -> str:
-    """Train the stub model one epoch and return the checkpoint location.
+def train_stub_run(
+    max_epochs: int = 5,
+    learning_rate: float = 0.01,
+    batch_size: int = 2,
+    optimizer: str = "sgd",
+) -> str:
+    """Train the stub model and return the checkpoint location, showing live progress.
 
-    Bind the Lightning adapter to the handler (currying the checkpoint dir from
-    settings), GIVE the stub model via build_stub_model, and run one epoch on stub
-    data. ``unwrap`` raises at this outer edge if training fails -- carrying the
-    ErrorInfo cause.
+    The notebook-facing facade. Binds the Lightning adapter to the handler -- currying
+    the checkpoint dir from settings AND ``enable_progress=True`` so an interactive run
+    shows a live progress bar with per-step loss -- GIVES the stub model built from the
+    certified config, and runs the requested epochs on stub data. Every hyperparameter
+    is a keyword with a sensible default so a notebook caller can tweak
+    epochs/lr/batch/optimizer and watch. ``unwrap`` raises at this outer edge if
+    training fails -- carrying the ErrorInfo cause (e.g. an unsupported optimizer name).
     """
     settings = get_settings()
     logger.info("composing stub run under %s", settings.mlmodels.checkpoint_dir)
-    train = partial(train_with_lightning, settings.mlmodels.checkpoint_dir)
-    cmd = TrainRun(run_id=_STUB_RUN_ID, data=stub_training_data(), max_epochs=1)
+    train = partial(
+        train_with_lightning, settings.mlmodels.checkpoint_dir, enable_progress=True
+    )
+    cmd = TrainRun(
+        run_id=_STUB_RUN_ID,
+        data=stub_training_data(),
+        max_epochs=max_epochs,
+        learning_rate=learning_rate,
+        batch_size=batch_size,
+        optimizer=optimizer,
+    )
     return (
         handle_train_run(build_model=build_stub_model, train=train, cmd=cmd)
         .unwrap()

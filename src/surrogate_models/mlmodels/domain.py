@@ -3,7 +3,7 @@
 Holds the TrainingRun aggregate as states-as-types (ConfiguredRun -> TrainedRun),
 the run identity (RunID) and training configuration (TrainingConfig) as validated
 value objects, the Checkpoint reference a completed run points at, and the
-validation errors returned when an id or an epoch count is malformed. No torch, no
+validation errors returned when an id or a training knob is malformed. No torch, no
 I/O, no raise: the model is GIVEN to the shell as an injected callable and the
 training itself happens there; the domain only records a run's certified
 configuration and the checkpoint the shell produced. Failures travel the railway as
@@ -41,8 +41,8 @@ class InvalidRunID:
 
 
 @dataclass(frozen=True, slots=True)
-class InvalidTrainingConfig:
-    """Validation failure: a candidate training configuration is out of range.
+class InvalidMaxEpochs:
+    """Validation failure: the epoch budget is below the one-epoch minimum.
 
     Carries the offending ``max_epochs`` -- the value that failed certification.
     """
@@ -51,15 +51,64 @@ class InvalidTrainingConfig:
 
 
 @dataclass(frozen=True, slots=True)
-class TrainingConfig:
-    """A certified training configuration -- how long a run trains.
+class InvalidLearningRate:
+    """Validation failure: the learning rate is not strictly positive.
 
-    ``max_epochs`` is the number of passes over the data and is always >= 1 (the
-    smart constructor make_training_config rejects anything less). Deliberately
-    minimal for the thin training slice; more knobs join here as the context grows.
+    Carries the offending ``learning_rate`` -- the value that failed certification.
+    """
+
+    learning_rate: float
+
+
+@dataclass(frozen=True, slots=True)
+class InvalidBatchSize:
+    """Validation failure: the batch size is below one.
+
+    Carries the offending ``batch_size`` -- the value that failed certification.
+    """
+
+    batch_size: int
+
+
+@dataclass(frozen=True, slots=True)
+class InvalidOptimizer:
+    """Validation failure: the optimizer name is not a supported choice.
+
+    Carries the offending ``optimizer`` -- the value that failed certification.
+    """
+
+    optimizer: str
+
+
+# Every way make_training_config can reject a candidate configuration -- one typed
+# member per field, each carrying its own offending value. The application lifts this
+# union into a single coded FailTrainRun via an exhaustive match at the boundary.
+type TrainingConfigError = (
+    InvalidMaxEpochs | InvalidLearningRate | InvalidBatchSize | InvalidOptimizer
+)
+
+# The optimiser names the domain certifies. Authoritative here (the pure core owns the
+# vocabulary); infrastructure maps each name to its concrete torch optimiser class.
+SUPPORTED_OPTIMIZERS: frozenset[str] = frozenset({"sgd", "adam"})
+
+
+@dataclass(frozen=True, slots=True)
+class TrainingConfig:
+    """A certified training configuration -- the knobs a run trains under.
+
+    Every field is certified by make_training_config: ``max_epochs`` (passes over the
+    data, >= 1), ``learning_rate`` (the optimiser step size, strictly > 0),
+    ``batch_size`` (rows per gradient step, >= 1), and ``optimizer`` (which optimiser
+    to use, one of SUPPORTED_OPTIMIZERS). The shell reads every field FROM this one
+    certified object -- the model's optimiser from ``learning_rate`` + ``optimizer``,
+    the DataLoader from ``batch_size``, the Trainer from ``max_epochs`` -- so an
+    invalid combination cannot reach training.
     """
 
     max_epochs: int
+    learning_rate: float
+    batch_size: int
+    optimizer: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,16 +166,28 @@ def make_runid(run_id: str) -> Result[RunID, InvalidRunID]:
 
 def make_training_config(
     max_epochs: int,
-) -> Result[TrainingConfig, InvalidTrainingConfig]:
-    """Certify ``max_epochs`` into a TrainingConfig, or reject it.
+    learning_rate: float,
+    batch_size: int,
+    optimizer: str,
+) -> Result[TrainingConfig, TrainingConfigError]:
+    """Certify the four training knobs, or reject the first invalid field.
 
-    The sole way to build a TrainingConfig. Pure and total: a run must train for at
-    least one epoch, so a value below 1 (zero or negative) returns
-    ``Err(InvalidTrainingConfig)`` carrying the offending count.
+    The sole way to build a TrainingConfig. Pure and total: each field is checked in
+    turn and the FIRST failure short-circuits to its own typed error carrying the
+    offending value -- ``max_epochs`` >= 1 (InvalidMaxEpochs), ``learning_rate`` > 0
+    (InvalidLearningRate), ``batch_size`` >= 1 (InvalidBatchSize), and ``optimizer``
+    in SUPPORTED_OPTIMIZERS (InvalidOptimizer). Only an all-valid combination yields
+    ``Ok(TrainingConfig)``.
     """
-    if max_epochs >= 1:
-        return Ok(TrainingConfig(max_epochs))
-    return Err(InvalidTrainingConfig(max_epochs))
+    if max_epochs < 1:
+        return Err(InvalidMaxEpochs(max_epochs))
+    if learning_rate <= 0:
+        return Err(InvalidLearningRate(learning_rate))
+    if batch_size < 1:
+        return Err(InvalidBatchSize(batch_size))
+    if optimizer not in SUPPORTED_OPTIMIZERS:
+        return Err(InvalidOptimizer(optimizer))
+    return Ok(TrainingConfig(max_epochs, learning_rate, batch_size, optimizer))
 
 
 def configure_run(run_id: RunID, config: TrainingConfig) -> ConfiguredRun:
