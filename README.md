@@ -14,11 +14,11 @@ Status: the toolchain (uv, Make, JupyterLab) and project conventions are in plac
 and two bounded contexts are live. The `datasets` context ingests raw
 neutron-star `.dat` output into typed, schema-certified frames and exposes a
 one-call public loader, `load_neutron_stars`. The `mlmodels` context manages
-training as a thin vertical slice: its application layer is the public API -- a
-train handler that certifies a run's configuration (epochs, learning rate, batch
-size, optimizer) and drives a single injected `save_trained_run` port, which
-trains the run's model behind the imperative shell and writes a checkpoint. The
-shipped infrastructure adapter is a typed placeholder -- the real neutron-stars
+training as a thin vertical slice: it exposes a settings-driven `train_run` facade
+over a train handler that certifies a run's configuration (epochs, learning rate,
+batch size, optimizer) and drives an injected `save_trained_run` port, which trains
+the run's model behind the imperative shell and writes a checkpoint under the
+configured `checkpoint_dir`. The shipped infrastructure adapter is a typed placeholder -- the real neutron-stars
 surrogate regressor is the next slice -- so the slice is proven end to end today
 by tests that supply their own stub-regressor adapter: a real one-epoch Lightning
 run writing a checkpoint, plus a fuller multi-epoch run that saves a checkpoint per
@@ -46,6 +46,23 @@ df = load_neutron_stars()
 The returned frame carries every column from the raw batches plus a `pc_init`
 column -- each batch's initial central pressure, taken from its comment header.
 On failure (for example a missing source file) the call raises.
+
+Configure and train a run through the settings-driven training facade:
+
+```python
+from surrogate_models import TrainRun, train_run
+
+location = train_run(
+    TrainRun("run1", max_epochs=10, learning_rate=0.05, batch_size=2, optimizer="adam")
+)
+```
+
+`train_run(cmd)` certifies the run's configuration, binds the `save_trained_run`
+adapter to the configured `checkpoint_dir` (from settings, below), trains the run,
+and returns the written checkpoint location. The shipped adapter is a typed
+placeholder, so the call raises `TRAINING_NOT_IMPLEMENTED` until the real
+neutron-stars regressor lands -- the training slice is proven today by the `mlmodels`
+tests, which supply their own stub-regressor adapter.
 
 ### Configuration
 
@@ -132,7 +149,7 @@ make lab LAB_HOST=0.0.0.0 LAB_PORT=9000
 ```
 .
 |-- src/surrogate_models/
-|   |-- __init__.py           # public API (re-exports load_neutron_stars)
+|   |-- __init__.py           # public API (re-exports load_neutron_stars, train_run, TrainRun)
 |   |-- __main__.py           # placeholder CLI entry point
 |   |-- config.py             # app-wide settings shell (pydantic-settings)
 |   |-- datasets/             # datasets bounded context
@@ -144,7 +161,7 @@ make lab LAB_HOST=0.0.0.0 LAB_PORT=9000
 |   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig
 |   |   |-- application.py    # CQRS handler (train run) over the injected save_trained_run port
 |   |   |-- infrastructure.py # imperative shell: save_trained_run adapter (real model is a later slice)
-|   |   `-- __main__.py       # context root + train_run seat (injected adapter -> checkpoint location)
+|   |   `-- __main__.py       # context root + settings-driven train_run facade (get_settings -> checkpoint dir)
 |   `-- railway_adts/         # Result / Option / @safe railway primitives
 |-- tests/                    # mirror of src/, test-first
 |-- Makefile                  # task runner (environment, quality, build, JupyterLab)
