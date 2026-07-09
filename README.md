@@ -16,13 +16,15 @@ neutron-star `.dat` output into typed, schema-certified frames and exposes a
 one-call public loader, `load_neutron_stars`. The `mlmodels` context manages
 training as a thin vertical slice: it exposes a settings-driven `train_run` facade
 over a train handler that certifies a run's configuration (epochs, learning rate,
-batch size, optimizer) and drives an injected `save_trained_run` port, which trains
+batch size, optimizer) and drives an injected `save_trained_run` port, which builds
 the run's model behind the imperative shell and writes a checkpoint under the
-configured `checkpoint_dir`. The shipped infrastructure adapter is a typed placeholder -- the real neutron-stars
-surrogate regressor is the next slice -- so the slice is proven end to end today
-by tests that supply their own stub-regressor adapter: a real one-epoch Lightning
-run writing a checkpoint, plus a fuller multi-epoch run that saves a checkpoint per
-epoch and shows the training loss actually falling. The `python -m surrogate_models`
+configured `checkpoint_dir`. The shipped adapter persists the model UNTRAINED -- it
+builds a minimal regressor from the certified config and saves its initial weights,
+so `train_run` returns a real checkpoint path today; fitting the model over prepared
+data is the next slice. That full training path is already proven end to end by tests
+that supply their own stub-regressor adapter: a real one-epoch Lightning run writing a
+checkpoint, plus a fuller multi-epoch run that saves a checkpoint per epoch and shows
+the training loss actually falling. The `python -m surrogate_models`
 command-line entry point is still a placeholder; the library API below works today.
 
 ## Public API
@@ -58,11 +60,12 @@ location = train_run(
 ```
 
 `train_run(cmd)` certifies the run's configuration, binds the `save_trained_run`
-adapter to the configured `checkpoint_dir` (from settings, below), trains the run,
-and returns the written checkpoint location. The shipped adapter is a typed
-placeholder, so the call raises `TRAINING_NOT_IMPLEMENTED` until the real
-neutron-stars regressor lands -- the training slice is proven today by the `mlmodels`
-tests, which supply their own stub-regressor adapter.
+adapter to the configured `checkpoint_dir` (from settings, below), builds and
+persists the run's model, and returns the written checkpoint location. The shipped
+adapter saves the model UNTRAINED for now (a minimal regressor built from the config),
+so the call returns a real checkpoint path; fitting over prepared data is the next
+slice, proven today by the `mlmodels` tests that supply their own stub-regressor
+adapter.
 
 ### Configuration
 
@@ -74,7 +77,7 @@ Settings resolve highest-priority first: OS environment (and `.env`), then
 |------------------------------------------------|----------------------------------------|------------------------------------------------------|
 | `SURROGATE_MODELS__DATASETS__PATH`             | `var/data/surrogate_models/datasets`   | Where certified datasets are persisted (parquet)     |
 | `SURROGATE_MODELS__DATASETS__NEUTRON_STARS_SOURCE` | `data/neutron-stars/neutron-stars.dat` | Raw concatenated neutron-stars `.dat` the loader digests |
-| `SURROGATE_MODELS__MLMODELS__CHECKPOINT_DIR`   | `var/data/surrogate_models/checkpoints` | Where a training run writes its Lightning `.ckpt`    |
+| `SURROGATE_MODELS__MLMODELS__CHECKPOINT_DIR`   | `var/data/surrogate_models/checkpoints` | Where a training run writes its `{run_id}.ckpt`      |
 
 See `.env.example` and `surrogate_models.toml.example` for a copy-ready template.
 
@@ -160,7 +163,7 @@ make lab LAB_HOST=0.0.0.0 LAB_PORT=9000
 |   |-- mlmodels/             # mlmodels (training) bounded context
 |   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig
 |   |   |-- application.py    # CQRS handler (train run) over the injected save_trained_run port
-|   |   |-- infrastructure.py # imperative shell: save_trained_run adapter (real model is a later slice)
+|   |   |-- infrastructure.py # imperative shell: save_trained_run writes the run's untrained checkpoint (fit is a later slice)
 |   |   `-- __main__.py       # context root + settings-driven train_run facade (get_settings -> checkpoint dir)
 |   `-- railway_adts/         # Result / Option / @safe railway primitives
 |-- tests/                    # mirror of src/, test-first
