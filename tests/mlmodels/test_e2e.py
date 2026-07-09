@@ -15,6 +15,10 @@ recording the per-epoch training loss via _LossRecorder, so the tests can assert
 that the steps land on disk and that the loss actually falls -- the model is learning,
 not merely producing a file. All of this is test scaffolding, never shipped in src.
 One assert per test.
+
+The proof drives the application handler directly -- handle_train_run, the injectable
+seam the real src adapter will bind to. The settings-driven __main__.train_run facade
+that wires the src adapter from get_settings() is proven separately in test_main.py.
 """
 
 from functools import partial
@@ -27,7 +31,6 @@ from lightning.pytorch.callbacks import ModelCheckpoint
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from surrogate_models.mlmodels.__main__ import train_run
 from surrogate_models.mlmodels.application import TrainRun, handle_train_run
 from surrogate_models.mlmodels.domain import Checkpoint, ConfiguredRun, TrainedRun
 from surrogate_models.railway_adts import fmap_error, safe
@@ -199,21 +202,6 @@ def test_handler_trained_run_points_at_the_written_checkpoint(tmp_path: Path) ->
     save = partial(stub_save_trained_run, tmp_path)
     result = handle_train_run(save_trained_run=save, cmd=_cmd())
     assert result.unwrap().checkpoint == Checkpoint(str(tmp_path / "e2e.ckpt"))
-
-
-# --- composition seat end to end: __main__.train_run + injected adapter ---
-
-
-def test_seat_returns_the_checkpoint_location(tmp_path: Path) -> None:
-    location = train_run(
-        save_trained_run=partial(stub_save_trained_run, tmp_path), cmd=_cmd()
-    )
-    assert location == str(tmp_path / "e2e.ckpt")
-
-
-def test_seat_writes_the_checkpoint_file(tmp_path: Path) -> None:
-    train_run(save_trained_run=partial(stub_save_trained_run, tmp_path), cmd=_cmd())
-    assert (tmp_path / "e2e.ckpt").exists()
 
 
 # --- fuller proof: a multi-epoch run does real work, its steps land on disk ---

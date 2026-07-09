@@ -1,41 +1,44 @@
-"""Mlmodels context root -- the composition seat for the training slice.
+"""Mlmodels context root -- composition + the settings-driven train_run facade.
 
-Exposes train_run: the context's public entry point that wires an INJECTED
-SaveTrainedRunFn adapter into the application's train handler and projects the result
-to the checkpoint location -- a bare ``str``, so the seat never names a domain type
-(the composition seal). The ready-to-use adapter is supplied by whoever composes the
-context: the src ``infrastructure.save_trained_run`` (curried on a checkpoint dir)
-once the real training slice lands, or a test-owned adapter for the end-to-end proof.
-The higher build-up (settings wiring, a top-level project main, a delivery edge) is
-added as the system grows.
+The context's composition seat: it reads settings via get_settings() and binds the
+src infrastructure adapter (save_trained_run, curried on the configured
+checkpoint_dir) to this context's OWN application handler (DIP), never touching the
+domain ring directly -- the run id and hyperparameters arrive as edge primitives on
+the TrainRun command and the domain smart constructors certify them inside the
+handler. Mirrors the datasets load_neutron_stars() seat, which binds
+settings.datasets.path the same way.
+
+train_run(cmd) is the notebook-friendly entry point re-exported from the top-level
+package. The src save_trained_run adapter is a not-yet-implemented placeholder today,
+so the facade surfaces its TRAINING_NOT_IMPLEMENTED cause until the real training
+slice lands -- when it does, this seat and every ring above stay unchanged.
 """
 
 from __future__ import annotations
 
 import logging
+from functools import partial
 
-from surrogate_models.mlmodels.application import (
-    SaveTrainedRunFn,
-    TrainRun,
-    handle_train_run,
-)
+from surrogate_models.config import get_settings
+from surrogate_models.mlmodels.application import TrainRun, handle_train_run
+from surrogate_models.mlmodels.infrastructure import save_trained_run
 
 logger = logging.getLogger(__name__)
 
 
-def train_run(*, save_trained_run: SaveTrainedRunFn, cmd: TrainRun) -> str:
-    """Train a run via the injected adapter and return its checkpoint location.
+def train_run(cmd: TrainRun) -> str:
+    """Configure and train a run under the configured checkpoint dir; return its path.
 
-    The context's composition seat: hands ``cmd`` to the application handler with the
-    GIVEN ``save_trained_run`` and unwraps the terminal run's checkpoint location (a
-    bare ``str`` -- the seat projects away the domain aggregate so it never imports a
-    domain type). ``unwrap`` raises at this outer edge if configuration or training
-    fails, carrying the ErrorInfo cause. The adapter is injected by the composer -- the
-    src infrastructure adapter once the real training slice lands, or a test adapter.
+    The context's composition seat: it reads ``mlmodels.checkpoint_dir`` from
+    ``get_settings()``, curries the src ``save_trained_run`` adapter on it to satisfy
+    the application's ``SaveTrainedRunFn``, hands ``cmd`` to ``handle_train_run``, and
+    projects the terminal run's checkpoint location (a bare ``str`` -- the seat never
+    names a domain type). ``unwrap`` raises at this outer edge if configuration or
+    training fails, carrying the ``ErrorInfo`` cause. The src adapter is a placeholder
+    today, so this surfaces ``TRAINING_NOT_IMPLEMENTED`` until the real training slice
+    replaces it -- the checkpoint dir is still configuration, wired here from settings.
     """
+    settings = get_settings()
     logger.info("composing train run %s", cmd.run_id)
-    return (
-        handle_train_run(save_trained_run=save_trained_run, cmd=cmd)
-        .unwrap()
-        .checkpoint.location
-    )
+    save = partial(save_trained_run, settings.mlmodels.checkpoint_dir)
+    return handle_train_run(save_trained_run=save, cmd=cmd).unwrap().checkpoint.location
