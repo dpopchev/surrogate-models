@@ -20,9 +20,10 @@ size, optimizer) and drives a single injected `save_trained_run` port, which
 trains the run's model behind the imperative shell and writes a checkpoint. The
 shipped infrastructure adapter is a typed placeholder -- the real neutron-stars
 surrogate regressor is the next slice -- so the slice is proven end to end today
-by a test that supplies its own stub-regressor adapter (a real one-epoch Lightning
-run writing a checkpoint). The `python -m surrogate_models` command-line entry
-point is still a placeholder; the library API below works today.
+by tests that supply their own stub-regressor adapter: a real one-epoch Lightning
+run writing a checkpoint, plus a fuller multi-epoch run that saves a checkpoint per
+epoch and shows the training loss actually falling. The `python -m surrogate_models`
+command-line entry point is still a placeholder; the library API below works today.
 
 ## Public API
 
