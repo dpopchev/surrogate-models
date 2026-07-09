@@ -1,61 +1,41 @@
-"""Mlmodels context root -- composition of the training slice.
+"""Mlmodels context root -- the composition seat for the training slice.
 
-The context's composition seat and smoke facade: it reads settings via
-get_settings(), binds the Lightning infrastructure adapter to this context's OWN
-application handler (DIP, currying the checkpoint dir), GIVES the stub model, and runs
-one epoch on stub data -- never touching the domain ring directly. Returns the
-checkpoint location the trained run wrote.
+Exposes train_run: the context's public entry point that wires an INJECTED
+SaveTrainedRunFn adapter into the application's train handler and projects the result
+to the checkpoint location -- a bare ``str``, so the seat never names a domain type
+(the composition seal). The ready-to-use adapter is supplied by whoever composes the
+context: the src ``infrastructure.save_trained_run`` (curried on a checkpoint dir)
+once the real training slice lands, or a test-owned adapter for the end-to-end proof.
+The higher build-up (settings wiring, a top-level project main, a delivery edge) is
+added as the system grows.
 """
 
 from __future__ import annotations
 
 import logging
-from functools import partial
 
-from surrogate_models.config import get_settings
-from surrogate_models.mlmodels.application import TrainRun, handle_train_run
-from surrogate_models.mlmodels.infrastructure import (
-    build_stub_model,
-    stub_training_data,
-    train_with_lightning,
+from surrogate_models.mlmodels.application import (
+    SaveTrainedRunFn,
+    TrainRun,
+    handle_train_run,
 )
 
 logger = logging.getLogger(__name__)
 
-_STUB_RUN_ID = "stub-run"
 
+def train_run(*, save_trained_run: SaveTrainedRunFn, cmd: TrainRun) -> str:
+    """Train a run via the injected adapter and return its checkpoint location.
 
-def train_stub_run(
-    max_epochs: int = 5,
-    learning_rate: float = 0.01,
-    batch_size: int = 2,
-    optimizer: str = "sgd",
-) -> str:
-    """Train the stub model and return the checkpoint location, showing live progress.
-
-    The notebook-facing facade. Binds the Lightning adapter to the handler -- currying
-    the checkpoint dir from settings AND ``enable_progress=True`` so an interactive run
-    shows a live progress bar with per-step loss -- GIVES the stub model built from the
-    certified config, and runs the requested epochs on stub data. Every hyperparameter
-    is a keyword with a sensible default so a notebook caller can tweak
-    epochs/lr/batch/optimizer and watch. ``unwrap`` raises at this outer edge if
-    training fails -- carrying the ErrorInfo cause (e.g. an unsupported optimizer name).
+    The context's composition seat: hands ``cmd`` to the application handler with the
+    GIVEN ``save_trained_run`` and unwraps the terminal run's checkpoint location (a
+    bare ``str`` -- the seat projects away the domain aggregate so it never imports a
+    domain type). ``unwrap`` raises at this outer edge if configuration or training
+    fails, carrying the ErrorInfo cause. The adapter is injected by the composer -- the
+    src infrastructure adapter once the real training slice lands, or a test adapter.
     """
-    settings = get_settings()
-    logger.info("composing stub run under %s", settings.mlmodels.checkpoint_dir)
-    train = partial(
-        train_with_lightning, settings.mlmodels.checkpoint_dir, enable_progress=True
-    )
-    cmd = TrainRun(
-        run_id=_STUB_RUN_ID,
-        data=stub_training_data(),
-        max_epochs=max_epochs,
-        learning_rate=learning_rate,
-        batch_size=batch_size,
-        optimizer=optimizer,
-    )
+    logger.info("composing train run %s", cmd.run_id)
     return (
-        handle_train_run(build_model=build_stub_model, train=train, cmd=cmd)
+        handle_train_run(save_trained_run=save_trained_run, cmd=cmd)
         .unwrap()
         .checkpoint.location
     )
