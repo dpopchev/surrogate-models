@@ -14,14 +14,15 @@ Status: the toolchain (uv, Make, JupyterLab) and project conventions are in plac
 and two bounded contexts are live. The `datasets` context ingests raw
 neutron-star `.dat` output into typed, schema-certified frames and exposes a
 one-call public loader, `load_neutron_stars`. The `mlmodels` context manages
-training as a thin vertical slice: you GIVE it a model -- an injected PyTorch
-Lightning module -- and it runs training behind the imperative shell under a
-certified configuration (epochs, learning rate, batch size, optimizer) and writes
-a checkpoint, streaming a live progress bar with per-step loss for interactive
-runs. It is exercised end to end today with a stub regressor (the real
-neutron-stars surrogate is the next slice). The `python -m surrogate_models`
-command-line entry point is still a placeholder; the library API below works
-today.
+training as a thin vertical slice: its application layer is the public API -- a
+train handler that certifies a run's configuration (epochs, learning rate, batch
+size, optimizer) and drives a single injected `save_trained_run` port, which
+trains the run's model behind the imperative shell and writes a checkpoint. The
+shipped infrastructure adapter is a typed placeholder -- the real neutron-stars
+surrogate regressor is the next slice -- so the slice is proven end to end today
+by a test that supplies its own stub-regressor adapter (a real one-epoch Lightning
+run writing a checkpoint). The `python -m surrogate_models` command-line entry
+point is still a placeholder; the library API below works today.
 
 ## Public API
 
@@ -140,9 +141,9 @@ make lab LAB_HOST=0.0.0.0 LAB_PORT=9000
 |   |   `-- __main__.py       # context root + load_neutron_stars facade
 |   |-- mlmodels/             # mlmodels (training) bounded context
 |   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig
-|   |   |-- application.py    # CQRS handler (train run) over injected build_model / train
-|   |   |-- infrastructure.py # imperative shell: Lightning Trainer adapter + stub model
-|   |   `-- __main__.py       # context root + train_stub_run facade
+|   |   |-- application.py    # CQRS handler (train run) over the injected save_trained_run port
+|   |   |-- infrastructure.py # imperative shell: save_trained_run adapter (real model is a later slice)
+|   |   `-- __main__.py       # context root + train_run seat (injected adapter -> checkpoint location)
 |   `-- railway_adts/         # Result / Option / @safe railway primitives
 |-- tests/                    # mirror of src/, test-first
 |-- Makefile                  # task runner (environment, quality, build, JupyterLab)
