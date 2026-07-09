@@ -17,3 +17,8 @@
 path = "/var/data/surrogate_models/datasets"
 # Raw concatenated neutron-stars .dat file the ingest reader digests.
 neutron_stars_source = "/data/neutron-stars/neutron-stars.dat"
+
+[mlmodels]
+# Where the mlmodels bounded context writes a training run's Lightning checkpoint
+# (.ckpt). Created on first train; need not preexist, but the parent must be writable.
+checkpoint_dir = "/var/data/surrogate_models/checkpoints"
