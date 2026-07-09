@@ -3,14 +3,14 @@
 train_run(cmd) is the public composition seat: it reads ``mlmodels.checkpoint_dir``
 from get_settings(), curries the src save_trained_run adapter on it, and drives the
 train handler, returning the checkpoint location (raising at the outer edge on
-failure). The src adapter is a not-yet-implemented placeholder, so today the facade
-surfaces its TRAINING_NOT_IMPLEMENTED cause -- these tests pin that honest contract
-AND that the CONFIGURED checkpoint dir actually reaches the adapter (proving the
-settings wiring, not just the error). When the real training slice lands, the first
-test flips to assert a written checkpoint, exactly as datasets test_main asserts a
-built frame. Settings are resolved via get_settings(), so each test isolates the
-environment (env overrides + cache clear) as tests/datasets/test_main.py does. One
-assert per test.
+failure). The thin training slice has landed, so the facade's happy path is now
+reachable: train_run returns the path of the ``{run_id}.ckpt`` the adapter wrote under
+the configured dir -- these tests pin that reachable contract AND that the CONFIGURED
+checkpoint dir actually reaches the adapter (proving the settings wiring). When the
+EXPAND slice trains for real, the first test grows a "trained weights" assertion, but
+the path contract holds. Settings are resolved via get_settings(), so each test
+isolates the environment (env overrides + cache clear) as tests/datasets/test_main.py
+does. One assert per test.
 """
 
 import logging
@@ -21,7 +21,6 @@ import pytest
 
 from surrogate_models import TrainRun, train_run
 from surrogate_models.config import get_settings
-from surrogate_models.railway_adts import UnwrapError
 
 CHECKPOINT_DIR_ENV = "SURROGATE_MODELS__MLMODELS__CHECKPOINT_DIR"
 LOGGING_LEVEL_ENV = "SURROGATE_MODELS__LOGGING__LEVEL"
@@ -64,12 +63,12 @@ def _cmd(run_id: str = "manual") -> TrainRun:
     )
 
 
-def test_train_run_raises_until_training_is_implemented(
+def test_train_run_returns_the_written_checkpoint_path(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setenv(CHECKPOINT_DIR_ENV, str(tmp_path / "checkpoints"))
-    with pytest.raises(UnwrapError):
-        train_run(_cmd())
+    checkpoints = tmp_path / "checkpoints"
+    monkeypatch.setenv(CHECKPOINT_DIR_ENV, str(checkpoints))
+    assert train_run(_cmd()) == str(checkpoints / "manual.ckpt")
 
 
 def test_train_run_binds_the_configured_checkpoint_dir(
@@ -77,6 +76,6 @@ def test_train_run_binds_the_configured_checkpoint_dir(
 ) -> None:
     checkpoints = tmp_path / "checkpoints"
     monkeypatch.setenv(CHECKPOINT_DIR_ENV, str(checkpoints))
-    with caplog.at_level(logging.INFO), pytest.raises(UnwrapError):
+    with caplog.at_level(logging.INFO):
         train_run(_cmd())
     assert any(str(checkpoints) in record.getMessage() for record in caplog.records)

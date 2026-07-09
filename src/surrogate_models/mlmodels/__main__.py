@@ -9,9 +9,10 @@ handler. Mirrors the datasets load_neutron_stars() seat, which binds
 settings.datasets.path the same way.
 
 train_run(cmd) is the notebook-friendly entry point re-exported from the top-level
-package. The src save_trained_run adapter is a not-yet-implemented placeholder today,
-so the facade surfaces its TRAINING_NOT_IMPLEMENTED cause until the real training
-slice lands -- when it does, this seat and every ring above stay unchanged.
+package. The src save_trained_run adapter now persists a run's UNTRAINED model as
+{run_id}.ckpt (the thin training slice), so the facade returns the written checkpoint
+path; when the EXPAND slice trains for real, this seat and every ring above stay
+unchanged.
 """
 
 from __future__ import annotations
@@ -34,9 +35,10 @@ def train_run(cmd: TrainRun) -> str:
     the application's ``SaveTrainedRunFn``, hands ``cmd`` to ``handle_train_run``, and
     projects the terminal run's checkpoint location (a bare ``str`` -- the seat never
     names a domain type). ``unwrap`` raises at this outer edge if configuration or
-    training fails, carrying the ``ErrorInfo`` cause. The src adapter is a placeholder
-    today, so this surfaces ``TRAINING_NOT_IMPLEMENTED`` until the real training slice
-    replaces it -- the checkpoint dir is still configuration, wired here from settings.
+    training fails, carrying the ``ErrorInfo`` cause. The thin slice makes this happy
+    path reachable: the src adapter writes the run's untrained ``{run_id}.ckpt`` under
+    the configured dir and this returns its path; the EXPAND slice trains for real
+    without changing this seat.
     """
     settings = get_settings()
     logger.info("composing train run %s", cmd.run_id)
