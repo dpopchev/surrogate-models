@@ -22,6 +22,8 @@ from surrogate_models.mlmodels.domain import (
     InvalidMaxEpochs,
     InvalidOptimizer,
     InvalidRunID,
+    RunID,
+    RunSummaryDTO,
     TrainedRun,
     TrainingConfigError,
     complete_training,
@@ -166,4 +168,80 @@ def handle_train_run(
                 .fmap(lambda checkpoint: complete_training(run, checkpoint))
             )
         )
+    )
+
+
+# --- (2) Queries ---
+
+# Read-side port (DIP via callables): FindRunSummaryFn returns the read model keyed by
+# RunID -- a RunSummaryDTO projected straight from the run's {run_id}.json manifest --
+# BYPASSING the TrainingRun aggregate and its certification. FIND a view to show it (the
+# read counterpart of the write side's LOAD-to-act-on-it). The DTO is a legal query
+# read model at the I/O boundary; a lookup miss or read failure folds into an ErrorInfo
+# cause. Never returns an aggregate -- that would be the read-model bypass smell
+# (CQRS_004).
+FindRunSummaryFn = Callable[[RunID], Result[RunSummaryDTO, ErrorInfo]]
+
+
+@dataclass(frozen=True, slots=True)
+class GetRunSummary:
+    """Query: fetch the read-model summary of a persisted run by its id.
+
+    Carries only edge data -- the run id to look up, as a bare ``str`` (an edge DTO
+    holds primitives; the handler re-wraps it into a ``RunID`` via the domain
+    :func:`make_runid` before the read port is touched). The read port is injected into
+    the handler, not the query.
+    """
+
+    run_id: str
+
+
+# The union of every mlmodels read query -- one member today, dispatched by match/case
+# at the delivery edge. Grows as queries are added (no base class).
+type MLModelQuery = GetRunSummary
+
+
+@dataclass(frozen=True, slots=True)
+class FailGetRunSummary:
+    """Failure of handle_get_run_summary, carrying its structured ``cause``.
+
+    An invalid id and a read-boundary ``ErrorInfo`` both fold into one application
+    error, so the failure crosses UP the ring as a serializable descriptor -- never the
+    domain type or a lower-layer exception.
+    """
+
+    cause: ErrorInfo
+
+
+def _fail_get_from_invalid_id(error: InvalidRunID) -> FailGetRunSummary:
+    """Lift a domain id-validation rejection into the query handler's own error.
+
+    The offending id string stays in the domain error; the boundary reports a stable
+    ``code`` plus message, never the domain type -- symmetric with the write side's
+    :func:`_fail_from_invalid_id`. The rejection is logged here at the boundary (the
+    domain core stays free of logging).
+    """
+    logger.warning("run id rejected on read: %r is not a valid id", error.run_id)
+    return FailGetRunSummary(
+        ErrorInfo(code="INVALID_RUN_ID", message=f"invalid run id: {error.run_id!r}")
+    )
+
+
+def handle_get_run_summary(
+    *, find: FindRunSummaryFn, query: GetRunSummary
+) -> Result[RunSummaryDTO, FailGetRunSummary]:
+    """Fetch the read-model summary for ``query.run_id`` from the run manifest.
+
+    Re-wraps the edge ``str`` id into a ``RunID`` via the domain :func:`make_runid` (an
+    invalid id short-circuits to ``FailGetRunSummary`` and the read port is never
+    touched), then binds the injected ``FindRunSummaryFn`` and returns its RunSummaryDTO
+    on the success rail -- the read model projected from the manifest, never the
+    TrainedRun aggregate (loading an aggregate only to show it is the read-model bypass
+    smell, CQRS_004). A read-boundary ``ErrorInfo`` folds into ``FailGetRunSummary``.
+    Pure railway composition -- no branching on the ``Result``.
+    """
+    return (
+        make_runid(query.run_id)
+        .fmap_err(_fail_get_from_invalid_id)
+        .and_then(lambda run_id: find(run_id).fmap_err(FailGetRunSummary))
     )

@@ -1,22 +1,29 @@
-"""Tests for the mlmodels application -- handle_train_run across its rails.
+"""Tests for the mlmodels application -- the train command and run-summary query.
 
-The handler composes one injected callable on the railway: save_trained_run is GIVEN
-the certified ConfiguredRun aggregate and returns the produced Checkpoint (or an
-ErrorInfo cause). The port is injected as a typed lambda -- never a mock. The rails
-covered: the ok path folds the checkpoint into a TrainedRun; an invalid id and any
-invalid config knob short-circuit to FailTrainRun before training; and a
-training-boundary ErrorInfo folds into FailTrainRun. One assert per test.
+The write handler composes one injected callable on the railway: save_trained_run is
+GIVEN the certified ConfiguredRun aggregate and returns the produced Checkpoint (or an
+ErrorInfo cause). The read handler binds an injected FindRunSummaryFn and returns the
+RunSummaryDTO the read side projected. Both ports are injected as typed lambdas -- never
+a mock. The rails covered: the ok path folds the checkpoint into a TrainedRun; an
+invalid id and any invalid config knob short-circuit to FailTrainRun before training; a
+training-boundary ErrorInfo folds into FailTrainRun; and the query returns the found
+summary on its ok rail. One assert per test.
 """
 
 from surrogate_models.mlmodels.application import (
+    FailGetRunSummary,
     FailTrainRun,
+    FindRunSummaryFn,
+    GetRunSummary,
     TrainRun,
+    handle_get_run_summary,
     handle_train_run,
 )
 from surrogate_models.mlmodels.domain import (
     Checkpoint,
     ConfiguredRun,
     RunID,
+    RunSummaryDTO,
     TrainedRun,
 )
 from surrogate_models.railway_adts import Err, ErrorInfo, Ok, Result
@@ -150,3 +157,53 @@ def test_training_failure_is_err() -> None:
 def test_training_failure_folds_the_cause_into_fail_train_run() -> None:
     result = handle_train_run(save_trained_run=_failing_save, cmd=_cmd())
     assert result.unwrap_err().cause == _TRAIN_FAILURE
+
+
+# --- Queries: handle_get_run_summary returns the projected read model ---
+
+
+def _find_ok(summary: RunSummaryDTO) -> FindRunSummaryFn:
+    """A read port that always returns ``summary``, ignoring the key."""
+    return lambda _run_id: Ok(summary)
+
+
+def _find_err(error: ErrorInfo) -> FindRunSummaryFn:
+    """A read port that fails at the boundary, returning the ErrorInfo cause."""
+    return lambda _run_id: Err(error)
+
+
+def _unreachable_find(run_id: RunID) -> Result[RunSummaryDTO, ErrorInfo]:
+    """A read port that fails the test if the handler queries despite a bad id."""
+    raise AssertionError("find must not be called when the run id is invalid")
+
+
+def test_get_ok_returns_the_run_summary() -> None:
+    summary = RunSummaryDTO("demo", "regressor", "1.0.0")
+    result = handle_get_run_summary(find=_find_ok(summary), query=GetRunSummary("demo"))
+    assert result.unwrap() == summary
+
+
+# --- invalid id rail (short-circuits before the read port) ---
+
+
+def test_get_invalid_id_error_is_fail_get_run_summary() -> None:
+    result = handle_get_run_summary(
+        find=_unreachable_find, query=GetRunSummary("bad id")
+    )
+    assert isinstance(result.unwrap_err(), FailGetRunSummary)
+
+
+def test_get_invalid_id_reports_the_run_id_code() -> None:
+    result = handle_get_run_summary(
+        find=_unreachable_find, query=GetRunSummary("bad id")
+    )
+    assert result.unwrap_err().cause.code == "INVALID_RUN_ID"
+
+
+# --- read-boundary failure rail ---
+
+
+def test_get_read_failure_folds_the_cause_into_fail_get_run_summary() -> None:
+    cause = ErrorInfo(code="RUN_SUMMARY_READ_FAILED", message="boom")
+    result = handle_get_run_summary(find=_find_err(cause), query=GetRunSummary("demo"))
+    assert result.unwrap_err().cause == cause
