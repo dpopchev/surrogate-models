@@ -5,9 +5,10 @@ the run identity (RunID) and training configuration (TrainingConfig) as validate
 value objects, the injected model's declared identity (ModelIdentity), the recorded
 train/val/test split (HoldoutSpec) and training-data provenance (DatasetProvenance),
 the Checkpoint reference a completed run points at, the read-side run summary
-(RunSummaryDTO) a query projects from a run's manifest, and the validation errors
+(RunSummaryDTO) a query projects from a run's manifest, the validation errors
 returned when an id, a model identity, a split, provenance, or a training knob is
-malformed.
+malformed, and the reload guard (verify_fingerprint) that rejects a rebuilt model
+whose structure no longer matches its manifest (ModelIdentityMismatch).
 No torch, no I/O, no raise: the model is GIVEN to the shell as an injected callable
 and the training itself happens there; the domain only records a run's certified
 configuration and the checkpoint the shell produced. Failures travel the railway as
@@ -385,3 +386,36 @@ def complete_training(run: ConfiguredRun, checkpoint: Checkpoint) -> TrainedRun:
     the run's identity and configuration.
     """
     return TrainedRun(run.run_id, run.config, checkpoint)
+
+
+@dataclass(frozen=True, slots=True)
+class ModelIdentityMismatch:
+    """Reload-guard failure: a checkpoint does not match its recorded identity.
+
+    Raised when a run is materialised and the model it rebuilds no longer matches what
+    the manifest recorded -- the structural fingerprint drifted (a layer shape changed)
+    or, in a later slice, the declared name/version differs. Carries the run id and the
+    ``expected`` (recorded) versus ``got`` (recomputed) values, so a reload fails loudly
+    instead of loading weights into the wrong architecture.
+    """
+
+    run_id: RunID
+    expected: str
+    got: str
+
+
+def verify_fingerprint(
+    run_id: RunID, expected: str, got: str
+) -> Result[str, ModelIdentityMismatch]:
+    """Check a rebuilt model's structural fingerprint against the recorded one.
+
+    The SHAPE half of the reload guard. Pure and total: returns ``Ok(got)`` when the
+    recomputed fingerprint equals the one the manifest recorded at save time, else
+    ``Err(ModelIdentityMismatch)`` carrying both -- so a checkpoint cannot be silently
+    loaded into a structurally drifted architecture. The fingerprint itself is computed
+    in the shell (it needs torch); the domain owns only the match decision and the
+    error.
+    """
+    if expected == got:
+        return Ok(got)
+    return Err(ModelIdentityMismatch(run_id, expected, got))

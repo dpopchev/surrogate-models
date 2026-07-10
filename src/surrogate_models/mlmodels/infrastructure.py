@@ -28,8 +28,10 @@ composition root, save_trained_run satisfies the application's SaveTrainedRunFn.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -41,6 +43,7 @@ from surrogate_models.mlmodels.domain import (
     Checkpoint,
     ConfiguredRun,
     InvalidRunID,
+    ModelIdentityMismatch,
     RunSummaryDTO,
     TrainedRun,
     TrainingConfig,
@@ -49,6 +52,7 @@ from surrogate_models.mlmodels.domain import (
     configure_run,
     make_runid,
     make_training_config,
+    verify_fingerprint,
 )
 from surrogate_models.railway_adts import ErrorInfo, Result, fmap_error, safe
 
@@ -65,10 +69,13 @@ class RunManifest:
     (name, version) feed the read-side RunSummaryDTO, while the four training knobs
     (max_epochs, learning_rate, batch_size, optimizer) let the LOAD side rebuild the
     run's certified TrainingConfig -- the "optimizer/loss recorded as declared
-    metadata" of fork 1A. Grows to carry the split, provenance, metrics, and structural
-    fingerprint as their persistence slices land. load_trained_run certifies these
-    primitives back into domain value objects when hydrating the aggregate; the
-    read-side Find projects the identity fields straight into a DTO.
+    metadata" of fork 1A. The fingerprint is the model's structural digest at save
+    time (see structural_fingerprint) -- the SHAPE half of the reload guard that
+    materialize_model checks so a checkpoint cannot be loaded into a drifted
+    architecture. Grows to carry the split, provenance, and metrics as their
+    persistence slices land. load_trained_run certifies these primitives back into
+    domain value objects when hydrating the aggregate; the read-side Find projects the
+    identity fields straight into a DTO.
     """
 
     run_id: str
@@ -78,6 +85,7 @@ class RunManifest:
     learning_rate: float
     batch_size: int
     optimizer: str
+    fingerprint: str
 
 
 def write_run_manifest(manifest_dir: Path, manifest: RunManifest) -> Path:
@@ -111,6 +119,7 @@ def read_run_manifest(manifest_dir: Path, run_id: str) -> RunManifest:
         learning_rate=payload["learning_rate"],
         batch_size=payload["batch_size"],
         optimizer=payload["optimizer"],
+        fingerprint=payload["fingerprint"],
     )
 
 
@@ -214,6 +223,20 @@ def load_trained_run(
     )
 
 
+def structural_fingerprint(state_dict: dict[str, torch.Tensor]) -> str:
+    """Hash a model's structure -- its sorted ``parameter name -> shape`` layout.
+
+    The reload guard's SHAPE half: a digest of only the state_dict's keys and tensor
+    shapes (never the weight VALUES), so it is identical for a trained and an untrained
+    copy of the same architecture but differs the moment a layer's shape drifts. Save
+    records it in the manifest; materialize_model recomputes it on the rebuilt nn and
+    rejects a mismatch as a ModelIdentityMismatch, catching a checkpoint loaded into the
+    wrong architecture before it silently corrupts predictions.
+    """
+    layout = sorted((key, tuple(tensor.shape)) for key, tensor in state_dict.items())
+    return hashlib.sha256(repr(layout).encode()).hexdigest()
+
+
 class SurrogateRegressor(lightning.LightningModule):
     """A minimal single-feature linear regressor built FROM a run's config.
 
@@ -272,6 +295,79 @@ def save_trained_run(checkpoint_dir: Path, run: ConfiguredRun) -> Checkpoint:
             run.config.learning_rate,
             run.config.batch_size,
             run.config.optimizer,
+            structural_fingerprint(model.state_dict()),
         ),
     )
     return Checkpoint(str(target))
+
+
+@safe(Exception, fmap_error(lambda cause: cause, code="MODEL_MATERIALIZE_FAILED"))
+def _load_live_model(
+    factory: Callable[[], lightning.LightningModule], run: TrainedRun
+) -> lightning.LightningModule:
+    """Build a fresh model via the injected factory and load the ckpt weights into it.
+
+    The torch I/O half of materialize: ``factory()`` (fork 1A's user-owned model) then
+    load the state_dict with ``weights_only=True`` -- only weights travel, never a
+    pickled class -- from the ckpt the hydrated aggregate points at. ``@safe`` folds a
+    missing or unreadable ckpt into ``MODEL_MATERIALIZE_FAILED``.
+    """
+    logger.info("materialize run %s from %s", run.run_id, run.checkpoint.location)
+    model = factory()
+    model.load_state_dict(torch.load(run.checkpoint.location, weights_only=True))
+    return model
+
+
+def _reload_mismatch(error: ModelIdentityMismatch) -> ErrorInfo:
+    """Fold a reload-guard mismatch into a coded boundary cause.
+
+    The rebuilt model's structure no longer matches the manifest's recorded fingerprint;
+    surface it as ``MODEL_IDENTITY_MISMATCH`` with the expected/got values preserved in
+    the message, so a reload fails loudly instead of returning a silently wrong model.
+    """
+    return ErrorInfo(
+        code="MODEL_IDENTITY_MISMATCH",
+        message=f"reload identity mismatch: {error!r}",
+    )
+
+
+def _guard_reload(
+    manifest_dir: Path, run: TrainedRun, model: lightning.LightningModule
+) -> Result[lightning.LightningModule, ErrorInfo]:
+    """Verify a rebuilt model against its manifest, returning the model if it matches.
+
+    Reads the recorded fingerprint from the sidecar (reusing the @safe manifest read),
+    recomputes the live model's structural_fingerprint, and runs the pure domain
+    verify_fingerprint guard; a drift folds to ``MODEL_IDENTITY_MISMATCH`` while a match
+    passes the model through. Sequential and_then over the @safe read (no nested
+    @safe), mirroring load_trained_run.
+    """
+    got = structural_fingerprint(model.state_dict())
+    return _read_manifest(manifest_dir, run.run_id).and_then(
+        lambda manifest: (
+            verify_fingerprint(run.run_id, manifest.fingerprint, got)
+            .fmap_err(_reload_mismatch)
+            .fmap(lambda _: model)
+        )
+    )
+
+
+def materialize_model(
+    factory: Callable[[], lightning.LightningModule],
+    manifest_dir: Path,
+    run: TrainedRun,
+) -> Result[lightning.LightningModule, ErrorInfo]:
+    """Rebuild ``run``'s LIVE nn on demand, guarded by its recorded fingerprint.
+
+    The torch-bearing counterpart of load_trained_run: the metadata aggregate points at
+    a checkpoint, and this turns it back into a usable model, so the live nn never has
+    to cross into domain/application. ``factory`` and ``manifest_dir`` lead so the
+    composition root binds them via ``partial`` to yield the design's ``TrainedRun ->
+    Result[LightningModule]`` shape. Builds + loads the weights (_load_live_model), then
+    verifies the rebuilt structure against the manifest (_guard_reload): a load failure
+    is ``MODEL_MATERIALIZE_FAILED``, a structural drift is ``MODEL_IDENTITY_MISMATCH``.
+    The declared name/version half of the guard lands in the next slice.
+    """
+    return _load_live_model(factory, run).and_then(
+        lambda model: _guard_reload(manifest_dir, run, model)
+    )
