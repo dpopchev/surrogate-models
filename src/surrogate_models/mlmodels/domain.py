@@ -92,6 +92,19 @@ class InvalidDatasetProvenance:
 
 
 @dataclass(frozen=True, slots=True)
+class InvalidMetrics:
+    """Validation failure: a candidate metrics record is malformed.
+
+    Carries the offending validation and test RMSE -- raised when either is negative
+    (a root-mean-square error cannot be below zero). Holds the candidate values that
+    failed certification.
+    """
+
+    val_rmse: float
+    test_rmse: float
+
+
+@dataclass(frozen=True, slots=True)
 class InvalidMaxEpochs:
     """Validation failure: the epoch budget is below the one-epoch minimum.
 
@@ -220,6 +233,20 @@ class DatasetProvenance:
 
 
 @dataclass(frozen=True, slots=True)
+class Metrics:
+    """A run's recorded evaluation scores -- its validation and test RMSE.
+
+    The metadata a trained run keeps so its quality is persisted alongside the model,
+    not just printed once at training time. Root-mean-square error in the target's own
+    units, so a reloaded run reports how well it generalised without re-running the
+    evaluation. Built solely by make_metrics.
+    """
+
+    val_rmse: float
+    test_rmse: float
+
+
+@dataclass(frozen=True, slots=True)
 class ConfiguredRun:
     """The initial TrainingRun state: a run certified and ready to train.
 
@@ -340,6 +367,20 @@ def make_dataset_provenance(
             InvalidDatasetProvenance(dataset_id, feature_columns, target_column, n_rows)
         )
     return Ok(DatasetProvenance(dataset_id, feature_columns, target_column, n_rows))
+
+
+def make_metrics(val_rmse: float, test_rmse: float) -> Result[Metrics, InvalidMetrics]:
+    """Certify a run's recorded validation and test RMSE into a Metrics value object.
+
+    The sole way to build a Metrics record, so a persisted run's quality is validated
+    metadata rather than an ad-hoc pair of floats. Pure and total: validate + wrap, no
+    measuring (the RMSE is computed in the shell against the held-out loaders and handed
+    in). Either RMSE below zero returns ``Err(InvalidMetrics)`` carrying the offending
+    pair -- a root-mean-square error cannot be negative.
+    """
+    if val_rmse < 0 or test_rmse < 0:
+        return Err(InvalidMetrics(val_rmse, test_rmse))
+    return Ok(Metrics(val_rmse, test_rmse))
 
 
 def make_training_config(

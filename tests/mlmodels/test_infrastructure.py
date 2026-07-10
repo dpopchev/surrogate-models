@@ -31,15 +31,27 @@ from surrogate_models.mlmodels.domain import (
     configure_run,
 )
 from surrogate_models.mlmodels.infrastructure import (
+    EvaluationRecord,
+    ProvenanceRecord,
     RunManifest,
+    SplitRecord,
     SurrogateRegressor,
     find_run_summary,
     load_trained_run,
     materialize_model,
+    read_evaluation_record,
+    read_provenance_record,
     read_run_manifest,
+    read_split_record,
+    record_run_evaluation,
+    record_run_provenance,
+    record_run_split,
     save_trained_run,
     structural_fingerprint,
+    write_evaluation_record,
+    write_provenance_record,
     write_run_manifest,
+    write_split_record,
 )
 
 
@@ -71,6 +83,67 @@ def test_run_manifest_round_trips_through_its_sidecar(tmp_path: Path) -> None:
     )
     write_run_manifest(tmp_path, manifest)
     assert read_run_manifest(tmp_path, "demo") == manifest
+
+
+def test_evaluation_record_round_trips_through_its_sidecar(tmp_path: Path) -> None:
+    record = EvaluationRecord(run_id="demo", val_rmse=0.05, test_rmse=0.06)
+    write_evaluation_record(tmp_path, record)
+    assert read_evaluation_record(tmp_path, "demo") == record
+
+
+def test_record_run_evaluation_persists_the_metrics(tmp_path: Path) -> None:
+    record_run_evaluation(tmp_path, "demo", 0.05, 0.06)
+    written = read_evaluation_record(tmp_path, "demo")
+    assert written == EvaluationRecord("demo", 0.05, 0.06)
+
+
+def test_record_run_evaluation_rejects_a_negative_rmse(tmp_path: Path) -> None:
+    assert record_run_evaluation(tmp_path, "demo", -0.1, 0.06).is_err() is True
+
+
+def test_split_record_round_trips_through_its_sidecar(tmp_path: Path) -> None:
+    record = SplitRecord(
+        run_id="demo",
+        train_fraction=0.7,
+        val_fraction=0.15,
+        test_fraction=0.15,
+        seed=0,
+    )
+    write_split_record(tmp_path, record)
+    assert read_split_record(tmp_path, "demo") == record
+
+
+def test_record_run_split_persists_the_split(tmp_path: Path) -> None:
+    record_run_split(tmp_path, "demo", 0.7, 0.15, 0.15, 0)
+    written = read_split_record(tmp_path, "demo")
+    assert written == SplitRecord("demo", 0.7, 0.15, 0.15, 0)
+
+
+def test_record_run_split_rejects_fractions_not_summing_to_one(tmp_path: Path) -> None:
+    assert record_run_split(tmp_path, "demo", 0.5, 0.3, 0.3, 0).is_err() is True
+
+
+def test_provenance_record_round_trips_through_its_sidecar(tmp_path: Path) -> None:
+    record = ProvenanceRecord(
+        run_id="demo",
+        dataset_id="example",
+        feature_columns=("x1", "x2"),
+        target_column="y",
+        n_rows=3,
+    )
+    write_provenance_record(tmp_path, record)
+    assert read_provenance_record(tmp_path, "demo") == record
+
+
+def test_record_run_provenance_persists_the_provenance(tmp_path: Path) -> None:
+    record_run_provenance(tmp_path, "demo", "example", ("x1", "x2"), "y", 3)
+    written = read_provenance_record(tmp_path, "demo")
+    assert written == ProvenanceRecord("demo", "example", ("x1", "x2"), "y", 3)
+
+
+def test_record_run_provenance_rejects_target_among_features(tmp_path: Path) -> None:
+    result = record_run_provenance(tmp_path, "demo", "example", ("x1", "y"), "y", 3)
+    assert result.is_err() is True
 
 
 def test_save_trained_run_writes_a_manifest_naming_the_model(tmp_path: Path) -> None:

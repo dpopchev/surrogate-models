@@ -42,6 +42,9 @@ from torch import nn
 from surrogate_models.mlmodels.domain import (
     Checkpoint,
     ConfiguredRun,
+    InvalidDatasetProvenance,
+    InvalidHoldoutSpec,
+    InvalidMetrics,
     InvalidRunID,
     ModelIdentity,
     ModelIdentityMismatch,
@@ -51,6 +54,9 @@ from surrogate_models.mlmodels.domain import (
     TrainingConfigError,
     complete_training,
     configure_run,
+    make_dataset_provenance,
+    make_holdout_spec,
+    make_metrics,
     make_runid,
     make_training_config,
     verify_fingerprint,
@@ -122,6 +128,302 @@ def read_run_manifest(manifest_dir: Path, run_id: str) -> RunManifest:
         batch_size=payload["batch_size"],
         optimizer=payload["optimizer"],
         fingerprint=payload["fingerprint"],
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class EvaluationRecord:
+    """The ``{run_id}.metrics.json`` sidecar persisted alongside a run's checkpoint.
+
+    A boundary record (primitive fields only) holding a run's measured quality
+    SEPARATELY from the RunManifest, because a run is evaluated AFTER it is saved and
+    materialised -- the untrained ``save_trained_run`` toy has no metrics to write, so
+    coupling metrics into the manifest would force it to invent them. Kept as its own
+    sidecar so save_trained_run and RunManifest stay untouched; record_run_evaluation
+    certifies the RMSE via the domain make_metrics gate before writing this row.
+    """
+
+    run_id: str
+    val_rmse: float
+    test_rmse: float
+
+
+def write_evaluation_record(record_dir: Path, record: EvaluationRecord) -> Path:
+    """Write ``record`` to ``{run_id}.metrics.json`` under ``record_dir``; return path.
+
+    The evaluation-sidecar writer, mirroring write_run_manifest: serialises the record's
+    primitive fields as JSON (no torch import) so a run's persisted quality reads back
+    without materialising its weights. Creates ``record_dir`` if missing. A plain helper
+    (not ``@safe``): the port adapter that calls it owns the single ``@safe`` boundary.
+    """
+    record_dir.mkdir(parents=True, exist_ok=True)
+    target = record_dir / f"{record.run_id}.metrics.json"
+    target.write_text(json.dumps(asdict(record)))
+    return target
+
+
+def read_evaluation_record(record_dir: Path, run_id: str) -> EvaluationRecord:
+    """Read ``{run_id}.metrics.json`` under ``record_dir`` into an EvaluationRecord.
+
+    The read-side counterpart to write_evaluation_record, recovering a run's persisted
+    metrics with no torch import. A plain helper (not ``@safe``): the port adapter that
+    calls it owns the single ``@safe`` boundary.
+    """
+    payload = json.loads((record_dir / f"{run_id}.metrics.json").read_text())
+    return EvaluationRecord(
+        run_id=payload["run_id"],
+        val_rmse=payload["val_rmse"],
+        test_rmse=payload["test_rmse"],
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class SplitRecord:
+    """The ``{run_id}.split.json`` sidecar recording how a run's data was divided.
+
+    A boundary record (primitive fields only) holding the train/val/test fractions and
+    the shuffle seed, so a persisted run's split is reproducible and comparable across
+    experiments. Its own sidecar (like EvaluationRecord) not a RunManifest field: the
+    untrained toy save path does no splitting, so coupling it into the manifest would
+    force the toy to invent a split. record_run_split certifies these primitives via the
+    domain make_holdout_spec gate before writing this row.
+    """
+
+    run_id: str
+    train_fraction: float
+    val_fraction: float
+    test_fraction: float
+    seed: int
+
+
+def write_split_record(record_dir: Path, record: SplitRecord) -> Path:
+    """Write ``record`` to ``{run_id}.split.json`` under ``record_dir``; return path.
+
+    The split-sidecar writer, mirroring write_evaluation_record: serialises the record's
+    primitive fields as JSON (no torch import). Creates ``record_dir`` if missing. A
+    plain helper (not ``@safe``): the port adapter that calls it owns the ``@safe``
+    boundary.
+    """
+    record_dir.mkdir(parents=True, exist_ok=True)
+    target = record_dir / f"{record.run_id}.split.json"
+    target.write_text(json.dumps(asdict(record)))
+    return target
+
+
+def read_split_record(record_dir: Path, run_id: str) -> SplitRecord:
+    """Read ``{run_id}.split.json`` under ``record_dir`` into a SplitRecord.
+
+    The read-side counterpart to write_split_record, recovering a run's persisted split
+    with no torch import. A plain helper (not ``@safe``): the port adapter that calls it
+    owns the ``@safe`` boundary.
+    """
+    payload = json.loads((record_dir / f"{run_id}.split.json").read_text())
+    return SplitRecord(
+        run_id=payload["run_id"],
+        train_fraction=payload["train_fraction"],
+        val_fraction=payload["val_fraction"],
+        test_fraction=payload["test_fraction"],
+        seed=payload["seed"],
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class ProvenanceRecord:
+    """The ``{run_id}.provenance.json`` sidecar recording a run's training data.
+
+    A boundary record (primitive fields only) holding the dataset id, feature columns,
+    target column, and row count, so a persisted run is self-describing about WHAT it
+    trained on without shipping the data. Its own sidecar (like SplitRecord) not a
+    RunManifest field: the untrained toy save path sources no data, so coupling it into
+    the manifest would force the toy to invent provenance. record_run_provenance
+    certifies these primitives via the domain make_dataset_provenance gate on write.
+    """
+
+    run_id: str
+    dataset_id: str
+    feature_columns: tuple[str, ...]
+    target_column: str
+    n_rows: int
+
+
+def write_provenance_record(record_dir: Path, record: ProvenanceRecord) -> Path:
+    """Write ``record`` to ``{run_id}.provenance.json`` under ``record_dir``.
+
+    The provenance-sidecar writer, mirroring write_split_record: serialises the record's
+    primitive fields as JSON (no torch import). Creates ``record_dir`` if missing. A
+    plain helper (not ``@safe``): the port adapter that calls it owns the ``@safe``
+    boundary.
+    """
+    record_dir.mkdir(parents=True, exist_ok=True)
+    target = record_dir / f"{record.run_id}.provenance.json"
+    target.write_text(json.dumps(asdict(record)))
+    return target
+
+
+def read_provenance_record(record_dir: Path, run_id: str) -> ProvenanceRecord:
+    """Read ``{run_id}.provenance.json`` under ``record_dir`` into a ProvenanceRecord.
+
+    The read-side counterpart to write_provenance_record. JSON has no tuple, so the
+    feature columns come back as a list and are re-wrapped to a tuple, matching the
+    frozen record's shape (and the domain DatasetProvenance) for equality. A plain
+    helper (not ``@safe``): the port adapter that calls it owns the ``@safe`` boundary.
+    """
+    payload = json.loads((record_dir / f"{run_id}.provenance.json").read_text())
+    return ProvenanceRecord(
+        run_id=payload["run_id"],
+        dataset_id=payload["dataset_id"],
+        feature_columns=tuple(payload["feature_columns"]),
+        target_column=payload["target_column"],
+        n_rows=payload["n_rows"],
+    )
+
+
+def _invalid_metrics(error: InvalidMetrics) -> ErrorInfo:
+    """Fold a domain metrics rejection into a coded boundary cause.
+
+    The shell measured a nonsensical RMSE (below zero); surface it as
+    ``INVALID_METRICS`` with the offending pair preserved in the message, so a bad
+    evaluation is refused loudly instead of persisted.
+    """
+    return ErrorInfo(code="INVALID_METRICS", message=f"metrics rejected: {error!r}")
+
+
+@safe(OSError, fmap_error(lambda cause: cause, code="EVALUATION_WRITE_FAILED"))
+def _write_evaluation(record_dir: Path, record: EvaluationRecord) -> EvaluationRecord:
+    """Write the evaluation sidecar at the @safe I/O boundary; return the record.
+
+    Separates the fallible write (OSError -> ``EVALUATION_WRITE_FAILED``) from the pure
+    metrics certification, so record_run_evaluation chains the two on the railway with
+    no nested ``@safe`` -- the same shape as load_trained_run's read + reconstitute.
+    """
+    write_evaluation_record(record_dir, record)
+    return record
+
+
+def record_run_evaluation(
+    record_dir: Path, run_id: str, val_rmse: float, test_rmse: float
+) -> Result[EvaluationRecord, ErrorInfo]:
+    """Certify a run's measured RMSE and persist it as the evaluation sidecar.
+
+    The metrics write adapter: the shell scores a materialised run against its held-out
+    loaders and hands the raw val/test RMSE here. The domain make_metrics gate certifies
+    the pair (a negative RMSE folds to ``INVALID_METRICS`` and nothing is written), then
+    ``_write_evaluation`` persists the ``{run_id}.metrics.json`` record. Kept apart from
+    save_trained_run because a run is evaluated AFTER it is saved and materialised; the
+    manifest and the untrained toy save path stay untouched.
+    """
+    logger.info("record_run_evaluation: run %s under %s", run_id, record_dir)
+    return (
+        make_metrics(val_rmse, test_rmse)
+        .fmap_err(_invalid_metrics)
+        .fmap(lambda m: EvaluationRecord(run_id, m.val_rmse, m.test_rmse))
+        .and_then(lambda record: _write_evaluation(record_dir, record))
+    )
+
+
+def _invalid_split(error: InvalidHoldoutSpec) -> ErrorInfo:
+    """Fold a domain holdout-split rejection into a coded boundary cause.
+
+    The shell was handed fractions that do not form a valid split (out of range, not
+    summing to one, or a negative seed); surface it as ``INVALID_SPLIT`` with the
+    offending values preserved, so a nonsensical split is refused instead of persisted.
+    """
+    return ErrorInfo(code="INVALID_SPLIT", message=f"split rejected: {error!r}")
+
+
+@safe(OSError, fmap_error(lambda cause: cause, code="SPLIT_WRITE_FAILED"))
+def _write_split(record_dir: Path, record: SplitRecord) -> SplitRecord:
+    """Write the split sidecar at the @safe I/O boundary; return the record.
+
+    Separates the fallible write (OSError -> ``SPLIT_WRITE_FAILED``) from the pure split
+    certification, so record_run_split chains the two on the railway with no nested
+    ``@safe`` -- the same shape as record_run_evaluation.
+    """
+    write_split_record(record_dir, record)
+    return record
+
+
+def record_run_split(
+    record_dir: Path,
+    run_id: str,
+    train_fraction: float,
+    val_fraction: float,
+    test_fraction: float,
+    seed: int,
+) -> Result[SplitRecord, ErrorInfo]:
+    """Certify a run's train/val/test split and persist it as the split sidecar.
+
+    The split write adapter: the notebook chooses the fractions + seed when it divides
+    the data by hand and hands them here. The domain make_holdout_spec gate certifies
+    them (an invalid split folds to ``INVALID_SPLIT`` and nothing is written), then
+    ``_write_split`` persists the ``{run_id}.split.json`` record. Kept apart from
+    save_trained_run because the untrained toy does no splitting; the manifest stays
+    untouched.
+    """
+    logger.info("record_run_split: run %s under %s", run_id, record_dir)
+    return (
+        make_holdout_spec(train_fraction, val_fraction, test_fraction, seed)
+        .fmap_err(_invalid_split)
+        .fmap(
+            lambda s: SplitRecord(
+                run_id, s.train_fraction, s.val_fraction, s.test_fraction, s.seed
+            )
+        )
+        .and_then(lambda record: _write_split(record_dir, record))
+    )
+
+
+def _invalid_provenance(error: InvalidDatasetProvenance) -> ErrorInfo:
+    """Fold a domain provenance rejection into a coded boundary cause.
+
+    The shell was handed data provenance that does not certify (blank id, no features, a
+    target that is also a feature, or no rows); surface it as ``INVALID_PROVENANCE``,
+    the offending values preserved, so unusable provenance is refused, not persisted.
+    """
+    return ErrorInfo(
+        code="INVALID_PROVENANCE", message=f"provenance rejected: {error!r}"
+    )
+
+
+@safe(OSError, fmap_error(lambda cause: cause, code="PROVENANCE_WRITE_FAILED"))
+def _write_provenance(record_dir: Path, record: ProvenanceRecord) -> ProvenanceRecord:
+    """Write the provenance sidecar at the @safe I/O boundary; return the record.
+
+    Separates the fallible write (OSError -> ``PROVENANCE_WRITE_FAILED``) from the pure
+    provenance certification, so record_run_provenance chains the two on the railway
+    with no nested ``@safe`` -- the same shape as record_run_split.
+    """
+    write_provenance_record(record_dir, record)
+    return record
+
+
+def record_run_provenance(
+    record_dir: Path,
+    run_id: str,
+    dataset_id: str,
+    feature_columns: tuple[str, ...],
+    target_column: str,
+    n_rows: int,
+) -> Result[ProvenanceRecord, ErrorInfo]:
+    """Certify a run's training-data provenance and persist it as the sidecar.
+
+    The provenance write adapter: the notebook knows which dataset, columns, and row
+    count it trained on and hands them here. The domain make_dataset_provenance gate
+    certifies them (unusable provenance folds to ``INVALID_PROVENANCE`` and nothing is
+    written), then ``_write_provenance`` persists the ``{run_id}.provenance.json``
+    record. Kept apart from save_trained_run because the untrained toy sources no data;
+    the manifest stays untouched.
+    """
+    logger.info("record_run_provenance: run %s under %s", run_id, record_dir)
+    return (
+        make_dataset_provenance(dataset_id, feature_columns, target_column, n_rows)
+        .fmap_err(_invalid_provenance)
+        .fmap(
+            lambda p: ProvenanceRecord(
+                run_id, p.dataset_id, p.feature_columns, p.target_column, p.n_rows
+            )
+        )
+        .and_then(lambda record: _write_provenance(record_dir, record))
     )
 
 

@@ -19,6 +19,7 @@ from surrogate_models.mlmodels.domain import (
     InvalidHoldoutSpec,
     InvalidLearningRate,
     InvalidMaxEpochs,
+    InvalidMetrics,
     InvalidOptimizer,
     InvalidRunID,
     RunID,
@@ -29,6 +30,7 @@ from surrogate_models.mlmodels.domain import (
     configure_run,
     make_dataset_provenance,
     make_holdout_spec,
+    make_metrics,
     make_model_identity,
     make_runid,
     make_training_config,
@@ -170,6 +172,21 @@ def test_make_dataset_provenance_rejects_non_positive_rows() -> None:
 def test_make_dataset_provenance_err_is_invalid_dataset_provenance() -> None:
     error = _make_provenance(dataset_id="").unwrap_err()
     assert isinstance(error, InvalidDatasetProvenance)
+
+
+# --- make_metrics: the recorded val/test RMSE gate ---
+
+
+def test_make_metrics_ok_on_valid_values() -> None:
+    assert make_metrics(0.05, 0.06).is_ok() is True
+
+
+def test_make_metrics_rejects_a_negative_val_rmse() -> None:
+    assert make_metrics(-0.1, 0.06).is_err() is True
+
+
+def test_make_metrics_err_is_invalid_metrics() -> None:
+    assert isinstance(make_metrics(-0.1, 0.06).unwrap_err(), InvalidMetrics)
 
 
 # --- make_training_config: certifies four knobs, first bad field wins ---
