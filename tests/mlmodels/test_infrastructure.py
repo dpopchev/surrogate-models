@@ -21,12 +21,14 @@ from surrogate_models.mlmodels.domain import (
     ConfiguredRun,
     RunID,
     RunSummaryDTO,
+    TrainedRun,
     TrainingConfig,
     configure_run,
 )
 from surrogate_models.mlmodels.infrastructure import (
     RunManifest,
     find_run_summary,
+    load_trained_run,
     read_run_manifest,
     save_trained_run,
     write_run_manifest,
@@ -49,7 +51,15 @@ def test_save_trained_run_returns_the_written_checkpoint(tmp_path: Path) -> None
 
 
 def test_run_manifest_round_trips_through_its_sidecar(tmp_path: Path) -> None:
-    manifest = RunManifest(run_id="demo", model_name="regressor", model_version="1.0.0")
+    manifest = RunManifest(
+        run_id="demo",
+        model_name="regressor",
+        model_version="1.0.0",
+        max_epochs=3,
+        learning_rate=0.01,
+        batch_size=2,
+        optimizer="sgd",
+    )
     write_run_manifest(tmp_path, manifest)
     assert read_run_manifest(tmp_path, "demo") == manifest
 
@@ -62,9 +72,60 @@ def test_save_trained_run_writes_a_manifest_naming_the_model(tmp_path: Path) -> 
 def test_find_run_summary_projects_the_manifest_into_a_summary(tmp_path: Path) -> None:
     write_run_manifest(
         tmp_path,
-        RunManifest(run_id="demo", model_name="regressor", model_version="1.0.0"),
+        RunManifest(
+            run_id="demo",
+            model_name="regressor",
+            model_version="1.0.0",
+            max_epochs=3,
+            learning_rate=0.01,
+            batch_size=2,
+            optimizer="sgd",
+        ),
     )
     result = find_run_summary(tmp_path, "demo")
     assert result.unwrap() == RunSummaryDTO(
         run_id="demo", model_name="regressor", model_version="1.0.0"
     )
+
+
+def test_load_trained_run_hydrates_the_persisted_run(tmp_path: Path) -> None:
+    write_run_manifest(
+        tmp_path,
+        RunManifest(
+            run_id="demo",
+            model_name="regressor",
+            model_version="1.0.0",
+            max_epochs=3,
+            learning_rate=0.01,
+            batch_size=2,
+            optimizer="sgd",
+        ),
+    )
+    result = load_trained_run(tmp_path, "demo")
+    assert result.unwrap() == TrainedRun(
+        RunID("demo"),
+        TrainingConfig(3, 0.01, 2, "sgd"),
+        Checkpoint(str(tmp_path / "demo.ckpt")),
+    )
+
+
+def test_load_trained_run_missing_manifest_reports_read_failed(tmp_path: Path) -> None:
+    result = load_trained_run(tmp_path, "absent")
+    assert result.unwrap_err().code == "RUN_LOAD_FAILED"
+
+
+def test_load_run_uncertifiable_manifest_is_corrupt(tmp_path: Path) -> None:
+    write_run_manifest(
+        tmp_path,
+        RunManifest(
+            run_id="demo",
+            model_name="regressor",
+            model_version="1.0.0",
+            max_epochs=3,
+            learning_rate=0.01,
+            batch_size=2,
+            optimizer="rmsprop",
+        ),
+    )
+    result = load_trained_run(tmp_path, "demo")
+    assert result.unwrap_err().code == "RUN_LOAD_CORRUPT"

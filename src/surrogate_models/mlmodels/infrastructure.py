@@ -11,7 +11,10 @@ sidecar and write_run_manifest / read_run_manifest round-trip it as JSON with no
 import, so Find and Load stay cheap; the @safe port adapters that call these plain
 helpers own the single I/O boundary. find_run_summary is the read adapter: it projects
 the manifest into a RunSummaryDTO with no torch load, so a query can show a run without
-materialising its weights.
+materialising its weights. load_trained_run is the write-side LOAD adapter: it reads the
+same sidecar, re-certifies its primitives back through the domain smart constructors
+(the trust boundary), and assembles a TrainedRun via configure_run -> complete_training
+-- still torch-free, so the live nn is rebuilt later by materialize_model, on demand.
 
 This is the THIN training slice: the adapter persists the model's UNTRAINED weights
 (no fit, no data, no Trainer yet) so the composition seat's happy path is reachable
@@ -37,10 +40,17 @@ from torch import nn
 from surrogate_models.mlmodels.domain import (
     Checkpoint,
     ConfiguredRun,
+    InvalidRunID,
     RunSummaryDTO,
+    TrainedRun,
     TrainingConfig,
+    TrainingConfigError,
+    complete_training,
+    configure_run,
+    make_runid,
+    make_training_config,
 )
-from surrogate_models.railway_adts import fmap_error, safe
+from surrogate_models.railway_adts import ErrorInfo, Result, fmap_error, safe
 
 logger = logging.getLogger(__name__)
 
@@ -50,16 +60,24 @@ class RunManifest:
     """The ``{run_id}.json`` sidecar persisted alongside a run's checkpoint.
 
     A boundary record (primitive fields only -- it is a row crossing an I/O boundary,
-    not a domain type) holding the metadata the read side needs WITHOUT loading torch:
-    the run id and the trained model's declared identity. Grows to carry the split,
-    provenance, metrics, and structural fingerprint as their persistence slices land.
-    A later mapper certifies these primitives back into domain value objects when
-    hydrating the aggregate; the read-side Find projects them straight into a DTO.
+    not a domain type) holding the metadata both projections need WITHOUT loading torch.
+    A SUPERSET of every read: the run id and the trained model's declared identity
+    (name, version) feed the read-side RunSummaryDTO, while the four training knobs
+    (max_epochs, learning_rate, batch_size, optimizer) let the LOAD side rebuild the
+    run's certified TrainingConfig -- the "optimizer/loss recorded as declared
+    metadata" of fork 1A. Grows to carry the split, provenance, metrics, and structural
+    fingerprint as their persistence slices land. load_trained_run certifies these
+    primitives back into domain value objects when hydrating the aggregate; the
+    read-side Find projects the identity fields straight into a DTO.
     """
 
     run_id: str
     model_name: str
     model_version: str
+    max_epochs: int
+    learning_rate: float
+    batch_size: int
+    optimizer: str
 
 
 def write_run_manifest(manifest_dir: Path, manifest: RunManifest) -> Path:
@@ -89,6 +107,10 @@ def read_run_manifest(manifest_dir: Path, run_id: str) -> RunManifest:
         run_id=payload["run_id"],
         model_name=payload["model_name"],
         model_version=payload["model_version"],
+        max_epochs=payload["max_epochs"],
+        learning_rate=payload["learning_rate"],
+        batch_size=payload["batch_size"],
+        optimizer=payload["optimizer"],
     )
 
 
@@ -108,6 +130,88 @@ def find_run_summary(manifest_dir: Path, run_id: str) -> RunSummaryDTO:
     logger.debug("reading run summary %s from %s", run_id, manifest_dir)
     manifest = read_run_manifest(manifest_dir, run_id)
     return RunSummaryDTO(manifest.run_id, manifest.model_name, manifest.model_version)
+
+
+@safe(OSError, fmap_error(lambda cause: cause, code="RUN_LOAD_FAILED"))
+def _read_manifest(checkpoint_dir: Path, run_id: str) -> RunManifest:
+    """Read the LOAD sidecar at the @safe I/O boundary.
+
+    Separate from find's read boundary so LOAD carries its own code: ``@safe`` folds a
+    missing or unreadable ``{run_id}.json`` (OSError) into ``RUN_LOAD_FAILED``, while a
+    malformed json or missing key propagates as a corruption/logic fault -- symmetric
+    with find_run_summary.
+    """
+    return read_run_manifest(checkpoint_dir, run_id)
+
+
+def _load_corruption(error: InvalidRunID | TrainingConfigError) -> ErrorInfo:
+    """Fold a manifest whose primitives no longer re-certify into a corruption cause.
+
+    Our own save wrote this manifest, so a re-certification failure means the sidecar
+    was corrupted or tampered with -- one uniform ``RUN_LOAD_CORRUPT`` code, the
+    specific domain rejection preserved in the message. Typed against both
+    re-certification rails so the same lift folds an invalid id and a bad knob alike.
+    """
+    return ErrorInfo(
+        code="RUN_LOAD_CORRUPT",
+        message=f"manifest failed re-certification: {error!r}",
+    )
+
+
+def _reconstitute_run(
+    checkpoint_dir: Path, manifest: RunManifest
+) -> Result[TrainedRun, ErrorInfo]:
+    """Re-certify a read-back manifest's primitives and assemble the TrainedRun.
+
+    The trust boundary for LOAD: the manifest's raw id and training knobs are run back
+    through the same smart constructors that first built them (make_runid,
+    make_training_config), each rejection folded to ``RUN_LOAD_CORRUPT`` BEFORE the
+    chain continues so both rails share one error type; only an all-valid manifest
+    assembles a run, via the sanctioned configure_run -> complete_training transition.
+    The checkpoint path is DERIVED (``checkpoint_dir/{run_id}.ckpt`` -- deterministic,
+    never persisted) and wrapped as an opaque handle; the ckpt itself is not read here.
+    """
+    checkpoint = Checkpoint(str(checkpoint_dir / f"{manifest.run_id}.ckpt"))
+    return (
+        make_runid(manifest.run_id)
+        .fmap_err(_load_corruption)
+        .and_then(
+            lambda run_id: (
+                make_training_config(
+                    manifest.max_epochs,
+                    manifest.learning_rate,
+                    manifest.batch_size,
+                    manifest.optimizer,
+                )
+                .fmap_err(_load_corruption)
+                .fmap(
+                    lambda config: complete_training(
+                        configure_run(run_id, config), checkpoint
+                    )
+                )
+            )
+        )
+    )
+
+
+def load_trained_run(
+    checkpoint_dir: Path, run_id: str
+) -> Result[TrainedRun, ErrorInfo]:
+    """Hydrate a re-certified TrainedRun from ``{run_id}.json`` (src LoadTrainedRunFn).
+
+    The write side's LOAD counterpart of save_trained_run. ``checkpoint_dir`` leads so
+    the composition root can bind it via ``partial`` to yield a ``RunID ->
+    Result[TrainedRun]`` port. Torch-free: it reads ONLY the manifest sidecar (no ckpt
+    load) and hands it to _reconstitute_run, which re-certifies the primitives (the
+    trust boundary) and derives the checkpoint path. A missing sidecar folds into
+    ``RUN_LOAD_FAILED``; a manifest that no longer certifies folds into
+    ``RUN_LOAD_CORRUPT``. The LIVE nn is NOT rebuilt here -- materialize_model does that
+    on demand from the checkpoint the hydrated aggregate points at.
+    """
+    logger.info("load_trained_run: run %s under %s", run_id, checkpoint_dir)
+    return _read_manifest(checkpoint_dir, run_id).and_then(
+        lambda manifest: _reconstitute_run(checkpoint_dir, manifest)
+    )
 
 
 class SurrogateRegressor(lightning.LightningModule):
@@ -160,6 +264,14 @@ def save_trained_run(checkpoint_dir: Path, run: ConfiguredRun) -> Checkpoint:
     torch.save(model.state_dict(), target)
     write_run_manifest(
         checkpoint_dir,
-        RunManifest(str(run.run_id), model.MODEL_NAME, model.MODEL_VERSION),
+        RunManifest(
+            str(run.run_id),
+            model.MODEL_NAME,
+            model.MODEL_VERSION,
+            run.config.max_epochs,
+            run.config.learning_rate,
+            run.config.batch_size,
+            run.config.optimizer,
+        ),
     )
     return Checkpoint(str(target))
