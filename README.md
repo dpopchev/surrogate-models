@@ -161,7 +161,7 @@ make lab LAB_HOST=0.0.0.0 LAB_PORT=9000
 |   |   |-- infrastructure.py # imperative shell: parquet I/O, .dat ingest
 |   |   `-- __main__.py       # context root + load_neutron_stars facade
 |   |-- mlmodels/             # mlmodels (training) bounded context
-|   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig
+|   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig, ModelIdentity, HoldoutSpec, DatasetProvenance
 |   |   |-- application.py    # CQRS handler (train run) over the injected save_trained_run port
 |   |   |-- infrastructure.py # imperative shell: save_trained_run writes the run's untrained checkpoint (fit is a later slice)
 |   |   `-- __main__.py       # context root + settings-driven train_run facade (get_settings -> checkpoint dir)
