@@ -19,7 +19,14 @@ RED-GREEN-REFACTOR loop and vertical-slice framing; apply these mechanics inside
   to build a test input.
 - [do] Inject I/O dependencies as typed lambdas matching the port `Callable` aliases.
   NEVER `mock.patch` or `monkeypatch`.
-- [do] Source concrete values from `data/{concept}/prepared/` (per the data-layout
-  rule). If absent, HALT and ask -- never read `orig/`, never invent domain data.
+- [do] Tests ALWAYS use MINIMAL, small, hand-authored fixtures -- the fewest tiny
+  rows/columns (2-3 rows; generic names like `x1`/`y`) that prove the point -- for
+  EVERY tier, e2e included. If a test needs many rows or the real schema to pass, it is
+  over-specified; shrink it to the minimal example.
+- [don't] NEVER put a real/production dataset -- or its SCHEMA (real column names),
+  its SCALE (true row counts), or its CONTENTS -- into `tests/`. The real datasets are
+  private and NOT in the repo; a test must not depend on them, read `data/**`, or
+  hard-code their column names or sizes (that leaks private data). Real data is loaded
+  only by app/infrastructure adapters at RUNTIME, never by a test.
 - [don't] Return bare values from command handlers -- they return `Result[T, E]`
   (see the architecture rule).
