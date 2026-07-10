@@ -246,3 +246,31 @@ def test_materialize_model_rejects_a_declared_identity_mismatch(tmp_path: Path) 
         run,
     )
     assert result.unwrap_err().code == "MODEL_IDENTITY_MISMATCH"
+
+
+def test_save_load_materialize_round_trip_reproduces_the_persisted_model(
+    tmp_path: Path,
+) -> None:
+    """The whole persistence path is faithful end to end.
+
+    Drives the real adapters in order -- save_trained_run writes the ckpt+manifest,
+    load_trained_run hydrates the re-certified aggregate FROM that manifest, and
+    materialize_model rebuilds the live nn with BOTH reload guards (fingerprint +
+    declared identity) passing against what save recorded. Every unwrap succeeding
+    proves the guarded chain completes; the materialised weights matching the persisted
+    checkpoint proves the model round-tripped without drift (identical predictions for a
+    deterministic model). Not a unit of new behaviour -- the composition proof for L2b.
+    """
+    config = TrainingConfig(1, 0.01, 2, "sgd")
+    save_trained_run(tmp_path, configure_run(RunID("smoke"), config)).unwrap()
+    persisted = torch.load(tmp_path / "smoke.ckpt", weights_only=True)
+    run = load_trained_run(tmp_path, "smoke").unwrap()
+    materialized = materialize_model(
+        lambda: SurrogateRegressor(config),
+        ModelIdentity("surrogate-regressor", "0.1.0"),
+        tmp_path,
+        run,
+    ).unwrap()
+    assert torch.equal(
+        materialized.state_dict()["linear.weight"], persisted["linear.weight"]
+    )
