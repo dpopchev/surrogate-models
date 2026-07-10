@@ -43,6 +43,7 @@ from surrogate_models.mlmodels.domain import (
     Checkpoint,
     ConfiguredRun,
     InvalidRunID,
+    ModelIdentity,
     ModelIdentityMismatch,
     RunSummaryDTO,
     TrainedRun,
@@ -53,6 +54,7 @@ from surrogate_models.mlmodels.domain import (
     make_runid,
     make_training_config,
     verify_fingerprint,
+    verify_identity,
 )
 from surrogate_models.railway_adts import ErrorInfo, Result, fmap_error, safe
 
@@ -332,20 +334,29 @@ def _reload_mismatch(error: ModelIdentityMismatch) -> ErrorInfo:
 
 
 def _guard_reload(
-    manifest_dir: Path, run: TrainedRun, model: lightning.LightningModule
+    identity: ModelIdentity,
+    manifest_dir: Path,
+    run: TrainedRun,
+    model: lightning.LightningModule,
 ) -> Result[lightning.LightningModule, ErrorInfo]:
     """Verify a rebuilt model against its manifest, returning the model if it matches.
 
-    Reads the recorded fingerprint from the sidecar (reusing the @safe manifest read),
-    recomputes the live model's structural_fingerprint, and runs the pure domain
-    verify_fingerprint guard; a drift folds to ``MODEL_IDENTITY_MISMATCH`` while a match
-    passes the model through. Sequential and_then over the @safe read (no nested
-    @safe), mirroring load_trained_run.
+    Reads the recorded fingerprint and declared identity from the sidecar (reusing the
+    @safe manifest read) and runs both pure domain guards: verify_fingerprint on the
+    live model's recomputed structural_fingerprint (shape drift), then verify_identity
+    on the injected model's declared ``identity`` (name/version drift). Either drift
+    folds to ``MODEL_IDENTITY_MISMATCH``; only a model clearing both passes through.
+    Sequential and_then over the @safe read (no nested @safe), like load_trained_run.
     """
     got = structural_fingerprint(model.state_dict())
     return _read_manifest(manifest_dir, run.run_id).and_then(
         lambda manifest: (
             verify_fingerprint(run.run_id, manifest.fingerprint, got)
+            .and_then(
+                lambda _: verify_identity(
+                    run.run_id, manifest.model_name, manifest.model_version, identity
+                )
+            )
             .fmap_err(_reload_mismatch)
             .fmap(lambda _: model)
         )
@@ -354,20 +365,22 @@ def _guard_reload(
 
 def materialize_model(
     factory: Callable[[], lightning.LightningModule],
+    identity: ModelIdentity,
     manifest_dir: Path,
     run: TrainedRun,
 ) -> Result[lightning.LightningModule, ErrorInfo]:
-    """Rebuild ``run``'s LIVE nn on demand, guarded by its recorded fingerprint.
+    """Rebuild ``run``'s LIVE nn on demand, guarded by its recorded identity.
 
     The torch-bearing counterpart of load_trained_run: the metadata aggregate points at
     a checkpoint, and this turns it back into a usable model, so the live nn never has
-    to cross into domain/application. ``factory`` and ``manifest_dir`` lead so the
-    composition root binds them via ``partial`` to yield the design's ``TrainedRun ->
-    Result[LightningModule]`` shape. Builds + loads the weights (_load_live_model), then
-    verifies the rebuilt structure against the manifest (_guard_reload): a load failure
-    is ``MODEL_MATERIALIZE_FAILED``, a structural drift is ``MODEL_IDENTITY_MISMATCH``.
-    The declared name/version half of the guard lands in the next slice.
+    to cross into domain/application. ``factory`` and its declared ``identity`` are the
+    injected model seam (the composition root hands both, per fork 1A); ``manifest_dir``
+    joins so ``partial`` yields the design's ``TrainedRun -> Result[LightningModule]``
+    shape. Builds + loads the weights (_load_live_model), then verifies the rebuilt
+    model against the manifest (_guard_reload): a load failure is
+    ``MODEL_MATERIALIZE_FAILED``, a structural OR declared-identity drift is
+    ``MODEL_IDENTITY_MISMATCH``.
     """
     return _load_live_model(factory, run).and_then(
-        lambda model: _guard_reload(manifest_dir, run, model)
+        lambda model: _guard_reload(identity, manifest_dir, run, model)
     )

@@ -22,6 +22,7 @@ from torch import nn
 from surrogate_models.mlmodels.domain import (
     Checkpoint,
     ConfiguredRun,
+    ModelIdentity,
     RunID,
     RunSummaryDTO,
     TrainedRun,
@@ -176,7 +177,12 @@ def test_materialize_model_loads_the_persisted_weights(tmp_path: Path) -> None:
         configure_run(RunID("smoke"), config),
         Checkpoint(str(tmp_path / "smoke.ckpt")),
     )
-    result = materialize_model(lambda: SurrogateRegressor(config), tmp_path, run)
+    result = materialize_model(
+        lambda: SurrogateRegressor(config),
+        ModelIdentity("surrogate-regressor", "0.1.0"),
+        tmp_path,
+        run,
+    )
     model = result.unwrap()
     assert torch.equal(
         model.state_dict()["linear.weight"], reference.state_dict()["linear.weight"]
@@ -203,5 +209,40 @@ def test_materialize_model_rejects_a_fingerprint_mismatch(tmp_path: Path) -> Non
         configure_run(RunID("smoke"), config),
         Checkpoint(str(tmp_path / "smoke.ckpt")),
     )
-    result = materialize_model(lambda: SurrogateRegressor(config), tmp_path, run)
+    result = materialize_model(
+        lambda: SurrogateRegressor(config),
+        ModelIdentity("surrogate-regressor", "0.1.0"),
+        tmp_path,
+        run,
+    )
+    assert result.unwrap_err().code == "MODEL_IDENTITY_MISMATCH"
+
+
+def test_materialize_model_rejects_a_declared_identity_mismatch(tmp_path: Path) -> None:
+    config = TrainingConfig(1, 0.01, 2, "sgd")
+    reference = SurrogateRegressor(config)
+    torch.save(reference.state_dict(), tmp_path / "smoke.ckpt")
+    write_run_manifest(
+        tmp_path,
+        RunManifest(
+            run_id="smoke",
+            model_name="surrogate-regressor",
+            model_version="0.1.0",
+            max_epochs=1,
+            learning_rate=0.01,
+            batch_size=2,
+            optimizer="sgd",
+            fingerprint=structural_fingerprint(reference.state_dict()),
+        ),
+    )
+    run = complete_training(
+        configure_run(RunID("smoke"), config),
+        Checkpoint(str(tmp_path / "smoke.ckpt")),
+    )
+    result = materialize_model(
+        lambda: SurrogateRegressor(config),
+        ModelIdentity("surrogate-regressor", "0.2.0"),
+        tmp_path,
+        run,
+    )
     assert result.unwrap_err().code == "MODEL_IDENTITY_MISMATCH"

@@ -7,8 +7,9 @@ train/val/test split (HoldoutSpec) and training-data provenance (DatasetProvenan
 the Checkpoint reference a completed run points at, the read-side run summary
 (RunSummaryDTO) a query projects from a run's manifest, the validation errors
 returned when an id, a model identity, a split, provenance, or a training knob is
-malformed, and the reload guard (verify_fingerprint) that rejects a rebuilt model
-whose structure no longer matches its manifest (ModelIdentityMismatch).
+malformed, and the reload guard (verify_fingerprint on structure, verify_identity on
+declared name/version) that rejects a rebuilt model no longer matching its manifest
+(ModelIdentityMismatch).
 No torch, no I/O, no raise: the model is GIVEN to the shell as an injected callable
 and the training itself happens there; the domain only records a run's certified
 configuration and the checkpoint the shell produced. Failures travel the railway as
@@ -394,9 +395,9 @@ class ModelIdentityMismatch:
 
     Raised when a run is materialised and the model it rebuilds no longer matches what
     the manifest recorded -- the structural fingerprint drifted (a layer shape changed)
-    or, in a later slice, the declared name/version differs. Carries the run id and the
-    ``expected`` (recorded) versus ``got`` (recomputed) values, so a reload fails loudly
-    instead of loading weights into the wrong architecture.
+    or the declared name/version differs (logic drift the fingerprint cannot see).
+    Carries the run id and the ``expected`` (recorded) versus ``got`` (rebuilt) values,
+    so a reload fails loudly instead of loading weights into the wrong model.
     """
 
     run_id: RunID
@@ -419,3 +420,24 @@ def verify_fingerprint(
     if expected == got:
         return Ok(got)
     return Err(ModelIdentityMismatch(run_id, expected, got))
+
+
+def verify_identity(
+    run_id: RunID, expected_name: str, expected_version: str, got: ModelIdentity
+) -> Result[ModelIdentity, ModelIdentityMismatch]:
+    """Check a rebuilt model's declared identity against the recorded one.
+
+    The LOGIC half of the reload guard -- a version bump or a renamed model that the
+    structural fingerprint cannot see. Pure and total: returns ``Ok(got)`` when the
+    injected model's certified identity equals what the manifest recorded (the recorded
+    side stays primitive, like the fingerprint str), else ``Err(ModelIdentityMismatch)``
+    rendering both as ``name@version`` -- so weights never load into a model whose
+    declared identity drifted from the one that trained.
+    """
+    if got.name == expected_name and got.version == expected_version:
+        return Ok(got)
+    return Err(
+        ModelIdentityMismatch(
+            run_id, f"{expected_name}@{expected_version}", f"{got.name}@{got.version}"
+        )
+    )
