@@ -17,11 +17,13 @@ one-call public loader, `load_neutron_stars`. The `mlmodels` context manages
 training as a thin vertical slice: it exposes a settings-driven `train_run` facade
 over a train handler that certifies a run's configuration (epochs, learning rate,
 batch size, optimizer) and drives an injected `save_trained_run` port, which builds
-the run's model behind the imperative shell and writes a checkpoint under the
-configured `checkpoint_dir`. The shipped adapter persists the model UNTRAINED -- it
-builds a minimal regressor from the certified config and saves its initial weights,
-so `train_run` returns a real checkpoint path today; fitting the model over prepared
-data is the next slice. That full training path is already proven end to end by tests
+the run's model behind the imperative shell and writes two artifacts under the
+configured `checkpoint_dir`: the model `{run_id}.ckpt` and a `{run_id}.json` manifest
+sidecar recording the model's declared identity (name, version) for a torch-free read
+side. The shipped adapter persists the model UNTRAINED -- it builds a minimal
+regressor from the certified config and saves its initial weights, so `train_run`
+returns a real checkpoint path today; fitting the model over prepared data is the next
+slice. That full training path is already proven end to end by tests
 that supply their own stub-regressor adapter: a real one-epoch Lightning run writing a
 checkpoint, plus a fuller multi-epoch run that saves a checkpoint per epoch and shows
 the training loss actually falling. The `python -m surrogate_models`
@@ -61,11 +63,12 @@ location = train_run(
 
 `train_run(cmd)` certifies the run's configuration, binds the `save_trained_run`
 adapter to the configured `checkpoint_dir` (from settings, below), builds and
-persists the run's model, and returns the written checkpoint location. The shipped
-adapter saves the model UNTRAINED for now (a minimal regressor built from the config),
-so the call returns a real checkpoint path; fitting over prepared data is the next
-slice, proven today by the `mlmodels` tests that supply their own stub-regressor
-adapter.
+persists the run's model as a `{run_id}.ckpt` checkpoint plus a `{run_id}.json`
+manifest sidecar (the model's declared identity, readable without torch), and returns
+the written checkpoint location. The shipped adapter saves the model UNTRAINED for now
+(a minimal regressor built from the config), so the call returns a real checkpoint
+path; fitting over prepared data is the next slice, proven today by the `mlmodels`
+tests that supply their own stub-regressor adapter.
 
 ### Configuration
 
@@ -163,7 +166,7 @@ make lab LAB_HOST=0.0.0.0 LAB_PORT=9000
 |   |-- mlmodels/             # mlmodels (training) bounded context
 |   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig, ModelIdentity, HoldoutSpec, DatasetProvenance
 |   |   |-- application.py    # CQRS handler (train run) over the injected save_trained_run port
-|   |   |-- infrastructure.py # imperative shell: save_trained_run writes the run's untrained checkpoint (fit is a later slice)
+|   |   |-- infrastructure.py # imperative shell: save_trained_run writes the untrained checkpoint + {run_id}.json manifest sidecar (RunManifest); fit is a later slice
 |   |   `-- __main__.py       # context root + settings-driven train_run facade (get_settings -> checkpoint dir)
 |   `-- railway_adts/         # Result / Option / @safe railway primitives
 |-- tests/                    # mirror of src/, test-first
