@@ -29,8 +29,13 @@ checkpoint weights (a bare `state_dict` or a bundled Lightning checkpoint alike)
 verifies the rebuilt model against the manifest on two axes --
 its structural fingerprint (shape drift) and its declared name/version (logic drift the
 fingerprint cannot see) -- so a mismatch on either fails loudly rather than loading
-weights into a drifted model. The shipped adapter persists the model
-UNTRAINED -- it builds a minimal
+weights into a drifted model. A run's measured quality and training context persist as
+their own torch-free sidecars alongside those artifacts -- `{run_id}.metrics.json`
+(validation and test RMSE), `{run_id}.split.json` (train/val/test fractions and seed),
+and `{run_id}.provenance.json` (dataset id, feature and target columns, row count) --
+each written through an adapter that certifies its values against the owning domain
+smart constructor, so an invalid record is refused rather than saved. The shipped
+adapter persists the model UNTRAINED -- it builds a minimal
 regressor from the certified config and saves its initial weights, so `train_run`
 returns a real checkpoint path today; fitting the model over prepared data is the next
 slice. That full training path is already proven end to end by tests
@@ -184,9 +189,9 @@ hand -- the integration is composed in the notebook, not in `src/`:
 |   |   |-- infrastructure.py # imperative shell: parquet I/O, .dat ingest
 |   |   `-- __main__.py       # context root + load_neutron_stars facade
 |   |-- mlmodels/             # mlmodels (training) bounded context
-|   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig, ModelIdentity, HoldoutSpec, DatasetProvenance, RunSummaryDTO (read model); reload guard verify_fingerprint + verify_identity / ModelIdentityMismatch
+|   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig, ModelIdentity, HoldoutSpec, DatasetProvenance, Metrics, RunSummaryDTO (read model); reload guard verify_fingerprint + verify_identity / ModelIdentityMismatch
 |   |   |-- application.py    # CQRS handlers: train-run command over save_trained_run, run-summary query over find_run_summary
-|   |   |-- infrastructure.py # imperative shell: save_trained_run writes the untrained checkpoint + {run_id}.json manifest (RunManifest: identity + config + structural fingerprint); find_run_summary projects it into a RunSummaryDTO and load_trained_run re-certifies it into a TrainedRun (torch-free read + load); materialize_model rebuilds the live model over the checkpoint (bare state_dict or bundled Lightning checkpoint), guarded on structural fingerprint and declared identity; real fit is a later slice
+|   |   |-- infrastructure.py # imperative shell: save_trained_run writes the untrained checkpoint + {run_id}.json manifest (RunManifest: identity + config + structural fingerprint); find_run_summary projects it into a RunSummaryDTO and load_trained_run re-certifies it into a TrainedRun (torch-free read + load); materialize_model rebuilds the live model over the checkpoint (bare state_dict or bundled Lightning checkpoint), guarded on structural fingerprint and declared identity; record_run_evaluation / record_run_split / record_run_provenance certify and write the {run_id}.metrics|split|provenance.json sidecars; real fit is a later slice
 |   |   `-- __main__.py       # context root + settings-driven train_run facade (get_settings -> checkpoint dir)
 |   `-- railway_adts/         # Result / Option / @safe railway primitives
 |-- tests/                    # mirror of src/, test-first
