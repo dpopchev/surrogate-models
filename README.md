@@ -164,9 +164,9 @@ make lab LAB_HOST=0.0.0.0 LAB_PORT=9000
 |   |   |-- infrastructure.py # imperative shell: parquet I/O, .dat ingest
 |   |   `-- __main__.py       # context root + load_neutron_stars facade
 |   |-- mlmodels/             # mlmodels (training) bounded context
-|   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig, ModelIdentity, HoldoutSpec, DatasetProvenance
+|   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig, ModelIdentity, HoldoutSpec, DatasetProvenance, RunSummaryDTO (read model)
 |   |   |-- application.py    # CQRS handler (train run) over the injected save_trained_run port
-|   |   |-- infrastructure.py # imperative shell: save_trained_run writes the untrained checkpoint + {run_id}.json manifest sidecar (RunManifest); fit is a later slice
+|   |   |-- infrastructure.py # imperative shell: save_trained_run writes the untrained checkpoint + {run_id}.json manifest sidecar (RunManifest); find_run_summary projects it into a RunSummaryDTO (torch-free read side); fit is a later slice
 |   |   `-- __main__.py       # context root + settings-driven train_run facade (get_settings -> checkpoint dir)
 |   `-- railway_adts/         # Result / Option / @safe railway primitives
 |-- tests/                    # mirror of src/, test-first
