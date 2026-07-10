@@ -13,7 +13,10 @@ Checkpoint. One assert per test.
 from surrogate_models.mlmodels.domain import (
     Checkpoint,
     ConfiguredRun,
+    DatasetProvenance,
     InvalidBatchSize,
+    InvalidDatasetProvenance,
+    InvalidHoldoutSpec,
     InvalidLearningRate,
     InvalidMaxEpochs,
     InvalidOptimizer,
@@ -24,6 +27,9 @@ from surrogate_models.mlmodels.domain import (
     TrainingConfigError,
     complete_training,
     configure_run,
+    make_dataset_provenance,
+    make_holdout_spec,
+    make_model_identity,
     make_runid,
     make_training_config,
 )
@@ -43,6 +49,21 @@ def _make_config(
 def _training_config(max_epochs: int = 1) -> TrainingConfig:
     """Build a valid TrainingConfig value object directly for the transition tests."""
     return TrainingConfig(max_epochs, 0.01, 2, "sgd")
+
+
+_EXAMPLE_FEATURES = ("x1", "x2")
+_EXAMPLE_TARGET = "y"
+_EXAMPLE_ROWS = 3
+
+
+def _make_provenance(
+    dataset_id: str = "example",
+    feature_columns: tuple[str, ...] = _EXAMPLE_FEATURES,
+    target_column: str = _EXAMPLE_TARGET,
+    n_rows: int = _EXAMPLE_ROWS,
+) -> Result[DatasetProvenance, InvalidDatasetProvenance]:
+    """Certify a minimal example provenance; override one field to probe a rail."""
+    return make_dataset_provenance(dataset_id, feature_columns, target_column, n_rows)
 
 
 # --- make_runid: the sole str -> RunID smart constructor ---
@@ -74,6 +95,81 @@ def test_make_runid_err_is_invalid_runid() -> None:
 
 def test_make_runid_err_carries_the_offending_string() -> None:
     assert make_runid("bad run").unwrap_err().run_id == "bad run"
+
+
+# --- make_model_identity: the injected model's identity gate ---
+
+
+def test_make_model_identity_err_on_empty_name() -> None:
+    assert make_model_identity("", "1.0.0").is_err() is True
+
+
+# --- make_holdout_spec: the recorded train/val/test holdout gate ---
+
+
+def test_make_holdout_spec_ok_on_valid_fractions() -> None:
+    assert make_holdout_spec(0.7, 0.15, 0.15, 0).is_ok() is True
+
+
+def test_make_holdout_spec_ok_carries_train_fraction() -> None:
+    assert make_holdout_spec(0.7, 0.15, 0.15, 0).unwrap().train_fraction == 0.7
+
+
+def test_make_holdout_spec_ok_carries_seed() -> None:
+    assert make_holdout_spec(0.7, 0.15, 0.15, 42).unwrap().seed == 42
+
+
+def test_make_holdout_spec_rejects_a_non_positive_fraction() -> None:
+    assert make_holdout_spec(-0.1, 0.6, 0.5, 0).is_err() is True
+
+
+def test_make_holdout_spec_rejects_fractions_not_summing_to_one() -> None:
+    assert make_holdout_spec(0.5, 0.3, 0.3, 0).is_err() is True
+
+
+def test_make_holdout_spec_rejects_a_negative_seed() -> None:
+    assert make_holdout_spec(0.7, 0.15, 0.15, -1).is_err() is True
+
+
+def test_make_holdout_spec_err_is_invalid_holdout_spec() -> None:
+    error = make_holdout_spec(0.5, 0.3, 0.3, 0).unwrap_err()
+    assert isinstance(error, InvalidHoldoutSpec)
+
+
+# --- make_dataset_provenance: the training-data provenance gate ---
+
+
+def test_make_dataset_provenance_ok_on_valid_columns() -> None:
+    assert _make_provenance().is_ok() is True
+
+
+def test_make_dataset_provenance_ok_carries_target_column() -> None:
+    assert _make_provenance().unwrap().target_column == "y"
+
+
+def test_make_dataset_provenance_ok_carries_n_rows() -> None:
+    assert _make_provenance().unwrap().n_rows == 3
+
+
+def test_make_dataset_provenance_rejects_empty_dataset_id() -> None:
+    assert _make_provenance(dataset_id="").is_err() is True
+
+
+def test_make_dataset_provenance_rejects_no_feature_columns() -> None:
+    assert _make_provenance(feature_columns=()).is_err() is True
+
+
+def test_make_dataset_provenance_rejects_target_among_features() -> None:
+    assert _make_provenance(target_column="x1").is_err() is True
+
+
+def test_make_dataset_provenance_rejects_non_positive_rows() -> None:
+    assert _make_provenance(n_rows=0).is_err() is True
+
+
+def test_make_dataset_provenance_err_is_invalid_dataset_provenance() -> None:
+    error = _make_provenance(dataset_id="").unwrap_err()
+    assert isinstance(error, InvalidDatasetProvenance)
 
 
 # --- make_training_config: certifies four knobs, first bad field wins ---

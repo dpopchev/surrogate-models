@@ -2,18 +2,21 @@
 
 Holds the TrainingRun aggregate as states-as-types (ConfiguredRun -> TrainedRun),
 the run identity (RunID) and training configuration (TrainingConfig) as validated
-value objects, the Checkpoint reference a completed run points at, and the
-validation errors returned when an id or a training knob is malformed. No torch, no
-I/O, no raise: the model is GIVEN to the shell as an injected callable and the
-training itself happens there; the domain only records a run's certified
+value objects, the injected model's declared identity (ModelIdentity), the recorded
+train/val/test split (HoldoutSpec) and training-data provenance (DatasetProvenance),
+the Checkpoint reference a completed run points at, and the validation errors returned
+when an id, a model identity, a split, provenance, or a training knob is malformed.
+No torch, no I/O, no raise: the model is GIVEN to the shell as an injected callable
+and the training itself happens there; the domain only records a run's certified
 configuration and the checkpoint the shell produced. Failures travel the railway as
 Result values.
 
-The smart constructors (make_runid, make_training_config) and the pure transitions
-(configure_run, complete_training) are added under TDD. A TrainedRun is reachable
-only through complete_training applied to a ConfiguredRun, so every trained run in
-the system was a validly configured run first -- the "trained but never configured"
-and "trained without an artifact" states are unrepresentable.
+The smart constructors (make_runid, make_model_identity, make_holdout_spec,
+make_dataset_provenance, make_training_config) and the pure transitions (configure_run,
+complete_training) are added under TDD. A TrainedRun is reachable only through
+complete_training applied to a ConfiguredRun, so every trained run in the system was a
+validly configured run first -- the "trained but never configured" and "trained without
+an artifact" states are unrepresentable.
 """
 
 from __future__ import annotations
@@ -38,6 +41,50 @@ class InvalidRunID:
     """
 
     run_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class InvalidModelIdentity:
+    """Validation failure: a candidate model identity is malformed.
+
+    Carries the offending ``name`` and ``version`` -- the values that failed
+    certification. The injected model's identity is the minimum criterion a run records
+    so a later reload can prove the model class it loads weights into matches the one
+    that trained; an identity this constructor rejects can never be recorded.
+    """
+
+    name: str
+    version: str
+
+
+@dataclass(frozen=True, slots=True)
+class InvalidHoldoutSpec:
+    """Validation failure: a candidate holdout split is malformed.
+
+    Carries the offending fractions and seed -- raised when a fraction falls outside
+    (0, 1), the fractions do not sum to 1, or the seed is negative. Holds the candidate
+    values that failed certification.
+    """
+
+    train_fraction: float
+    val_fraction: float
+    test_fraction: float
+    seed: int
+
+
+@dataclass(frozen=True, slots=True)
+class InvalidDatasetProvenance:
+    """Validation failure: a candidate dataset provenance is malformed.
+
+    Carries the offending values -- raised when the dataset id is blank, no feature
+    columns are given, the target column is blank or also a feature, or the row count is
+    below one. Holds the candidate values that failed certification.
+    """
+
+    dataset_id: str
+    feature_columns: tuple[str, ...]
+    target_column: str
+    n_rows: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,6 +171,51 @@ class Checkpoint:
 
 
 @dataclass(frozen=True, slots=True)
+class ModelIdentity:
+    """The user-injected model's declared identity -- its ``name`` and ``version``.
+
+    The minimum criteria every injected model must meet. A trained run records this
+    identity in its manifest so a reload can verify the model class it loads weights
+    into matches the one that trained -- a version bump flags logic drift the structural
+    fingerprint cannot see. Built only by make_model_identity (the sole constructor).
+    """
+
+    name: str
+    version: str
+
+
+@dataclass(frozen=True, slots=True)
+class HoldoutSpec:
+    """A recorded train/val/test holdout split -- the fractions and the shuffle seed.
+
+    The metadata a run keeps so its split is reproducible and comparable across
+    experiments. The actual splitting is done by an injected shell strategy; this only
+    certifies and remembers the fractions (each in (0, 1), summing to 1) and the seed.
+    Built solely by make_holdout_spec.
+    """
+
+    train_fraction: float
+    val_fraction: float
+    test_fraction: float
+    seed: int
+
+
+@dataclass(frozen=True, slots=True)
+class DatasetProvenance:
+    """Provenance of the data a run trained on -- enough to trace and reproduce it.
+
+    Records the dataset identity, its feature columns, the target column, and the row
+    count, so a persisted run is self-describing without shipping the data. Built solely
+    by make_dataset_provenance.
+    """
+
+    dataset_id: str
+    feature_columns: tuple[str, ...]
+    target_column: str
+    n_rows: int
+
+
+@dataclass(frozen=True, slots=True)
 class ConfiguredRun:
     """The initial TrainingRun state: a run certified and ready to train.
 
@@ -162,6 +254,69 @@ def make_runid(run_id: str) -> Result[RunID, InvalidRunID]:
     if _RUN_ID_PATTERN.match(run_id):
         return Ok(RunID(run_id))
     return Err(InvalidRunID(run_id))
+
+
+def make_model_identity(
+    name: str, version: str
+) -> Result[ModelIdentity, InvalidModelIdentity]:
+    """Certify the injected model's declared identity, or reject it.
+
+    The sole way to build a ModelIdentity -- the minimum criteria a user-injected model
+    must meet before a run can record it. A blank ``name`` (empty or whitespace-only) is
+    rejected with ``Err(InvalidModelIdentity)`` carrying the offending pair, so an
+    unnamed model can never be persisted; ``version`` well-formedness is a later slice.
+    """
+    if not name.strip():
+        return Err(InvalidModelIdentity(name, version))
+    return Ok(ModelIdentity(name, version))
+
+
+def make_holdout_spec(
+    train_fraction: float, val_fraction: float, test_fraction: float, seed: int
+) -> Result[HoldoutSpec, InvalidHoldoutSpec]:
+    """Certify a train/val/test holdout split, or reject it.
+
+    The sole way to build a HoldoutSpec, recording the split so a run is reproducible.
+    Each fraction must lie strictly in (0, 1), the three must sum to 1 (within a
+    floating-point tolerance), and the ``seed`` must be non-negative. Any violation
+    returns ``Err(InvalidHoldoutSpec)`` carrying the offending candidate values; the
+    actual splitting is an injected shell strategy, so this only certifies the metadata.
+    """
+    fractions = (train_fraction, val_fraction, test_fraction)
+    valid_fractions = all(0.0 < fraction < 1.0 for fraction in fractions)
+    sums_to_one = abs(sum(fractions) - 1.0) <= 1e-9
+    if not (valid_fractions and sums_to_one and seed >= 0):
+        return Err(
+            InvalidHoldoutSpec(train_fraction, val_fraction, test_fraction, seed)
+        )
+    return Ok(HoldoutSpec(train_fraction, val_fraction, test_fraction, seed))
+
+
+def make_dataset_provenance(
+    dataset_id: str,
+    feature_columns: tuple[str, ...],
+    target_column: str,
+    n_rows: int,
+) -> Result[DatasetProvenance, InvalidDatasetProvenance]:
+    """Certify the provenance of a run's training data, or reject it.
+
+    The sole way to build a DatasetProvenance. Requires a non-blank ``dataset_id``, at
+    least one feature column, a non-blank ``target_column`` that is NOT also a feature
+    (a column cannot be both input and output), and a positive ``n_rows``. Any violation
+    returns ``Err(InvalidDatasetProvenance)`` carrying the offending candidate values.
+    """
+    well_formed = (
+        bool(dataset_id.strip())
+        and len(feature_columns) > 0
+        and bool(target_column.strip())
+        and target_column not in feature_columns
+        and n_rows >= 1
+    )
+    if not well_formed:
+        return Err(
+            InvalidDatasetProvenance(dataset_id, feature_columns, target_column, n_rows)
+        )
+    return Ok(DatasetProvenance(dataset_id, feature_columns, target_column, n_rows))
 
 
 def make_training_config(
