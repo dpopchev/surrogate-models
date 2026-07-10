@@ -7,6 +7,10 @@ onto the failure rail as a DATASET_SAVE_FAILED cause. find_dataset_frame is the
 path-first read port: it reads path/{dataset_id}.parquet back into a bare frame
 (the read model) and folds any OSError as a DATASET_READ_FAILED cause. One assert
 per test.
+
+All ``.dat`` fixtures here are MINIMAL synthetic batches (generic ``f*`` columns, a
+``Pc =`` comment -- the one parameter the reader actually extracts) exercising the
+reader's contract; never the real dataset's schema or scale (see the tdd rule).
 """
 
 import logging
@@ -30,49 +34,47 @@ from surrogate_models.datasets.infrastructure import (
 from surrogate_models.railway_adts import Ok
 
 ONE_BATCH = """\
-# x1 = 0.005, x2 = 1000.0, beta = 0.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
-rhoc Pc M
-5.89e14 5.0e-05 0.56
-6.06e14 5.5e-05 0.59
+# Pc = 5e-05
+f1 f2 f3
+1.0 2.0 3.0
+4.0 5.0 6.0
 """
 
 TWO_BATCH = """\
-# x1 = 0.005, x2 = 1000.0, beta = 0.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
-rhoc Pc M
-5.89e14 5.0e-05 0.56
-6.06e14 5.5e-05 0.59
-# x1 = 0.005, x2 = 1000.0, beta = 6.4, Lambda = 0.7, Pc = 7e-05, choice_theory = 31
-rhoc Pc M
-7.10e14 7.0e-05 0.71
-7.50e14 7.5e-05 0.75
+# Pc = 5e-05
+f1 f2 f3
+1.0 2.0 3.0
+4.0 5.0 6.0
+# Pc = 7e-05
+f1 f2 f3
+7.0 8.0 9.0
+10.0 11.0 12.0
 """
 
-# A comment-only batch (a run that produced zero stars: its `#` parameter comment is
-# immediately followed by the next batch's comment, with no header/data rows). The
-# real neutron-stars.dat has 36 of these; each fed pd.read_csv an empty string ->
-# EmptyDataError. The reader must SKIP such batches and parse the rest.
+# A comment-only batch: its `#` comment is immediately followed by the next batch's
+# comment, with no header/data rows. Feeding pd.read_csv an empty body raises
+# EmptyDataError, so the reader must SKIP such a batch and parse the rest.
 EMPTY_BATCH_BETWEEN = """\
-# x1 = 0.005, x2 = 1000.0, beta = 0.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
-rhoc Pc M
-5.89e14 5.0e-05 0.56
-# x1 = 0.005, x2 = 1000.0, beta = 50.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
-# x1 = 0.005, x2 = 1000.0, beta = 6.4, Lambda = 0.7, Pc = 7e-05, choice_theory = 31
-rhoc Pc M
-7.10e14 7.0e-05 0.71
+# Pc = 5e-05
+f1 f2 f3
+1.0 2.0 3.0
+# tag = empty
+# Pc = 7e-05
+f1 f2 f3
+7.0 8.0 9.0
 """
 
-# A batch that emitted its header but ZERO data rows (a run that printed the column
-# header yet produced no stars). pd.read_csv on a header-only body yields a 0-row,
-# all-object frame; concatenated with the populated (float) batches it upcasts the
-# shared columns to object -- which make_dataset rejects (DATASET_MISSING_SCHEMA).
-# The real neutron-stars.dat has 203 such batches. The reader must heal the dtype.
+# A batch that emitted its header but ZERO data rows. pd.read_csv on a header-only
+# body yields a 0-row, all-object frame; concatenated with the populated (float)
+# batches it upcasts the shared columns to object -- which make_dataset rejects
+# (DATASET_MISSING_SCHEMA). The reader must heal the dtype back to numeric.
 HEADER_ONLY_BATCH_MIX = """\
-# x1 = 0.005, x2 = 1000.0, beta = 0.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
-rhoc Pc M
-5.89e14 5.0e-05 0.56
-6.06e14 5.5e-05 0.59
-# x1 = 0.005, x2 = 1000.0, beta = 6.4, Lambda = 0.7, Pc = 7e-05, choice_theory = 31
-rhoc Pc M
+# Pc = 5e-05
+f1 f2 f3
+1.0 2.0 3.0
+4.0 5.0 6.0
+# Pc = 7e-05
+f1 f2 f3
 """
 
 
@@ -153,7 +155,7 @@ def test_read_neutron_stars_frame_wraps_malformed_batch_as_error(
     tmp_path: Path,
 ) -> None:
     source = tmp_path / "neutron-stars.dat"
-    source.write_text("# x1 = 0.005, beta = 0.4\nrhoc M\n5.89e14 0.56\n")
+    source.write_text("# tag = 1\nf1 f2\n1.0 2.0\n")
     failure = read_neutron_stars_frame(source)
     assert failure.unwrap_err().code == "NEUTRON_STARS_READ_FAILED"
 
@@ -174,7 +176,7 @@ def test_read_neutron_stars_frame_warns_on_skipped_empty_batch(
     source.write_text(EMPTY_BATCH_BETWEEN)
     with caplog.at_level(logging.WARNING):
         read_neutron_stars_frame(source)
-    assert "beta = 50.4" in caplog.text
+    assert "tag = empty" in caplog.text
 
 
 def test_read_neutron_stars_frame_heals_object_dtype_from_header_only_batch(

@@ -6,7 +6,8 @@ load_neutron_stars() is the public get-or-build entry point: it reads the stored
 frame (read-through). It returns a bare DataFrame, raising at the outer edge on
 failure. Settings are resolved via get_settings(), so each test isolates the
 environment (env overrides + cache clear) exactly as tests/test_config.py does.
-One assert per test.
+One assert per test. The ``.dat`` fixture is a minimal synthetic batch (generic
+columns, a ``Pc =`` comment), never the real dataset's schema or scale (tdd rule).
 """
 
 import logging
@@ -26,10 +27,10 @@ LOGGING_LEVEL_ENV = "SURROGATE_MODELS__LOGGING__LEVEL"
 LOGGING_FILE_ENV = "SURROGATE_MODELS__LOGGING__FILE"
 
 ONE_BATCH = """\
-# x1 = 0.005, x2 = 1000.0, beta = 0.4, Lambda = 0.5, Pc = 5e-05, choice_theory = 31
-rhoc Pc M
-5.89e14 5.0e-05 0.56
-6.06e14 5.5e-05 0.59
+# Pc = 5e-05
+f1 f2 f3
+1.0 2.0 3.0
+4.0 5.0 6.0
 """
 
 
