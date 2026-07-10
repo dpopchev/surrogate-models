@@ -4,8 +4,10 @@ Holds the TrainingRun aggregate as states-as-types (ConfiguredRun -> TrainedRun)
 the run identity (RunID) and training configuration (TrainingConfig) as validated
 value objects, the injected model's declared identity (ModelIdentity), the recorded
 train/val/test split (HoldoutSpec) and training-data provenance (DatasetProvenance),
-the Checkpoint reference a completed run points at, and the validation errors returned
-when an id, a model identity, a split, provenance, or a training knob is malformed.
+the Checkpoint reference a completed run points at, the read-side run summary
+(RunSummaryDTO) a query projects from a run's manifest, and the validation errors
+returned when an id, a model identity, a split, provenance, or a training knob is
+malformed.
 No torch, no I/O, no raise: the model is GIVEN to the shell as an injected callable
 and the training itself happens there; the domain only records a run's certified
 configuration and the checkpoint the shell produced. Failures travel the railway as
@@ -240,6 +242,25 @@ class TrainedRun:
     run_id: RunID
     config: TrainingConfig
     checkpoint: Checkpoint
+
+
+@dataclass(frozen=True, slots=True)
+class RunSummaryDTO:
+    """A read-model summary of a persisted run, projected from its manifest.
+
+    The read side's DTO -- primitive fields only, built by the infrastructure Find
+    adapter straight from the ``{run_id}.json`` manifest, BYPASSING the TrainingRun
+    aggregate and its certification (FIND a view to show it). Deliberately NOT an
+    aggregate and NOT built by a smart constructor: it carries the run id and the
+    trained model's declared identity for display, and grows as the manifest gains
+    split, provenance, and metric fields. Homed in the domain -- the shared bottom both
+    application (the FindRunSummaryFn read port) and infrastructure (the find adapter)
+    name -- because infrastructure may not import application.
+    """
+
+    run_id: str
+    model_name: str
+    model_version: str
 
 
 def make_runid(run_id: str) -> Result[RunID, InvalidRunID]:

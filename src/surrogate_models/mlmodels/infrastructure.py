@@ -9,7 +9,9 @@ Persistence is two artifacts per run: the Lightning ``{run_id}.ckpt`` (live weig
 and a ``{run_id}.json`` sidecar (metadata for the read side). RunManifest models that
 sidecar and write_run_manifest / read_run_manifest round-trip it as JSON with no torch
 import, so Find and Load stay cheap; the @safe port adapters that call these plain
-helpers own the single I/O boundary.
+helpers own the single I/O boundary. find_run_summary is the read adapter: it projects
+the manifest into a RunSummaryDTO with no torch load, so a query can show a run without
+materialising its weights.
 
 This is the THIN training slice: the adapter persists the model's UNTRAINED weights
 (no fit, no data, no Trainer yet) so the composition seat's happy path is reachable
@@ -32,7 +34,12 @@ import lightning
 import torch
 from torch import nn
 
-from surrogate_models.mlmodels.domain import Checkpoint, ConfiguredRun, TrainingConfig
+from surrogate_models.mlmodels.domain import (
+    Checkpoint,
+    ConfiguredRun,
+    RunSummaryDTO,
+    TrainingConfig,
+)
 from surrogate_models.railway_adts import fmap_error, safe
 
 logger = logging.getLogger(__name__)
@@ -83,6 +90,24 @@ def read_run_manifest(manifest_dir: Path, run_id: str) -> RunManifest:
         model_name=payload["model_name"],
         model_version=payload["model_version"],
     )
+
+
+@safe(OSError, fmap_error(lambda cause: cause, code="RUN_SUMMARY_READ_FAILED"))
+def find_run_summary(manifest_dir: Path, run_id: str) -> RunSummaryDTO:
+    """Project the ``{run_id}.json`` manifest into a RunSummaryDTO read model.
+
+    The read side's lookup adapter. ``manifest_dir`` leads so the composition root binds
+    it via ``partial`` to yield the application's ``FindRunSummaryFn``. It reads ONLY
+    the manifest sidecar (via read_run_manifest -- json, NO torch load) and maps its
+    primitives straight into a RunSummaryDTO, BYPASSING the aggregate and its
+    certification (FIND a view to show it). ``@safe`` folds a missing or unreadable
+    manifest (OSError) into an ErrorInfo cause (``RUN_SUMMARY_READ_FAILED``); a
+    non-OSError (malformed json, a missing key) propagates as a corruption/logic fault,
+    symmetric with the datasets find_dataset_frame read boundary.
+    """
+    logger.debug("reading run summary %s from %s", run_id, manifest_dir)
+    manifest = read_run_manifest(manifest_dir, run_id)
+    return RunSummaryDTO(manifest.run_id, manifest.model_name, manifest.model_version)
 
 
 class SurrogateRegressor(lightning.LightningModule):

@@ -20,11 +20,13 @@ from surrogate_models.mlmodels.domain import (
     Checkpoint,
     ConfiguredRun,
     RunID,
+    RunSummaryDTO,
     TrainingConfig,
     configure_run,
 )
 from surrogate_models.mlmodels.infrastructure import (
     RunManifest,
+    find_run_summary,
     read_run_manifest,
     save_trained_run,
     write_run_manifest,
@@ -55,3 +57,14 @@ def test_run_manifest_round_trips_through_its_sidecar(tmp_path: Path) -> None:
 def test_save_trained_run_writes_a_manifest_naming_the_model(tmp_path: Path) -> None:
     save_trained_run(tmp_path, _configured_run())
     assert read_run_manifest(tmp_path, "smoke").model_name == "surrogate-regressor"
+
+
+def test_find_run_summary_projects_the_manifest_into_a_summary(tmp_path: Path) -> None:
+    write_run_manifest(
+        tmp_path,
+        RunManifest(run_id="demo", model_name="regressor", model_version="1.0.0"),
+    )
+    result = find_run_summary(tmp_path, "demo")
+    assert result.unwrap() == RunSummaryDTO(
+        run_id="demo", model_name="regressor", model_version="1.0.0"
+    )
