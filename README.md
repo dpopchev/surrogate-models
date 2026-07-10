@@ -24,9 +24,11 @@ training config, and the model's structural fingerprint. That sidecar backs two
 torch-free reads of the same file: a run-summary query projects it into a read DTO,
 and a load path re-certifies it back into a `TrainedRun` aggregate. Rebuilding the
 live model is a separate `materialize_model` step behind the shell: it builds a fresh
-model from an injected factory, loads the checkpoint weights, and verifies the rebuilt
-structure against the recorded fingerprint -- a mismatch fails loudly rather than
-loading weights into a drifted architecture. The shipped adapter persists the model
+model from an injected factory (handed alongside its declared identity), loads the
+checkpoint weights, and verifies the rebuilt model against the manifest on two axes --
+its structural fingerprint (shape drift) and its declared name/version (logic drift the
+fingerprint cannot see) -- so a mismatch on either fails loudly rather than loading
+weights into a drifted model. The shipped adapter persists the model
 UNTRAINED -- it builds a minimal
 regressor from the certified config and saves its initial weights, so `train_run`
 returns a real checkpoint path today; fitting the model over prepared data is the next
@@ -171,9 +173,9 @@ make lab LAB_HOST=0.0.0.0 LAB_PORT=9000
 |   |   |-- infrastructure.py # imperative shell: parquet I/O, .dat ingest
 |   |   `-- __main__.py       # context root + load_neutron_stars facade
 |   |-- mlmodels/             # mlmodels (training) bounded context
-|   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig, ModelIdentity, HoldoutSpec, DatasetProvenance, RunSummaryDTO (read model); reload guard verify_fingerprint / ModelIdentityMismatch
+|   |   |-- domain.py         # functional core: TrainingRun states, RunID, TrainingConfig, ModelIdentity, HoldoutSpec, DatasetProvenance, RunSummaryDTO (read model); reload guard verify_fingerprint + verify_identity / ModelIdentityMismatch
 |   |   |-- application.py    # CQRS handlers: train-run command over save_trained_run, run-summary query over find_run_summary
-|   |   |-- infrastructure.py # imperative shell: save_trained_run writes the untrained checkpoint + {run_id}.json manifest (RunManifest: identity + config + structural fingerprint); find_run_summary projects it into a RunSummaryDTO and load_trained_run re-certifies it into a TrainedRun (torch-free read + load); materialize_model rebuilds the live model over the checkpoint, fingerprint-guarded; real fit is a later slice
+|   |   |-- infrastructure.py # imperative shell: save_trained_run writes the untrained checkpoint + {run_id}.json manifest (RunManifest: identity + config + structural fingerprint); find_run_summary projects it into a RunSummaryDTO and load_trained_run re-certifies it into a TrainedRun (torch-free read + load); materialize_model rebuilds the live model over the checkpoint, guarded on structural fingerprint and declared identity; real fit is a later slice
 |   |   `-- __main__.py       # context root + settings-driven train_run facade (get_settings -> checkpoint dir)
 |   `-- railway_adts/         # Result / Option / @safe railway primitives
 |-- tests/                    # mirror of src/, test-first
