@@ -311,12 +311,16 @@ def _load_live_model(
 
     The torch I/O half of materialize: ``factory()`` (fork 1A's user-owned model) then
     load the state_dict with ``weights_only=True`` -- only weights travel, never a
-    pickled class -- from the ckpt the hydrated aggregate points at. ``@safe`` folds a
-    missing or unreadable ckpt into ``MODEL_MATERIALIZE_FAILED``.
+    pickled class -- from the ckpt the hydrated aggregate points at. Accepts a bare
+    ``state_dict`` (what save_trained_run writes) OR a bundled Lightning checkpoint
+    (``trainer.save_checkpoint`` nests weights under a ``state_dict`` key), so a
+    resumable checkpoint reloads too. ``@safe`` folds a missing or unreadable ckpt
+    into ``MODEL_MATERIALIZE_FAILED``.
     """
     logger.info("materialize run %s from %s", run.run_id, run.checkpoint.location)
     model = factory()
-    model.load_state_dict(torch.load(run.checkpoint.location, weights_only=True))
+    checkpoint = torch.load(run.checkpoint.location, weights_only=True)
+    model.load_state_dict(checkpoint.get("state_dict", checkpoint))
     return model
 
 

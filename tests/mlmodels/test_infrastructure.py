@@ -189,6 +189,42 @@ def test_materialize_model_loads_the_persisted_weights(tmp_path: Path) -> None:
     )
 
 
+def test_materialize_model_loads_a_bundled_checkpoint(tmp_path: Path) -> None:
+    config = TrainingConfig(1, 0.01, 2, "sgd")
+    reference = SurrogateRegressor(config)
+    torch.save(
+        {"state_dict": reference.state_dict(), "epoch": 5, "global_step": 10},
+        tmp_path / "bundle.ckpt",
+    )
+    write_run_manifest(
+        tmp_path,
+        RunManifest(
+            run_id="bundle",
+            model_name="surrogate-regressor",
+            model_version="0.1.0",
+            max_epochs=1,
+            learning_rate=0.01,
+            batch_size=2,
+            optimizer="sgd",
+            fingerprint=structural_fingerprint(reference.state_dict()),
+        ),
+    )
+    run = complete_training(
+        configure_run(RunID("bundle"), config),
+        Checkpoint(str(tmp_path / "bundle.ckpt")),
+    )
+    result = materialize_model(
+        lambda: SurrogateRegressor(config),
+        ModelIdentity("surrogate-regressor", "0.1.0"),
+        tmp_path,
+        run,
+    )
+    model = result.unwrap()
+    assert torch.equal(
+        model.state_dict()["linear.weight"], reference.state_dict()["linear.weight"]
+    )
+
+
 def test_materialize_model_rejects_a_fingerprint_mismatch(tmp_path: Path) -> None:
     config = TrainingConfig(1, 0.01, 2, "sgd")
     torch.save(SurrogateRegressor(config).state_dict(), tmp_path / "smoke.ckpt")
