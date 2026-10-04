@@ -1,16 +1,16 @@
 # Board -- surrogate-models
 record: local
-open path: E-002 > W-007 > T-014   | blocked: 0 | todo roots: 0 | done: 20 | pruned: 0
+open path: E-002 > W-012   | blocked: 1 | todo roots: 0 | done: 24 | pruned: 0
 
 ## Tree
 
 ### E-002 [doing] Data audit -- preprocessed datasets behind Sections 2 and 3
 
-#### W-007 issue [doing] BH table from the zero-phi0 dataset
+#### W-007 issue [blocked] BH table from the zero-phi0 dataset   [blocked since 2026-10-04, waiting on W-012: T-016 make data fails: parser does not handle repeated block headers]
 
-- T-014 [doing] Add data dependencies and the state home -> pandas + pyarrow, mk/data.mk STATE, CLAUDE.md gate deviation   <- ACTIVE LEAF
-- T-015 [todo] Write the BH preparation test-first -> 30_physical_framework/32_black_holes/prepare_black_holes.py with its tests
-- T-016 [todo] Wire the BH preparation into make -> local/state/black_holes.parquet
+- T-014 [done] Add data dependencies and the state home -> pandas + pyarrow, mk/data.mk STATE, CLAUDE.md gate deviation
+- T-015 [done] Write the BH preparation test-first -> 30_physical_framework/32_black_holes/prepare_black_holes.py with its tests
+- T-016 [doing] Wire the BH preparation into make -> local/state/black_holes.parquet
 
 #### W-008 spike [todo] How neutron-stars.dat is laid out and how bad runs show up
 
@@ -31,6 +31,11 @@ open path: E-002 > W-007 > T-014   | blocked: 0 | todo roots: 0 | done: 20 | pru
 
 - T-023 [todo] Write the EDA numbers test-first -> 40_data_analysis/41_eda/eda_numbers.py with its tests
 - T-024 [todo] Render Section 3.1 from the macros -> 41_eda.tex uses generated numbers and states the EDA scope
+
+#### W-012 bug [doing] BH parser fails on repeated block headers and blank lines   (filed during T-016)
+
+- T-025 [done] Record the repeated-header case as a failing test -> test_prepare_black_holes.py RED
+- T-026 [done] Skip repeated headers and blank lines in parse_table -> prepare_black_holes.py GREEN
 
 ## Closed
 
@@ -77,10 +82,10 @@ closed 2026-10-04 -- outcome: Given pyproject.toml, When torch is added with uv,
 ```mermaid
 flowchart TD
   E002["E-002 doing: Data audit -- preprocessed datasets behind Sections 2 and 3"]
-  E002 --> W007["W-007 issue doing: BH table from the zero-phi0 dataset"]
-  W007 --> T014["T-014 doing: Add data dependencies and the state home -> pandas + pyarrow, mk/data.mk STATE, CLAUDE.md gate deviation -- ACTIVE LEAF"]
-  W007 --> T015["T-015 todo: Write the BH preparation test-first -> 30_physical_framework/32_black_holes/prepare_black_holes.py with its tests"]
-  W007 --> T016["T-016 todo: Wire the BH preparation into make -> local/state/black_holes.parquet"]
+  E002 --> W007["W-007 issue blocked on W-012: BH table from the zero-phi0 dataset"]
+  W007 --> T014["T-014 done: Add data dependencies and the state home -> pandas + pyarrow, mk/data.mk STATE, CLAUDE.md gate deviation"]
+  W007 --> T015["T-015 done: Write the BH preparation test-first -> 30_physical_framework/32_black_holes/prepare_black_holes.py with its tests"]
+  W007 --> T016["T-016 doing: Wire the BH preparation into make -> local/state/black_holes.parquet"]
   E002 --> W008["W-008 spike todo: How neutron-stars.dat is laid out and how bad runs show up"]
   W008 --> T017["T-017 todo: Probe the NS file layout and failure signatures -> local/scratch/probe_neutron_stars.py and Findings on W-008"]
   W008 --> T018["T-018 todo: Decide the NS parsing and filtering rules -> spike.decision on W-008"]
@@ -93,11 +98,16 @@ flowchart TD
   E002 --> W011["W-011 issue todo: Section 3.1 numbers from generated macros"]
   W011 --> T023["T-023 todo: Write the EDA numbers test-first -> 40_data_analysis/41_eda/eda_numbers.py with its tests"]
   W011 --> T024["T-024 todo: Render Section 3.1 from the macros -> 41_eda.tex uses generated numbers and states the EDA scope"]
+  E002 --> W012["W-012 bug doing: BH parser fails on repeated block headers and blank lines"]
+  W012 --> T025["T-025 done: Record the repeated-header case as a failing test -> test_prepare_black_holes.py RED"]
+  W012 --> T026["T-026 done: Skip repeated headers and blank lines in parse_table -> prepare_black_holes.py GREEN"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,W007,T014 doing
-  class T015,T016,W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,T023,T024 todo
+  class E002,T016,W012 doing
+  class W007 blocked
+  class T014,T015,T025,T026 done
+  class W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,T023,T024 todo
 ```
