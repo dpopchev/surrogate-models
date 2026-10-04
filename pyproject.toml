@@ -1,0 +1,54 @@
+# pyproject.toml -- Python is a tool here, not the product (E-001 Decisions): a
+# non-package uv project. Each chapter folder keeps the scripts that make its
+# assets, each with test_<script>.py beside it. uv manages the local .venv from
+# this file; nothing is built.
+
+[project]
+name = "surrogate_models"
+version = "0"
+requires-python = ">=3.14"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "ruff>=0.6",
+  "pyright>=1.1",
+]
+
+# ---------------------------------------------------------------------------
+# Tools -- configured here, never in scattered rc files.
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+# Tests sit beside their scripts inside the chapter folders (00_metadata, 10_abstract, ...).
+testpaths = ["[0-9][0-9]_*"]
+# importlib: chapter folders are not valid package names and test basenames may repeat.
+addopts = "-ra --doctest-modules --import-mode=importlib"
+# Tool residuals live in local/; tools without a pyproject key are pointed
+# there by mk/python.mk's exports.
+cache_dir = "local/.pytest_cache"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+extend-exclude = ["build", "local"]
+cache-dir = "local/.ruff_cache"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# conftest.py is the add-python template verbatim; its lines exceed 100 columns.
+"conftest.py" = ["E501"]
+
+[tool.pyright]
+include = ["."]
+exclude = ["**/__pycache__", ".venv", "build", "local"]
+pythonVersion = "3.14"
+typeCheckingMode = "standard"
+venvPath = "."
+venv = ".venv"

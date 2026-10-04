@@ -10,3 +10,9 @@ local/
 .env
 .env.*
 !.env.example
+
+# --- uv-managed environment (`make sync` recreates it)
+.venv/
+
+# --- hatchling writes no egg-info; a setuptools layout would, so it is ignored too
+*.egg-info/
