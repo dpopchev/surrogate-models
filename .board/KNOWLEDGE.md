@@ -14,8 +14,10 @@
 - 2026-10-04 E-001: text is edited in this repository; Overleaf is one-way (render and edit), changes come back by hand
 - 2026-10-04 E-001: the first flavour is article (build/paper/article/); another flavour (e.g. revtex) is a sibling folder later
 - 2026-10-04 E-001: the paper is native LaTeX; build/paper/<flavour>/ is a flat copy of every .tex, .bib and generated asset
+- 2026-10-04 E-001: the upload unit is the folder build/paper/article/ (Overleaf Upload folder into the existing project); build/paper/article.zip stays as a spare copy -- confirmed to unpack via New Project -> Upload Project; tar.gz not needed (Overleaf takes zip)
 
 ## Deviations
+- 2026-10-04 E-001: AC4 and W-004 added (acknowledged) -- the developer uploads build/paper/article/ into an existing Overleaf project with Upload folder, so the folder must hold sources only; the PDF of AC1 moves to build/paper/article.pdf
 - 2026-10-04 E-001: T-003 check narrowed from make check to make lint typecheck -- pytest exits 5 with no tests collected; make check turns green with T-004's first test
 - 2026-10-04 E-001: T-005 check reads main.log instead of pdftotext -- poppler is not installed locally
 - 2026-10-04 E-001: siunitx dropped from 00_metadata/preamble.tex during T-002 -- not installed locally (Arch texlive-science) and unused

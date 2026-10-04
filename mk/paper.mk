@@ -14,6 +14,10 @@ PAPER_FLAVOUR  ?= article
 PAPER_ENTRY    := 00_metadata/$(PAPER_FLAVOUR).tex
 PAPER_DIR      := $(BUILD)/paper/$(PAPER_FLAVOUR)
 PAPER_ZIP      := $(BUILD)/paper/$(PAPER_FLAVOUR).zip
+PAPER_PDF      := $(BUILD)/paper/$(PAPER_FLAVOUR).pdf
+# LaTeX residue and the PDF stay out of $(PAPER_DIR): that folder is what Overleaf's
+# Upload folder takes, sources and assets only.
+PAPER_LATEX    := $(abspath $(BUILD))/paper/.latex/$(PAPER_FLAVOUR)
 
 # Every .tex and .bib of the chapter folders except the flavour entries. The
 # build is flat, so basenames must be unique -- compile refuses a clash.
@@ -46,11 +50,12 @@ compile: $(PAPER_ASSETS) ## Build the flat paper and its PDF under build/paper/
 	@cp $(PAPER_SRC) $(PAPER_ASSETS) $(PAPER_DIR)/
 	@cp $(PAPER_ENTRY) $(PAPER_DIR)/main.tex
 	$(call log_info,assembled $(words $(PAPER_SRC)) sources and $(words $(PAPER_ASSETS)) assets into $(PAPER_DIR)/ -- compiling)
-	@$(LATEXMK) -cd $(PAPER_DIR)/main.tex
+	@$(LATEXMK) -cd -outdir=$(PAPER_LATEX) $(PAPER_DIR)/main.tex
+	@cp $(PAPER_LATEX)/main.pdf $(PAPER_PDF)
 	@rm -f $(PAPER_ZIP)
 	@zip -q -j -X $(PAPER_ZIP) $(PAPER_DIR)/main.tex \
 	  $(addprefix $(PAPER_DIR)/,$(notdir $(PAPER_SRC) $(PAPER_ASSETS)))
-	$(call log_done,compiled $(PAPER_DIR)/main.pdf -- Overleaf upload $(PAPER_ZIP))
+	$(call log_done,compiled $(PAPER_PDF) -- upload folder $(PAPER_DIR)/$(comma) spare $(PAPER_ZIP))
 
 # Clean room: the zip alone must compile, as Overleaf will see it.
 PAPER_VERIFY := $(BUILD)/paper/verify
