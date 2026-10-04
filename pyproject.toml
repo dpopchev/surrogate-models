@@ -28,6 +28,8 @@ dev = [
 testpaths = ["[0-9][0-9]_*"]
 # Default (prepend) import mode: a test imports the script beside it by module name, as
 # `uv run python <dir>/<script>.py` does. Test basenames must be unique across folders.
+# The root on pythonpath makes shared code importable as `shared.<module>`.
+pythonpath = ["."]
 addopts = "-ra --doctest-modules"
 # Tool residuals live in local/; tools without a pyproject key are pointed
 # there by mk/python.mk's exports.
