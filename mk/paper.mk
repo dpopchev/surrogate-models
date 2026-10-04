@@ -21,15 +21,29 @@ PAPER_SRC = $(filter-out $(PAPER_FLAVOURS:%=00_metadata/%.tex), \
 
 LATEXMK := latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error -silent
 
+# Generated assets: one file per asset, named <dir>_<name>.<ext>, written by the
+# script beside its section and copied flat next to the sources.
+ASSETS       := $(BUILD)/assets
+PAPER_ASSETS := $(ASSETS)/00_metadata_build_stamp.tex
+
+# The stamp reads git state (commit, uncommitted changes) that make cannot watch,
+# so it is rebuilt on every run.
+.PHONY: FORCE
+FORCE:
+
+$(ASSETS)/00_metadata_build_stamp.tex: 00_metadata/build_stamp.py FORCE
+	@$(RUN) python $< $@
+	$(call log_done,build stamp written to $@)
+
 .PHONY: compile
-compile: ## Build the flat paper and its PDF under build/paper/
+compile: $(PAPER_ASSETS) ## Build the flat paper and its PDF under build/paper/
 	@dups=$$(printf '%s\n' $(notdir $(PAPER_SRC)) | sort | uniq -d); \
 	  if [ -n "$$dups" ]; then \
 	    printf 'duplicate source basenames (the build is flat): %s\n' "$$dups" >&2; exit 1; \
 	  fi
 	@rm -rf $(PAPER_DIR) && mkdir -p $(PAPER_DIR)
-	@cp $(PAPER_SRC) $(PAPER_DIR)/
+	@cp $(PAPER_SRC) $(PAPER_ASSETS) $(PAPER_DIR)/
 	@cp $(PAPER_ENTRY) $(PAPER_DIR)/main.tex
-	$(call log_info,assembled $(words $(PAPER_SRC)) sources into $(PAPER_DIR)/ -- compiling)
+	$(call log_info,assembled $(words $(PAPER_SRC)) sources and $(words $(PAPER_ASSETS)) assets into $(PAPER_DIR)/ -- compiling)
 	@$(LATEXMK) -cd $(PAPER_DIR)/main.tex
 	$(call log_done,compiled $(PAPER_DIR)/main.pdf)
