@@ -52,12 +52,15 @@ BLACK_HOLES = make_table_spec(
 
 
 def parse_table(text: str) -> pd.DataFrame:
-    """Parse whitespace-separated rows under a '#'-prefixed header line of column names."""
+    """Parse whitespace-separated rows under a '#'-prefixed header line of column names.
+
+    The data may come in blocks: later '#' lines (repeated headers) and blank lines are skipped.
+    """
     header, _, body = text.partition("\n")
     if not header.startswith("#"):
         raise ValueError(f"first line must be a '#' column header, got {header[:40]!r}")
     names = header.lstrip("#").split()
-    return pd.read_csv(io.StringIO(body), sep=r"\s+", header=None, names=names)
+    return pd.read_csv(io.StringIO(body), sep=r"\s+", header=None, names=names, comment="#")
 
 
 def check_fixed(table: pd.DataFrame, fixed: tuple[str, ...]) -> pd.DataFrame:

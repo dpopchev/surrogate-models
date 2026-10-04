@@ -22,6 +22,11 @@ def test_parse_reads_values_despite_trailing_whitespace() -> None:
     assert parse_table(TEXT)["b"].tolist() == [2.0, 5.0]
 
 
+def test_parse_reads_every_block_under_repeated_headers() -> None:
+    blocks = "# a b\n1.0 2.0 \n3.0 4.0 \n \n  \n# a b\n5.0 6.0 \n"
+    assert parse_table(blocks)["a"].tolist() == [1.0, 3.0, 5.0]
+
+
 def test_text_without_a_header_line_is_rejected() -> None:
     with pytest.raises(ValueError, match="header"):
         parse_table("1.0 2.0\n")
