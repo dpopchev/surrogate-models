@@ -13,6 +13,7 @@ PAPER_FLAVOURS := article
 PAPER_FLAVOUR  ?= article
 PAPER_ENTRY    := 00_metadata/$(PAPER_FLAVOUR).tex
 PAPER_DIR      := $(BUILD)/paper/$(PAPER_FLAVOUR)
+PAPER_ZIP      := $(BUILD)/paper/$(PAPER_FLAVOUR).zip
 
 # Every .tex and .bib of the chapter folders except the flavour entries. The
 # build is flat, so basenames must be unique -- compile refuses a clash.
@@ -46,4 +47,7 @@ compile: $(PAPER_ASSETS) ## Build the flat paper and its PDF under build/paper/
 	@cp $(PAPER_ENTRY) $(PAPER_DIR)/main.tex
 	$(call log_info,assembled $(words $(PAPER_SRC)) sources and $(words $(PAPER_ASSETS)) assets into $(PAPER_DIR)/ -- compiling)
 	@$(LATEXMK) -cd $(PAPER_DIR)/main.tex
-	$(call log_done,compiled $(PAPER_DIR)/main.pdf)
+	@rm -f $(PAPER_ZIP)
+	@zip -q -j -X $(PAPER_ZIP) $(PAPER_DIR)/main.tex \
+	  $(addprefix $(PAPER_DIR)/,$(notdir $(PAPER_SRC) $(PAPER_ASSETS)))
+	$(call log_done,compiled $(PAPER_DIR)/main.pdf -- Overleaf upload $(PAPER_ZIP))
