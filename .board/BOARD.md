@@ -1,13 +1,13 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 1 | done: 14 | pruned: 0
+open path: W-005   | blocked: 0 | todo roots: 0 | done: 16 | pruned: 0
 
 ## Tree
 
-### W-005 issue [todo] (standalone) Python layer follows the COLOCATED level
+### W-005 issue [doing] (standalone) Python layer follows the COLOCATED level
 
-- T-010 [todo] Put the repository root on pytest pythonpath -> pyproject.toml pythonpath = ["."]
-- T-011 [todo] Align the python files with the add-python COLOCATED templates -> pyproject.toml, mk/python.mk, conftest.py
+- T-010 [done] Put the repository root on pytest pythonpath -> pyproject.toml pythonpath = ["."]
+- T-011 [done] Align the python files with the add-python COLOCATED templates -> pyproject.toml, mk/python.mk, conftest.py
 
 ## Closed
 
@@ -39,13 +39,14 @@ closed 2026-10-04 -- outcome: One command produces an Overleaf-ready article fro
 ## Diagram
 ```mermaid
 flowchart TD
-  W005["W-005 issue todo, standalone: Python layer follows the COLOCATED level"]
-  W005 --> T010["T-010 todo: Put the repository root on pytest pythonpath -> pyproject.toml pythonpath = ['.']"]
-  W005 --> T011["T-011 todo: Align the python files with the add-python COLOCATED templates -> pyproject.toml, mk/python.mk, conftest.py"]
+  W005["W-005 issue doing, standalone: Python layer follows the COLOCATED level"]
+  W005 --> T010["T-010 done: Put the repository root on pytest pythonpath -> pyproject.toml pythonpath = ['.']"]
+  W005 --> T011["T-011 done: Align the python files with the add-python COLOCATED templates -> pyproject.toml, mk/python.mk, conftest.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W005,T010,T011 todo
+  class W005 doing
+  class T010,T011 done
 ```
