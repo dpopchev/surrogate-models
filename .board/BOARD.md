@@ -1,13 +1,8 @@
 # Board -- surrogate-models
 record: local
-open path: W-006   | blocked: 0 | todo roots: 0 | done: 19 | pruned: 0
+open path: none   | blocked: 0 | todo roots: 0 | done: 20 | pruned: 0
 
 ## Tree
-
-### W-006 issue [doing] (standalone) Python dependencies resolve CPU-only for this machine
-
-- T-012 [done] Pin torch to the PyTorch CPU index -> pyproject.toml [[tool.uv.index]] and [tool.uv.sources]
-- T-013 [done] Prove torch resolves CPU-only -> a scratch copy of pyproject.toml locks torch +cpu with no GPU packages
 
 ## Closed
 
@@ -43,17 +38,19 @@ closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/
 - T-010 [done] Put the repository root on pytest pythonpath -> pyproject.toml pythonpath = ["."]
 - T-011 [done] Align the python files with the add-python COLOCATED templates -> pyproject.toml, mk/python.mk, conftest.py
 
+### W-006 issue [done] (standalone) Python dependencies resolve CPU-only for this machine
+
+closed 2026-10-04 -- outcome: Given pyproject.toml, When torch is added with uv, Then it resolves from https://download.pytorch.org/whl/cpu and the lock holds no nvidia, CUDA or triton package. -- ledger: ledgers/W-006.md
+
+- T-012 [done] Pin torch to the PyTorch CPU index -> pyproject.toml [[tool.uv.index]] and [tool.uv.sources]
+- T-013 [done] Prove torch resolves CPU-only -> a scratch copy of pyproject.toml locks torch +cpu with no GPU packages
+
 ## Diagram
 ```mermaid
 flowchart TD
-  W006["W-006 issue doing, standalone: Python dependencies resolve CPU-only for this machine"]
-  W006 --> T012["T-012 done: Pin torch to the PyTorch CPU index -> pyproject.toml [[tool.uv.index]] and [tool.uv.sources]"]
-  W006 --> T013["T-013 done: Prove torch resolves CPU-only -> a scratch copy of pyproject.toml locks torch +cpu with no GPU packages"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W006 doing
-  class T012,T013 done
 ```
