@@ -1,8 +1,8 @@
 """One assert per test function: the suite refuses to run while a test checks more than one thing.
 
-Several facts about one behavior are a test class with a shared fixture and one single-assert test per
-fact, or separate test functions (rules/python.md, Tests). Written by add-python as tests/conftest.py
-(package level) or scripts/conftest.py (helper level).
+Several facts about one behavior are a test class with a shared fixture and one single-assert test
+per fact, or separate test functions (rules/python.md, Tests). Written by add-python as
+tests/conftest.py (package level) or scripts/conftest.py (helper level).
 """
 
 import ast
@@ -14,7 +14,7 @@ import pytest
 
 
 def _asserts(function: Callable[..., object]) -> list[ast.Assert]:
-    """The assert statements of the test's own body; asserts of nested helper functions are not counted."""
+    """The asserts of the test's own body; those of nested helper functions are not counted."""
     body = ast.parse(textwrap.dedent(inspect.getsource(function))).body[0]
     found: list[ast.Assert] = []
     stack: list[ast.AST] = list(ast.iter_child_nodes(body))
@@ -44,4 +44,6 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
             offenders[item.nodeid.split("[")[0]] = why  # a parametrized test is one function
     if offenders:
         lines = "\n".join(f"  {nodeid}: {why}" for nodeid, why in sorted(offenders.items()))
-        raise pytest.UsageError(f"one assert per test -- split into a test class or separate tests:\n{lines}")
+        raise pytest.UsageError(
+            f"one assert per test -- split into a test class or separate tests:\n{lines}"
+        )

@@ -21,6 +21,12 @@ export PYTHONPYCACHEPREFIX          := $(abspath $(LOCAL))/pycache
 export HYPOTHESIS_STORAGE_DIRECTORY := $(abspath $(LOCAL))/.hypothesis
 export MYPY_CACHE_DIR               := $(abspath $(LOCAL))/.mypy_cache
 
+# Colocated level: a module run by path imports shared code as `shared.<m>`,
+# so the repository root goes on PYTHONPATH once shared/ exists.
+ifneq ($(wildcard shared/.),)
+export PYTHONPATH := $(CURDIR)
+endif
+
 CHECKS += lint typecheck test
 
 $(PYVER):
