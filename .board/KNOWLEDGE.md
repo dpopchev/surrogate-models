@@ -4,6 +4,11 @@
 - 2026-10-04 E-001: standing: with pytest prepend mode, two same-named modules in different chapter folders import the first one silently (unlike duplicate test basenames, which error) -> every kept module basename is unique repo-wide and never shadows a stdlib module supersedes: E-001#1
 - 2026-10-04 W-007: T-016: fact: BH table has 21 beta curves (4.0 to 5.0, step 0.05), 5508-5942 rows each, r_h 4.059 to 10.0, D 0.105 to 0.506 (0.68 decades) -> the 6.7-decade D range is an NS property; BH D needs no log rescue
 - 2026-10-04 W-007: T-016: fact: black-holes-zero-phi0.dat holds 21 blocks, each after 2 blank lines and a repeated '#' header; 120164 data rows of 9 fields -> the parser must skip repeated headers and blank lines (W-012)
+- 2026-10-04 W-008: T-017: fact: 1850 blocks, each a '#' line (x1, x2, beta, Lambda, Pc, choice_theory) then a 27-column header then rows; one header layout; 224597 rows, all finite, D > 0 and M > 0 -> parse per block; outline N = 224597 is the unfiltered count
+- 2026-10-04 W-008: T-017: fact: 239 blocks are empty (no rows), concentrated at beta >= 17.4 -> the non-converged runs; 1611 non-empty curves remain, one block per (beta, lambda), 50 beta (0.4 to 49.4, step 1) x 37 lambda (0.5 to 4.1, step 0.1)
+- 2026-10-04 W-008: T-017: fact: header beta and Lambda equal the beta and lambda columns; x1, x2, Pc, choice_theory, kappa (1000), mphi (0), lambda_phi (0), TheoryType (31) are constant -> assert them, inputs are (beta, lambda, rhoc)
+- 2026-10-04 W-008: T-017: fact: outline 3.1 rho_c range (5.891e14 to 3.342e15) and D range (8.2e-8 to 0.38) match the UNFILTERED file; lambda 0.5 to 0.8 carry 11550 rows each vs a median 5640 per lambda -> 3.1 numbers will change after filtering
+- 2026-10-04 W-008: T-017: fact: rho_c rises strictly in all 1611 curves; 1111 curves continue past their M maximum (23550 rows, up to 65 per curve); 500 curves end before reaching a maximum -> cutting past M_max leaves 201047 rows
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
