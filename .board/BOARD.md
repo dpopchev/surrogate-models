@@ -1,8 +1,36 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 0 | done: 20 | pruned: 0
+open path: E-002 > W-007 > T-014   | blocked: 0 | todo roots: 0 | done: 20 | pruned: 0
 
 ## Tree
+
+### E-002 [doing] Data audit -- preprocessed datasets behind Sections 2 and 3
+
+#### W-007 issue [doing] BH table from the zero-phi0 dataset
+
+- T-014 [doing] Add data dependencies and the state home -> pandas + pyarrow, mk/data.mk STATE, CLAUDE.md gate deviation   <- ACTIVE LEAF
+- T-015 [todo] Write the BH preparation test-first -> 30_physical_framework/32_black_holes/prepare_black_holes.py with its tests
+- T-016 [todo] Wire the BH preparation into make -> local/state/black_holes.parquet
+
+#### W-008 spike [todo] How neutron-stars.dat is laid out and how bad runs show up
+
+- T-017 [todo] Probe the NS file layout and failure signatures -> local/scratch/probe_neutron_stars.py and Findings on W-008
+- T-018 [todo] Decide the NS parsing and filtering rules -> spike.decision on W-008
+
+#### W-009 issue [todo] NS table from the filtered dataset
+
+- T-019 [todo] Write the NS preparation test-first -> 30_physical_framework/33_neutron_stars/prepare_neutron_stars.py with its tests
+- T-020 [todo] Wire the NS preparation into make -> local/state/neutron_stars.parquet
+
+#### W-010 issue [todo] Frozen split grouped by curve
+
+- T-021 [todo] Write the curve-grouped split test-first -> 50_methodology/51_algorithms/split_datasets.py with its tests
+- T-022 [todo] Wire the split into make with its invariant -> local/state/split.parquet, no curve in two sets
+
+#### W-011 issue [todo] Section 3.1 numbers from generated macros
+
+- T-023 [todo] Write the EDA numbers test-first -> 40_data_analysis/41_eda/eda_numbers.py with its tests
+- T-024 [todo] Render Section 3.1 from the macros -> 41_eda.tex uses generated numbers and states the EDA scope
 
 ## Closed
 
@@ -48,9 +76,28 @@ closed 2026-10-04 -- outcome: Given pyproject.toml, When torch is added with uv,
 ## Diagram
 ```mermaid
 flowchart TD
+  E002["E-002 doing: Data audit -- preprocessed datasets behind Sections 2 and 3"]
+  E002 --> W007["W-007 issue doing: BH table from the zero-phi0 dataset"]
+  W007 --> T014["T-014 doing: Add data dependencies and the state home -> pandas + pyarrow, mk/data.mk STATE, CLAUDE.md gate deviation -- ACTIVE LEAF"]
+  W007 --> T015["T-015 todo: Write the BH preparation test-first -> 30_physical_framework/32_black_holes/prepare_black_holes.py with its tests"]
+  W007 --> T016["T-016 todo: Wire the BH preparation into make -> local/state/black_holes.parquet"]
+  E002 --> W008["W-008 spike todo: How neutron-stars.dat is laid out and how bad runs show up"]
+  W008 --> T017["T-017 todo: Probe the NS file layout and failure signatures -> local/scratch/probe_neutron_stars.py and Findings on W-008"]
+  W008 --> T018["T-018 todo: Decide the NS parsing and filtering rules -> spike.decision on W-008"]
+  E002 --> W009["W-009 issue todo: NS table from the filtered dataset"]
+  W009 --> T019["T-019 todo: Write the NS preparation test-first -> 30_physical_framework/33_neutron_stars/prepare_neutron_stars.py with its tests"]
+  W009 --> T020["T-020 todo: Wire the NS preparation into make -> local/state/neutron_stars.parquet"]
+  E002 --> W010["W-010 issue todo: Frozen split grouped by curve"]
+  W010 --> T021["T-021 todo: Write the curve-grouped split test-first -> 50_methodology/51_algorithms/split_datasets.py with its tests"]
+  W010 --> T022["T-022 todo: Wire the split into make with its invariant -> local/state/split.parquet, no curve in two sets"]
+  E002 --> W011["W-011 issue todo: Section 3.1 numbers from generated macros"]
+  W011 --> T023["T-023 todo: Write the EDA numbers test-first -> 40_data_analysis/41_eda/eda_numbers.py with its tests"]
+  W011 --> T024["T-024 todo: Render Section 3.1 from the macros -> 41_eda.tex uses generated numbers and states the EDA scope"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
+  class E002,W007,T014 doing
+  class T015,T016,W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,T023,T024 todo
 ```

@@ -4,7 +4,8 @@
 - 2026-10-04 E-001: standing: with pytest prepend mode, two same-named modules in different chapter folders import the first one silently (unlike duplicate test basenames, which error) -> every kept module basename is unique repo-wide and never shadows a stdlib module supersedes: E-001#1
 
 ## Open questions
-- none recorded
+- 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
+- 2026-10-04 E-002: open: Section 6 has no solver posterior -- the reference posterior must come from the dataset (dense-grid interpolation or nearest samples); which one?
 
 ## Decisions
 - 2026-10-04 E-001: Python is a tool, not the product: a non-package uv project, no src/, no tests/, no wheel
@@ -14,6 +15,11 @@
 - 2026-10-04 E-001: the first flavour is article (build/paper/article/); another flavour (e.g. revtex) is a sibling folder later
 - 2026-10-04 E-001: the paper is native LaTeX; build/paper/<flavour>/ is a flat copy of every .tex, .bib and generated asset
 - 2026-10-04 E-001: the upload unit is the folder build/paper/article/ (Overleaf Upload folder into the existing project); build/paper/article.zip stays as a spare copy -- confirmed to unpack via New Project -> Upload Project; tar.gz not needed (Overleaf takes zip)
+- 2026-10-04 E-002: Section 3.1 EDA describes the full filtered dataset; anything fitted from data (standardization statistics, data-driven thresholds, model selection) uses the training split only, and the paper states both
+- 2026-10-04 E-002: local/ holds runtime state (preprocessed tables, splits, trained weights, metrics) and survives make clean; build/ holds only what make builds and orchestrates into the paper -- a gate deviation from rules/python.md, recorded in CLAUDE.md
+- 2026-10-04 E-002: no solver and no field equations are available; only local/initial-data, which must be preprocessed first
+- 2026-10-04 E-002: only black-holes-zero-phi0.dat is used; kappa, lambda2 and phi0 are fixed settings, so BH is 2D in (r_h, beta)
+- 2026-10-04 E-002: tables are pandas DataFrames stored as parquet through pyarrow
 - 2026-10-04 W-006: the machine is CPU-only (Intel integrated graphics); every ML dependency is installed without its GPU parts
 
 ## Deviations
