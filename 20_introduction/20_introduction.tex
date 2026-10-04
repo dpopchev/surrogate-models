@@ -1,0 +1,15 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\todo{Draft from the outline.}
+\begin{itemize}
+  \item \textbf{Astrophysical context:} probing scalar-tensor / dilaton gravity using compact objects (black holes and neutron stars).
+  \item \textbf{The bottleneck:} high-fidelity ODE/PDE solvers require minutes per evaluation, making $10^5$--$10^7$ Bayesian MCMC samples computationally prohibitive.
+  \item \textbf{Literature gap:} existing surrogates treat dataset generation as an opaque step, missing key insights into data quality, target skewness and sampling artifacts.
+  \item \textbf{Core contributions:}
+  \begin{enumerate}
+    \item A unified neural surrogate predicting mass ($M$) and dilaton charge ($\Dch$) across the BH $(\rh, \beta)$ and NS $(\beta, \lambda, \rhoc)$ regimes.
+    \item A data-guided feature engineering framework with testable architectural hypotheses ($H_1$, $H_2$, $H_3$).
+    \item A rigorous ``scheme of elimination'' comparing classical ML (GPs, XGBoost) against deep ResNets.
+  \end{enumerate}
+\end{itemize}

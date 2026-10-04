@@ -1,0 +1,28 @@
+% The article flavour: build/paper/article/main.tex is a copy of this file.
+% Every \input is a bare basename -- the build copies all sources into one flat folder.
+
+\documentclass[11pt,a4paper]{article}
+
+\input{preamble}
+\input{metadata}
+
+\title{\papertitle}
+\author{\paperauthors\\[0.5em]\small\paperaffiliations}
+
+\begin{document}
+
+\maketitle
+
+\input{10_abstract}
+\input{20_introduction}
+\input{30_physical_framework}
+\input{40_data_analysis}
+\input{50_methodology}
+\input{60_results}
+\input{70_mcmc}
+\input{80_conclusion}
+
+\bibliographystyle{unsrtnat}
+\bibliography{refs}
+
+\end{document}

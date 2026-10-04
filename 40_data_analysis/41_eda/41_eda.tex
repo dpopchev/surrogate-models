@@ -1,0 +1,10 @@
+\subsection{Exploratory Data Analysis and Variable Distributions}
+\label{sec:eda}
+
+\todo{Draft from the outline; every number below becomes a generated macro.}
+\begin{itemize}
+  \item \textit{Symmetric input space:} $\rhoc$ spans a factor of $5.7$ ($5.891\times 10^{14}$ to $3.342\times 10^{15}\,\mathrm{g/cm^3}$), appearing unimodal and symmetric in log-space (mean $= 15.152 \approx$ median $= 15.147$).
+  \item \textit{Control grids:} discrete parameter discretization for $\beta$ (50 values) and $\lambda$ (37 values, with a floor pile-up at $\lambda = 0.5$).
+  \item \textit{Sampling artifact ($M$ pile-up):} uniform $\log\rhoc$ sampling over-represents the flat turning point ($dM/d\rhoc \to 0$), compressing $25\%$ of the dataset into a narrow $0.09\,\Msun$ window near $\Mmax$.
+  \item \textit{Wide-dynamic-range target ($\Dch$):} the dilaton charge spans $6.7$ decades ($8.2\times 10^{-8}$ to $0.38$) with a single smooth log-distribution ($0.03\%$ below $10^{-6}$, no zero-floor spike).
+\end{itemize}

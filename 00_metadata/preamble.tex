@@ -1,0 +1,25 @@
+% Packages and macros shared by every flavour of the paper (article, revtex, ...).
+% A flavour entry file (e.g. article.tex) sets \documentclass, then \input{preamble}.
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
+
+% Physics notation used across chapters.
+\newcommand{\Msun}{M_\odot}
+\newcommand{\rhoc}{\rho_c}
+\newcommand{\Mmax}{M_{\max}}
+\newcommand{\rh}{r_h}
+\newcommand{\Dch}{D}
+\newcommand{\order}[1]{\mathcal{O}\!\left(#1\right)}
+
+% Draft markers: visible in the PDF, searchable in the source.
+\newcommand{\todo}[1]{\textbf{[TODO: #1]}}

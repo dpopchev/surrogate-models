@@ -7,7 +7,12 @@
 - none recorded
 
 ## Decisions
-- none recorded
+- 2026-10-04 E-001: Python is a tool, not the product: a non-package uv project, no src/, no tests/, no wheel
+- 2026-10-04 E-001: chapter folders sit at the repo root; each section folder holds its text and the Python scripts that make its assets, each script with test_<script>.py beside it
+- 2026-10-04 E-001: packages and macros shared by every flavour live in 00_metadata/preamble.tex; references in 00_metadata/refs.bib (natbib + bibtex), a stub the developer replaces
+- 2026-10-04 E-001: text is edited in this repository; Overleaf is one-way (render and edit), changes come back by hand
+- 2026-10-04 E-001: the first flavour is article (build/paper/article/); another flavour (e.g. revtex) is a sibling folder later
+- 2026-10-04 E-001: the paper is native LaTeX; build/paper/<flavour>/ is a flat copy of every .tex, .bib and generated asset
 
 ## Deviations
 - none recorded
