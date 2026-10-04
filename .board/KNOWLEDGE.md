@@ -14,6 +14,7 @@
 - 2026-10-04 E-001: the first flavour is article (build/paper/article/); another flavour (e.g. revtex) is a sibling folder later
 - 2026-10-04 E-001: the paper is native LaTeX; build/paper/<flavour>/ is a flat copy of every .tex, .bib and generated asset
 - 2026-10-04 E-001: the upload unit is the folder build/paper/article/ (Overleaf Upload folder into the existing project); build/paper/article.zip stays as a spare copy -- confirmed to unpack via New Project -> Upload Project; tar.gz not needed (Overleaf takes zip)
+- 2026-10-04 W-006: the machine is CPU-only (Intel integrated graphics); every ML dependency is installed without its GPU parts
 
 ## Deviations
 - none recorded
