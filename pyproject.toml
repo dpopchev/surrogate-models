@@ -13,6 +13,18 @@ dependencies = []
 [tool.uv]
 package = false
 
+# This machine is CPU-only (Intel integrated graphics, no CUDA): every ML dependency is
+# installed without its GPU parts. torch and torchvision resolve from the PyTorch CPU
+# index (explicit: nothing else is looked up there); XGBoost is added as `xgboost-cpu`.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
+
 [dependency-groups]
 dev = [
   "pytest>=8",
