@@ -1,0 +1,12 @@
+# --- regenerable: every artifact a make target produces (rules/makefile.md -> Directories)
+# `make clean` removes the whole directory; if that loses something, it was misplaced.
+build/
+
+# --- machine-local: inputs, key files, scratch and every tool residual -- never
+# tracked, never cleaned.
+local/
+
+# --- env files at the repo root, if a launcher still uses one; the contract is .env.example
+.env
+.env.*
+!.env.example

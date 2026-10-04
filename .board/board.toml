@@ -1,0 +1,34 @@
+# .board/board.toml -- written by `board bind`; every key: skills/board/local.md
+
+[views]
+kanban = false            # also write KANBAN.md
+csv = false               # also write board.csv
+
+[knowledge]
+budget_chars = 7500       # KNOWLEDGE.md cap; over it board check fails (V16)
+entry_max_chars = 300     # one Finding, Decision or Deviation line
+
+[landing]
+mode = "ff-main"          # pr | ff-main
+approver = "developer"    # developer | agent
+branch_id = "local"       # local | remote
+tag = "epic-close"        # epic-close | root-close | none
+
+[show]
+detail = "brief"          # board show default: title | brief | full
+
+# Optional: sync the local record to an external board.
+# [remote]
+# backend = "azure-devops"          # azure-devops | jira | github | other
+# locator = "myorg/MyProject"       # org/project | Jira key | owner/repo
+# area = "MyProject\\Team A"
+# iteration = "MyProject\\Team A"   # Azure DevOps only
+# credential = "local/azure/devops.pat"   # under local/, never its value
+# token = "AB#{id}"                 # AB#{id} | {key}-{n} | #{n}
+
+# [remote.states]
+# todo = "To Do"
+# doing = "Doing"
+# done = "Done"
+# pruned = "Removed"
+# blocked = "Doing"
