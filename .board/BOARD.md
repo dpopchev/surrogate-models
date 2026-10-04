@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-001 > W-002 > T-003   | blocked: 0 | todo roots: 0 | done: 3 | pruned: 0
+open path: E-001 > W-002 > T-004   | blocked: 0 | todo roots: 0 | done: 4 | pruned: 0
 
 ## Tree
 
@@ -13,8 +13,8 @@ open path: E-001 > W-002 > T-003   | blocked: 0 | todo roots: 0 | done: 3 | prun
 
 #### W-002 issue [doing] A script beside its section generates an asset the article uses
 
-- T-003 [doing] Add the Python toolchain as a non-package project -> pyproject.toml, mk/python.mk, make check green   <- ACTIVE LEAF
-- T-004 [todo] Write the build stamp script test-first -> 00_metadata/build_stamp.py with test_build_stamp.py
+- T-003 [done] Add the Python toolchain as a non-package project -> pyproject.toml, mk/python.mk, make check green
+- T-004 [doing] Write the build stamp script test-first -> 00_metadata/build_stamp.py with test_build_stamp.py   <- ACTIVE LEAF
 - T-005 [todo] Wire generated assets into compile -> build stamp on the title page of main.pdf
 
 #### W-003 issue [todo] The article zip is a self-contained Overleaf project
@@ -30,8 +30,8 @@ flowchart TD
   W001 --> T001["T-001 done: Write the chapter skeleton and shared LaTeX setup -> 00_metadata/ and one <dir>/<dir>.tex per section"]
   W001 --> T002["T-002 done: Add the paper layer -> mk/paper.mk compile builds build/paper/article/main.pdf"]
   E001 --> W002["W-002 issue doing: A script beside its section generates an asset the article uses"]
-  W002 --> T003["T-003 doing: Add the Python toolchain as a non-package project -> pyproject.toml, mk/python.mk, make check green -- ACTIVE LEAF"]
-  W002 --> T004["T-004 todo: Write the build stamp script test-first -> 00_metadata/build_stamp.py with test_build_stamp.py"]
+  W002 --> T003["T-003 done: Add the Python toolchain as a non-package project -> pyproject.toml, mk/python.mk, make check green"]
+  W002 --> T004["T-004 doing: Write the build stamp script test-first -> 00_metadata/build_stamp.py with test_build_stamp.py -- ACTIVE LEAF"]
   W002 --> T005["T-005 todo: Wire generated assets into compile -> build stamp on the title page of main.pdf"]
   E001 --> W003["W-003 issue todo: The article zip is a self-contained Overleaf project"]
   W003 --> T006["T-006 todo: Add the zip step -> build/paper/article.zip with main.tex at its root"]
@@ -41,7 +41,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E001,W002,T003 doing
-  class W001,T001,T002 done
-  class T004,T005,W003,T006,T007 todo
+  class E001,W002,T004 doing
+  class W001,T001,T002,T003 done
+  class T005,W003,T006,T007 todo
 ```

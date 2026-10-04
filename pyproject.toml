@@ -26,8 +26,9 @@ dev = [
 [tool.pytest.ini_options]
 # Tests sit beside their scripts inside the chapter folders (00_metadata, 10_abstract, ...).
 testpaths = ["[0-9][0-9]_*"]
-# importlib: chapter folders are not valid package names and test basenames may repeat.
-addopts = "-ra --doctest-modules --import-mode=importlib"
+# Default (prepend) import mode: a test imports the script beside it by module name, as
+# `uv run python <dir>/<script>.py` does. Test basenames must be unique across folders.
+addopts = "-ra --doctest-modules"
 # Tool residuals live in local/; tools without a pyproject key are pointed
 # there by mk/python.mk's exports.
 cache_dir = "local/.pytest_cache"
