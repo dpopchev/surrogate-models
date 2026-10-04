@@ -1,12 +1,12 @@
 # Board -- surrogate-models
 record: local
-open path: E-002 > W-007   | blocked: 0 | todo roots: 0 | done: 26 | pruned: 0
+open path: E-002   | blocked: 0 | todo roots: 0 | done: 27 | pruned: 0
 
 ## Tree
 
 ### E-002 [doing] Data audit -- preprocessed datasets behind Sections 2 and 3
 
-#### W-007 issue [doing] BH table from the zero-phi0 dataset
+#### W-007 issue [done] BH table from the zero-phi0 dataset
 
 - T-014 [done] Add data dependencies and the state home -> pandas + pyarrow, mk/data.mk STATE, CLAUDE.md gate deviation
 - T-015 [done] Write the BH preparation test-first -> 30_physical_framework/32_black_holes/prepare_black_holes.py with its tests
@@ -82,7 +82,7 @@ closed 2026-10-04 -- outcome: Given pyproject.toml, When torch is added with uv,
 ```mermaid
 flowchart TD
   E002["E-002 doing: Data audit -- preprocessed datasets behind Sections 2 and 3"]
-  E002 --> W007["W-007 issue doing: BH table from the zero-phi0 dataset"]
+  E002 --> W007["W-007 issue done: BH table from the zero-phi0 dataset"]
   W007 --> T014["T-014 done: Add data dependencies and the state home -> pandas + pyarrow, mk/data.mk STATE, CLAUDE.md gate deviation"]
   W007 --> T015["T-015 done: Write the BH preparation test-first -> 30_physical_framework/32_black_holes/prepare_black_holes.py with its tests"]
   W007 --> T016["T-016 done: Wire the BH preparation into make -> local/state/black_holes.parquet"]
@@ -106,7 +106,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,W007 doing
-  class T014,T015,T016,W012,T025,T026 done
+  class E002 doing
+  class W007,T014,T015,T016,W012,T025,T026 done
   class W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,T023,T024 todo
 ```
