@@ -2,6 +2,7 @@
 
 ## Findings
 - 2026-10-04 E-001: standing: with pytest prepend mode, two same-named modules in different chapter folders import the first one silently (unlike duplicate test basenames, which error) -> every kept module basename is unique repo-wide and never shadows a stdlib module supersedes: E-001#1
+- 2026-10-04 W-007: T-016: fact: BH table has 21 beta curves (4.0 to 5.0, step 0.05), 5508-5942 rows each, r_h 4.059 to 10.0, D 0.105 to 0.506 (0.68 decades) -> the 6.7-decade D range is an NS property; BH D needs no log rescue
 - 2026-10-04 W-007: T-016: fact: black-holes-zero-phi0.dat holds 21 blocks, each after 2 blank lines and a repeated '#' header; 120164 data rows of 9 fields -> the parser must skip repeated headers and blank lines (W-012)
 
 ## Open questions
@@ -16,4 +17,4 @@
 - 2026-10-04 E-002: tables are pandas DataFrames stored as parquet through pyarrow
 
 ## Deviations
-- none recorded
+- 2026-10-04 E-002: W-012 bug filed during T-016 and pre-empted W-007 (blocked, then unblocked) -- the BH file holds 21 header-repeated blocks; W-012 lands on main together with W-007 because it builds on W-007's unlanded commits
