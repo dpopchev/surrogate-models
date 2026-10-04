@@ -1,13 +1,8 @@
 # Board -- surrogate-models
 record: local
-open path: W-005   | blocked: 0 | todo roots: 0 | done: 16 | pruned: 0
+open path: none   | blocked: 0 | todo roots: 0 | done: 17 | pruned: 0
 
 ## Tree
-
-### W-005 issue [doing] (standalone) Python layer follows the COLOCATED level
-
-- T-010 [done] Put the repository root on pytest pythonpath -> pyproject.toml pythonpath = ["."]
-- T-011 [done] Align the python files with the add-python COLOCATED templates -> pyproject.toml, mk/python.mk, conftest.py
 
 ## Closed
 
@@ -36,17 +31,19 @@ closed 2026-10-04 -- outcome: One command produces an Overleaf-ready article fro
 - T-008 [done] Move LaTeX residue out of the upload folder -> build/paper/article/ sources only, PDF at build/paper/article.pdf
 - T-009 [done] Verify the upload folder in a clean room -> paper-verify compiles a copy of build/paper/article/
 
+### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
+
+closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/python.md, When make check runs, Then it passes with the repository root on pytest pythonpath and the python files matching the add-python COLOCATED templates. -- ledger: ledgers/W-005.md
+
+- T-010 [done] Put the repository root on pytest pythonpath -> pyproject.toml pythonpath = ["."]
+- T-011 [done] Align the python files with the add-python COLOCATED templates -> pyproject.toml, mk/python.mk, conftest.py
+
 ## Diagram
 ```mermaid
 flowchart TD
-  W005["W-005 issue doing, standalone: Python layer follows the COLOCATED level"]
-  W005 --> T010["T-010 done: Put the repository root on pytest pythonpath -> pyproject.toml pythonpath = ['.']"]
-  W005 --> T011["T-011 done: Align the python files with the add-python COLOCATED templates -> pyproject.toml, mk/python.mk, conftest.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W005 doing
-  class T010,T011 done
 ```
