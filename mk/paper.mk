@@ -51,3 +51,16 @@ compile: $(PAPER_ASSETS) ## Build the flat paper and its PDF under build/paper/
 	@zip -q -j -X $(PAPER_ZIP) $(PAPER_DIR)/main.tex \
 	  $(addprefix $(PAPER_DIR)/,$(notdir $(PAPER_SRC) $(PAPER_ASSETS)))
 	$(call log_done,compiled $(PAPER_DIR)/main.pdf -- Overleaf upload $(PAPER_ZIP))
+
+# Clean room: the zip alone must compile, as Overleaf will see it.
+PAPER_VERIFY := $(BUILD)/paper/verify
+
+CHECKS += paper-verify
+
+.PHONY: paper-verify
+paper-verify: compile ## Compile the unpacked zip in an empty folder
+	@rm -rf $(PAPER_VERIFY) && mkdir -p $(PAPER_VERIFY)
+	@unzip -q $(PAPER_ZIP) -d $(PAPER_VERIFY)
+	@$(LATEXMK) -cd $(PAPER_VERIFY)/main.tex
+	@test -f $(PAPER_VERIFY)/main.pdf
+	$(call log_done,$(PAPER_ZIP) compiles on its own -- $(PAPER_VERIFY)/main.pdf)
