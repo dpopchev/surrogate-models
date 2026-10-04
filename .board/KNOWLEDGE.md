@@ -16,4 +16,5 @@
 
 ## Deviations
 - 2026-10-04 E-001: T-003 check narrowed from make check to make lint typecheck -- pytest exits 5 with no tests collected; make check turns green with T-004's first test
+- 2026-10-04 E-001: T-005 check reads main.log instead of pdftotext -- poppler is not installed locally
 - 2026-10-04 E-001: siunitx dropped from 00_metadata/preamble.tex during T-002 -- not installed locally (Arch texlive-science) and unused
