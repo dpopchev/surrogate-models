@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-001 > W-003   | blocked: 0 | todo roots: 0 | done: 9 | pruned: 0
+open path: E-001   | blocked: 0 | todo roots: 0 | done: 10 | pruned: 0
 
 ## Tree
 
@@ -17,7 +17,7 @@ open path: E-001 > W-003   | blocked: 0 | todo roots: 0 | done: 9 | pruned: 0
 - T-004 [done] Write the build stamp script test-first -> 00_metadata/build_stamp.py with test_build_stamp.py
 - T-005 [done] Wire generated assets into compile -> build stamp on the title page of main.pdf
 
-#### W-003 issue [doing] The article zip is a self-contained Overleaf project
+#### W-003 issue [done] The article zip is a self-contained Overleaf project
 
 - T-006 [done] Add the zip step -> build/paper/article.zip with main.tex at its root
 - T-007 [done] Add the clean-room check -> make paper-verify compiles the unpacked zip
@@ -33,7 +33,7 @@ flowchart TD
   W002 --> T003["T-003 done: Add the Python toolchain as a non-package project -> pyproject.toml, mk/python.mk, make check green"]
   W002 --> T004["T-004 done: Write the build stamp script test-first -> 00_metadata/build_stamp.py with test_build_stamp.py"]
   W002 --> T005["T-005 done: Wire generated assets into compile -> build stamp on the title page of main.pdf"]
-  E001 --> W003["W-003 issue doing: The article zip is a self-contained Overleaf project"]
+  E001 --> W003["W-003 issue done: The article zip is a self-contained Overleaf project"]
   W003 --> T006["T-006 done: Add the zip step -> build/paper/article.zip with main.tex at its root"]
   W003 --> T007["T-007 done: Add the clean-room check -> make paper-verify compiles the unpacked zip"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
@@ -41,6 +41,6 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E001,W003 doing
-  class W001,T001,T002,W002,T003,T004,T005,T006,T007 done
+  class E001 doing
+  class W001,T001,T002,W002,T003,T004,T005,W003,T006,T007 done
 ```
