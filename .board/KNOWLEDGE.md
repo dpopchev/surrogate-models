@@ -3,8 +3,8 @@
 ## Findings
 - 2026-10-04 E-001: standing: with pytest prepend mode, two same-named modules in different chapter folders import the first one silently (unlike duplicate test basenames, which error) -> every kept module basename is unique repo-wide and never shadows a stdlib module supersedes: E-001#1
 - 2026-10-04 W-007: T-016: fact: BH table has 21 beta curves (4.0 to 5.0, step 0.05), 5508-5942 rows each, r_h 4.059 to 10.0, D 0.105 to 0.506 (0.68 decades) -> the 6.7-decade D range is an NS property; BH D needs no log rescue
-- 2026-10-04 W-007: T-016: fact: black-holes-zero-phi0.dat holds 21 blocks, each after 2 blank lines and a repeated '#' header; 120164 data rows of 9 fields -> the parser must skip repeated headers and blank lines (W-012)
 - 2026-10-05 E-002: T-019: fact: none of the 21 BH curves in local/state/black_holes.parquet has an interior M maximum -> the cut-at-M_max rule changes only NS data; BH series are plotted whole
+- 2026-10-05 W-007: fact: kept in code -> prepare_black_holes.py tests supersedes: W-007#1
 - 2026-10-05 W-008: T-018: fact: header grid is 51 beta (0.4 to 50.4) x lambda 0.5 to 4.1; beta 50.4 is entirely empty; for beta >= 17.4 the empty blocks are the highest lambdas, growing from 1 (beta 17.4) to 12 (beta 49.4) -> the non-empty (beta, lambda) domain is non-rectangular
 - 2026-10-05 W-008: fact: the T-018 grid fact is the exact grid -> use it supersedes: W-008#2
 - 2026-10-05 W-009: T-019: fact: filtered NS table: 201047 rows, 1611 curves, 16 columns; D 8.203e-08 to 0.2338, rho_c 5.891e14 to 2.785e15 -> the Section 3.1 ranges after filtering (W-011)
@@ -51,3 +51,4 @@
 - 2026-10-05 E-002: T-020's check amended to read the first 5 columns -- W-008 R3 (developer-confirmed) keeps the 16 varying NS columns, inputs and targets first, the rest for EDA (R for the mass-radius figure)
 - 2026-10-05 E-002: W-015 filed during T-020 (standalone): the D-floor and sign Decisions contradict the drafted H1 and EDA text
 - 2026-10-05 E-002: developer re-plan: the split comes from per-dataset EDA; E-002 parked for E-003 (config, style, EDA figures); W-019 spike and W-020 (AC5) added; W-010, W-015 wait on W-019; W-010's lines and edge to be revised (GroupKFold for NS)
+- 2026-10-05 E-003: W-022 bug filed during T-044 (NS EDA rule re-runs every compile); queued, not blocking

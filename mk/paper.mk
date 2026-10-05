@@ -46,9 +46,18 @@ NS_EDA        := 40_data_analysis/41_neutron_stars/eda_neutron_stars.py
 NS_EDA_ASSETS := $(ASSETS)/41_neutron_stars_figures.tex
 PAPER_ASSETS  += $(NS_EDA_ASSETS)
 
-$(NS_EDA_ASSETS): $(NS_EDA) paper.toml shared/config.py shared/plots.py $(STATE)/neutron_stars.parquet
+$(NS_EDA_ASSETS): $(NS_EDA) paper.toml shared/config.py shared/plots.py shared/eda.py $(STATE)/neutron_stars.parquet
 	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS)
 	$(call log_done,NS EDA figures and numbers written to $(ASSETS)/)
+
+# Section 4.2: the BH EDA, the same way; its numbers file stands for the whole set.
+BH_EDA        := 40_data_analysis/42_black_holes/eda_black_holes.py
+BH_EDA_ASSETS := $(ASSETS)/42_black_holes_numbers.tex
+PAPER_ASSETS  += $(BH_EDA_ASSETS)
+
+$(BH_EDA_ASSETS): $(BH_EDA) paper.toml shared/config.py shared/plots.py shared/eda.py $(STATE)/black_holes.parquet
+	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS)
+	$(call log_done,BH EDA figures and numbers written to $(ASSETS)/)
 
 .PHONY: compile
 compile: $(PAPER_ASSETS) ## Build the flat paper and its PDF under build/paper/
