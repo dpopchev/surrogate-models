@@ -40,10 +40,11 @@ $(ASSETS)/00_metadata_build_stamp.tex: 00_metadata/build_stamp.py FORCE
 	@$(RUN) python $< $@
 	$(call log_done,build stamp written to $@)
 
-# Section 4.1: the NS EDA writes the figures paper.toml selects, their numbers and the
-# figures .tex; the .tex stands for the whole set (the script clears its own stale assets).
+# Section 4.1: the NS EDA writes the figures and tables paper.toml selects and their numbers;
+# the numbers file, written on every run, stands for the whole set (the script clears its own
+# stale assets).
 NS_EDA        := 40_data_analysis/41_neutron_stars/eda_neutron_stars.py
-NS_EDA_ASSETS := $(ASSETS)/41_neutron_stars_figures.tex
+NS_EDA_ASSETS := $(ASSETS)/41_neutron_stars_numbers.tex
 PAPER_ASSETS  += $(NS_EDA_ASSETS)
 
 $(NS_EDA_ASSETS): $(NS_EDA) paper.toml shared/config.py shared/plots.py shared/eda.py $(STATE)/neutron_stars.parquet

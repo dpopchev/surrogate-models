@@ -86,9 +86,9 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 60 | pruned: 2
 - T-056 [done] Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests
 - T-057 [done] Write the BH insight paragraphs -> 40_data_analysis/42_black_holes/42_black_holes.tex
 
-#### W-022 bug [todo] The NS EDA make rule targets a file the script no longer writes   (filed during T-044)
+#### W-022 bug [doing] The NS EDA make rule targets a file the script no longer writes   (filed during T-044)
 
-- T-058 [todo] Point the NS EDA rule at its numbers file -> mk/paper.mk
+- T-058 [doing] Point the NS EDA rule at its numbers file -> mk/paper.mk   <- ACTIVE LEAF
 
 #### W-023 bug [done] Python bytecode caches are tracked in git   (filed during T-057)
 
@@ -203,8 +203,8 @@ flowchart TD
   W018 --> T055["T-055 done: Extract the dataset-agnostic EDA core -> shared/eda.py with shared/test_eda.py"]
   W018 --> T056["T-056 done: Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests"]
   W018 --> T057["T-057 done: Write the BH insight paragraphs -> 40_data_analysis/42_black_holes/42_black_holes.tex"]
-  E003 --> W022["W-022 bug todo: The NS EDA make rule targets a file the script no longer writes"]
-  W022 --> T058["T-058 todo: Point the NS EDA rule at its numbers file -> mk/paper.mk"]
+  E003 --> W022["W-022 bug doing: The NS EDA make rule targets a file the script no longer writes"]
+  W022 --> T058["T-058 doing: Point the NS EDA rule at its numbers file -> mk/paper.mk -- ACTIVE LEAF"]
   E003 --> W023["W-023 bug done: Python bytecode caches are tracked in git"]
   W023 --> T059["T-059 done: Untrack and delete the bytecode caches -> a tree without __pycache__"]
   W015["W-015 issue todo, standalone: Paper text for the D floor and the sign symmetry of D"]
@@ -219,8 +219,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,E003 doing
+  class E002,E003,W022,T058 doing
   class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W013,T027,T028,T029,W014,T030,T031,W016,T036,T037,W017,T038,T039,T040,T041,T052,T053,T054,W018,T043,T044,T045,T055,T056,T057,W023,T059 done
-  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W022,T058,W015,T033,T034,T035,W021,T050,T051 todo
+  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W015,T033,T034,T035,W021,T050,T051 todo
   class T032,T042 pruned
 ```
