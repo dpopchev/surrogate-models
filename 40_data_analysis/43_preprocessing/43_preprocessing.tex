@@ -1,6 +1,5 @@
 \subsection{Preprocessing and Feature Decisions}
 \label{sec:preprocessing}
-\input{43_preprocessing_numbers}
 
 Both datasets are prepared the same way: the inputs are standardized on the training folds, the charge target is $\log_{10}(\max(\Dch, \varepsilon)/M)$, the mass target is $M$ in solar masses, and whole curves are split into a frozen test set and GroupKFold folds. \Cref{tab:decisions-ns,tab:decisions-bh} list each decision with its grounds from Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}; the three choices a table row cannot carry are argued first.
 

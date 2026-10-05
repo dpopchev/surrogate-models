@@ -1,12 +1,12 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 1 | done: 92 | pruned: 4
+open path: W-028 > T-067   | blocked: 0 | todo roots: 0 | done: 92 | pruned: 4
 
 ## Tree
 
-### W-028 issue [todo] (standalone) Outline text cites stale charge and row numbers   (filed during T-051)
+### W-028 issue [doing] (standalone) Outline text cites stale charge and row numbers   (filed during T-051)
 
-- T-067 [todo] Cite the generated numbers in the abstract and Section 2.3 -> 10_abstract.tex and 33_neutron_stars.tex
+- T-067 [doing] Cite the generated numbers in the abstract and Section 2.3 -> 10_abstract.tex and 33_neutron_stars.tex   <- ACTIVE LEAF
 
 ## Closed
 
@@ -184,12 +184,12 @@ closed 2026-10-05 -- outcome: Given local/initial-data and a built local/state, 
 ## Diagram
 ```mermaid
 flowchart TD
-  W028["W-028 issue todo, standalone: Outline text cites stale charge and row numbers"]
-  W028 --> T067["T-067 todo: Cite the generated numbers in the abstract and Section 2.3 -> 10_abstract.tex and 33_neutron_stars.tex"]
+  W028["W-028 issue doing, standalone: Outline text cites stale charge and row numbers"]
+  W028 --> T067["T-067 doing: Cite the generated numbers in the abstract and Section 2.3 -> 10_abstract.tex and 33_neutron_stars.tex -- ACTIVE LEAF"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W028,T067 todo
+  class W028,T067 doing
 ```
