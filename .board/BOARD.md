@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 1 | done: 87 | pruned: 4
+open path: none   | blocked: 0 | todo roots: 2 | done: 87 | pruned: 4
 
 ## Tree
 
@@ -8,6 +8,10 @@ open path: none   | blocked: 0 | todo roots: 1 | done: 87 | pruned: 4
 
 - T-050 [todo] Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex
 - T-051 [todo] Add the review note kind and mark the open claims -> preamble.tex and the review notes
+
+### W-027 issue [todo] (standalone) make clean runs every area clean, the state included
+
+- T-066 [todo] Adopt the area cleans -> Makefile, mk/python.mk and mk/data.mk
 
 ## Closed
 
@@ -175,10 +179,12 @@ flowchart TD
   W021["W-021 issue todo, standalone: Review markers in the paper with todonotes"]
   W021 --> T050["T-050 todo: Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex"]
   W021 --> T051["T-051 todo: Add the review note kind and mark the open claims -> preamble.tex and the review notes"]
+  W027["W-027 issue todo, standalone: make clean runs every area clean, the state included"]
+  W027 --> T066["T-066 todo: Adopt the area cleans -> Makefile, mk/python.mk and mk/data.mk"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W021,T050,T051 todo
+  class W021,T050,T051,W027,T066 todo
 ```

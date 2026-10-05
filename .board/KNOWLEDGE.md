@@ -15,7 +15,7 @@
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 
 ## Decisions
-- none recorded
+- 2026-10-05 W-027: make clean removes local/state too (each area has its own clean); supersedes the E-002 Decision of 2026-10-04 that state survives make clean (developer: an oversight)
 
 ## Deviations
 - none recorded
