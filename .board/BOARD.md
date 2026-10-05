@@ -1,14 +1,8 @@
 # Board -- surrogate-models
 record: local
-open path: W-015   | blocked: 0 | todo roots: 1 | done: 86 | pruned: 4
+open path: none   | blocked: 0 | todo roots: 1 | done: 87 | pruned: 4
 
 ## Tree
-
-### W-015 issue [doing] (standalone) Paper text for the D floor and the sign symmetry of D   (filed during T-020)
-
-- T-033 [done] Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output
-- T-034 [done] Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex
-- T-035 [done] State the sign symmetry of D in Section 2 -> 30_physical_framework/31_action/31_action.tex
 
 ### W-021 issue [todo] (standalone) Review markers in the paper with todonotes   (filed during T-041)
 
@@ -160,6 +154,14 @@ closed 2026-10-04 -- outcome: Given pyproject.toml, When torch is added with uv,
 - T-012 [done] Pin torch to the PyTorch CPU index -> pyproject.toml [[tool.uv.index]] and [tool.uv.sources]
 - T-013 [done] Prove torch resolves CPU-only -> a scratch copy of pyproject.toml locks torch +cpu with no GPU packages
 
+### W-015 issue [done] (standalone) Paper text for the D floor and the sign symmetry of D
+
+closed 2026-10-05 -- outcome: Given the E-002 D-floor and sign-symmetry Decisions and the Section 3.1 macros, When make compile runs, Then H1, the EDA D bullet and Section 2 state the floor eps, the share of rows below it and the D -> -D symmetry, with no hard-coded number. -- ledger: ledgers/W-015.md
+
+- T-033 [done] Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output
+- T-034 [done] Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex
+- T-035 [done] State the sign symmetry of D in Section 2 -> 30_physical_framework/31_action/31_action.tex
+
 ### W-024 issue [done] (standalone) Runtime state follows the global local/state rule
 
 closed 2026-10-05 -- outcome: Given the base Makefile with STATE and no local/state Gate deviation, When make clean and then make data run, Then make data rebuilds no state file. -- ledger: ledgers/W-024.md
@@ -170,10 +172,6 @@ closed 2026-10-05 -- outcome: Given the base Makefile with STATE and no local/st
 ## Diagram
 ```mermaid
 flowchart TD
-  W015["W-015 issue doing, standalone: Paper text for the D floor and the sign symmetry of D"]
-  W015 --> T033["T-033 done: Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output"]
-  W015 --> T034["T-034 done: Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex"]
-  W015 --> T035["T-035 done: State the sign symmetry of D in Section 2 -> 30_physical_framework/31_action/31_action.tex"]
   W021["W-021 issue todo, standalone: Review markers in the paper with todonotes"]
   W021 --> T050["T-050 todo: Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex"]
   W021 --> T051["T-051 todo: Add the review note kind and mark the open claims -> preamble.tex and the review notes"]
@@ -182,7 +180,5 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W015 doing
-  class T033,T034,T035 done
   class W021,T050,T051 todo
 ```
