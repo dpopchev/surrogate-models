@@ -8,27 +8,40 @@ macros; the dataset-agnostic machinery lives in shared/eda.py.
 """
 
 import logging
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal, assert_never, get_args
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.collections import LineCollection
+from matplotlib.colors import Colormap
+from matplotlib.figure import Figure
 
+from shared.config import BhFigure, BhTable, PaperConfig, load_config
 from shared.eda import (
     Adjacency,
     ColumnSummary,
+    booktabs,
     camel,
     curve_adjacency,
     curve_ids,
+    grid_bins,
     group_splitter,
     holdout_mae,
     kfold_mae,
     make_curve_space,
     number_tex,
     orders_of_magnitude,
+    render_macros,
     row_splitter,
     summarize,
+    text_width_size,
+    with_charge_targets,
 )
+from shared.plots import PlotStyle, anchor_color, apply_style, colormap
 
 logger = logging.getLogger(__name__)
 
@@ -268,3 +281,244 @@ def numbers(found: Evidence) -> dict[str, str]:
 def _split_error(score: SplitScore) -> str:
     """One split error for math mode; BH errors span orders of magnitude, so the format adapts."""
     return number_tex(score.mae)
+
+
+LABELS = {"r_h": "$r_h$", "beta": "$\\beta$", "M": "$M$", "D": "$D$", "D_over_M": "$D/M$"}
+TARGET_LABELS = {
+    "D": "$D$",
+    "log10_D": "$\\log_{10} D$",
+    "D_over_M": "$D/M$",
+    "log10_D_over_M": "$\\log_{10}(D/M)$",
+}
+STRATEGY_LABELS: dict[BhSplitStrategy, str] = {
+    "random_rows": "random rows",
+    "curves": "$\\beta$ curves (GroupKFold)",
+    "outer_curves": "outer $\\beta$ curves, from the others",
+}
+
+
+def _univariate_table(found: Evidence) -> str:
+    """Range, orders of magnitude and skew, raw against log10."""
+    summary = {(s.column, s.scale): s for s in found.summaries}
+    rows = [
+        f"{LABELS[c]} & ${number_tex(summary[c, 'raw'].minimum)}$ & "
+        f"${number_tex(summary[c, 'raw'].maximum)}$ & "
+        f"{orders_of_magnitude(summary[c, 'raw']):.2f} & "
+        f"{summary[c, 'raw'].skew:.2f} & {summary[c, 'log10'].skew:.2f}"
+        for c in SUMMARY_COLUMNS
+    ]
+    header = "Variable & min & max & orders of magnitude & skew & skew of $\\log_{10}$"
+    caption = (
+        "Black holes: range and skewness of each continuous variable, raw and in $\\log_{10}$."
+    )
+    return booktabs("bh-univariate", caption, "lrrrrr", header, rows)
+
+
+def _charge_table(found: Evidence) -> str:
+    """How each candidate charge target correlates with M, beta and r_h."""
+    rows = [
+        f"{TARGET_LABELS[t.target]} & {t.pearson_m:.3f} & {t.spearman_m:.3f} & "
+        f"{t.pearson_beta:.3f} & {t.pearson_rh:.3f}"
+        for t in found.targets
+    ]
+    header = "Target & Pearson $M$ & Spearman $M$ & Pearson $\\beta$ & Pearson $r_h$"
+    caption = "Black holes: correlation of the candidate charge targets."
+    return booktabs("bh-charge-correlation", caption, "lrrrr", header, rows)
+
+
+def _split_table(found: Evidence) -> str:
+    """1-NN error per split strategy and target."""
+    error = {(s.strategy, s.target): _split_error(s) for s in found.splits}
+    rows = [
+        f"{STRATEGY_LABELS[strategy]} & ${error[strategy, 'M']}$ & "
+        f"${error[strategy, 'M_correction']}$ & ${error[strategy, 'log10_D']}$"
+        for strategy in get_args(BhSplitStrategy)
+    ]
+    header = "Held out & $M$ & $M - r_h/2$ & $\\log_{10} D$"
+    caption = (
+        f"Black holes: 1-nearest-neighbour mean absolute error under each split "
+        f"({found.folds} folds; the outer curves are predicted from the others)."
+    )
+    return booktabs("bh-split-strategies", caption, "lrrr", header, rows)
+
+
+def table_tex(found: Evidence, table: BhTable) -> str:
+    """The booktabs table environment of one table."""
+    match table:
+        case "univariate":
+            return _univariate_table(found)
+        case "charge_correlation":
+            return _charge_table(found)
+        case "split_strategies":
+            return _split_table(found)
+        case _:
+            assert_never(table)
+
+
+def asset(figure: BhFigure) -> str:
+    """The flat asset basename of one figure."""
+    return f"42_black_holes_{figure}"
+
+
+def caption(figure: BhFigure) -> str:
+    """The caption of one figure."""
+    match figure:
+        case "univariate_continuous":
+            return (
+                "Black holes: distributions of the continuous variables, raw (left) and "
+                "$\\log_{10}$ (right)."
+            )
+        case "mass_correction":
+            return (
+                "Black holes: the mass correction $M - \\rh/2$ against $\\rh$, one line per "
+                "$\\beta$ curve."
+            )
+        case "charge_target":
+            return (
+                "Black holes: $M$ against $\\log_{10}\\Dch$ (left) and $\\log_{10}(\\Dch/M)$ "
+                "(right), coloured by $\\beta$."
+            )
+        case "existence_edge":
+            return (
+                "Black holes: the $\\rh$ range of each $\\beta$ curve; dots mark where each "
+                "curve starts."
+            )
+        case _:
+            assert_never(figure)
+
+
+def figure_tex(figure: BhFigure) -> str:
+    """The figure environment of one figure, placed here or at the top of a page (!htb)."""
+    return (
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{asset(figure)}}}\n"
+        f"\\caption{{{caption(figure)}}}\n\\label{{fig:bh-{figure.replace('_', '-')}}}\n"
+        "\\end{figure}\n"
+    )
+
+
+# r_h sits on a fine grid of thousands of values; up to this many, one bar per value.
+GRID_LIMIT = 250
+
+
+def _univariate_continuous(table: pd.DataFrame, style: PlotStyle) -> Figure:
+    """Histograms of the continuous variables, raw and in log10, grid-aware bins."""
+    fig, axes = plt.subplots(
+        len(SUMMARY_COLUMNS), 2, figsize=text_width_size(1.1), layout="constrained"
+    )
+    # Without edges: many thin bars would vanish under the style's white edges.
+    bars = {"color": anchor_color(style, "black_holes"), "linewidth": 0}
+    for row, column in enumerate(SUMMARY_COLUMNS):
+        raw = table[column].to_numpy(dtype=float)
+        logged = np.log10(raw)
+        axes[row, 0].hist(raw, bins=grid_bins(raw, GRID_LIMIT), **bars)
+        axes[row, 1].hist(logged, bins=grid_bins(logged, GRID_LIMIT), **bars)
+        axes[row, 0].set_xlabel(LABELS[column])
+        axes[row, 1].set_xlabel(f"$\\log_{{10}}$ {LABELS[column]}")
+    return fig
+
+
+def _curve_lines(table: pd.DataFrame, y: str, cmap: Colormap) -> LineCollection:
+    """One line per beta curve of y against r_h, coloured by beta."""
+    groups = [g for _, g in table.groupby(list(CURVE))]
+    lines = LineCollection(
+        [np.column_stack((g["r_h"], g[y])) for g in groups],
+        array=np.array([g["beta"].iloc[0] for g in groups]), cmap=cmap, linewidths=0.6,
+    )
+    lines.set_rasterized(True)
+    return lines
+
+
+def _mass_correction(table: pd.DataFrame, style: PlotStyle) -> Figure:
+    """M - r_h/2 against r_h, one line per beta curve."""
+    fig, ax = plt.subplots(figsize=text_width_size(0.55), layout="constrained")
+    lines = _curve_lines(table, "M_correction", colormap(style.black_holes.beta_cmap))
+    ax.add_collection(lines)
+    ax.autoscale()
+    ax.set_xlabel(LABELS["r_h"])
+    ax.set_ylabel("$M - r_h/2$")
+    fig.colorbar(lines, ax=ax, label=LABELS["beta"])
+    return fig
+
+
+def _charge_target(table: pd.DataFrame, style: PlotStyle) -> Figure:
+    """M against log10 D and log10 D/M, coloured by beta."""
+    fig, axes = plt.subplots(1, 2, figsize=text_width_size(0.45), layout="constrained")
+    cmap = colormap(style.black_holes.beta_cmap)
+    scatters = [
+        ax.scatter(
+            table["M"], table[target], c=table["beta"], cmap=cmap,
+            s=0.2, linewidths=0, rasterized=True,
+        )
+        for ax, target in zip(axes, ("log10_D", "log10_D_over_M"), strict=True)
+    ]
+    for ax, target in zip(axes, ("log10_D", "log10_D_over_M"), strict=True):
+        ax.set_xlabel(LABELS["M"])
+        ax.set_ylabel(TARGET_LABELS[target])
+    fig.colorbar(scatters[-1], ax=list(axes), label=LABELS["beta"])
+    return fig
+
+
+def _existence_edge(table: pd.DataFrame, style: PlotStyle) -> Figure:
+    """Each beta curve's r_h range as a horizontal segment, its start marked."""
+    fig, ax = plt.subplots(figsize=text_width_size(0.45), layout="constrained")
+    ranges = table.groupby("beta")["r_h"].agg(["min", "max"])
+    cmap = colormap(style.black_holes.beta_cmap)
+    shade = (ranges.index - ranges.index.min()) / max(np.ptp(ranges.index), 1e-12)
+    ax.hlines(ranges.index, ranges["min"], ranges["max"], colors=cmap(shade), linewidth=1.2)
+    ax.scatter(ranges["min"], ranges.index, color=cmap(shade), s=6, zorder=3)
+    ax.set_xlabel(LABELS["r_h"])
+    ax.set_ylabel(LABELS["beta"])
+    return fig
+
+
+def draw(figure: BhFigure, table: pd.DataFrame, style: PlotStyle) -> Figure:
+    """Draw one BH EDA figure from a table with the charge targets and the mass correction."""
+    match figure:
+        case "univariate_continuous":
+            return _univariate_continuous(table, style)
+        case "mass_correction":
+            return _mass_correction(table, style)
+        case "charge_target":
+            return _charge_target(table, style)
+        case "existence_edge":
+            return _existence_edge(table, style)
+        case _:
+            assert_never(figure)
+
+
+# --- shell ------------------------------------------------------------------------------------
+
+
+def main(
+    argv: list[str], config: PaperConfig | None = None, folds: int = 5, seed: int = 20261005
+) -> None:
+    """Write the selected figures and tables and the numbers into the asset folder, after
+    removing this section's assets from an earlier run."""
+    assert len(argv) == 2, f"usage: eda_black_holes.py <table.parquet> <asset dir>, got {argv}"
+    source, out = Path(argv[0]), Path(argv[1])
+    assert source.is_file(), f"prepared BH table not found: {source}"
+    config = config or load_config()
+    apply_style(config.plot)
+    table = with_mass_correction(with_charge_targets(pd.read_parquet(source)))
+    out.mkdir(parents=True, exist_ok=True)
+    for stale in out.glob("42_black_holes_*"):
+        stale.unlink()
+    section = config.data_analysis.black_holes
+    for figure in section.figures:
+        fig = draw(figure, table, config.plot)
+        fig.savefig(out / f"{asset(figure)}.pdf", dpi=300)
+        plt.close(fig)
+        (out / f"42_black_holes_fig_{figure}.tex").write_text(figure_tex(figure))
+    found = evidence(table, folds, seed)
+    (out / "42_black_holes_numbers.tex").write_text(render_macros(numbers(found)))
+    for name in section.tables:
+        (out / f"42_black_holes_tab_{name}.tex").write_text(table_tex(found, name))
+    logger.info(
+        "done: BH figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
+    )
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    main(sys.argv[1:])
