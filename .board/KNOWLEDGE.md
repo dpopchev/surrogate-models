@@ -9,6 +9,8 @@
 - 2026-10-04 W-008: T-017: fact: header beta and Lambda equal the beta and lambda columns; x1, x2, Pc, choice_theory, kappa (1000), mphi (0), lambda_phi (0), TheoryType (31) are constant -> assert them, inputs are (beta, lambda, rhoc)
 - 2026-10-04 W-008: T-017: fact: outline 3.1 rho_c range (5.891e14 to 3.342e15) and D range (8.2e-8 to 0.38) match the UNFILTERED file; lambda 0.5 to 0.8 carry 11550 rows each vs a median 5640 per lambda -> 3.1 numbers will change after filtering
 - 2026-10-04 W-008: T-017: fact: rho_c rises strictly in all 1611 curves; 1111 curves continue past their M maximum (23550 rows, up to 65 per curve); 500 curves end before reaching a maximum -> cutting past M_max leaves 201047 rows
+- 2026-10-05 W-008: T-018: fact: header grid is 51 beta (0.4 to 50.4) x lambda 0.5 to 4.1; beta 50.4 is entirely empty; for beta >= 17.4 the empty blocks are the highest lambdas, growing from 1 (beta 17.4) to 12 (beta 49.4) -> the non-empty (beta, lambda) domain is non-rectangular
+- 2026-10-05 W-008: T-018: fact: lambda 0.5 to 0.8 hold twice the rows as their rho_c runs to 3.34e15 vs 1.65e15 elsewhere at the same step (about 1e13); all 500 curves ending before M_max have lambda >= 1.3 -> the extra rows are past-peak tail, the M_max cut removes most of the imbalance
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
@@ -20,6 +22,7 @@
 - 2026-10-04 E-002: no solver and no field equations are available; only local/initial-data, which must be preprocessed first
 - 2026-10-04 E-002: only black-holes-zero-phi0.dat is used; kappa, lambda2 and phi0 are fixed settings, so BH is 2D in (r_h, beta)
 - 2026-10-04 E-002: tables are pandas DataFrames stored as parquet through pyarrow
+- 2026-10-04 W-008: Parse per block, fail on another header; assert the T-017 constants, drop them; inputs (beta, lambda, rho_c), targets (M, D); drop empty blocks; cut each curve after its M max, keep that row, keep peakless curves whole; N = 201047; the paper states the non-rectangular domain
 
 ## Deviations
 - 2026-10-04 E-002: W-012 bug filed during T-016 and pre-empted W-007 (blocked, then unblocked) -- the BH file holds 21 header-repeated blocks; W-012 lands on main together with W-007 because it builds on W-007's unlanded commits
