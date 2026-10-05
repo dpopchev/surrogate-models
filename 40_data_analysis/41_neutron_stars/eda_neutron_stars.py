@@ -338,6 +338,8 @@ class Evidence:
     """Every computed result Section 4.1 cites, computed once for the macros and the tables."""
 
     rows: int
+    density_grid_values: int
+    rows_per_curve: tuple[int, int]
     folds: int
     window: float
     mass_max: float
@@ -352,8 +354,11 @@ class Evidence:
 
 def evidence(table: pd.DataFrame, folds: int, seed: int, window: float = 0.09) -> Evidence:
     """Compute every Section 4.1 result from a table with the charge targets."""
+    sizes = table.groupby(list(CURVE)).size()
     return Evidence(
         len(table),
+        table["rho_c"].nunique(),
+        (int(sizes.min()), int(sizes.max())),
         folds,
         window,
         float(table["M"].max()),
@@ -388,6 +393,10 @@ def numbers(found: Evidence) -> dict[str, str]:
         "nsEdaRhocLogStd": f"{rho.std:.3f}",
         "nsEdaRhocRawSkew": f"{summary['rho_c', 'raw'].skew:.2f}",
         "nsEdaRhocLogSkew": f"{rho.skew:.2f}",
+        "nsEdaRhocOrders": f"{_orders(summary['rho_c', 'raw']):.1f}",
+        "nsEdaDensityGridValues": f"{found.density_grid_values}",
+        "nsEdaRowsPerCurveMin": f"{found.rows_per_curve[0]}",
+        "nsEdaRowsPerCurveMax": f"{found.rows_per_curve[1]}",
         "nsEdaDMin": _sci(d.minimum),
         "nsEdaDMax": f"{d.maximum:.3f}",
         "nsEdaDOrders": f"{_orders(d):.1f}",
@@ -404,7 +413,7 @@ def numbers(found: Evidence) -> dict[str, str]:
         "nsEdaPileUpWindow": f"{found.window:.2f}",
         "nsEdaPileUpPercent": f"{100 * found.pile_up:.0f}",
     } | {
-        f"nsEdaSplit{_camel(s.strategy)}{TARGET_TAGS[s.target]}": f"{s.mae:.4f}"
+        f"nsEdaSplit{_camel(s.strategy)}{TARGET_TAGS[s.target]}": _split_error(s)
         for s in found.splits
     }
 
@@ -462,10 +471,10 @@ def _charge_table(found: Evidence) -> str:
 
 def _split_table(found: Evidence) -> str:
     """Table C: 1-NN error per split strategy and target."""
-    error = {(s.strategy, s.target): s.mae for s in found.splits}
+    error = {(s.strategy, s.target): _split_error(s) for s in found.splits}
     rows = [
-        f"{STRATEGY_LABELS[strategy]} & {error[strategy, 'log10_D_over_M']:.3f} & "
-        f"{error[strategy, 'M']:.4f}"
+        f"{STRATEGY_LABELS[strategy]} & {error[strategy, 'log10_D_over_M']} & "
+        f"{error[strategy, 'M']}"
         for strategy in get_args(SplitStrategy)
     ]
     header = "Held out & $\\log_{10}(D/M)$ & $M$"
@@ -495,6 +504,13 @@ def _table(found: Evidence, table: NsTable) -> str:
 
 
 TARGET_TAGS = {"M": "M", "log10_D_over_M": "DM"}
+# The mass errors are an order of magnitude smaller, so they keep one more decimal.
+SPLIT_DECIMALS = {"M": 4, "log10_D_over_M": 3}
+
+
+def _split_error(score: SplitScore) -> str:
+    """One split error with its target's decimals, as in the text and Table C alike."""
+    return f"{score.mae:.{SPLIT_DECIMALS[score.target]}f}"
 
 
 def _camel(name: str) -> str:

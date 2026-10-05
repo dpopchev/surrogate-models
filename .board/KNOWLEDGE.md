@@ -7,12 +7,12 @@
 - 2026-10-05 E-002: T-019: fact: none of the 21 BH curves in local/state/black_holes.parquet has an interior M maximum -> the cut-at-M_max rule changes only NS data; BH series are plotted whole
 - 2026-10-05 W-008: T-018: fact: header grid is 51 beta (0.4 to 50.4) x lambda 0.5 to 4.1; beta 50.4 is entirely empty; for beta >= 17.4 the empty blocks are the highest lambdas, growing from 1 (beta 17.4) to 12 (beta 49.4) -> the non-empty (beta, lambda) domain is non-rectangular
 - 2026-10-05 W-008: fact: the T-018 grid fact is the exact grid -> use it supersedes: W-008#2
-- 2026-10-05 W-009: T-019: fact: after the cut lambda < 0.85 still holds about 10000 rows per lambda vs about 4900 elsewhere -> their curves reach higher rho_c before the peak; the imbalance stays about 2x, a split and loss-weighting concern supersedes: W-008#6
 - 2026-10-05 W-009: T-019: fact: filtered NS table: 201047 rows, 1611 curves, 16 columns; D 8.203e-08 to 0.2338, rho_c 5.891e14 to 2.785e15 -> the Section 3.1 ranges after filtering (W-011)
 - 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-008#1
 - 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-008#3
 - 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-008#4
 - 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-009#1
+- 2026-10-05 W-009: fact: shown in the grid_fill figure -> W-017 supersedes: W-009#2
 - 2026-10-05 W-009: fact: the filtered ranges above replace the unfiltered outline ranges -> W-011 uses them supersedes: W-008#5
 - 2026-10-05 W-014: T-031: fact: article textwidth is 360.0pt (4.98 in) -> the PlotStyle text_width_pt default
 - 2026-10-05 W-017: T-041: fact: 99.2% nearest rows in own curve; 1-NN log10(D/M) error 0.013 random vs 0.052 grouped -> split by curve
@@ -43,6 +43,7 @@
 - 2026-10-05 E-003: the first slice is the config skeleton plus one real choice; further choices land with the figure or table that consumes them
 - 2026-10-05 E-003: values live in a top-level paper.toml, the schema in shared/config.py (pydantic-settings TOML source, env overrides PAPER__<SECTION>__<SUBSECTION>__<FIELD>); section keys are the folder names without their number prefix
 - 2026-10-05 W-008: Parse per block, fail on another header; assert the T-017 constants, drop them; inputs (beta, lambda, rho_c), targets (M, D); drop empty blocks; cut each curve after its M max, keep that row, keep peakless curves whole; N = 201047; the paper states the non-rectangular domain
+- 2026-10-05 W-017: rho_c: keep log10, standardized; argue from positivity and the M vs log10 rho_c shape, not skew (grid is about uniform in rho_c)
 
 ## Deviations
 - 2026-10-04 E-002: W-012 bug filed during T-016 and pre-empted W-007 (blocked, then unblocked) -- the BH file holds 21 header-repeated blocks; W-012 lands on main together with W-007 because it builds on W-007's unlanded commits

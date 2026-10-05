@@ -173,11 +173,34 @@ def test_numbers_give_the_charge_range_in_orders_of_magnitude() -> None:
     assert "nsEdaDOrders" in numbers(evidence(with_charge_targets(DENSE), folds=2, seed=0))
 
 
+class TestGridNumbers:
+    @pytest.fixture
+    def found(self):
+        table = with_charge_targets(DENSE.iloc[:-1])
+        return numbers(evidence(table, folds=2, seed=0))
+
+    def test_density_grid_values_count_the_distinct_central_densities(self, found) -> None:
+        assert found["nsEdaDensityGridValues"] == "4"
+
+    def test_rows_per_curve_maximum(self, found) -> None:
+        assert found["nsEdaRowsPerCurveMax"] == "4"
+
+    def test_rows_per_curve_minimum(self, found) -> None:
+        assert found["nsEdaRowsPerCurveMin"] == "3"
+
+    def test_density_orders_of_magnitude(self, found) -> None:
+        assert found["nsEdaRhocOrders"] == "3.0"
+
+
 def test_pile_up_share_counts_rows_within_the_window_of_their_curve_maximum() -> None:
     assert pile_up_share(DENSE, window=0.15) == pytest.approx(0.5)
 
 
 GRID = evidence(with_charge_targets(grid(range(1, 4), range(1, 4))), folds=3, seed=0)
+
+
+def test_charge_split_macros_use_the_tables_three_decimals() -> None:
+    assert len(numbers(GRID)["nsEdaSplitCurvesDM"].split(".")[1]) == 3
 
 
 def test_tables_tex_labels_each_selected_table() -> None:
