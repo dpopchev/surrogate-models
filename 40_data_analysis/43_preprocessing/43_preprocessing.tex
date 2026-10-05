@@ -41,3 +41,34 @@ $\nsEdaGridFillPercent\%$ grid fill; predicting the rim from the interior scores
 \end{tabular}
 \end{table}
 \FloatBarrier
+
+The black-hole decisions (\cref{tab:decisions-bh}) differ from the neutron-star ones in three rows: the horizon radius enters linearly, because it is uniform and spans only $\bhEdaRhOrders$ orders of magnitude; the charge target keeps the neutron-star definition although dividing by the mass gains nothing here, so that both datasets share one target; and the domain is bounded by the existence edge instead of a triangle.
+
+\begin{table}[!htb]
+\centering
+\caption{Black holes: preprocessing and feature decisions with their grounds.}
+\label{tab:decisions-bh}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{p{2.4cm} p{3.6cm} p{5.3cm}}
+\toprule
+Item & Decision & Grounds \\
+\midrule
+$\rh$ input & $\rh$, linear, standardized &
+Uniform grid of step $\bhEdaRhStep$ over $\bhEdaRhOrders$ orders of magnitude, skew $\bhEdaRhRawSkew$; a logarithm would only add skew. \\
+$\beta$ input & Linear, standardized; retained &
+At fixed $\rh$ it moves $M$ by $\bhEdaBetaEffectPercentM\%$ and $\log_{10}\Dch$ by $\bhEdaBetaEffectPercentLD\%$ of their spread, but it sets the existence edge, $\rh^{\min}$ from $\bhEdaEdgeRhMinLow$ to $\bhEdaEdgeRhMinHigh$. \\
+Charge target & $\log_{10}(\max(\Dch, \varepsilon)/M)$, as for neutron stars &
+Dividing by $M$ brings no gain here (Spearman with $M$: $\bhEdaSpearmanMLogD$ against $\bhEdaSpearmanMLogDM$); kept for one definition across both datasets; the floor is inactive (smallest $\Dch$ $\bhEdaDMin$). \\
+Mass target & $M$, in $\Msun$ &
+Pearson $r = \bhEdaPearsonMRh$ with $\rh$; the dilaton correction $M - \rh/2$ spans $\bhEdaCorrectionMin$ to $\bhEdaCorrectionMax\,\Msun$. \\
+Input scaling & Standardization fitted on the training folds only &
+As for neutron stars. \\
+Split & $\prepBhTestCurves$ of $\prepBhCurves$ curves frozen as test; GroupKFold ($\prepBhFolds$ folds) over $\beta$ curves &
+$\bhEdaSameCurvePercent\%$ of rows have their nearest neighbour on their own curve; for $\log_{10}\Dch$ a row-random split scores $\bhEdaSplitRandomRowsLD$ against $\bhEdaSplitCurvesLD$ for whole curves. \\
+Domain of validity & $\beta$ from $\bhEdaEdgeBetaLow$ to $\bhEdaEdgeBetaHigh$, $\rh$ from the existence edge to $\bhEdaRhMax$ &
+The outermost curves score as any other ($\bhEdaSplitOuterCurvesLD$, ablation). \\
+\bottomrule
+\end{tabular}
+\end{table}
+\FloatBarrier

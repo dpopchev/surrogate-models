@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002 > W-020 > T-048   | blocked: 0 | todo roots: 2 | done: 74 | pruned: 4
+open path: E-002 > W-020 > T-049   | blocked: 0 | todo roots: 2 | done: 75 | pruned: 4
 
 ## Tree
 
@@ -44,8 +44,8 @@ open path: E-002 > W-020 > T-048   | blocked: 0 | todo roots: 2 | done: 74 | pru
 
 #### W-020 issue [doing] Section 4.3 preprocessing and feature decisions tables
 
-- T-048 [doing] Write the NS decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex   <- ACTIVE LEAF
-- T-049 [todo] Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
+- T-048 [done] Write the NS decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
+- T-049 [doing] Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex   <- ACTIVE LEAF
 - T-062 [done] Generate the Section 3.3 numbers test-first -> 40_data_analysis/43_preprocessing/preprocessing_numbers.py
 
 #### W-025 bug [todo] Two generated EDA tables overflow the text width   (filed during T-048)
@@ -187,8 +187,8 @@ flowchart TD
   W019 --> T046["T-046 done: Decide the NS decisions rows with the developer -> NS part of W-019 spike.decision"]
   W019 --> T047["T-047 done: Decide the BH decisions rows with the developer -> BH part of W-019 spike.decision"]
   E002 --> W020["W-020 issue doing: Section 4.3 preprocessing and feature decisions tables"]
-  W020 --> T048["T-048 doing: Write the NS decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex -- ACTIVE LEAF"]
-  W020 --> T049["T-049 todo: Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
+  W020 --> T048["T-048 done: Write the NS decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
+  W020 --> T049["T-049 doing: Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex -- ACTIVE LEAF"]
   W020 --> T062["T-062 done: Generate the Section 3.3 numbers test-first -> 40_data_analysis/43_preprocessing/preprocessing_numbers.py"]
   E002 --> W025["W-025 bug todo: Two generated EDA tables overflow the text width"]
   W025 --> T063["T-063 todo: Make the generated EDA tables fit the text width -> shared/eda.py booktabs and the table headers"]
@@ -204,8 +204,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,W020,T048 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,W012,T025,T026,W019,T046,T047,T062 done
-  class T049,W025,T063,W015,T033,T034,T035,W021,T050,T051 todo
+  class E002,W020,T049 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,W012,T025,T026,W019,T046,T047,T048,T062 done
+  class W025,T063,W015,T033,T034,T035,W021,T050,T051 todo
   class T023,T024 pruned
 ```
