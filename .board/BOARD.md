@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 1 | done: 46 | pruned: 1
+open path: E-002   | blocked: 0 | todo roots: 2 | done: 47 | pruned: 1
 
 ## Tree
 
@@ -71,7 +71,10 @@ open path: E-002   | blocked: 0 | todo roots: 1 | done: 46 | pruned: 1
 - T-038 [done] Write the NS EDA computations test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py with its tests
 - T-039 [done] Draw the NS EDA figures selected in paper.toml -> eda_neutron_stars.py figure functions and main
 - T-040 [done] Wire the NS EDA into make and Section 4.1 -> mk/paper.mk rules and 41_neutron_stars.tex
-- T-041 [doing] Review the NS EDA figures with the developer -> Findings on W-017   <- ACTIVE LEAF
+- T-041 [done] Review the NS EDA figures with the developer -> Findings on W-017
+- T-052 [doing] Compare split strategies on the NS table test-first -> split_strategies in eda_neutron_stars.py   <- ACTIVE LEAF
+- T-053 [todo] Add the NS tables and the extending figures selected in paper.toml -> eda_neutron_stars.py and shared/config.py
+- T-054 [todo] Write the NS insight paragraphs -> 40_data_analysis/41_neutron_stars/41_neutron_stars.tex
 
 #### W-018 issue [todo] BH EDA figures and numbers selected in paper.toml
 
@@ -85,6 +88,11 @@ open path: E-002   | blocked: 0 | todo roots: 1 | done: 46 | pruned: 1
 - T-033 [todo] Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output
 - T-034 [todo] Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex
 - T-035 [todo] State the sign symmetry of D in Section 2 -> 30_physical_framework/31_action/31_action.tex
+
+### W-021 issue [todo] (standalone) Review markers in the paper with todonotes   (filed during T-041)
+
+- T-050 [todo] Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex
+- T-051 [todo] Add the review note kind and mark the open claims -> preamble.tex and the review notes
 
 ## Closed
 
@@ -172,7 +180,10 @@ flowchart TD
   W017 --> T038["T-038 done: Write the NS EDA computations test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py with its tests"]
   W017 --> T039["T-039 done: Draw the NS EDA figures selected in paper.toml -> eda_neutron_stars.py figure functions and main"]
   W017 --> T040["T-040 done: Wire the NS EDA into make and Section 4.1 -> mk/paper.mk rules and 41_neutron_stars.tex"]
-  W017 --> T041["T-041 doing: Review the NS EDA figures with the developer -> Findings on W-017 -- ACTIVE LEAF"]
+  W017 --> T041["T-041 done: Review the NS EDA figures with the developer -> Findings on W-017"]
+  W017 --> T052["T-052 doing: Compare split strategies on the NS table test-first -> split_strategies in eda_neutron_stars.py -- ACTIVE LEAF"]
+  W017 --> T053["T-053 todo: Add the NS tables and the extending figures selected in paper.toml -> eda_neutron_stars.py and shared/config.py"]
+  W017 --> T054["T-054 todo: Write the NS insight paragraphs -> 40_data_analysis/41_neutron_stars/41_neutron_stars.tex"]
   E003 --> W018["W-018 issue todo: BH EDA figures and numbers selected in paper.toml"]
   W018 --> T042["T-042 todo: Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests"]
   W018 --> T043["T-043 todo: Draw the BH EDA figures selected in paper.toml -> eda_black_holes.py figure functions and main"]
@@ -182,13 +193,16 @@ flowchart TD
   W015 --> T033["T-033 todo: Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output"]
   W015 --> T034["T-034 todo: Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex"]
   W015 --> T035["T-035 todo: State the sign symmetry of D in Section 2 -> 30_physical_framework/31_action/31_action.tex"]
+  W021["W-021 issue todo, standalone: Review markers in the paper with todonotes"]
+  W021 --> T050["T-050 todo: Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex"]
+  W021 --> T051["T-051 todo: Add the review note kind and mark the open claims -> preamble.tex and the review notes"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,E003,W017,T041 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W013,T027,T028,T029,W014,T030,T031,W016,T036,T037,T038,T039,T040 done
-  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W018,T042,T043,T044,T045,W015,T033,T034,T035 todo
+  class E002,E003,W017,T052 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W013,T027,T028,T029,W014,T030,T031,W016,T036,T037,T038,T039,T040,T041 done
+  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,T053,T054,W018,T042,T043,T044,T045,W015,T033,T034,T035,W021,T050,T051 todo
   class T032 pruned
 ```
