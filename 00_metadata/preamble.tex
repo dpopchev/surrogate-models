@@ -21,5 +21,9 @@
 \newcommand{\Dch}{D}
 \newcommand{\order}[1]{\mathcal{O}\!\left(#1\right)}
 
-% Draft markers: visible in the PDF, searchable in the source.
-\newcommand{\todo}[1]{\textbf{[TODO: #1]}}
+% Draft markers, visible in the PDF and searchable in the source: \todo (todonotes,
+% inline, grey) marks a drafting gap; \placeholder marks missing title-block data,
+% where a todonotes box cannot sit.
+\usepackage{todonotes}
+\presetkeys{todonotes}{inline,color=gray!20}{}
+\newcommand{\placeholder}[1]{\textbf{[#1]}}
