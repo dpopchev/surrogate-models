@@ -22,7 +22,7 @@
 - 2026-10-04 E-002: no solver and no field equations are available; only local/initial-data, which must be preprocessed first
 - 2026-10-04 E-002: only black-holes-zero-phi0.dat is used; kappa, lambda2 and phi0 are fixed settings, so BH is 2D in (r_h, beta)
 - 2026-10-04 E-002: tables are pandas DataFrames stored as parquet through pyarrow
-- 2026-10-04 W-008: Parse per block, fail on another header; assert the T-017 constants, drop them; inputs (beta, lambda, rho_c), targets (M, D); drop empty blocks; cut each curve after its M max, keep that row, keep peakless curves whole; N = 201047; the paper states the non-rectangular domain
+- 2026-10-05 W-008: Parse per block, fail on another header; assert the T-017 constants, drop them; inputs (beta, lambda, rho_c), targets (M, D); drop empty blocks; cut each curve after its M max, keep that row, keep peakless curves whole; N = 201047; the paper states the non-rectangular domain
 
 ## Deviations
 - 2026-10-04 E-002: W-012 bug filed during T-016 and pre-empted W-007 (blocked, then unblocked) -- the BH file holds 21 header-repeated blocks; W-012 lands on main together with W-007 because it builds on W-007's unlanded commits

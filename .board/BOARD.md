@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002 > W-008   | blocked: 0 | todo roots: 0 | done: 29 | pruned: 0
+open path: E-002   | blocked: 0 | todo roots: 0 | done: 30 | pruned: 0
 
 ## Tree
 
@@ -12,7 +12,7 @@ open path: E-002 > W-008   | blocked: 0 | todo roots: 0 | done: 29 | pruned: 0
 - T-015 [done] Write the BH preparation test-first -> 30_physical_framework/32_black_holes/prepare_black_holes.py with its tests
 - T-016 [done] Wire the BH preparation into make -> local/state/black_holes.parquet
 
-#### W-008 spike [doing] How neutron-stars.dat is laid out and how bad runs show up
+#### W-008 spike [done] How neutron-stars.dat is laid out and how bad runs show up
 
 - T-017 [done] Probe the NS file layout and failure signatures -> local/scratch/probe_neutron_stars.py and Findings on W-008
 - T-018 [done] Decide the NS parsing and filtering rules -> spike.decision on W-008
@@ -86,7 +86,7 @@ flowchart TD
   W007 --> T014["T-014 done: Add data dependencies and the state home -> pandas + pyarrow, mk/data.mk STATE, CLAUDE.md gate deviation"]
   W007 --> T015["T-015 done: Write the BH preparation test-first -> 30_physical_framework/32_black_holes/prepare_black_holes.py with its tests"]
   W007 --> T016["T-016 done: Wire the BH preparation into make -> local/state/black_holes.parquet"]
-  E002 --> W008["W-008 spike doing: How neutron-stars.dat is laid out and how bad runs show up"]
+  E002 --> W008["W-008 spike done: How neutron-stars.dat is laid out and how bad runs show up"]
   W008 --> T017["T-017 done: Probe the NS file layout and failure signatures -> local/scratch/probe_neutron_stars.py and Findings on W-008"]
   W008 --> T018["T-018 done: Decide the NS parsing and filtering rules -> spike.decision on W-008"]
   E002 --> W009["W-009 issue todo: NS table from the filtered dataset"]
@@ -106,7 +106,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,W008 doing
-  class W007,T014,T015,T016,T017,T018,W012,T025,T026 done
+  class E002 doing
+  class W007,T014,T015,T016,W008,T017,T018,W012,T025,T026 done
   class W009,T019,T020,W010,T021,T022,W011,T023,T024 todo
 ```
