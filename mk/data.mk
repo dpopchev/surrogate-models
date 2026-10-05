@@ -12,7 +12,7 @@ INITIAL_DATA := $(LOCAL)/initial-data
 # Each prepared artifact is a file rule from its script and raw input; DATA_STATE
 # collects them for `data` (defined above the rule, since make expands
 # prerequisites when it reads one). A missing raw input stops make with its path.
-DATA_STATE := $(STATE)/black_holes.parquet $(STATE)/neutron_stars.parquet
+DATA_STATE := $(STATE)/black_holes.parquet $(STATE)/neutron_stars.parquet $(STATE)/split.parquet
 
 BH_SCRIPT := 30_physical_framework/32_black_holes/prepare_black_holes.py
 BH_RAW    := $(INITIAL_DATA)/black-holes/black-holes-zero-phi0.dat
@@ -27,6 +27,14 @@ NS_RAW    := $(INITIAL_DATA)/neutron-stars/neutron-stars.dat
 $(STATE)/neutron_stars.parquet: $(NS_SCRIPT) $(NS_RAW)
 	@$(RUN) python $(NS_SCRIPT) $(NS_RAW) $@
 	$(call log_done,neutron-star table written to $@)
+
+# The frozen curve-grouped split of both tables (W-019): seed, test fraction and
+# folds are the script's defaults.
+SPLIT_SCRIPT := 50_methodology/51_algorithms/split_datasets.py
+
+$(STATE)/split.parquet: $(SPLIT_SCRIPT) shared/eda.py $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet
+	@$(RUN) python $(SPLIT_SCRIPT) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $@
+	$(call log_done,curve split written to $@)
 
 .PHONY: data
 data: $(DATA_STATE) ## Prepare the datasets into local/state/
