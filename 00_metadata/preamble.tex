@@ -22,8 +22,10 @@
 \newcommand{\order}[1]{\mathcal{O}\!\left(#1\right)}
 
 % Draft markers, visible in the PDF and searchable in the source: \todo (todonotes,
-% inline, grey) marks a drafting gap; \placeholder marks missing title-block data,
-% where a todonotes box cannot sit.
+% inline, grey) marks a drafting gap; \review (inline, orange) marks a claim the
+% supervisors must check; \placeholder marks missing title-block data, where a
+% todonotes box cannot sit. Uncomment \listoftodos in the flavour to list them all.
 \usepackage{todonotes}
 \presetkeys{todonotes}{inline,color=gray!20}{}
+\newcommand{\review}[1]{\todo[color=orange!30]{\textbf{Review:} #1}}
 \newcommand{\placeholder}[1]{\textbf{[#1]}}

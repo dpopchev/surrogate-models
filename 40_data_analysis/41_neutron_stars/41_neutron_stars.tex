@@ -25,7 +25,7 @@ The charge spans $\nsEdaDOrders$ orders of magnitude, so its target is logarithm
 Against the mass, $\log_{10}\Dch$ has $\rho = \nsEdaCorrMLogD$: heavier stars tend to carry more charge, so part of the charge merely repeats the mass. For $\log_{10}(\Dch/M)$, $\rho$ falls to $\nsEdaCorrMLogDM$ (and $r$ from $\nsEdaPearsonMLogD$ to $\nsEdaPearsonMLogDM$): ranking the stars by mass says almost nothing about their normalized charge, so the charge output no longer duplicates the mass output and the network learns the two separately.
 Against $\lambda$, $r$ rises from $\nsEdaCorrLambdaLogD$ to $\nsEdaCorrLambdaLogDM$: a straight line in $\lambda$ explains $\nsEdaLambdaLinearPercentLogDM\%$ of the variance of $\log_{10}(\Dch/M)$ against $\nsEdaLambdaLinearPercentLogD\%$ of $\log_{10}\Dch$, so the normalized charge is more directly a function of the theory's parameter.
 Against $\beta$, both targets stay near $r = \nsEdaCorrBetaLogDM$: the coupling has no overall straight-line effect, yet at fixed $\lambda$ it explains much of the variance (decision~3), so its influence depends on $\lambda$, an interaction the network has to capture.
-\todo{Review: physical reading of $\Dch/M$ as the dimensionless charge-to-mass ratio.}
+\review{physical reading of $\Dch/M$ as the dimensionless charge-to-mass ratio.}
 
 \InputIfFileExists{41_neutron_stars_tab_charge_correlation}{}{}
 \InputIfFileExists{41_neutron_stars_fig_charge_target}{}{}
@@ -33,11 +33,11 @@ Against $\beta$, both targets stay near $r = \nsEdaCorrBetaLogDM$: the coupling 
 
 \paragraph{3.\ Both free parameters stay inputs.}
 $\lambda$ carries the strongest linear signal in the charge, and at fixed $\lambda$ the coupling $\beta$ still explains $\nsEdaBetaSharePercent\%$ of the variance of $\log_{10}(\Dch/M)$ (median over $\lambda$).
-\todo{Review: $\beta$ as the first-order coupling and $\lambda$ as a second-order self-interaction, against the field equations (Section~\ref{sec:action}).}
+\review{$\beta$ as the first-order coupling and $\lambda$ as a second-order self-interaction, against the field equations (Section~\ref{sec:action}).}
 
 \paragraph{4.\ The domain is triangular, and the data pile up near the maximum mass.}
 Only $\nsEdaGridFillPercent\%$ of the $\nsEdaGridCells$ $(\beta, \lambda)$ cells hold a converged curve: the corner of large $\beta$ and large $\lambda$ is empty, and the maximum mass falls towards it, from $\nsEdaMassMax\,\Msun$ at small $\lambda$ (\cref{fig:ns-mass-max}, right). Curves also thin out towards that edge, from $\nsEdaRowsPerCurveMax$ rows to $\nsEdaRowsPerCurveMin$. Along each curve the densities are spaced about evenly while $dM/d\rhoc \to 0$ at the turning point, so $\nsEdaPileUpPercent\%$ of all rows lie within $\nsEdaPileUpWindow\,\Msun$ of their curve's maximum (\cref{fig:ns-mass-max}, left): a sampling artefact that weights the region of Hypothesis~$H_2$ heavily.
-\todo{Review: $\nsEdaMassMax\,\Msun$ against the heaviest observed neutron stars (about $2.08\,\Msun$, PSR J0740+6620; about $2.35\,\Msun$, PSR J0952$-$0607) and theoretical maxima of about $2.2$ to $2.5\,\Msun$; the single polytropic equation of state sets the dataset's maximum; masses assumed in solar units; add citations.}
+\review{$\nsEdaMassMax\,\Msun$ against the heaviest observed neutron stars (about $2.08\,\Msun$, PSR J0740+6620; about $2.35\,\Msun$, PSR J0952$-$0607) and theoretical maxima of about $2.2$ to $2.5\,\Msun$; the single polytropic equation of state sets the dataset's maximum; masses assumed in solar units; add citations.}
 
 \InputIfFileExists{41_neutron_stars_fig_mass_max}{}{}
 \FloatBarrier
