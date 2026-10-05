@@ -1,8 +1,25 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 0 | done: 98 | pruned: 4
+open path: none   | blocked: 0 | todo roots: 1 | done: 98 | pruned: 4
 
 ## Tree
+
+### E-004 [todo] The paper builds for Overleaf upload and section-by-section review
+
+#### W-031 issue [todo] build/ grouped by section
+
+- T-070 [todo] Write each section's assets into its own folder test-first -> both EDA modules and preprocessing_numbers.py
+- T-071 [todo] Add make assets and move LaTeX residue to build/.work -> mk/paper.mk
+
+#### W-032 issue [todo] make overleaf keeps a drag-and-drop Overleaf project in sync
+
+- T-072 [todo] Diff the upload folder against the last upload test-first -> 00_metadata/overleaf_upload.py
+- T-073 [todo] Wire make overleaf -> mk/paper.mk, build/paper/overleaf/ and overleaf.zip
+
+#### W-033 issue [todo] One PDF per section with references resolved
+
+- T-074 [todo] Write the section entry files test-first -> 00_metadata/section_entry.py
+- T-075 [todo] Wire make section and make sections -> mk/paper.mk and build/paper/sections/
 
 ## Closed
 
@@ -198,9 +215,20 @@ closed 2026-10-05 -- outcome: Given paper.toml with plot.dpi = 450, When make co
 ## Diagram
 ```mermaid
 flowchart TD
+  E004["E-004 todo: The paper builds for Overleaf upload and section-by-section review"]
+  E004 --> W031["W-031 issue todo: build/ grouped by section"]
+  W031 --> T070["T-070 todo: Write each section's assets into its own folder test-first -> both EDA modules and preprocessing_numbers.py"]
+  W031 --> T071["T-071 todo: Add make assets and move LaTeX residue to build/.work -> mk/paper.mk"]
+  E004 --> W032["W-032 issue todo: make overleaf keeps a drag-and-drop Overleaf project in sync"]
+  W032 --> T072["T-072 todo: Diff the upload folder against the last upload test-first -> 00_metadata/overleaf_upload.py"]
+  W032 --> T073["T-073 todo: Wire make overleaf -> mk/paper.mk, build/paper/overleaf/ and overleaf.zip"]
+  E004 --> W033["W-033 issue todo: One PDF per section with references resolved"]
+  W033 --> T074["T-074 todo: Write the section entry files test-first -> 00_metadata/section_entry.py"]
+  W033 --> T075["T-075 todo: Wire make section and make sections -> mk/paper.mk and build/paper/sections/"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
+  class E004,W031,T070,T071,W032,T072,T073,W033,T074,T075 todo
 ```
