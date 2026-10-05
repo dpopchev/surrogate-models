@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 2 | done: 33 | pruned: 0
+open path: E-002   | blocked: 0 | todo roots: 1 | done: 33 | pruned: 1
 
 ## Tree
 
@@ -37,19 +37,48 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 33 | pruned: 0
 - T-025 [done] Record the repeated-header case as a failing test -> test_prepare_black_holes.py RED
 - T-026 [done] Skip repeated headers and blank lines in parse_table -> prepare_black_holes.py GREEN
 
-### E-003 [todo] Paper config -- paper.toml chooses every figure variant and its common style
+#### W-019 spike [todo] Which preprocessing, targets and split each dataset's EDA supports
+
+- T-046 [todo] Decide the NS decisions rows with the developer -> NS part of W-019 spike.decision
+- T-047 [todo] Decide the BH decisions rows with the developer -> BH part of W-019 spike.decision
+
+#### W-020 issue [todo] Section 4.3 preprocessing and feature decisions tables
+
+- T-048 [todo] Write the NS decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
+- T-049 [todo] Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
+
+### E-003 [doing] Paper config, shared plot style and the per-dataset EDA figures
 
 #### W-013 issue [todo] Section choices loaded from paper.toml
 
 - T-027 [todo] Add pydantic-settings -> pyproject.toml and uv.lock
 - T-028 [todo] Write the config loader test-first -> shared/config.py with shared/test_config.py
-- T-029 [todo] Write paper.toml with the first choice -> paper.toml
+- T-029 [todo] Write paper.toml with the plot and NS EDA sections -> paper.toml
 
-#### W-014 issue [todo] One paper-wide plot style from paper.toml
+#### W-014 issue [doing] One paper-wide plot style with a color family per dataset
 
-- T-030 [todo] Add matplotlib and seaborn -> pyproject.toml and uv.lock
+- T-030 [doing] Add matplotlib and seaborn -> pyproject.toml and uv.lock   <- ACTIVE LEAF
 - T-031 [todo] Write the plot style test-first -> shared/plots.py with shared/test_plots.py
-- T-032 [todo] Add the plot section and render a style sample -> paper.toml and local/scratch/style_sample.pdf
+- T-032 [pruned] Add the plot section and render a style sample -> paper.toml and local/scratch/style_sample.pdf   [pruned: replaced by the re-plan: the [plot] section moves into T-029 and the visual review happens on the NS and BH EDA figures (T-041, T-045), not a separate sample]
+
+#### W-016 issue [todo] Section 4 split into NS EDA, BH EDA, preprocessing decisions and hypotheses
+
+- T-036 [todo] Move the existing Section 4 subsections -> 40_data_analysis/41_neutron_stars and 44_hypotheses
+- T-037 [todo] Add the BH EDA and preprocessing subsections -> 40_data_analysis/42_black_holes and 43_preprocessing
+
+#### W-017 issue [todo] NS EDA figures and numbers selected in paper.toml
+
+- T-038 [todo] Write the NS EDA computations test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py with its tests
+- T-039 [todo] Draw the NS EDA figures selected in paper.toml -> eda_neutron_stars.py figure functions and main
+- T-040 [todo] Wire the NS EDA into make and Section 4.1 -> mk/paper.mk rules and 41_neutron_stars.tex
+- T-041 [todo] Review the NS EDA figures with the developer -> Findings on W-017
+
+#### W-018 issue [todo] BH EDA figures and numbers selected in paper.toml
+
+- T-042 [todo] Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests
+- T-043 [todo] Draw the BH EDA figures selected in paper.toml -> eda_black_holes.py figure functions and main
+- T-044 [todo] Wire the BH EDA into make and Section 4.2 -> mk/paper.mk rules and 42_black_holes.tex
+- T-045 [todo] Review the BH EDA figures with the developer -> Findings on W-018
 
 ### W-015 issue [todo] (standalone) Paper text for the D floor and the sign symmetry of D   (filed during T-020)
 
@@ -121,15 +150,34 @@ flowchart TD
   E002 --> W012["W-012 bug done: BH parser fails on repeated block headers and blank lines"]
   W012 --> T025["T-025 done: Record the repeated-header case as a failing test -> test_prepare_black_holes.py RED"]
   W012 --> T026["T-026 done: Skip repeated headers and blank lines in parse_table -> prepare_black_holes.py GREEN"]
-  E003["E-003 todo: Paper config -- paper.toml chooses every figure variant and its common style"]
+  E002 --> W019["W-019 spike todo: Which preprocessing, targets and split each dataset's EDA supports"]
+  W019 --> T046["T-046 todo: Decide the NS decisions rows with the developer -> NS part of W-019 spike.decision"]
+  W019 --> T047["T-047 todo: Decide the BH decisions rows with the developer -> BH part of W-019 spike.decision"]
+  E002 --> W020["W-020 issue todo: Section 4.3 preprocessing and feature decisions tables"]
+  W020 --> T048["T-048 todo: Write the NS decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
+  W020 --> T049["T-049 todo: Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
+  E003["E-003 doing: Paper config, shared plot style and the per-dataset EDA figures"]
   E003 --> W013["W-013 issue todo: Section choices loaded from paper.toml"]
   W013 --> T027["T-027 todo: Add pydantic-settings -> pyproject.toml and uv.lock"]
   W013 --> T028["T-028 todo: Write the config loader test-first -> shared/config.py with shared/test_config.py"]
-  W013 --> T029["T-029 todo: Write paper.toml with the first choice -> paper.toml"]
-  E003 --> W014["W-014 issue todo: One paper-wide plot style from paper.toml"]
-  W014 --> T030["T-030 todo: Add matplotlib and seaborn -> pyproject.toml and uv.lock"]
+  W013 --> T029["T-029 todo: Write paper.toml with the plot and NS EDA sections -> paper.toml"]
+  E003 --> W014["W-014 issue doing: One paper-wide plot style with a color family per dataset"]
+  W014 --> T030["T-030 doing: Add matplotlib and seaborn -> pyproject.toml and uv.lock -- ACTIVE LEAF"]
   W014 --> T031["T-031 todo: Write the plot style test-first -> shared/plots.py with shared/test_plots.py"]
-  W014 --> T032["T-032 todo: Add the plot section and render a style sample -> paper.toml and local/scratch/style_sample.pdf"]
+  W014 --> T032["T-032 pruned: Add the plot section and render a style sample -> paper.toml and local/scratch/style_sample.pdf"]
+  E003 --> W016["W-016 issue todo: Section 4 split into NS EDA, BH EDA, preprocessing decisions and hypotheses"]
+  W016 --> T036["T-036 todo: Move the existing Section 4 subsections -> 40_data_analysis/41_neutron_stars and 44_hypotheses"]
+  W016 --> T037["T-037 todo: Add the BH EDA and preprocessing subsections -> 40_data_analysis/42_black_holes and 43_preprocessing"]
+  E003 --> W017["W-017 issue todo: NS EDA figures and numbers selected in paper.toml"]
+  W017 --> T038["T-038 todo: Write the NS EDA computations test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py with its tests"]
+  W017 --> T039["T-039 todo: Draw the NS EDA figures selected in paper.toml -> eda_neutron_stars.py figure functions and main"]
+  W017 --> T040["T-040 todo: Wire the NS EDA into make and Section 4.1 -> mk/paper.mk rules and 41_neutron_stars.tex"]
+  W017 --> T041["T-041 todo: Review the NS EDA figures with the developer -> Findings on W-017"]
+  E003 --> W018["W-018 issue todo: BH EDA figures and numbers selected in paper.toml"]
+  W018 --> T042["T-042 todo: Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests"]
+  W018 --> T043["T-043 todo: Draw the BH EDA figures selected in paper.toml -> eda_black_holes.py figure functions and main"]
+  W018 --> T044["T-044 todo: Wire the BH EDA into make and Section 4.2 -> mk/paper.mk rules and 42_black_holes.tex"]
+  W018 --> T045["T-045 todo: Review the BH EDA figures with the developer -> Findings on W-018"]
   W015["W-015 issue todo, standalone: Paper text for the D floor and the sign symmetry of D"]
   W015 --> T033["T-033 todo: Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output"]
   W015 --> T034["T-034 todo: Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex"]
@@ -139,7 +187,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002 doing
+  class E002,E003,W014,T030 doing
   class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026 done
-  class W010,T021,T022,W011,T023,T024,E003,W013,T027,T028,T029,W014,T030,T031,T032,W015,T033,T034,T035 todo
+  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W013,T027,T028,T029,T031,W016,T036,T037,W017,T038,T039,T040,T041,W018,T042,T043,T044,T045,W015,T033,T034,T035 todo
+  class T032 pruned
 ```
