@@ -3,7 +3,7 @@
 
 \todo{Draft from the outline.}
 \begin{itemize}
-  \item \textbf{Hypothesis $H_1$ (continuous log-regression for $\Dch$):} modeling $Y = \log_{10} \Dch$ directly minimizes relative error, achieving sub-percent MARE across all $6.7$ decades without requiring a complex classify-then-regress pipeline.
+  \item \textbf{Hypothesis $H_1$ (continuous log-regression for the charge):} regressing $Y = \log_{10}(\max(\Dch, \varepsilon)/M)$ directly minimizes the relative error, achieving sub-percent MARE across the $\prepNsFloorOrders$ orders of magnitude the neutron-star charge spans above the floor $\varepsilon = \prepChargeFloor$ (Section~\ref{sec:preprocessing}), without a classify-then-regress pipeline.
   \item \textbf{Hypothesis $H_2$ (turning-point gradient protection):} combining Huber loss ($\delta = 1.0$) with smooth GELU activations prevents gradient saturation at $dM/d\rhoc = 0$, reducing the $\Mmax$ boundary error by $>50\%$ versus standard MSE/ReLU networks.
   \item \textbf{Hypothesis $H_3$ (ResNet grid smoothing):} identity skip-connections ($h^{(l+1)} = h^{(l)} + F(h^{(l)})$) allow the network to model continuous $\log\rhoc$ variation while smoothing over discrete $(\beta, \lambda)$ grid steps without residual ripples.
 \end{itemize}
