@@ -39,6 +39,7 @@
 
 ## Deviations
 - 2026-10-04 E-002: W-012 bug filed during T-016 and pre-empted W-007 (blocked, then unblocked) -- the BH file holds 21 header-repeated blocks; W-012 lands on main together with W-007 because it builds on W-007's unlanded commits
+- 2026-10-05 E-002: E-003 closed (v0.2.0); E-002 stays parked for W-024 (state rule), then resumes (developer order)
 - 2026-10-05 E-002: T-020's check amended to read the first 5 columns -- W-008 R3 (developer-confirmed) keeps the 16 varying NS columns, inputs and targets first, the rest for EDA (R for the mass-radius figure)
 - 2026-10-05 E-002: W-015 filed during T-020 (standalone): the D-floor and sign Decisions contradict the drafted H1 and EDA text
 - 2026-10-05 E-002: developer re-plan: the split comes from per-dataset EDA; E-002 parked for E-003 (config, style, EDA figures); W-019 spike and W-020 (AC5) added; W-010, W-015 wait on W-019; W-010's lines and edge to be revised (GroupKFold for NS)

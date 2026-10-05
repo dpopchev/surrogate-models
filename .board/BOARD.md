@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 2 | done: 63 | pruned: 2
+open path: E-002   | blocked: 0 | todo roots: 3 | done: 63 | pruned: 2
 
 ## Tree
 
@@ -57,6 +57,11 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 63 | pruned: 2
 
 - T-050 [todo] Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex
 - T-051 [todo] Add the review note kind and mark the open claims -> preamble.tex and the review notes
+
+### W-024 issue [todo] (standalone) Runtime state follows the global local/state rule
+
+- T-060 [todo] Move STATE into the base Makefile -> Makefile and mk/data.mk
+- T-061 [todo] Remove the local/state Gate deviation -> CLAUDE.md
 
 ## Closed
 
@@ -184,6 +189,9 @@ flowchart TD
   W021["W-021 issue todo, standalone: Review markers in the paper with todonotes"]
   W021 --> T050["T-050 todo: Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex"]
   W021 --> T051["T-051 todo: Add the review note kind and mark the open claims -> preamble.tex and the review notes"]
+  W024["W-024 issue todo, standalone: Runtime state follows the global local/state rule"]
+  W024 --> T060["T-060 todo: Move STATE into the base Makefile -> Makefile and mk/data.mk"]
+  W024 --> T061["T-061 todo: Remove the local/state Gate deviation -> CLAUDE.md"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -191,5 +199,5 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E002 doing
   class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026 done
-  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W015,T033,T034,T035,W021,T050,T051 todo
+  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W015,T033,T034,T035,W021,T050,T051,W024,T060,T061 todo
 ```
