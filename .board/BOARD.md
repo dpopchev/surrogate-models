@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002 > W-020   | blocked: 0 | todo roots: 2 | done: 77 | pruned: 4
+open path: E-002   | blocked: 0 | todo roots: 2 | done: 78 | pruned: 4
 
 ## Tree
 
@@ -42,7 +42,7 @@ open path: E-002 > W-020   | blocked: 0 | todo roots: 2 | done: 77 | pruned: 4
 - T-046 [done] Decide the NS decisions rows with the developer -> NS part of W-019 spike.decision
 - T-047 [done] Decide the BH decisions rows with the developer -> BH part of W-019 spike.decision
 
-#### W-020 issue [doing] Section 4.3 preprocessing and feature decisions tables
+#### W-020 issue [done] Section 4.3 preprocessing and feature decisions tables
 
 - T-048 [done] Write the NS decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
 - T-049 [done] Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
@@ -187,7 +187,7 @@ flowchart TD
   E002 --> W019["W-019 spike done: Which preprocessing, targets and split each dataset's EDA supports"]
   W019 --> T046["T-046 done: Decide the NS decisions rows with the developer -> NS part of W-019 spike.decision"]
   W019 --> T047["T-047 done: Decide the BH decisions rows with the developer -> BH part of W-019 spike.decision"]
-  E002 --> W020["W-020 issue doing: Section 4.3 preprocessing and feature decisions tables"]
+  E002 --> W020["W-020 issue done: Section 4.3 preprocessing and feature decisions tables"]
   W020 --> T048["T-048 done: Write the NS decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
   W020 --> T049["T-049 done: Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
   W020 --> T062["T-062 done: Generate the Section 3.3 numbers test-first -> 40_data_analysis/43_preprocessing/preprocessing_numbers.py"]
@@ -206,8 +206,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,W020 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,W012,T025,T026,W019,T046,T047,T048,T049,T062,T064 done
+  class E002 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,W012,T025,T026,W019,T046,T047,W020,T048,T049,T062,T064 done
   class W025,T063,W015,T033,T034,T035,W021,T050,T051 todo
   class T023,T024 pruned
 ```
