@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 2 | done: 80 | pruned: 4
+open path: E-002 > W-026 > T-065   | blocked: 0 | todo roots: 2 | done: 80 | pruned: 4
 
 ## Tree
 
@@ -53,9 +53,9 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 80 | pruned: 4
 
 - T-063 [done] Make the generated EDA tables fit the text width -> shared/eda.py booktabs and the table headers
 
-#### W-026 issue [todo] BH mass figure shows where the curves leave GR
+#### W-026 issue [doing] BH mass figure shows where the curves leave GR
 
-- T-065 [todo] Add the GR inset to the BH mass figure -> eda_black_holes.py and Section 3.2
+- T-065 [doing] Add the GR inset to the BH mass figure -> eda_black_holes.py and Section 3.2   <- ACTIVE LEAF
 
 ### W-015 issue [todo] (standalone) Paper text for the D floor and the sign symmetry of D   (filed during T-020)
 
@@ -198,8 +198,8 @@ flowchart TD
   W020 --> T064["T-064 done: Report raw M everywhere in the BH analysis -> eda_black_holes.py, Sections 3.2 and 3.3"]
   E002 --> W025["W-025 bug done: Two generated EDA tables overflow the text width"]
   W025 --> T063["T-063 done: Make the generated EDA tables fit the text width -> shared/eda.py booktabs and the table headers"]
-  E002 --> W026["W-026 issue todo: BH mass figure shows where the curves leave GR"]
-  W026 --> T065["T-065 todo: Add the GR inset to the BH mass figure -> eda_black_holes.py and Section 3.2"]
+  E002 --> W026["W-026 issue doing: BH mass figure shows where the curves leave GR"]
+  W026 --> T065["T-065 doing: Add the GR inset to the BH mass figure -> eda_black_holes.py and Section 3.2 -- ACTIVE LEAF"]
   W015["W-015 issue todo, standalone: Paper text for the D floor and the sign symmetry of D"]
   W015 --> T033["T-033 todo: Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output"]
   W015 --> T034["T-034 todo: Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex"]
@@ -212,8 +212,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002 doing
+  class E002,W026,T065 doing
   class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,W012,T025,T026,W019,T046,T047,W020,T048,T049,T062,T064,W025,T063 done
-  class W026,T065,W015,T033,T034,T035,W021,T050,T051 todo
+  class W015,T033,T034,T035,W021,T050,T051 todo
   class T023,T024 pruned
 ```

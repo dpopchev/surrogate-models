@@ -127,6 +127,17 @@ class TestFigures:
     def test_mass_radius_has_one_panel_and_its_colorbar(self) -> None:
         assert len(draw("mass_radius", TABLE, STYLE).axes) == 2
 
+    def test_the_mass_radius_panel_holds_one_inset(self) -> None:
+        assert len(draw("mass_radius", TABLE, STYLE).axes[0].child_axes) == 1
+
+    def test_the_inset_zooms_on_r_h_from_4_to_5(self) -> None:
+        inset = draw("mass_radius", TABLE, STYLE).axes[0].child_axes[0]
+        assert inset.get_xlim() == (4.0, 5.0)
+
+    def test_the_inset_draws_the_gr_relation(self) -> None:
+        inset = draw("mass_radius", TABLE, STYLE).axes[0].child_axes[0]
+        assert "GR" in [line.get_label() for line in inset.get_lines()]
+
     def test_charge_target_has_two_panels_and_a_colorbar(self) -> None:
         assert len(draw("charge_target", TABLE, STYLE).axes) == 3
 

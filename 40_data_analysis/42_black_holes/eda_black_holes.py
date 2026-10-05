@@ -16,6 +16,7 @@ from typing import Literal, assert_never, get_args
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
@@ -340,7 +341,11 @@ def caption(figure: BhFigure) -> str:
                 "$\\log_{10}$ (right)."
             )
         case "mass_radius":
-            return "Black holes: the mass $M$ against $\\rh$, one line per $\\beta$ curve."
+            return (
+                "Black holes: the mass $M$ against $\\rh$, one line per $\\beta$ curve; the inset "
+                "zooms on $\\rh$ from 4 to 5, where the curves leave the general-relativistic "
+                "relation $M = \\rh/2$ (dashed)."
+            )
         case "charge_target":
             return (
                 "Black holes: $M$ against $\\log_{10}\\Dch$ (left) and $\\log_{10}(\\Dch/M)$ "
@@ -397,14 +402,36 @@ def _curve_lines(table: pd.DataFrame, y: str, cmap: Colormap) -> LineCollection:
     return lines
 
 
+# The inset window near the existence edge, where the curves leave the GR relation M = r_h/2.
+ZOOM_RH = (4.0, 5.0)
+ZOOM_M = (2.0, 2.5)
+
+
+def _gr_inset(ax: Axes, table: pd.DataFrame, cmap: Colormap) -> None:
+    """Zoom on ZOOM_RH x ZOOM_M with the GR relation M = r_h/2 (G = c = 1) dashed."""
+    inset = ax.inset_axes((0.55, 0.2, 0.42, 0.4))
+    inset.add_collection(_curve_lines(table, "M", cmap))
+    rh = np.linspace(*ZOOM_RH, 2)
+    inset.plot(rh, rh / 2, color="black", linestyle="--", linewidth=0.8, label="GR")
+    inset.set_xlim(*ZOOM_RH)
+    inset.set_ylim(*ZOOM_M)
+    inset.set_xticks(np.linspace(*ZOOM_RH, 3))
+    inset.set_yticks(np.linspace(*ZOOM_M, 3))
+    inset.legend(loc="upper left", fontsize="small", frameon=False)
+    inset.tick_params(labelsize="small")
+    ax.indicate_inset_zoom(inset, edgecolor="black")
+
+
 def _mass_radius(table: pd.DataFrame, style: PlotStyle) -> Figure:
-    """M against r_h, one line per beta curve."""
+    """M against r_h, one line per beta curve, with the GR inset near the existence edge."""
     fig, ax = plt.subplots(figsize=text_width_size(0.55), layout="constrained")
-    lines = _curve_lines(table, "M", colormap(style.black_holes.beta_cmap))
+    cmap = colormap(style.black_holes.beta_cmap)
+    lines = _curve_lines(table, "M", cmap)
     ax.add_collection(lines)
     ax.autoscale()
     ax.set_xlabel(LABELS["r_h"])
     ax.set_ylabel(LABELS["M"])
+    _gr_inset(ax, table, cmap)
     fig.colorbar(lines, ax=ax, label=LABELS["beta"])
     return fig
 
