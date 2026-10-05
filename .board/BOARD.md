@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 2 | done: 65 | pruned: 2
+open path: E-002   | blocked: 0 | todo roots: 2 | done: 66 | pruned: 2
 
 ## Tree
 
@@ -57,11 +57,6 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 65 | pruned: 2
 
 - T-050 [todo] Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex
 - T-051 [todo] Add the review note kind and mark the open claims -> preamble.tex and the review notes
-
-### W-024 issue [doing] (standalone) Runtime state follows the global local/state rule
-
-- T-060 [done] Move STATE into the base Makefile -> Makefile and mk/data.mk
-- T-061 [done] Remove the local/state Gate deviation -> CLAUDE.md
 
 ## Closed
 
@@ -153,6 +148,13 @@ closed 2026-10-04 -- outcome: Given pyproject.toml, When torch is added with uv,
 - T-012 [done] Pin torch to the PyTorch CPU index -> pyproject.toml [[tool.uv.index]] and [tool.uv.sources]
 - T-013 [done] Prove torch resolves CPU-only -> a scratch copy of pyproject.toml locks torch +cpu with no GPU packages
 
+### W-024 issue [done] (standalone) Runtime state follows the global local/state rule
+
+closed 2026-10-05 -- outcome: Given the base Makefile with STATE and no local/state Gate deviation, When make clean and then make data run, Then make data rebuilds no state file. -- ledger: ledgers/W-024.md
+
+- T-060 [done] Move STATE into the base Makefile -> Makefile and mk/data.mk
+- T-061 [done] Remove the local/state Gate deviation -> CLAUDE.md
+
 ## Diagram
 ```mermaid
 flowchart TD
@@ -189,15 +191,12 @@ flowchart TD
   W021["W-021 issue todo, standalone: Review markers in the paper with todonotes"]
   W021 --> T050["T-050 todo: Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex"]
   W021 --> T051["T-051 todo: Add the review note kind and mark the open claims -> preamble.tex and the review notes"]
-  W024["W-024 issue doing, standalone: Runtime state follows the global local/state rule"]
-  W024 --> T060["T-060 done: Move STATE into the base Makefile -> Makefile and mk/data.mk"]
-  W024 --> T061["T-061 done: Remove the local/state Gate deviation -> CLAUDE.md"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,W024 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,T060,T061 done
+  class E002 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026 done
   class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W015,T033,T034,T035,W021,T050,T051 todo
 ```
