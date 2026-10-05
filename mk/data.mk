@@ -1,13 +1,12 @@
 # mk/data.mk -- the data layer: prepares the initial datasets into runtime state
-# under $(STATE). State is machine-local and survives make clean (CLAUDE.md, Gate
-# deviations); build/ products read it as prerequisites. Uses the base's LOCAL,
-# log_done and the python layer's RUN.
+# under $(STATE). State is machine-local and survives make clean
+# (rules/makefile.md, Directories); build/ products read it as prerequisites.
+# Uses the base's LOCAL, STATE and log_done and the python layer's RUN.
 
 # ------------------------------------------------------------------------------
 ### Data
 # ------------------------------------------------------------------------------
 
-STATE        := $(LOCAL)/state
 INITIAL_DATA := $(LOCAL)/initial-data
 
 # Each prepared artifact is a file rule from its script and raw input; DATA_STATE

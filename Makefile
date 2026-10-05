@@ -76,17 +76,20 @@ help: ## Show this help
 UV := uv
 
 # Directory convention (rules/makefile.md -> Directories):
-#   $(BUILD) EVERY built artifact -- `make clean` removes it whole
-#   $(LOCAL) machine-local: inputs, keys, scratch, tool residuals -- never
-#            tracked, never cleaned
+#   $(BUILD) the end product -- `make clean` removes it whole
+#   $(LOCAL) machine-local and interim: inputs, state, keys, scratch, tool
+#            residuals -- never tracked, never cleaned
+#   $(STATE) runtime state written by explicit file targets (prepared data,
+#            splits, trained weights) -- read by the end product's targets
 BUILD ?= build
 LOCAL ?= local
 OUT     := $(BUILD)/outputs
 REPORTS := $(BUILD)/reports
+STATE   := $(LOCAL)/state
 
 $(LOCAL):
-	@mkdir -p $(LOCAL)/keys $(LOCAL)/scratch $(LOCAL)/inputs
-	$(call log_warn,created $(LOCAL)/ -- inputs/$(comma) keys/ and scratch/ live here; git-ignored$(comma) never cleaned)
+	@mkdir -p $(LOCAL)/keys $(LOCAL)/scratch $(LOCAL)/inputs $(STATE)
+	$(call log_warn,created $(LOCAL)/ -- inputs/$(comma) state/$(comma) keys/ and scratch/ live here; git-ignored$(comma) never cleaned)
 
 $(OUT) $(REPORTS):
 	@mkdir -p $@
