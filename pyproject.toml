@@ -12,6 +12,7 @@ dependencies = [
     "matplotlib>=3.11.2",
     "pandas>=3.0.6",
     "pyarrow>=25.0.1",
+    "pydantic>=2.13.5",
     "seaborn>=0.13.2",
 ]
 

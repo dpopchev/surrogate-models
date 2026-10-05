@@ -58,7 +58,7 @@ open path: E-002   | blocked: 0 | todo roots: 1 | done: 34 | pruned: 1
 #### W-014 issue [doing] One paper-wide plot style with a color family per dataset
 
 - T-030 [done] Add matplotlib and seaborn -> pyproject.toml and uv.lock
-- T-031 [todo] Write the plot style test-first -> shared/plots.py with shared/test_plots.py
+- T-031 [doing] Write the plot style test-first -> shared/plots.py with shared/test_plots.py   <- ACTIVE LEAF
 - T-032 [pruned] Add the plot section and render a style sample -> paper.toml and local/scratch/style_sample.pdf   [pruned: replaced by the re-plan: the [plot] section moves into T-029 and the visual review happens on the NS and BH EDA figures (T-041, T-045), not a separate sample]
 
 #### W-016 issue [todo] Section 4 split into NS EDA, BH EDA, preprocessing decisions and hypotheses
@@ -163,7 +163,7 @@ flowchart TD
   W013 --> T029["T-029 todo: Write paper.toml with the plot and NS EDA sections -> paper.toml"]
   E003 --> W014["W-014 issue doing: One paper-wide plot style with a color family per dataset"]
   W014 --> T030["T-030 done: Add matplotlib and seaborn -> pyproject.toml and uv.lock"]
-  W014 --> T031["T-031 todo: Write the plot style test-first -> shared/plots.py with shared/test_plots.py"]
+  W014 --> T031["T-031 doing: Write the plot style test-first -> shared/plots.py with shared/test_plots.py -- ACTIVE LEAF"]
   W014 --> T032["T-032 pruned: Add the plot section and render a style sample -> paper.toml and local/scratch/style_sample.pdf"]
   E003 --> W016["W-016 issue todo: Section 4 split into NS EDA, BH EDA, preprocessing decisions and hypotheses"]
   W016 --> T036["T-036 todo: Move the existing Section 4 subsections -> 40_data_analysis/41_neutron_stars and 44_hypotheses"]
@@ -187,8 +187,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,E003,W014 doing
+  class E002,E003,W014,T031 doing
   class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,T030 done
-  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W013,T027,T028,T029,T031,W016,T036,T037,W017,T038,T039,T040,T041,W018,T042,T043,T044,T045,W015,T033,T034,T035 todo
+  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W013,T027,T028,T029,W016,T036,T037,W017,T038,T039,T040,T041,W018,T042,T043,T044,T045,W015,T033,T034,T035 todo
   class T032 pruned
 ```
