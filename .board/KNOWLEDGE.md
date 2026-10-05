@@ -25,6 +25,8 @@
 - 2026-10-04 E-002: no solver and no field equations are available; only local/initial-data, which must be preprocessed first
 - 2026-10-04 E-002: only black-holes-zero-phi0.dat is used; kappa, lambda2 and phi0 are fixed settings, so BH is 2D in (r_h, beta)
 - 2026-10-04 E-002: tables are pandas DataFrames stored as parquet through pyarrow
+- 2026-10-05 E-002: D has an artificial zero eps (about 1e-5, a knob): the prepared tables keep raw D; models regress log10(max(D, eps)); H1 is restated for D >= eps and the share below eps (0.5% of NS rows at 1e-5) is reported
+- 2026-10-05 E-002: the theory is symmetric under D -> -D; the dataset holds the positive branch and the D > 0 check stays as a guard on that convention; Section 2 states the symmetry
 - 2026-10-05 E-003: every figure and table series is one curve of fixed free parameters cut at its M_max (W-008 rule); figures and tables show the variation around M_max
 - 2026-10-05 E-003: one shared matplotlib and seaborn style for every figure; text rendered with usetex (pdflatex, Latin Modern) to match the 11pt article; default palette colorblind
 - 2026-10-05 E-003: paper.toml is the entry point that chooses which figures and computations are produced; each choice is a Literal scoped to what its module can draw or compute, so a new variant is added to the module and its Literal together
@@ -35,3 +37,4 @@
 ## Deviations
 - 2026-10-04 E-002: W-012 bug filed during T-016 and pre-empted W-007 (blocked, then unblocked) -- the BH file holds 21 header-repeated blocks; W-012 lands on main together with W-007 because it builds on W-007's unlanded commits
 - 2026-10-05 E-002: T-020's check amended to read the first 5 columns -- W-008 R3 (developer-confirmed) keeps the 16 varying NS columns, inputs and targets first, the rest for EDA (R for the mass-radius figure)
+- 2026-10-05 E-002: W-015 filed during T-020 as a standalone root after W-009 landed -- the D-floor and sign-symmetry Decisions contradict the drafted H1 and EDA text; queued, it waits on W-011's macros
