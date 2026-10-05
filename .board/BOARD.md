@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 0 | done: 30 | pruned: 0
+open path: E-002   | blocked: 0 | todo roots: 1 | done: 30 | pruned: 0
 
 ## Tree
 
@@ -36,6 +36,20 @@ open path: E-002   | blocked: 0 | todo roots: 0 | done: 30 | pruned: 0
 
 - T-025 [done] Record the repeated-header case as a failing test -> test_prepare_black_holes.py RED
 - T-026 [done] Skip repeated headers and blank lines in parse_table -> prepare_black_holes.py GREEN
+
+### E-003 [todo] Paper config -- paper.toml chooses every figure variant and its common style
+
+#### W-013 issue [todo] Section choices loaded from paper.toml
+
+- T-027 [todo] Add pydantic-settings -> pyproject.toml and uv.lock
+- T-028 [todo] Write the config loader test-first -> shared/config.py with shared/test_config.py
+- T-029 [todo] Write paper.toml with the first choice -> paper.toml
+
+#### W-014 issue [todo] One paper-wide plot style from paper.toml
+
+- T-030 [todo] Add matplotlib and seaborn -> pyproject.toml and uv.lock
+- T-031 [todo] Write the plot style test-first -> shared/plots.py with shared/test_plots.py
+- T-032 [todo] Add the plot section and render a style sample -> paper.toml and local/scratch/style_sample.pdf
 
 ## Closed
 
@@ -101,6 +115,15 @@ flowchart TD
   E002 --> W012["W-012 bug done: BH parser fails on repeated block headers and blank lines"]
   W012 --> T025["T-025 done: Record the repeated-header case as a failing test -> test_prepare_black_holes.py RED"]
   W012 --> T026["T-026 done: Skip repeated headers and blank lines in parse_table -> prepare_black_holes.py GREEN"]
+  E003["E-003 todo: Paper config -- paper.toml chooses every figure variant and its common style"]
+  E003 --> W013["W-013 issue todo: Section choices loaded from paper.toml"]
+  W013 --> T027["T-027 todo: Add pydantic-settings -> pyproject.toml and uv.lock"]
+  W013 --> T028["T-028 todo: Write the config loader test-first -> shared/config.py with shared/test_config.py"]
+  W013 --> T029["T-029 todo: Write paper.toml with the first choice -> paper.toml"]
+  E003 --> W014["W-014 issue todo: One paper-wide plot style from paper.toml"]
+  W014 --> T030["T-030 todo: Add matplotlib and seaborn -> pyproject.toml and uv.lock"]
+  W014 --> T031["T-031 todo: Write the plot style test-first -> shared/plots.py with shared/test_plots.py"]
+  W014 --> T032["T-032 todo: Add the plot section and render a style sample -> paper.toml and local/scratch/style_sample.pdf"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -108,5 +131,5 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E002 doing
   class W007,T014,T015,T016,W008,T017,T018,W012,T025,T026 done
-  class W009,T019,T020,W010,T021,T022,W011,T023,T024 todo
+  class W009,T019,T020,W010,T021,T022,W011,T023,T024,E003,W013,T027,T028,T029,W014,T030,T031,T032 todo
 ```

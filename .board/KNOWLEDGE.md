@@ -22,6 +22,10 @@
 - 2026-10-04 E-002: no solver and no field equations are available; only local/initial-data, which must be preprocessed first
 - 2026-10-04 E-002: only black-holes-zero-phi0.dat is used; kappa, lambda2 and phi0 are fixed settings, so BH is 2D in (r_h, beta)
 - 2026-10-04 E-002: tables are pandas DataFrames stored as parquet through pyarrow
+- 2026-10-05 E-003: one shared matplotlib and seaborn style for every figure; text rendered with usetex (pdflatex, Latin Modern) to match the 11pt article; default palette colorblind
+- 2026-10-05 E-003: paper.toml is the entry point that chooses which figures and computations are produced; each choice is a Literal scoped to what its module can draw or compute, so a new variant is added to the module and its Literal together
+- 2026-10-05 E-003: the first slice is the config skeleton plus one real choice; further choices land with the figure or table that consumes them
+- 2026-10-05 E-003: values live in a top-level paper.toml, the schema in shared/config.py (pydantic-settings TOML source, env overrides PAPER__<SECTION>__<SUBSECTION>__<FIELD>); section keys are the folder names without their number prefix
 - 2026-10-05 W-008: Parse per block, fail on another header; assert the T-017 constants, drop them; inputs (beta, lambda, rho_c), targets (M, D); drop empty blocks; cut each curve after its M max, keep that row, keep peakless curves whole; N = 201047; the paper states the non-rectangular domain
 
 ## Deviations
