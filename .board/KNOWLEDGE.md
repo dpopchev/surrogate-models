@@ -2,23 +2,12 @@
 
 ## Findings
 - 2026-10-04 E-001: standing: with pytest prepend mode, two same-named modules in different chapter folders import the first one silently (unlike duplicate test basenames, which error) -> every kept module basename is unique repo-wide and never shadows a stdlib module supersedes: E-001#1
-- 2026-10-05 E-002: T-019: fact: none of the 21 BH curves in local/state/black_holes.parquet has an interior M maximum -> the cut-at-M_max rule changes only NS data; BH series are plotted whole
-- 2026-10-05 W-007: fact: carried by the bhEda macros -> W-018 supersedes: W-007#2
-- 2026-10-05 W-007: fact: kept in code -> prepare_black_holes.py tests supersedes: W-007#1
-- 2026-10-05 W-008: fact: carried by the nsEda grid macros -> W-017 supersedes: W-008#7
-- 2026-10-05 W-008: fact: moot once W-008#7 is superseded -> drop supersedes: W-008#8
-- 2026-10-05 W-009: fact: W-017 macros carry the filtered ranges -> W-011 supersedes: W-009#4
-- 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-008#1
-- 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-008#3
-- 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-008#4
-- 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-009#1
-- 2026-10-05 W-009: fact: now generated as nsEda macros -> eda_neutron_stars.py supersedes: W-009#3
-- 2026-10-05 W-009: fact: shown in the grid_fill figure -> W-017 supersedes: W-009#2
+- 2026-10-05 E-002: standing: none of the 21 BH curves has an interior M maximum -> the cut-at-M_max rule changes only NS data; BH series are plotted whole supersedes: E-002#3
 - 2026-10-05 W-017: standing: 99.2% nearest rows in own curve; 1-NN log10(D/M) error 0.013 random vs 0.052 grouped -> split by curve supersedes: W-017#3
 - 2026-10-05 W-017: standing: log10(D/M): Spearman with M 0.22->0.06, Pearson with lambda 0.58->0.69 -> target log10(D/M) supersedes: W-017#2
 - 2026-10-05 W-018: standing: beta moves M 0.01%, log10 D 2.9% at fixed r_h; sets r_h,min 4.059..4.493 -> GroupKFold over beta supersedes: W-018#3
 - 2026-10-05 W-018: standing: log10(D/M) no gain over log10 D (Spearman M -1.000 vs -0.999) -> unlike NS, noted in 3.2 supersedes: W-018#2
-- 2026-10-05 W-018: standing: r_h linear (0.39 orders); M = r_h/2 + 0.006..0.120 (r 0.9999) -> raw M in M_sun supersedes: W-018#1
+- 2026-10-05 W-018: standing: r_h linear (0.39 orders); M 2.13..5.01 M_sun, Pearson 0.9999 with r_h -> raw M in M_sun supersedes: W-018#4
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
@@ -26,27 +15,7 @@
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 
 ## Decisions
-- 2026-10-04 E-002: Section 3.1 EDA describes the full filtered dataset; anything fitted from data (standardization statistics, data-driven thresholds, model selection) uses the training split only, and the paper states both
-- 2026-10-04 E-002: local/ holds runtime state (preprocessed tables, splits, trained weights, metrics) and survives make clean; build/ holds only what make builds and orchestrates into the paper -- a gate deviation from rules/python.md, recorded in CLAUDE.md
-- 2026-10-04 E-002: no solver and no field equations are available; only local/initial-data, which must be preprocessed first
-- 2026-10-04 E-002: only black-holes-zero-phi0.dat is used; kappa, lambda2 and phi0 are fixed settings, so BH is 2D in (r_h, beta)
-- 2026-10-04 E-002: tables are pandas DataFrames stored as parquet through pyarrow
-- 2026-10-05 E-002: D has an artificial zero eps (about 1e-5, a knob): the prepared tables keep raw D; models regress log10(max(D, eps)); H1 is restated for D >= eps and the share below eps (0.5% of NS rows at 1e-5) is reported
-- 2026-10-05 E-002: models are built with PyTorch and the Lightning framework (CPU-only: torch from the pyproject's PyTorch CPU index); this governs every modeling Epic that follows
-- 2026-10-05 E-002: the theory is symmetric under D -> -D; the dataset holds the positive branch and the D > 0 check stays as a guard on that convention; Section 2 states the symmetry
-- 2026-10-05 E-002: units G = c = 1 in both datasets, masses in M_sun; stated in Section 2
-- 2026-10-05 W-008: Parse per block, fail on another header; assert the T-017 constants, drop them; inputs (beta, lambda, rho_c), targets (M, D); drop empty blocks; cut each curve after its M max, keep that row, keep peakless curves whole; N = 201047; the paper states the non-rectangular domain
-- 2026-10-05 W-019: BH: r_h, beta linear standardized on train folds; targets log10(max(D,eps)/M) (as NS; no decorrelation here) and raw M; frozen 3 of 21 test curves, GroupKFold(5) on the rest; outer curves as ablation
-- 2026-10-05 W-019: Both datasets -- inputs standardized on train folds (log10 rho_c; beta, lambda, r_h linear); targets log10(max(D,eps)/M) and raw M in M_sun; 15% of curves frozen as test, GroupKFold(5) over curves on the rest; rim (NS) and outer curves (BH) as extrapolation ablation
-- 2026-10-05 W-019: NS: log10 rho_c, beta, lambda standardized on train folds; targets log10(max(D,eps)/M) and raw M; frozen 15% test curves, GroupKFold(5) over (beta,lambda) on the rest; rim as ablation; valid on the filled triangle
+- none recorded
 
 ## Deviations
-- 2026-10-04 E-002: W-012 bug filed during T-016 and pre-empted W-007 (blocked, then unblocked) -- the BH file holds 21 header-repeated blocks; W-012 lands on main together with W-007 because it builds on W-007's unlanded commits
-- 2026-10-05 E-002: AC3 amended to the W-019 split (15% test curves, GroupKFold 5); W-011 closed as realized by W-017
-- 2026-10-05 E-002: AC6 and W-026 added: GR inset in the BH mass figure (developer)
-- 2026-10-05 E-002: E-003 closed (v0.2.0); E-002 stays parked for W-024 (state rule), then resumes (developer order)
-- 2026-10-05 E-002: T-020's check amended to read the first 5 columns -- W-008 R3 (developer-confirmed) keeps the 16 varying NS columns, inputs and targets first, the rest for EDA (R for the mass-radius figure)
-- 2026-10-05 E-002: T-064 added to W-020: BH reports raw M everywhere (developer)
-- 2026-10-05 E-002: W-015 filed during T-020 (standalone): the D-floor and sign Decisions contradict the drafted H1 and EDA text
-- 2026-10-05 E-002: W-025 bug filed during T-048 (two EDA tables overflow the margin); queued
-- 2026-10-05 E-002: developer re-plan: the split comes from per-dataset EDA; E-002 parked for E-003 (config, style, EDA figures); W-019 spike and W-020 (AC5) added; W-010, W-015 wait on W-019; W-010's lines and edge to be revised (GroupKFold for NS)
+- none recorded
