@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-027   | blocked: 0 | todo roots: 1 | done: 88 | pruned: 4
+open path: none   | blocked: 0 | todo roots: 1 | done: 89 | pruned: 4
 
 ## Tree
 
@@ -8,10 +8,6 @@ open path: W-027   | blocked: 0 | todo roots: 1 | done: 88 | pruned: 4
 
 - T-050 [todo] Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex
 - T-051 [todo] Add the review note kind and mark the open claims -> preamble.tex and the review notes
-
-### W-027 issue [doing] (standalone) make clean runs every area clean, the state included
-
-- T-066 [done] Adopt the area cleans -> Makefile, mk/python.mk and mk/data.mk
 
 ## Closed
 
@@ -173,20 +169,22 @@ closed 2026-10-05 -- outcome: Given the base Makefile with STATE and no local/st
 - T-060 [done] Move STATE into the base Makefile -> Makefile and mk/data.mk
 - T-061 [done] Remove the local/state Gate deviation -> CLAUDE.md
 
+### W-027 issue [done] (standalone) make clean runs every area clean, the state included
+
+closed 2026-10-05 -- outcome: Given local/initial-data and a built local/state, When make clean runs, Then local/state is gone and local/initial-data is untouched. -- ledger: ledgers/W-027.md
+
+- T-066 [done] Adopt the area cleans -> Makefile, mk/python.mk and mk/data.mk
+
 ## Diagram
 ```mermaid
 flowchart TD
   W021["W-021 issue todo, standalone: Review markers in the paper with todonotes"]
   W021 --> T050["T-050 todo: Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex"]
   W021 --> T051["T-051 todo: Add the review note kind and mark the open claims -> preamble.tex and the review notes"]
-  W027["W-027 issue doing, standalone: make clean runs every area clean, the state included"]
-  W027 --> T066["T-066 done: Adopt the area cleans -> Makefile, mk/python.mk and mk/data.mk"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W027 doing
-  class T066 done
   class W021,T050,T051 todo
 ```
