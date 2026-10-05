@@ -1,12 +1,8 @@
 # Board -- surrogate-models
 record: local
-open path: W-028   | blocked: 0 | todo roots: 0 | done: 93 | pruned: 4
+open path: none   | blocked: 0 | todo roots: 0 | done: 94 | pruned: 4
 
 ## Tree
-
-### W-028 issue [doing] (standalone) Outline text cites stale charge and row numbers   (filed during T-051)
-
-- T-067 [done] Cite the generated numbers in the abstract and Section 2.3 -> 10_abstract.tex and 33_neutron_stars.tex
 
 ## Closed
 
@@ -181,16 +177,18 @@ closed 2026-10-05 -- outcome: Given local/initial-data and a built local/state, 
 
 - T-066 [done] Adopt the area cleans -> Makefile, mk/python.mk and mk/data.mk
 
+### W-028 issue [done] (standalone) Outline text cites stale charge and row numbers
+
+closed 2026-10-05 -- outcome: Given the generated EDA and preprocessing macros, When make compile runs, Then the abstract and Section 2.3 cite the charge range and row counts only through generated macros. -- ledger: ledgers/W-028.md
+
+- T-067 [done] Cite the generated numbers in the abstract and Section 2.3 -> 10_abstract.tex and 33_neutron_stars.tex
+
 ## Diagram
 ```mermaid
 flowchart TD
-  W028["W-028 issue doing, standalone: Outline text cites stale charge and row numbers"]
-  W028 --> T067["T-067 done: Cite the generated numbers in the abstract and Section 2.3 -> 10_abstract.tex and 33_neutron_stars.tex"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W028 doing
-  class T067 done
 ```
