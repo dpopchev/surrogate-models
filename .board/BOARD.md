@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 2 | done: 57 | pruned: 2
+open path: E-002   | blocked: 0 | todo roots: 2 | done: 58 | pruned: 2
 
 ## Tree
 
@@ -76,7 +76,7 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 57 | pruned: 2
 - T-053 [done] Add the NS tables and the extending figures selected in paper.toml -> eda_neutron_stars.py and shared/config.py
 - T-054 [done] Write the NS insight paragraphs -> 40_data_analysis/41_neutron_stars/41_neutron_stars.tex
 
-#### W-018 issue [doing] BH EDA figures and numbers selected in paper.toml
+#### W-018 issue [done] BH EDA figures and numbers selected in paper.toml
 
 - T-042 [pruned] Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests   [pruned: superseded by the developer's re-plan of 2026-10-05: the shared EDA core is extracted first (T-055) and the BH computations are re-briefed to the BH-specific analysis (T-056)]
 - T-043 [done] Draw the BH EDA figures selected in paper.toml -> eda_black_holes.py figure functions and main
@@ -191,7 +191,7 @@ flowchart TD
   W017 --> T052["T-052 done: Compare split strategies on the NS table test-first -> split_strategies in eda_neutron_stars.py"]
   W017 --> T053["T-053 done: Add the NS tables and the extending figures selected in paper.toml -> eda_neutron_stars.py and shared/config.py"]
   W017 --> T054["T-054 done: Write the NS insight paragraphs -> 40_data_analysis/41_neutron_stars/41_neutron_stars.tex"]
-  E003 --> W018["W-018 issue doing: BH EDA figures and numbers selected in paper.toml"]
+  E003 --> W018["W-018 issue done: BH EDA figures and numbers selected in paper.toml"]
   W018 --> T042["T-042 pruned: Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests"]
   W018 --> T043["T-043 done: Draw the BH EDA figures selected in paper.toml -> eda_black_holes.py figure functions and main"]
   W018 --> T044["T-044 done: Wire the BH EDA into make and Section 4.2 -> mk/paper.mk rules and 42_black_holes.tex"]
@@ -213,8 +213,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,E003,W018 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W013,T027,T028,T029,W014,T030,T031,W016,T036,T037,W017,T038,T039,T040,T041,T052,T053,T054,T043,T044,T045,T055,T056,T057 done
+  class E002,E003 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W013,T027,T028,T029,W014,T030,T031,W016,T036,T037,W017,T038,T039,T040,T041,T052,T053,T054,W018,T043,T044,T045,T055,T056,T057 done
   class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W022,T058,W015,T033,T034,T035,W021,T050,T051 todo
   class T032,T042 pruned
 ```
