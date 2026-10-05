@@ -72,8 +72,8 @@ def test_a_section_without_its_folder_is_reported(tmp_path: Path) -> None:
     assert missing_section_folders(_Paper, tmp_path) == ("chapter.lost",)
 
 
-def test_the_shipped_paper_toml_selects_every_ns_figure() -> None:
-    assert len(load_config().data_analysis.neutron_stars.figures) == 7
+def test_the_shipped_paper_toml_selects_the_five_ns_figures_the_text_cites() -> None:
+    assert len(load_config().data_analysis.neutron_stars.figures) == 5
 
 
 def test_the_shipped_paper_toml_selects_every_ns_table() -> None:

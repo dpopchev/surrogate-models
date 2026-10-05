@@ -432,7 +432,7 @@ def _booktabs(label: str, caption: str, spec: str, header: str, rows: list[str])
     """One booktabs table environment."""
     body = "".join(f"{row} \\\\\n" for row in rows)
     return (
-        "\\begin{table}[htbp]\n\\centering\n"
+        "\\begin{table}[!htb]\n\\centering\n"
         f"\\caption{{{caption}}}\n\\label{{tab:ns-{label}}}\n"
         f"\\begin{{tabular}}{{{spec}}}\n\\toprule\n{header} \\\\\n\\midrule\n{body}"
         "\\bottomrule\n\\end{tabular}\n\\end{table}\n"
@@ -485,13 +485,8 @@ def _split_table(found: Evidence) -> str:
     return _booktabs("split-strategies", caption, "lrr", header, rows)
 
 
-def tables_tex(found: Evidence, tables: tuple[NsTable, ...]) -> str:
-    """One booktabs table per selected table, in order."""
-    return "".join(_table(found, table) for table in tables)
-
-
-def _table(found: Evidence, table: NsTable) -> str:
-    """Render one table."""
+def table_tex(found: Evidence, table: NsTable) -> str:
+    """The booktabs table environment of one table."""
     match table:
         case "univariate":
             return _univariate_table(found)
@@ -566,14 +561,13 @@ def caption(figure: NsFigure) -> str:
             assert_never(figure)
 
 
-def figures_tex(figures: tuple[NsFigure, ...]) -> str:
-    """One figure environment per selected figure, in order."""
-    return "".join(
-        "\\begin{figure}[htbp]\n\\centering\n"
+def figure_tex(figure: NsFigure) -> str:
+    """The figure environment of one figure, placed here or at the top of a page (!htb)."""
+    return (
+        "\\begin{figure}[!htb]\n\\centering\n"
         f"\\includegraphics[width=\\textwidth]{{{asset(figure)}}}\n"
         f"\\caption{{{caption(figure)}}}\n\\label{{fig:ns-{figure.replace('_', '-')}}}\n"
         "\\end{figure}\n"
-        for figure in figures
     )
 
 
@@ -785,10 +779,11 @@ def main(
         fig = draw(figure, table, config.plot)
         fig.savefig(out / f"{asset(figure)}.pdf", dpi=300)
         plt.close(fig)
+        (out / f"41_neutron_stars_fig_{figure}.tex").write_text(figure_tex(figure))
     found = evidence(table, folds, seed)
     (out / "41_neutron_stars_numbers.tex").write_text(render_macros(numbers(found)))
-    (out / "41_neutron_stars_tables.tex").write_text(tables_tex(found, section.tables))
-    (out / "41_neutron_stars_figures.tex").write_text(figures_tex(section.figures))
+    for name in section.tables:
+        (out / f"41_neutron_stars_tab_{name}.tex").write_text(table_tex(found, name))
     logger.info(
         "done: NS figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
     )

@@ -15,7 +15,7 @@ from eda_neutron_stars import (
     curve_adjacency,
     draw,
     evidence,
-    figures_tex,
+    figure_tex,
     grid_fill,
     main,
     neighbour_distances,
@@ -26,7 +26,7 @@ from eda_neutron_stars import (
     rim_mask,
     split_strategies,
     summarize,
-    tables_tex,
+    table_tex,
     with_charge_targets,
 )
 
@@ -125,9 +125,9 @@ def test_numbers_name_the_grid_fill_in_percent() -> None:
     assert found["nsEdaGridFillPercent"] == "100.0"
 
 
-def test_figures_tex_includes_each_selected_figure() -> None:
-    assert "\\includegraphics[width=\\textwidth]{41_neutron_stars_grid_fill}" in figures_tex(
-        ("grid_fill",)
+def test_figure_tex_includes_its_figure() -> None:
+    assert "\\includegraphics[width=\\textwidth]{41_neutron_stars_grid_fill}" in figure_tex(
+        "grid_fill"
     )
 
 
@@ -203,12 +203,8 @@ def test_charge_split_macros_use_the_tables_three_decimals() -> None:
     assert len(numbers(GRID)["nsEdaSplitCurvesDM"].split(".")[1]) == 3
 
 
-def test_tables_tex_labels_each_selected_table() -> None:
-    assert "\\label{tab:ns-split-strategies}" in tables_tex(GRID, ("split_strategies",))
-
-
-def test_tables_tex_is_empty_when_no_table_is_selected() -> None:
-    assert tables_tex(GRID, ()) == ""
+def test_table_tex_labels_its_table() -> None:
+    assert "\\label{tab:ns-split-strategies}" in table_tex(GRID, "split_strategies")
 
 
 def test_a_moderate_number_prints_plainly() -> None:
@@ -224,7 +220,7 @@ def test_a_tiny_number_prints_in_scientific_notation() -> None:
 
 
 def test_univariate_table_has_a_row_for_the_central_density() -> None:
-    assert "$\\rho_c$ &" in tables_tex(GRID, ("univariate",))
+    assert "$\\rho_c$ &" in table_tex(GRID, "univariate")
 
 
 STYLE = PlotStyle(usetex=False)
@@ -274,13 +270,14 @@ def test_main_writes_each_selected_figure_and_drops_stale_ones(tmp_path: Path) -
     table = tmp_path / "ns.parquet"
     DENSE.to_parquet(table)
     (tmp_path / "41_neutron_stars_univariate.pdf").write_text("deselected since the last run")
+    selection = {"figures": ["grid_fill"], "tables": ["split_strategies"]}
     config = PaperConfig.model_validate(
-        {"plot": {"usetex": False}, "data_analysis": {"neutron_stars": {"figures": ["grid_fill"]}}}
+        {"plot": {"usetex": False}, "data_analysis": {"neutron_stars": selection}}
     )
     main([str(table), str(tmp_path)], config=config, folds=2)
     assert sorted(p.name for p in tmp_path.glob("41_neutron_stars_*")) == [
-        "41_neutron_stars_figures.tex",
+        "41_neutron_stars_fig_grid_fill.tex",
         "41_neutron_stars_grid_fill.pdf",
         "41_neutron_stars_numbers.tex",
-        "41_neutron_stars_tables.tex",
+        "41_neutron_stars_tab_split_strategies.tex",
     ]
