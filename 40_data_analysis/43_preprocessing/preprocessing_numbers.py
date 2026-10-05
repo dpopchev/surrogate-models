@@ -14,6 +14,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from shared.config import PaperConfig, load_config
@@ -49,6 +50,7 @@ class FloorShare:
     dataset: str
     rows: int
     below: int
+    orders_above: float
 
     @property
     def percent(self) -> float:
@@ -75,8 +77,9 @@ def split_summary(split: pd.DataFrame, dataset: str) -> SplitSummary:
 
 
 def floor_share(table: pd.DataFrame, dataset: str, eps: float) -> FloorShare:
-    """Count the rows of a table with D < eps."""
-    return FloorShare(dataset, len(table), int((table["D"] < eps).sum()))
+    """Count the rows of a table with D < eps, and the orders of magnitude D spans above eps."""
+    orders = float(np.log10(table["D"].max() / eps))
+    return FloorShare(dataset, len(table), int((table["D"] < eps).sum()), orders)
 
 
 # Macro tags of the datasets: \prepNs..., \prepBh...
@@ -101,7 +104,11 @@ def numbers(
         }
     for f in floors:
         tag = TAGS[f.dataset]
-        found |= {f"prep{tag}FloorRows": f"{f.below}", f"prep{tag}FloorPercent": f"{f.percent:.1f}"}
+        found |= {
+            f"prep{tag}FloorRows": f"{f.below}",
+            f"prep{tag}FloorPercent": f"{f.percent:.1f}",
+            f"prep{tag}FloorOrders": f"{f.orders_above:.1f}",
+        }
     return found
 
 

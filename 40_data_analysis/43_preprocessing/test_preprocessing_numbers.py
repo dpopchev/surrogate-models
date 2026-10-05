@@ -48,6 +48,10 @@ def test_floor_share_counts_rows_below_the_floor() -> None:
     assert floor_share(CHARGES, NS, eps=1e-5).below == 2
 
 
+def test_floor_share_gives_the_orders_of_magnitude_above_the_floor() -> None:
+    assert floor_share(CHARGES, NS, eps=1e-5).orders_above == pytest.approx(3.0)
+
+
 class TestNumbers:
     @pytest.fixture
     def found(self):
@@ -63,6 +67,9 @@ class TestNumbers:
 
     def test_gives_the_rows_below_the_floor_in_percent(self, found) -> None:
         assert found["prepNsFloorPercent"] == "50.0"
+
+    def test_names_the_orders_above_the_floor(self, found) -> None:
+        assert found["prepNsFloorOrders"] == "3.0"
 
     def test_names_the_seed(self, found) -> None:
         assert found["prepSeed"] == "7"

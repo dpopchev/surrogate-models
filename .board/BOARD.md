@@ -1,12 +1,12 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 2 | done: 83 | pruned: 4
+open path: W-015 > T-033   | blocked: 0 | todo roots: 1 | done: 83 | pruned: 4
 
 ## Tree
 
-### W-015 issue [todo] (standalone) Paper text for the D floor and the sign symmetry of D   (filed during T-020)
+### W-015 issue [doing] (standalone) Paper text for the D floor and the sign symmetry of D   (filed during T-020)
 
-- T-033 [todo] Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output
+- T-033 [doing] Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output   <- ACTIVE LEAF
 - T-034 [todo] Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex
 - T-035 [todo] State the sign symmetry of D in Section 2 -> 30_physical_framework/31_action/31_action.tex
 
@@ -170,8 +170,8 @@ closed 2026-10-05 -- outcome: Given the base Makefile with STATE and no local/st
 ## Diagram
 ```mermaid
 flowchart TD
-  W015["W-015 issue todo, standalone: Paper text for the D floor and the sign symmetry of D"]
-  W015 --> T033["T-033 todo: Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output"]
+  W015["W-015 issue doing, standalone: Paper text for the D floor and the sign symmetry of D"]
+  W015 --> T033["T-033 doing: Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output -- ACTIVE LEAF"]
   W015 --> T034["T-034 todo: Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex"]
   W015 --> T035["T-035 todo: State the sign symmetry of D in Section 2 -> 30_physical_framework/31_action/31_action.tex"]
   W021["W-021 issue todo, standalone: Review markers in the paper with todonotes"]
@@ -182,5 +182,6 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W015,T033,T034,T035,W021,T050,T051 todo
+  class W015,T033 doing
+  class T034,T035,W021,T050,T051 todo
 ```
