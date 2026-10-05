@@ -233,7 +233,7 @@ def test_main_writes_each_selected_figure_and_drops_stale_ones(tmp_path: Path) -
     main([str(table), str(tmp_path)], config=config, folds=2)
     assert sorted(p.name for p in tmp_path.glob("41_neutron_stars_*")) == [
         "41_neutron_stars_fig_grid_fill.tex",
-        "41_neutron_stars_grid_fill.pdf",
+        "41_neutron_stars_grid_fill.png",
         "41_neutron_stars_numbers.tex",
         "41_neutron_stars_tab_split_strategies.tex",
     ]

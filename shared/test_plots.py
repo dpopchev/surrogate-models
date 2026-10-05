@@ -68,6 +68,15 @@ def test_bh_anchor_is_the_second_palette_color() -> None:
     assert anchor_color(STYLE, "black_holes") == sns.color_palette("colorblind")[1]
 
 
+def test_figures_are_written_at_600_dpi_by_default() -> None:
+    assert PlotStyle().dpi == 600
+
+
+def test_a_non_positive_dpi_is_rejected() -> None:
+    with pytest.raises(ValidationError, match="dpi"):
+        PlotStyle.model_validate({"dpi": 0})
+
+
 def test_unknown_palette_is_rejected() -> None:
     with pytest.raises(ValidationError, match="palette"):
         PlotStyle.model_validate({"palette": "rainbow"})

@@ -9,7 +9,7 @@ from typing import Literal, assert_never
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.colors import Colormap
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, PositiveInt
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
@@ -54,6 +54,8 @@ class PlotStyle(BaseModel):
     usetex: bool = True
     text_width_pt: float = ARTICLE_TEXT_WIDTH_PT
     aspect: float = 0.62
+    # Figures are written as PNG at this resolution (W-029).
+    dpi: PositiveInt = 600
     neutron_stars: NeutronStarColors = NeutronStarColors()
     black_holes: BlackHoleColors = BlackHoleColors()
 

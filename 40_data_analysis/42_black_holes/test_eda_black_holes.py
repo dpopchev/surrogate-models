@@ -174,7 +174,7 @@ def test_main_writes_each_selected_asset_and_drops_stale_ones(tmp_path: Path) ->
     )
     main([str(table), str(tmp_path)], config=config, folds=3)
     assert sorted(p.name for p in tmp_path.glob("42_black_holes_*")) == [
-        "42_black_holes_existence_edge.pdf",
+        "42_black_holes_existence_edge.png",
         "42_black_holes_fig_existence_edge.tex",
         "42_black_holes_numbers.tex",
         "42_black_holes_tab_split_strategies.tex",

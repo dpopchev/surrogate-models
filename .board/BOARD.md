@@ -1,12 +1,12 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 1 | done: 94 | pruned: 4
+open path: W-029 > T-068   | blocked: 0 | todo roots: 0 | done: 94 | pruned: 4
 
 ## Tree
 
-### W-029 issue [todo] (standalone) Figures render as high-resolution PNG
+### W-029 issue [doing] (standalone) Figures render as high-resolution PNG
 
-- T-068 [todo] Write the EDA figures as PNG at plot.dpi -> shared/plots.py, both EDA modules, paper.toml
+- T-068 [doing] Write the EDA figures as PNG at plot.dpi -> shared/plots.py, both EDA modules, paper.toml   <- ACTIVE LEAF
 
 ## Closed
 
@@ -190,12 +190,12 @@ closed 2026-10-05 -- outcome: Given the generated EDA and preprocessing macros, 
 ## Diagram
 ```mermaid
 flowchart TD
-  W029["W-029 issue todo, standalone: Figures render as high-resolution PNG"]
-  W029 --> T068["T-068 todo: Write the EDA figures as PNG at plot.dpi -> shared/plots.py, both EDA modules, paper.toml"]
+  W029["W-029 issue doing, standalone: Figures render as high-resolution PNG"]
+  W029 --> T068["T-068 doing: Write the EDA figures as PNG at plot.dpi -> shared/plots.py, both EDA modules, paper.toml -- ACTIVE LEAF"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W029,T068 todo
+  class W029,T068 doing
 ```

@@ -502,7 +502,7 @@ def main(
     section = config.data_analysis.black_holes
     for figure in section.figures:
         fig = draw(figure, table, config.plot)
-        fig.savefig(out / f"{asset(figure)}.pdf", dpi=300)
+        fig.savefig(out / f"{asset(figure)}.png", dpi=config.plot.dpi)
         plt.close(fig)
         (out / f"42_black_holes_fig_{figure}.tex").write_text(figure_tex(figure))
     found = evidence(table, folds, seed)
