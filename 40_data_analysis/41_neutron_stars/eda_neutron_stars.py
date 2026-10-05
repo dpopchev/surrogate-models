@@ -11,7 +11,7 @@ import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, assert_never
+from typing import Literal, assert_never, get_args
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -95,13 +95,21 @@ class NeighbourDistances:
     across: np.ndarray
 
 
-@dataclass(frozen=True)
-class Leakage:
-    """1-nearest-neighbour error of a target under a row-random and a curve-grouped split."""
+SplitStrategy = Literal["random_rows", "curves", "beta_lines", "lambda_lines", "rim"]
 
+
+@dataclass(frozen=True)
+class SplitScore:
+    """1-nearest-neighbour error of a target when the split holds out what the strategy names.
+
+    random_rows: rows at random; curves: whole (beta, lambda) curves; beta_lines and
+    lambda_lines: every curve of a held-out beta or lambda value; rim: the rim curves, predicted
+    from the interior ones (extrapolation). NaN when the strategy has nothing to train on.
+    """
+
+    strategy: SplitStrategy
     target: str
-    mae_rows: float
-    mae_groups: float
+    mae: float
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -224,9 +232,13 @@ def curve_adjacency(table: pd.DataFrame, k: int = 16) -> Adjacency:
     )
 
 
-def _mae(table: pd.DataFrame, target: str, splitter: KFold | GroupKFold) -> float:
-    """Mean absolute 1-NN error of target under one cross-validation splitter."""
-    groups = _curve_ids(table) if isinstance(splitter, GroupKFold) else None
+def _mae(
+    table: pd.DataFrame, target: str, splitter: KFold | GroupKFold, groups: np.ndarray | None
+) -> float:
+    """Mean absolute 1-NN error of target under one cross-validation splitter; NaN when there
+    are fewer groups than folds."""
+    if groups is not None and len(np.unique(groups)) < splitter.get_n_splits():
+        return float("nan")
     model = KNeighborsRegressor(n_neighbors=1)
     predicted = cross_val_predict(
         model, _inputs(table), table[target].to_numpy(), cv=splitter, groups=groups
@@ -234,11 +246,61 @@ def _mae(table: pd.DataFrame, target: str, splitter: KFold | GroupKFold) -> floa
     return float(np.abs(predicted - table[target].to_numpy()).mean())
 
 
-def split_leakage(table: pd.DataFrame, target: str, folds: int, seed: int) -> Leakage:
-    """Compare 1-NN error under row-random KFold and GroupKFold over curves."""
-    rows = KFold(n_splits=folds, shuffle=True, random_state=seed)
-    groups = GroupKFold(n_splits=folds, shuffle=True, random_state=seed)
-    return Leakage(target, _mae(table, target, rows), _mae(table, target, groups))
+def _rows(folds: int, seed: int) -> KFold:
+    """The row-random splitter."""
+    return KFold(n_splits=folds, shuffle=True, random_state=seed)
+
+
+def _grouped(folds: int, seed: int) -> GroupKFold:
+    """The grouped splitter."""
+    return GroupKFold(n_splits=folds, shuffle=True, random_state=seed)
+
+
+def rim_mask(table: pd.DataFrame) -> pd.Series:
+    """Mark the rows of rim curves: the grid's outer beta and lambda lines, and each beta's
+    largest lambda (the boundary of an empty corner)."""
+    beta, lam = table["beta"], table["lambda"]
+    outer = beta.isin([beta.min(), beta.max()]) | lam.isin([lam.min(), lam.max()])
+    return outer | (lam == table.groupby("beta")["lambda"].transform("max"))
+
+
+def _rim_mae(table: pd.DataFrame, target: str) -> float:
+    """1-NN error on the rim rows of a model fitted on the interior rows; NaN without interior."""
+    rim = rim_mask(table).to_numpy()
+    if rim.all():
+        return float("nan")
+    inputs, values = _inputs(table), table[target].to_numpy()
+    model = KNeighborsRegressor(n_neighbors=1).fit(inputs[~rim], values[~rim])
+    return float(np.abs(model.predict(inputs[rim]) - values[rim]).mean())
+
+
+def _score(
+    table: pd.DataFrame, target: str, strategy: SplitStrategy, folds: int, seed: int
+) -> float:
+    """The 1-NN error of one strategy."""
+    match strategy:
+        case "random_rows":
+            return _mae(table, target, _rows(folds, seed), None)
+        case "curves":
+            return _mae(table, target, _grouped(folds, seed), _curve_ids(table))
+        case "beta_lines":
+            return _mae(table, target, _grouped(folds, seed), table["beta"].to_numpy())
+        case "lambda_lines":
+            return _mae(table, target, _grouped(folds, seed), table["lambda"].to_numpy())
+        case "rim":
+            return _rim_mae(table, target)
+        case _:
+            assert_never(strategy)
+
+
+def split_strategies(
+    table: pd.DataFrame, target: str, folds: int, seed: int
+) -> tuple[SplitScore, ...]:
+    """1-NN error of target under each split strategy, in SplitStrategy order."""
+    return tuple(
+        SplitScore(strategy, target, _score(table, target, strategy, folds, seed))
+        for strategy in get_args(SplitStrategy)
+    )
 
 
 def render_macros(numbers: dict[str, str]) -> str:
@@ -258,8 +320,11 @@ def numbers(table: pd.DataFrame, folds: int, seed: int) -> dict[str, str]:
     log_d, log_dm = charge_targets(table)
     fill = grid_fill(table)
     adjacency = curve_adjacency(table)
-    leak_dm = split_leakage(table, "log10_D_over_M", folds, seed)
-    leak_m = split_leakage(table, "M", folds, seed)
+    splits = {
+        (s.target, s.strategy): s.mae
+        for target in ("M", "log10_D_over_M")
+        for s in split_strategies(table, target, folds, seed)
+    }
     rho = summary["rho_c", "log10"]
     d = summary["D", "raw"]
     return {
@@ -284,11 +349,18 @@ def numbers(table: pd.DataFrame, folds: int, seed: int) -> dict[str, str]:
         "nsEdaWithinMedian": f"{adjacency.within_median:.3f}",
         "nsEdaAcrossMedian": f"{adjacency.across_median:.3f}",
         "nsEdaFolds": f"{folds}",
-        "nsEdaLeakRowsDM": f"{leak_dm.mae_rows:.3f}",
-        "nsEdaLeakGroupsDM": f"{leak_dm.mae_groups:.3f}",
-        "nsEdaLeakRowsM": f"{leak_m.mae_rows:.4f}",
-        "nsEdaLeakGroupsM": f"{leak_m.mae_groups:.4f}",
+    } | {
+        f"nsEdaSplit{_camel(strategy)}{TARGET_TAGS[target]}": f"{mae:.4f}"
+        for (target, strategy), mae in splits.items()
     }
+
+
+TARGET_TAGS = {"M": "M", "log10_D_over_M": "DM"}
+
+
+def _camel(name: str) -> str:
+    """random_rows -> RandomRows, for LaTeX macro names (letters only)."""
+    return "".join(part.capitalize() for part in name.split("_"))
 
 
 def asset(figure: NsFigure) -> str:

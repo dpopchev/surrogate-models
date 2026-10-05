@@ -20,7 +20,8 @@ from eda_neutron_stars import (
     neighbour_distances,
     numbers,
     render_macros,
-    split_leakage,
+    rim_mask,
+    split_strategies,
     summarize,
     with_charge_targets,
 )
@@ -100,8 +101,8 @@ def test_rows_of_dense_curves_neighbour_their_own_curve() -> None:
 def test_a_row_random_split_scores_better_than_a_grouped_one() -> None:
     offsets = {(1.0, 1.0): 1.0, (2.0, 1.0): 9.0, (3.0, 1.0): 2.0, (4.0, 1.0): 8.0}
     table = curves({key: [off] * 6 for key, off in offsets.items()}).rename(columns={"D": "y"})
-    leakage = split_leakage(table, "y", folds=2, seed=0)
-    assert leakage.mae_rows < leakage.mae_groups
+    scores = {s.strategy: s.mae for s in split_strategies(table, "y", folds=2, seed=0)}
+    assert scores["random_rows"] < scores["curves"]
 
 
 def test_macros_render_one_newcommand_per_number() -> None:
@@ -123,6 +124,44 @@ def test_figures_tex_includes_each_selected_figure() -> None:
     assert "\\includegraphics[width=\\textwidth]{41_neutron_stars_grid_fill}" in figures_tex(
         ("grid_fill",)
     )
+
+
+def grid(betas: range, lambdas: range, missing: tuple[tuple[int, int], ...] = ()) -> pd.DataFrame:
+    """A beta x lambda grid of 4-row curves whose D follows beta, lambda and the row."""
+    return curves(
+        {
+            (float(b), float(lam)): [0.1 * b + 0.01 * lam + 0.001 * i for i in range(4)]
+            for b in betas
+            for lam in lambdas
+            if (b, lam) not in missing
+        }
+    )
+
+
+def test_only_the_centre_of_a_full_3x3_grid_is_off_the_rim() -> None:
+    assert int((~rim_mask(grid(range(1, 4), range(1, 4)))).sum()) == 4
+
+
+def test_the_boundary_of_an_empty_corner_is_on_the_rim() -> None:
+    table = grid(range(1, 5), range(1, 5), missing=((4, 4), (3, 4)))
+    on_rim = rim_mask(table)
+    assert bool(on_rim[(table["beta"] == 3.0) & (table["lambda"] == 3.0)].all())
+
+
+def test_split_strategies_score_every_strategy_in_order() -> None:
+    scores = split_strategies(grid(range(1, 4), range(1, 4)), "D", folds=3, seed=0)
+    assert [s.strategy for s in scores] == [
+        "random_rows",
+        "curves",
+        "beta_lines",
+        "lambda_lines",
+        "rim",
+    ]
+
+
+def test_numbers_name_the_rim_score_of_the_charge_target() -> None:
+    table = with_charge_targets(grid(range(1, 4), range(1, 4)))
+    assert "nsEdaSplitRimDM" in numbers(table, folds=3, seed=0)
 
 
 STYLE = PlotStyle(usetex=False)
