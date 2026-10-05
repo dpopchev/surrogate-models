@@ -14,13 +14,11 @@
 - 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-009#1
 - 2026-10-05 W-009: fact: now generated as nsEda macros -> eda_neutron_stars.py supersedes: W-009#3
 - 2026-10-05 W-009: fact: shown in the grid_fill figure -> W-017 supersedes: W-009#2
-- 2026-10-05 W-014: fact: kept in code -> shared/plots.py supersedes: W-014#1
-- 2026-10-05 W-017: T-041: fact: 99.2% nearest rows in own curve; 1-NN log10(D/M) error 0.013 random vs 0.052 grouped -> split by curve
-- 2026-10-05 W-017: T-041: fact: log10 rho_c skew -0.03 (raw 0.57), sd 0.173 -> input log10 rho_c, standardized
-- 2026-10-05 W-017: T-041: fact: log10(D/M): Spearman with M 0.22->0.06, Pearson with lambda 0.58->0.69 -> target log10(D/M)
-- 2026-10-05 W-018: T-045: fact: beta moves M 0.01%, log10 D 2.9% at fixed r_h; sets r_h,min 4.059..4.493 -> GroupKFold over beta
-- 2026-10-05 W-018: T-045: fact: log10(D/M) no gain over log10 D (Spearman M -1.000 vs -0.999) -> unlike NS, noted in 3.2
-- 2026-10-05 W-018: T-045: fact: r_h linear (0.39 orders); M = r_h/2 + 0.006..0.120 (r 0.9999) -> raw M in M_sun
+- 2026-10-05 W-017: standing: 99.2% nearest rows in own curve; 1-NN log10(D/M) error 0.013 random vs 0.052 grouped -> split by curve supersedes: W-017#3
+- 2026-10-05 W-017: standing: log10(D/M): Spearman with M 0.22->0.06, Pearson with lambda 0.58->0.69 -> target log10(D/M) supersedes: W-017#2
+- 2026-10-05 W-018: standing: beta moves M 0.01%, log10 D 2.9% at fixed r_h; sets r_h,min 4.059..4.493 -> GroupKFold over beta supersedes: W-018#3
+- 2026-10-05 W-018: standing: log10(D/M) no gain over log10 D (Spearman M -1.000 vs -0.999) -> unlike NS, noted in 3.2 supersedes: W-018#2
+- 2026-10-05 W-018: standing: r_h linear (0.39 orders); M = r_h/2 + 0.006..0.120 (r 0.9999) -> raw M in M_sun supersedes: W-018#1
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
@@ -37,22 +35,10 @@
 - 2026-10-05 E-002: models are built with PyTorch and the Lightning framework (CPU-only: torch from the pyproject's PyTorch CPU index); this governs every modeling Epic that follows
 - 2026-10-05 E-002: the theory is symmetric under D -> -D; the dataset holds the positive branch and the D > 0 check stays as a guard on that convention; Section 2 states the symmetry
 - 2026-10-05 E-002: units G = c = 1 in both datasets, masses in M_sun; stated in Section 2
-- 2026-10-05 E-003: EDA per dataset, to organize the split from the data; scripts beside their section, figures built into build/assets and chosen in paper.toml, never in local/scratch
-- 2026-10-05 E-003: NS and BH use distinct color families, so a beta colorbar tells the dataset; BH and NS may not share a theory
-- 2026-10-05 E-003: colors: NS cool (lambda crest, beta mako, anchor blue), BH warm (beta flare, anchor orange)
-- 2026-10-05 E-003: every figure and table series is one curve of fixed free parameters cut at its M_max (W-008 rule); figures and tables show the variation around M_max
-- 2026-10-05 E-003: one shared matplotlib and seaborn style for every figure; text rendered with usetex (pdflatex, Latin Modern) to match the 11pt article; default palette colorblind
-- 2026-10-05 E-003: paper says orders of magnitude, never decades
-- 2026-10-05 E-003: paper.toml is the entry point that chooses which figures and computations are produced; each choice is a Literal scoped to what its module can draw or compute, so a new variant is added to the module and its Literal together
-- 2026-10-05 E-003: the first slice is the config skeleton plus one real choice; further choices land with the figure or table that consumes them
-- 2026-10-05 E-003: values live in a top-level paper.toml, the schema in shared/config.py (pydantic-settings TOML source, env overrides PAPER__<SECTION>__<SUBSECTION>__<FIELD>); section keys are the folder names without their number prefix
 - 2026-10-05 W-008: Parse per block, fail on another header; assert the T-017 constants, drop them; inputs (beta, lambda, rho_c), targets (M, D); drop empty blocks; cut each curve after its M max, keep that row, keep peakless curves whole; N = 201047; the paper states the non-rectangular domain
-- 2026-10-05 W-017: rho_c: keep log10, standardized; argue from positivity and the M vs log10 rho_c shape, not skew (grid is about uniform in rho_c)
-- 2026-10-05 W-018: build: shared/eda.py core first; BH figures univariate_continuous, mass_correction, charge_target, existence_edge
 
 ## Deviations
 - 2026-10-04 E-002: W-012 bug filed during T-016 and pre-empted W-007 (blocked, then unblocked) -- the BH file holds 21 header-repeated blocks; W-012 lands on main together with W-007 because it builds on W-007's unlanded commits
 - 2026-10-05 E-002: T-020's check amended to read the first 5 columns -- W-008 R3 (developer-confirmed) keeps the 16 varying NS columns, inputs and targets first, the rest for EDA (R for the mass-radius figure)
 - 2026-10-05 E-002: W-015 filed during T-020 (standalone): the D-floor and sign Decisions contradict the drafted H1 and EDA text
 - 2026-10-05 E-002: developer re-plan: the split comes from per-dataset EDA; E-002 parked for E-003 (config, style, EDA figures); W-019 spike and W-020 (AC5) added; W-010, W-015 wait on W-019; W-010's lines and edge to be revised (GroupKFold for NS)
-- 2026-10-05 E-003: bugs W-022 (stale NS rule target) and W-023 (tracked .pyc) filed during T-044, T-057
