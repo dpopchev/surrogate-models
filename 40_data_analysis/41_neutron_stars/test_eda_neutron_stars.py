@@ -1,23 +1,38 @@
 """Facts about the NS exploratory computations, on tiny synthetic curves."""
 
+from pathlib import Path
+
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 from eda_neutron_stars import (
     beta_share_at_fixed_lambda,
     charge_targets,
     curve_adjacency,
+    draw,
+    figures_tex,
     grid_fill,
+    main,
+    neighbour_distances,
+    numbers,
     render_macros,
     split_leakage,
     summarize,
     with_charge_targets,
 )
 
+from shared.config import PaperConfig
+from shared.plots import PlotStyle
+
 
 def curves(target: dict[tuple[float, float], list[float]]) -> pd.DataFrame:
-    """Curves keyed by (beta, lambda), each with rho_c = 10, 100, 1000, ...; M = 1, D = target."""
+    """Curves keyed by (beta, lambda): rho_c = 10, 100, ...; M = 1, 1.1, ...; D = target."""
     rows = [
-        {"beta": b, "lambda": lam, "rho_c": 10.0 ** (i + 1), "M": 1.0, "D": value}
+        {"beta": b, "lambda": lam, "rho_c": 10.0 ** (i + 1), "M": 1.0 + 0.1 * i, "D": value}
         for (b, lam), values in target.items()
         for i, value in enumerate(values)
     ]
@@ -91,3 +106,63 @@ def test_a_row_random_split_scores_better_than_a_grouped_one() -> None:
 
 def test_macros_render_one_newcommand_per_number() -> None:
     assert render_macros({"nsEdaX": "1.5"}) == "\\newcommand{\\nsEdaX}{1.5}\n"
+
+
+DENSE = curves({(b, lam): [0.1, 0.2, 0.3, 0.4] for b in (1.0, 50.0) for lam in (1.0, 2.0)})
+
+
+def test_every_row_of_a_dense_curve_has_a_within_curve_distance() -> None:
+    assert len(neighbour_distances(DENSE, k=3).within) == 16
+
+
+def test_numbers_name_the_grid_fill_in_percent() -> None:
+    assert numbers(with_charge_targets(DENSE), folds=2, seed=0)["nsEdaGridFillPercent"] == "100.0"
+
+
+def test_figures_tex_includes_each_selected_figure() -> None:
+    assert "\\includegraphics[width=\\textwidth]{41_neutron_stars_grid_fill}" in figures_tex(
+        ("grid_fill",)
+    )
+
+
+STYLE = PlotStyle(usetex=False)
+
+
+class TestFigures:
+    @pytest.fixture(autouse=True)
+    def _close(self):
+        yield
+        plt.close("all")
+
+    def test_univariate_has_a_raw_and_a_log10_panel_per_column(self) -> None:
+        assert len(draw("univariate", with_charge_targets(DENSE), STYLE).axes) == 12
+
+    def test_univariate_gives_a_grid_parameter_one_bar_per_value(self) -> None:
+        figure = draw("univariate", with_charge_targets(DENSE), STYLE)
+        assert len(figure.axes[0].patches) == 2
+
+    def test_charge_target_has_four_panels_and_two_colorbars(self) -> None:
+        assert len(draw("charge_target", with_charge_targets(DENSE), STYLE).axes) == 6
+
+    def test_mass_density_has_one_panel_and_its_colorbar(self) -> None:
+        assert len(draw("mass_density", with_charge_targets(DENSE), STYLE).axes) == 2
+
+    def test_grid_fill_has_one_panel_and_its_colorbar(self) -> None:
+        assert len(draw("grid_fill", with_charge_targets(DENSE), STYLE).axes) == 2
+
+    def test_curve_adjacency_has_one_panel(self) -> None:
+        assert len(draw("curve_adjacency", with_charge_targets(DENSE), STYLE).axes) == 1
+
+
+def test_main_writes_each_selected_figure(tmp_path: Path) -> None:
+    table = tmp_path / "ns.parquet"
+    DENSE.to_parquet(table)
+    config = PaperConfig.model_validate(
+        {"plot": {"usetex": False}, "data_analysis": {"neutron_stars": {"figures": ["grid_fill"]}}}
+    )
+    main([str(table), str(tmp_path)], config=config, folds=2)
+    assert sorted(p.name for p in tmp_path.glob("41_neutron_stars_*")) == [
+        "41_neutron_stars_figures.tex",
+        "41_neutron_stars_grid_fill.pdf",
+        "41_neutron_stars_numbers.tex",
+    ]
