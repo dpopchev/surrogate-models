@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 1 | done: 30 | pruned: 0
+open path: E-002 > W-009 > T-019   | blocked: 0 | todo roots: 1 | done: 30 | pruned: 0
 
 ## Tree
 
@@ -17,9 +17,9 @@ open path: E-002   | blocked: 0 | todo roots: 1 | done: 30 | pruned: 0
 - T-017 [done] Probe the NS file layout and failure signatures -> local/scratch/probe_neutron_stars.py and Findings on W-008
 - T-018 [done] Decide the NS parsing and filtering rules -> spike.decision on W-008
 
-#### W-009 issue [todo] NS table from the filtered dataset
+#### W-009 issue [doing] NS table from the filtered dataset
 
-- T-019 [todo] Write the NS preparation test-first -> 30_physical_framework/33_neutron_stars/prepare_neutron_stars.py with its tests
+- T-019 [doing] Write the NS preparation test-first -> 30_physical_framework/33_neutron_stars/prepare_neutron_stars.py with its tests   <- ACTIVE LEAF
 - T-020 [todo] Wire the NS preparation into make -> local/state/neutron_stars.parquet
 
 #### W-010 issue [todo] Frozen split grouped by curve
@@ -103,8 +103,8 @@ flowchart TD
   E002 --> W008["W-008 spike done: How neutron-stars.dat is laid out and how bad runs show up"]
   W008 --> T017["T-017 done: Probe the NS file layout and failure signatures -> local/scratch/probe_neutron_stars.py and Findings on W-008"]
   W008 --> T018["T-018 done: Decide the NS parsing and filtering rules -> spike.decision on W-008"]
-  E002 --> W009["W-009 issue todo: NS table from the filtered dataset"]
-  W009 --> T019["T-019 todo: Write the NS preparation test-first -> 30_physical_framework/33_neutron_stars/prepare_neutron_stars.py with its tests"]
+  E002 --> W009["W-009 issue doing: NS table from the filtered dataset"]
+  W009 --> T019["T-019 doing: Write the NS preparation test-first -> 30_physical_framework/33_neutron_stars/prepare_neutron_stars.py with its tests -- ACTIVE LEAF"]
   W009 --> T020["T-020 todo: Wire the NS preparation into make -> local/state/neutron_stars.parquet"]
   E002 --> W010["W-010 issue todo: Frozen split grouped by curve"]
   W010 --> T021["T-021 todo: Write the curve-grouped split test-first -> 50_methodology/51_algorithms/split_datasets.py with its tests"]
@@ -129,7 +129,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002 doing
+  class E002,W009,T019 doing
   class W007,T014,T015,T016,W008,T017,T018,W012,T025,T026 done
-  class W009,T019,T020,W010,T021,T022,W011,T023,T024,E003,W013,T027,T028,T029,W014,T030,T031,T032 todo
+  class T020,W010,T021,T022,W011,T023,T024,E003,W013,T027,T028,T029,W014,T030,T031,T032 todo
 ```

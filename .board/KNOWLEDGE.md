@@ -9,8 +9,11 @@
 - 2026-10-04 W-008: T-017: fact: header beta and Lambda equal the beta and lambda columns; x1, x2, Pc, choice_theory, kappa (1000), mphi (0), lambda_phi (0), TheoryType (31) are constant -> assert them, inputs are (beta, lambda, rhoc)
 - 2026-10-04 W-008: T-017: fact: outline 3.1 rho_c range (5.891e14 to 3.342e15) and D range (8.2e-8 to 0.38) match the UNFILTERED file; lambda 0.5 to 0.8 carry 11550 rows each vs a median 5640 per lambda -> 3.1 numbers will change after filtering
 - 2026-10-04 W-008: T-017: fact: rho_c rises strictly in all 1611 curves; 1111 curves continue past their M maximum (23550 rows, up to 65 per curve); 500 curves end before reaching a maximum -> cutting past M_max leaves 201047 rows
+- 2026-10-05 E-002: T-019: fact: none of the 21 BH curves in local/state/black_holes.parquet has an interior M maximum -> the cut-at-M_max rule changes only NS data; BH series are plotted whole
 - 2026-10-05 W-008: T-018: fact: header grid is 51 beta (0.4 to 50.4) x lambda 0.5 to 4.1; beta 50.4 is entirely empty; for beta >= 17.4 the empty blocks are the highest lambdas, growing from 1 (beta 17.4) to 12 (beta 49.4) -> the non-empty (beta, lambda) domain is non-rectangular
-- 2026-10-05 W-008: T-018: fact: lambda 0.5 to 0.8 hold twice the rows as their rho_c runs to 3.34e15 vs 1.65e15 elsewhere at the same step (about 1e13); all 500 curves ending before M_max have lambda >= 1.3 -> the extra rows are past-peak tail, the M_max cut removes most of the imbalance
+- 2026-10-05 W-009: T-019: fact: 11 of 27 NS columns are constant (kappa, mphi, lambda_phi, x1, x2, EPS_P, EOS_Type, Gamma_poly, K_poly, vPertEq[0], TheoryType); rhoc has 231 values shared by all curves, Pc, rho_rest_mass, rho-3P follow it -> assert the 11, keep the 16 varying (R3)
+- 2026-10-05 W-009: T-019: fact: after the cut lambda < 0.85 still holds about 10000 rows per lambda vs about 4900 elsewhere -> their curves reach higher rho_c before the peak; the imbalance stays about 2x, a split and loss-weighting concern supersedes: W-008#6
+- 2026-10-05 W-009: T-019: fact: filtered NS table: 201047 rows, 1611 curves, 16 columns; D 8.203e-08 to 0.2338, rho_c 5.891e14 to 2.785e15 -> the Section 3.1 ranges after filtering (W-011)
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
@@ -22,6 +25,7 @@
 - 2026-10-04 E-002: no solver and no field equations are available; only local/initial-data, which must be preprocessed first
 - 2026-10-04 E-002: only black-holes-zero-phi0.dat is used; kappa, lambda2 and phi0 are fixed settings, so BH is 2D in (r_h, beta)
 - 2026-10-04 E-002: tables are pandas DataFrames stored as parquet through pyarrow
+- 2026-10-05 E-003: every figure and table series is one curve of fixed free parameters cut at its M_max (W-008 rule); figures and tables show the variation around M_max
 - 2026-10-05 E-003: one shared matplotlib and seaborn style for every figure; text rendered with usetex (pdflatex, Latin Modern) to match the 11pt article; default palette colorblind
 - 2026-10-05 E-003: paper.toml is the entry point that chooses which figures and computations are produced; each choice is a Literal scoped to what its module can draw or compute, so a new variant is added to the module and its Literal together
 - 2026-10-05 E-003: the first slice is the config skeleton plus one real choice; further choices land with the figure or table that consumes them
