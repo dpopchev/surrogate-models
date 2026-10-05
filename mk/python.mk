@@ -28,6 +28,7 @@ export PYTHONPATH := $(CURDIR)
 endif
 
 CHECKS += lint typecheck test
+CLEANS += clean-python
 
 $(PYVER):
 	@$(UV) python pin $(DEFAULT_PYTHON)
@@ -63,3 +64,8 @@ test: ## Pytest with doctests
 test-quick: ## Pytest stopping at the first failure
 	@$(RUN) pytest -x -q
 	$(call log_done,quick tests passed)
+
+.PHONY: clean-python
+clean-python: ## Remove the python tool caches in local/
+	@rm -rf $(LOCAL)/pycache $(LOCAL)/.pytest_cache $(LOCAL)/.ruff_cache $(LOCAL)/.mypy_cache $(LOCAL)/.hypothesis
+	$(call log_done,removed the python tool caches in $(LOCAL)/)

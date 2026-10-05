@@ -78,9 +78,10 @@ UV := uv
 # Directory convention (rules/makefile.md -> Directories):
 #   $(BUILD) the end product -- `make clean` removes it whole
 #   $(LOCAL) machine-local and interim: inputs, state, keys, scratch, tool
-#            residuals -- never tracked, never cleaned
-#   $(STATE) runtime state written by explicit file targets (prepared data,
-#            splits, trained weights) -- read by the end product's targets
+#            residuals -- never tracked; make clean removes only state/ and
+#            the layers' residuals
+#   $(STATE) interim results and artifacts of any step, when a step needs
+#            them -- written by explicit file targets
 BUILD ?= build
 LOCAL ?= local
 OUT     := $(BUILD)/outputs
@@ -89,21 +90,31 @@ STATE   := $(LOCAL)/state
 
 $(LOCAL):
 	@mkdir -p $(LOCAL)/keys $(LOCAL)/scratch $(LOCAL)/inputs $(STATE)
-	$(call log_warn,created $(LOCAL)/ -- inputs/$(comma) state/$(comma) keys/ and scratch/ live here; git-ignored$(comma) never cleaned)
+	$(call log_warn,created $(LOCAL)/ -- inputs/$(comma) state/$(comma) keys/ and scratch/ live here; git-ignored$(comma) make clean removes only state/)
 
-$(OUT) $(REPORTS):
+$(OUT) $(REPORTS) $(STATE):
 	@mkdir -p $@
-	$(call log_warn,created $@/ -- a build artifact directory$(comma) removed by make clean)
+	$(call log_warn,created $@/ -- an artifact directory$(comma) removed by make clean)
+
+.PHONY: clean-build clean-state
+clean-build: ## Remove build/ -- the end products
+	@rm -rf $(BUILD)
+	$(call log_done,removed $(BUILD)/)
+
+clean-state: ## Remove local/state/ -- the interim results
+	@rm -rf $(STATE)
+	$(call log_done,removed $(STATE)/)
+
+# Layers (mk/python.mk, ...) add their targets and append to CHECKS and CLEANS.
+# Included here, before `check` and `clean`, because make expands prerequisites
+# when it reads a rule.
+CHECKS :=
+CLEANS := clean-build clean-state
+include $(wildcard mk/*.mk)
 
 .PHONY: clean
-clean: ## Remove build/ -- local/ .board/ .venv/ untouched
-	@rm -rf $(BUILD)
-	$(call log_done,removed $(BUILD)/ -- $(LOCAL)/$(comma) .board/ and .venv/ untouched)
-
-# Layers (mk/python.mk, ...) add their targets and append to CHECKS. Included
-# here, before `check`, because make expands prerequisites when it reads a rule.
-CHECKS :=
-include $(wildcard mk/*.mk)
+clean: $(CLEANS) ## Run every clean -- inputs, keys, settings, scratch, .board/ .venv/ untouched
+	$(call log_done,cleaned: $(CLEANS) -- inputs$(comma) keys$(comma) settings$(comma) scratch$(comma) initial-data$(comma) .board/ and .venv/ untouched)
 
 # ------------------------------------------------------------------------------
 ### Quality
