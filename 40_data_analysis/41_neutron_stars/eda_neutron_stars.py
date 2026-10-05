@@ -496,6 +496,8 @@ def main(
     apply_style(config.plot)
     table = with_charge_targets(pd.read_parquet(source))
     out.mkdir(parents=True, exist_ok=True)
+    for stale in out.glob("41_neutron_stars_*"):
+        stale.unlink()
     figures = config.data_analysis.neutron_stars.figures
     for figure in figures:
         fig = draw(figure, table, config.plot)

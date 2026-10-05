@@ -154,9 +154,10 @@ class TestFigures:
         assert len(draw("curve_adjacency", with_charge_targets(DENSE), STYLE).axes) == 1
 
 
-def test_main_writes_each_selected_figure(tmp_path: Path) -> None:
+def test_main_writes_each_selected_figure_and_drops_stale_ones(tmp_path: Path) -> None:
     table = tmp_path / "ns.parquet"
     DENSE.to_parquet(table)
+    (tmp_path / "41_neutron_stars_univariate.pdf").write_text("deselected since the last run")
     config = PaperConfig.model_validate(
         {"plot": {"usetex": False}, "data_analysis": {"neutron_stars": {"figures": ["grid_fill"]}}}
     )

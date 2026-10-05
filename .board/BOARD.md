@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 1 | done: 44 | pruned: 1
+open path: E-002   | blocked: 0 | todo roots: 1 | done: 45 | pruned: 1
 
 ## Tree
 
@@ -69,8 +69,8 @@ open path: E-002   | blocked: 0 | todo roots: 1 | done: 44 | pruned: 1
 #### W-017 issue [doing] NS EDA figures and numbers selected in paper.toml
 
 - T-038 [done] Write the NS EDA computations test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py with its tests
-- T-039 [doing] Draw the NS EDA figures selected in paper.toml -> eda_neutron_stars.py figure functions and main   <- ACTIVE LEAF
-- T-040 [todo] Wire the NS EDA into make and Section 4.1 -> mk/paper.mk rules and 41_neutron_stars.tex
+- T-039 [done] Draw the NS EDA figures selected in paper.toml -> eda_neutron_stars.py figure functions and main
+- T-040 [doing] Wire the NS EDA into make and Section 4.1 -> mk/paper.mk rules and 41_neutron_stars.tex   <- ACTIVE LEAF
 - T-041 [todo] Review the NS EDA figures with the developer -> Findings on W-017
 
 #### W-018 issue [todo] BH EDA figures and numbers selected in paper.toml
@@ -170,8 +170,8 @@ flowchart TD
   W016 --> T037["T-037 done: Add the BH EDA and preprocessing subsections -> 40_data_analysis/42_black_holes and 43_preprocessing"]
   E003 --> W017["W-017 issue doing: NS EDA figures and numbers selected in paper.toml"]
   W017 --> T038["T-038 done: Write the NS EDA computations test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py with its tests"]
-  W017 --> T039["T-039 doing: Draw the NS EDA figures selected in paper.toml -> eda_neutron_stars.py figure functions and main -- ACTIVE LEAF"]
-  W017 --> T040["T-040 todo: Wire the NS EDA into make and Section 4.1 -> mk/paper.mk rules and 41_neutron_stars.tex"]
+  W017 --> T039["T-039 done: Draw the NS EDA figures selected in paper.toml -> eda_neutron_stars.py figure functions and main"]
+  W017 --> T040["T-040 doing: Wire the NS EDA into make and Section 4.1 -> mk/paper.mk rules and 41_neutron_stars.tex -- ACTIVE LEAF"]
   W017 --> T041["T-041 todo: Review the NS EDA figures with the developer -> Findings on W-017"]
   E003 --> W018["W-018 issue todo: BH EDA figures and numbers selected in paper.toml"]
   W018 --> T042["T-042 todo: Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests"]
@@ -187,8 +187,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,E003,W017,T039 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W013,T027,T028,T029,W014,T030,T031,W016,T036,T037,T038 done
-  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,T040,T041,W018,T042,T043,T044,T045,W015,T033,T034,T035 todo
+  class E002,E003,W017,T040 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W013,T027,T028,T029,W014,T030,T031,W016,T036,T037,T038,T039 done
+  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,T041,W018,T042,T043,T044,T045,W015,T033,T034,T035 todo
   class T032 pruned
 ```
