@@ -12,25 +12,20 @@ import pytest
 from eda_neutron_stars import (
     beta_share_at_fixed_lambda,
     charge_targets,
-    curve_adjacency,
     draw,
     evidence,
     figure_tex,
     grid_fill,
     main,
-    neighbour_distances,
-    number_tex,
     numbers,
     pile_up_share,
-    render_macros,
     rim_mask,
     split_strategies,
-    summarize,
     table_tex,
-    with_charge_targets,
 )
 
 from shared.config import PaperConfig
+from shared.eda import with_charge_targets
 from shared.plots import PlotStyle
 
 
@@ -45,31 +40,6 @@ def curves(target: dict[tuple[float, float], list[float]]) -> pd.DataFrame:
 
 
 TABLE = curves({(1.0, 1.0): [0.1, 0.2], (2.0, 1.0): [0.3, 0.4], (1.0, 2.0): [0.5, 0.6]})
-
-
-def test_charge_ratio_is_d_over_m() -> None:
-    table = pd.DataFrame({"M": [2.0], "D": [0.5]})
-    assert with_charge_targets(table)["D_over_M"].tolist() == [0.25]
-
-
-def test_log10_charge_ratio() -> None:
-    table = pd.DataFrame({"M": [2.0], "D": [0.2]})
-    assert with_charge_targets(table)["log10_D_over_M"].tolist() == pytest.approx([-1.0])
-
-
-class TestSummarize:
-    @pytest.fixture
-    def summaries(self):
-        return {(s.column, s.scale): s for s in summarize(TABLE, ("rho_c",))}
-
-    def test_raw_maximum(self, summaries) -> None:
-        assert summaries["rho_c", "raw"].maximum == 100.0
-
-    def test_log10_mean(self, summaries) -> None:
-        assert summaries["rho_c", "log10"].mean == pytest.approx(1.5)
-
-    def test_one_summary_per_column_and_scale(self, summaries) -> None:
-        assert len(summaries) == 2
 
 
 def test_charge_targets_compare_log10_d_and_log10_d_over_m() -> None:
@@ -97,11 +67,6 @@ def test_grid_fill_counts_curves_over_the_product_grid() -> None:
     assert grid_fill(TABLE).fill == pytest.approx(0.75)
 
 
-def test_rows_of_dense_curves_neighbour_their_own_curve() -> None:
-    dense = {(b, 1.0): [0.1] * 6 for b in (1.0, 50.0, 100.0)}
-    assert curve_adjacency(curves(dense), k=3).same_curve_share == pytest.approx(1.0)
-
-
 def test_a_row_random_split_scores_better_than_a_grouped_one() -> None:
     offsets = {(1.0, 1.0): 1.0, (2.0, 1.0): 9.0, (3.0, 1.0): 2.0, (4.0, 1.0): 8.0}
     table = curves({key: [off] * 6 for key, off in offsets.items()}).rename(columns={"D": "y"})
@@ -109,15 +74,7 @@ def test_a_row_random_split_scores_better_than_a_grouped_one() -> None:
     assert scores["random_rows"] < scores["curves"]
 
 
-def test_macros_render_one_newcommand_per_number() -> None:
-    assert render_macros({"nsEdaX": "1.5"}) == "\\newcommand{\\nsEdaX}{1.5}\n"
-
-
 DENSE = curves({(b, lam): [0.1, 0.2, 0.3, 0.4] for b in (1.0, 50.0) for lam in (1.0, 2.0)})
-
-
-def test_every_row_of_a_dense_curve_has_a_within_curve_distance() -> None:
-    assert len(neighbour_distances(DENSE, k=3).within) == 16
 
 
 def test_numbers_name_the_grid_fill_in_percent() -> None:
@@ -221,18 +178,6 @@ def test_charge_split_macros_use_the_tables_three_decimals() -> None:
 
 def test_table_tex_labels_its_table() -> None:
     assert "\\label{tab:ns-split-strategies}" in table_tex(GRID, "split_strategies")
-
-
-def test_a_moderate_number_prints_plainly() -> None:
-    assert number_tex(0.4712) == "0.471"
-
-
-def test_a_moderate_number_keeps_three_significant_digits() -> None:
-    assert number_tex(0.47) == "0.470"
-
-
-def test_a_tiny_number_prints_in_scientific_notation() -> None:
-    assert number_tex(8.203e-8) == "8.20\\times 10^{-8}"
 
 
 def test_univariate_table_has_a_row_for_the_central_density() -> None:

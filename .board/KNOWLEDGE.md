@@ -44,6 +44,7 @@
 - 2026-10-05 E-003: values live in a top-level paper.toml, the schema in shared/config.py (pydantic-settings TOML source, env overrides PAPER__<SECTION>__<SUBSECTION>__<FIELD>); section keys are the folder names without their number prefix
 - 2026-10-05 W-008: Parse per block, fail on another header; assert the T-017 constants, drop them; inputs (beta, lambda, rho_c), targets (M, D); drop empty blocks; cut each curve after its M max, keep that row, keep peakless curves whole; N = 201047; the paper states the non-rectangular domain
 - 2026-10-05 W-017: rho_c: keep log10, standardized; argue from positivity and the M vs log10 rho_c shape, not skew (grid is about uniform in rho_c)
+- 2026-10-05 W-018: build: shared/eda.py core first; BH figures univariate_continuous, mass_correction, charge_target, existence_edge
 
 ## Deviations
 - 2026-10-04 E-002: W-012 bug filed during T-016 and pre-empted W-007 (blocked, then unblocked) -- the BH file holds 21 header-repeated blocks; W-012 lands on main together with W-007 because it builds on W-007's unlanded commits

@@ -5,6 +5,7 @@ numbers become \\nsEda... LaTeX macros so the text and the decisions table cite 
 The evidence they carry: which columns want log10, whether log10(D/M) is a better charge target
 than log10 D, whether beta matters at fixed lambda, how full the (beta, lambda) grid is, and
 whether rows of one curve are each other's nearest neighbours (why the split groups by curve).
+The dataset-agnostic machinery lives in shared/eda.py.
 """
 
 import logging
@@ -19,11 +20,30 @@ import pandas as pd
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
-from scipy.stats import skew
-from sklearn.model_selection import GroupKFold, KFold, cross_val_predict
-from sklearn.neighbors import KNeighborsRegressor, NearestNeighbors
 
 from shared.config import NsFigure, NsTable, PaperConfig, load_config
+from shared.eda import (
+    Adjacency,
+    ColumnSummary,
+    booktabs,
+    camel,
+    curve_adjacency,
+    curve_ids,
+    grid_bins,
+    group_splitter,
+    holdout_mae,
+    kfold_mae,
+    make_curve_space,
+    neighbour_distances,
+    number_tex,
+    orders_of_magnitude,
+    render_macros,
+    row_splitter,
+    sci_tex,
+    summarize,
+    text_width_size,
+    with_charge_targets,
+)
 from shared.plots import PlotStyle, anchor_color, apply_style, colormap
 
 logger = logging.getLogger(__name__)
@@ -31,21 +51,8 @@ logger = logging.getLogger(__name__)
 # --- vocabulary and types ---------------------------------------------------------------------
 
 CURVE = ("beta", "lambda")
-Scale = Literal["raw", "log10"]
-
-
-@dataclass(frozen=True)
-class ColumnSummary:
-    """One column's distribution on one scale."""
-
-    column: str
-    scale: Scale
-    minimum: float
-    maximum: float
-    mean: float
-    median: float
-    std: float
-    skew: float
+# The probe space: beta and lambda as they are, the central density in log10.
+NS_SPACE = make_curve_space({"beta": "raw", "lambda": "raw", "rho_c": "log10"}, CURVE)
 
 
 @dataclass(frozen=True)
@@ -78,23 +85,6 @@ class GridFill:
         return self.curves / self.cells
 
 
-@dataclass(frozen=True)
-class Adjacency:
-    """Whether rows find their nearest neighbour in their own curve, in standardized inputs."""
-
-    same_curve_share: float
-    within_median: float
-    across_median: float
-
-
-@dataclass(frozen=True)
-class NeighbourDistances:
-    """Per-row nearest distances to the own curve and to another curve, where found."""
-
-    within: np.ndarray
-    across: np.ndarray
-
-
 SplitStrategy = Literal["random_rows", "curves", "beta_lines", "lambda_lines", "rim"]
 
 
@@ -113,40 +103,6 @@ class SplitScore:
 
 
 # --- pure functions ---------------------------------------------------------------------------
-
-
-def with_charge_targets(table: pd.DataFrame) -> pd.DataFrame:
-    """Add D_over_M, log10_D and log10_D_over_M to a table with M and D."""
-    ratio = table["D"] / table["M"]
-    return table.assign(
-        D_over_M=ratio, log10_D=np.log10(table["D"]), log10_D_over_M=np.log10(ratio)
-    )
-
-
-def _summary(values: np.ndarray, column: str, scale: Scale) -> ColumnSummary:
-    """Summarize one column's values (sample std and bias-corrected skew, as pandas)."""
-    return ColumnSummary(
-        column,
-        scale,
-        float(np.min(values)),
-        float(np.max(values)),
-        float(np.mean(values)),
-        float(np.median(values)),
-        float(np.std(values, ddof=1)),
-        float(skew(values, bias=False)),
-    )
-
-
-def summarize(table: pd.DataFrame, columns: tuple[str, ...]) -> tuple[ColumnSummary, ...]:
-    """Summarize each column raw and in log10."""
-    return tuple(
-        summary
-        for column in columns
-        for summary in (
-            _summary(table[column].to_numpy(dtype=float), column, "raw"),
-            _summary(np.log10(table[column].to_numpy(dtype=float)), column, "log10"),
-        )
-    )
 
 
 def charge_targets(table: pd.DataFrame) -> tuple[ChargeTarget, ...]:
@@ -183,79 +139,6 @@ def grid_fill(table: pd.DataFrame) -> GridFill:
     )
 
 
-def _inputs(table: pd.DataFrame) -> np.ndarray:
-    """Standardized (beta, lambda, log10 rho_c); a constant column stays 0."""
-    raw = pd.DataFrame(
-        {"beta": table["beta"], "lambda": table["lambda"], "rho_c": np.log10(table["rho_c"])}
-    )
-    std = raw.std(ddof=0).replace(0.0, 1.0)
-    return ((raw - raw.mean()) / std).to_numpy()
-
-
-def _curve_ids(table: pd.DataFrame) -> np.ndarray:
-    """One integer per (beta, lambda) curve."""
-    return table.groupby(list(CURVE)).ngroup().to_numpy()
-
-
-def _nearest(table: pd.DataFrame, k: int) -> tuple[np.ndarray, np.ndarray]:
-    """Distances to the k nearest other rows (fewer in a small table), and whether each lies in
-    the row's own curve."""
-    curve = _curve_ids(table)
-    neighbours = NearestNeighbors(n_neighbors=min(k, len(table) - 1)).fit(_inputs(table))
-    distances, indices = neighbours.kneighbors()
-    return distances, curve[indices] == curve[:, None]
-
-
-def _first(distances: np.ndarray, mask: np.ndarray) -> np.ndarray:
-    """Per row, the distance of the first neighbour the mask selects; rows with none drop out."""
-    found = mask.any(axis=1)
-    return distances[found, mask[found].argmax(axis=1)]
-
-
-def neighbour_distances(table: pd.DataFrame, k: int = 16) -> NeighbourDistances:
-    """Each row's distance to its nearest same-curve and other-curve row among its k nearest."""
-    distances, same = _nearest(table, k)
-    return NeighbourDistances(_first(distances, same), _first(distances, ~same))
-
-
-def curve_adjacency(table: pd.DataFrame, k: int = 16) -> Adjacency:
-    """Find each row's nearest neighbour in standardized (beta, lambda, log10 rho_c).
-
-    Among the k nearest rows, the first of the same curve and the first of another give the
-    within- and across-curve distances; a row with none of a kind in k contributes no distance.
-    """
-    distances, same = _nearest(table, k)
-    return Adjacency(
-        float(same[:, 0].mean()),
-        float(np.median(_first(distances, same))),
-        float(np.median(_first(distances, ~same))),
-    )
-
-
-def _mae(
-    table: pd.DataFrame, target: str, splitter: KFold | GroupKFold, groups: np.ndarray | None
-) -> float:
-    """Mean absolute 1-NN error of target under one cross-validation splitter; NaN when there
-    are fewer groups than folds."""
-    if groups is not None and len(np.unique(groups)) < splitter.get_n_splits():
-        return float("nan")
-    model = KNeighborsRegressor(n_neighbors=1)
-    predicted = cross_val_predict(
-        model, _inputs(table), table[target].to_numpy(), cv=splitter, groups=groups
-    )
-    return float(np.abs(predicted - table[target].to_numpy()).mean())
-
-
-def _rows(folds: int, seed: int) -> KFold:
-    """The row-random splitter."""
-    return KFold(n_splits=folds, shuffle=True, random_state=seed)
-
-
-def _grouped(folds: int, seed: int) -> GroupKFold:
-    """The grouped splitter."""
-    return GroupKFold(n_splits=folds, shuffle=True, random_state=seed)
-
-
 def rim_mask(table: pd.DataFrame) -> pd.Series:
     """Mark the rows of rim curves: the grid's outer beta and lambda lines, and each beta's
     largest lambda (the boundary of an empty corner)."""
@@ -264,31 +147,24 @@ def rim_mask(table: pd.DataFrame) -> pd.Series:
     return outer | (lam == table.groupby("beta")["lambda"].transform("max"))
 
 
-def _rim_mae(table: pd.DataFrame, target: str) -> float:
-    """1-NN error on the rim rows of a model fitted on the interior rows; NaN without interior."""
-    rim = rim_mask(table).to_numpy()
-    if rim.all():
-        return float("nan")
-    inputs, values = _inputs(table), table[target].to_numpy()
-    model = KNeighborsRegressor(n_neighbors=1).fit(inputs[~rim], values[~rim])
-    return float(np.abs(model.predict(inputs[rim]) - values[rim]).mean())
-
-
 def _score(
     table: pd.DataFrame, target: str, strategy: SplitStrategy, folds: int, seed: int
 ) -> float:
     """The 1-NN error of one strategy."""
     match strategy:
         case "random_rows":
-            return _mae(table, target, _rows(folds, seed), None)
+            return kfold_mae(table, NS_SPACE, target, row_splitter(folds, seed), None)
         case "curves":
-            return _mae(table, target, _grouped(folds, seed), _curve_ids(table))
+            groups = curve_ids(table, NS_SPACE)
+            return kfold_mae(table, NS_SPACE, target, group_splitter(folds, seed), groups)
         case "beta_lines":
-            return _mae(table, target, _grouped(folds, seed), table["beta"].to_numpy())
+            groups = table["beta"].to_numpy()
+            return kfold_mae(table, NS_SPACE, target, group_splitter(folds, seed), groups)
         case "lambda_lines":
-            return _mae(table, target, _grouped(folds, seed), table["lambda"].to_numpy())
+            groups = table["lambda"].to_numpy()
+            return kfold_mae(table, NS_SPACE, target, group_splitter(folds, seed), groups)
         case "rim":
-            return _rim_mae(table, target)
+            return holdout_mae(table, NS_SPACE, target, rim_mask(table).to_numpy())
         case _:
             assert_never(strategy)
 
@@ -301,26 +177,6 @@ def split_strategies(
         SplitScore(strategy, target, _score(table, target, strategy, folds, seed))
         for strategy in get_args(SplitStrategy)
     )
-
-
-def render_macros(numbers: dict[str, str]) -> str:
-    """Render one \\newcommand per number, in the given order."""
-    return "".join(f"\\newcommand{{\\{name}}}{{{value}}}\n" for name, value in numbers.items())
-
-
-def _sci(value: float) -> str:
-    """Format a number for LaTeX math mode, e.g. 8.20\\times 10^{-8}."""
-    mantissa, exponent = f"{value:.2e}".split("e")
-    return f"{mantissa}\\times 10^{{{int(exponent)}}}"
-
-
-def number_tex(value: float) -> str:
-    """Format a number for LaTeX math mode: plain with three significant digits between 0.01
-    and 1000, else scientific."""
-    if not 0.01 <= abs(value) < 1000:
-        return _sci(value)
-    decimals = max(2 - int(np.floor(np.log10(abs(value)))), 0)
-    return f"{value:.{decimals}f}"
 
 
 def pile_up_share(table: pd.DataFrame, window: float) -> float:
@@ -367,14 +223,9 @@ def evidence(table: pd.DataFrame, folds: int, seed: int, window: float = 0.09) -
         charge_targets(table),
         beta_share_at_fixed_lambda(table, "log10_D_over_M"),
         grid_fill(table),
-        curve_adjacency(table),
+        curve_adjacency(table, NS_SPACE),
         tuple(s for t in SPLIT_TARGETS for s in split_strategies(table, t, folds, seed)),
     )
-
-
-def _orders(summary: ColumnSummary) -> float:
-    """The orders of magnitude a positive column spans."""
-    return float(np.log10(summary.maximum / summary.minimum))
 
 
 def numbers(found: Evidence) -> dict[str, str]:
@@ -393,13 +244,13 @@ def numbers(found: Evidence) -> dict[str, str]:
         "nsEdaRhocLogStd": f"{rho.std:.3f}",
         "nsEdaRhocRawSkew": f"{summary['rho_c', 'raw'].skew:.2f}",
         "nsEdaRhocLogSkew": f"{rho.skew:.2f}",
-        "nsEdaRhocOrders": f"{_orders(summary['rho_c', 'raw']):.1f}",
+        "nsEdaRhocOrders": f"{orders_of_magnitude(summary['rho_c', 'raw']):.1f}",
         "nsEdaDensityGridValues": f"{found.density_grid_values}",
         "nsEdaRowsPerCurveMin": f"{found.rows_per_curve[0]}",
         "nsEdaRowsPerCurveMax": f"{found.rows_per_curve[1]}",
-        "nsEdaDMin": _sci(d.minimum),
+        "nsEdaDMin": sci_tex(d.minimum),
         "nsEdaDMax": f"{d.maximum:.3f}",
-        "nsEdaDOrders": f"{_orders(d):.1f}",
+        "nsEdaDOrders": f"{orders_of_magnitude(d):.1f}",
         "nsEdaCorrMLogD": f"{log_d.spearman_m:.2f}",
         "nsEdaCorrMLogDM": f"{log_dm.spearman_m:.2f}",
         "nsEdaCorrLambdaLogD": f"{log_d.pearson_lambda:.2f}",
@@ -420,7 +271,7 @@ def numbers(found: Evidence) -> dict[str, str]:
         "nsEdaPileUpWindow": f"{found.window:.2f}",
         "nsEdaPileUpPercent": f"{100 * found.pile_up:.0f}",
     } | {
-        f"nsEdaSplit{_camel(s.strategy)}{TARGET_TAGS[s.target]}": _split_error(s)
+        f"nsEdaSplit{camel(s.strategy)}{TARGET_TAGS[s.target]}": _split_error(s)
         for s in found.splits
     }
 
@@ -435,23 +286,13 @@ STRATEGY_LABELS: dict[SplitStrategy, str] = {
 }
 
 
-def _booktabs(label: str, caption: str, spec: str, header: str, rows: list[str]) -> str:
-    """One booktabs table environment."""
-    body = "".join(f"{row} \\\\\n" for row in rows)
-    return (
-        "\\begin{table}[!htb]\n\\centering\n"
-        f"\\caption{{{caption}}}\n\\label{{tab:ns-{label}}}\n"
-        f"\\begin{{tabular}}{{{spec}}}\n\\toprule\n{header} \\\\\n\\midrule\n{body}"
-        "\\bottomrule\n\\end{tabular}\n\\end{table}\n"
-    )
-
-
 def _univariate_table(found: Evidence) -> str:
     """Table A: range, orders of magnitude and skew, raw against log10."""
     summary = {(s.column, s.scale): s for s in found.summaries}
     rows = [
         f"{TABLE_LABELS[c]} & ${number_tex(summary[c, 'raw'].minimum)}$ & "
-        f"${number_tex(summary[c, 'raw'].maximum)}$ & {_orders(summary[c, 'raw']):.1f} & "
+        f"${number_tex(summary[c, 'raw'].maximum)}$ & "
+        f"{orders_of_magnitude(summary[c, 'raw']):.1f} & "
         f"{summary[c, 'raw'].skew:.2f} & {summary[c, 'log10'].skew:.2f}"
         for c in SUMMARY_COLUMNS
     ]
@@ -459,7 +300,7 @@ def _univariate_table(found: Evidence) -> str:
     caption = (
         "Neutron stars: range and skewness of each continuous variable, raw and in $\\log_{10}$."
     )
-    return _booktabs("univariate", caption, "lrrrrr", header, rows)
+    return booktabs("ns-univariate", caption, "lrrrrr", header, rows)
 
 
 def _charge_table(found: Evidence) -> str:
@@ -473,7 +314,7 @@ def _charge_table(found: Evidence) -> str:
         "Target & Pearson $M$ & Spearman $M$ & Pearson $\\lambda$ & Pearson $\\beta$"
     )
     caption = "Neutron stars: correlation of the two candidate charge targets."
-    return _booktabs("charge-correlation", caption, "lrrrr", header, rows)
+    return booktabs("ns-charge-correlation", caption, "lrrrr", header, rows)
 
 
 def _split_table(found: Evidence) -> str:
@@ -489,7 +330,7 @@ def _split_table(found: Evidence) -> str:
         f"Neutron stars: 1-nearest-neighbour mean absolute error under each split "
         f"({found.folds} folds; the rim is predicted from the interior)."
     )
-    return _booktabs("split-strategies", caption, "lrr", header, rows)
+    return booktabs("ns-split-strategies", caption, "lrr", header, rows)
 
 
 def table_tex(found: Evidence, table: NsTable) -> str:
@@ -513,11 +354,6 @@ SPLIT_DECIMALS = {"M": 4, "log10_D_over_M": 3}
 def _split_error(score: SplitScore) -> str:
     """One split error with its target's decimals, as in the text and Table C alike."""
     return f"{score.mae:.{SPLIT_DECIMALS[score.target]}f}"
-
-
-def _camel(name: str) -> str:
-    """random_rows -> RandomRows, for LaTeX macro names (letters only)."""
-    return "".join(part.capitalize() for part in name.split("_"))
 
 
 def asset(figure: NsFigure) -> str:
@@ -588,37 +424,14 @@ LABELS = {
 }
 
 
-def _size(height_ratio: float) -> tuple[float, float]:
-    """A text-wide figure size whose height is height_ratio times its width."""
-    width = float(plt.rcParams["figure.figsize"][0])
-    return (width, width * height_ratio)
-
-
-GRID_VALUES = 60
-
-
-def _bins(values: np.ndarray, limit: int = GRID_VALUES) -> np.ndarray | int:
-    """One bin per value for a variable on a grid (at most limit distinct values), else 40.
-
-    Equal-width bins alias against a parameter grid and draw spikes that are not in the data.
-    """
-    grid = np.unique(values)
-    if len(grid) > limit:
-        return 40
-    if len(grid) == 1:
-        return np.array([grid[0] - 0.5, grid[0] + 0.5])
-    middles = (grid[1:] + grid[:-1]) / 2
-    return np.concatenate(([2 * grid[0] - middles[0]], middles, [2 * grid[-1] - middles[-1]]))
-
-
 def _univariate(table: pd.DataFrame, style: PlotStyle) -> Figure:
     """Histograms of each variable, raw and in log10."""
-    fig, axes = plt.subplots(len(LABELS), 2, figsize=_size(1.6), layout="constrained")
+    fig, axes = plt.subplots(len(LABELS), 2, figsize=text_width_size(1.6), layout="constrained")
     color = anchor_color(style, "neutron_stars")
     for row, (column, label) in enumerate(LABELS.items()):
         raw = table[column].to_numpy(dtype=float)
-        axes[row, 0].hist(raw, bins=_bins(raw), color=color)
-        axes[row, 1].hist(np.log10(raw), bins=_bins(np.log10(raw)), color=color)
+        axes[row, 0].hist(raw, bins=grid_bins(raw), color=color)
+        axes[row, 1].hist(np.log10(raw), bins=grid_bins(np.log10(raw)), color=color)
         axes[row, 0].set_xlabel(label)
         axes[row, 1].set_xlabel(f"$\\log_{{10}}$ {label}")
     return fig
@@ -630,15 +443,17 @@ DENSITY_GRID_VALUES = 250
 
 def _univariate_continuous(table: pd.DataFrame, style: PlotStyle) -> Figure:
     """Histograms of the continuous variables, raw and in log10, grid-aware bins."""
-    fig, axes = plt.subplots(len(SUMMARY_COLUMNS), 2, figsize=_size(1.1), layout="constrained")
+    fig, axes = plt.subplots(
+        len(SUMMARY_COLUMNS), 2, figsize=text_width_size(1.1), layout="constrained"
+    )
     color = anchor_color(style, "neutron_stars")
     for row, column in enumerate(SUMMARY_COLUMNS):
         raw = table[column].to_numpy(dtype=float)
         logged = np.log10(raw)
         # Without edges: a few hundred thin bars would vanish under the style's white edges.
         bars = {"color": color, "linewidth": 0}
-        axes[row, 0].hist(raw, bins=_bins(raw, DENSITY_GRID_VALUES), **bars)
-        axes[row, 1].hist(logged, bins=_bins(logged, DENSITY_GRID_VALUES), **bars)
+        axes[row, 0].hist(raw, bins=grid_bins(raw, DENSITY_GRID_VALUES), **bars)
+        axes[row, 1].hist(logged, bins=grid_bins(logged, DENSITY_GRID_VALUES), **bars)
         axes[row, 0].set_xlabel(LABELS[column])
         axes[row, 1].set_xlabel(f"$\\log_{{10}}$ {LABELS[column]}")
     return fig
@@ -646,7 +461,7 @@ def _univariate_continuous(table: pd.DataFrame, style: PlotStyle) -> Figure:
 
 def _mass_max(table: pd.DataFrame, style: PlotStyle, window: float = 0.09) -> Figure:
     """Rows' distance to their curve's M_max, and each curve's M_max over the grid."""
-    fig, (left, right) = plt.subplots(1, 2, figsize=_size(0.45), layout="constrained")
+    fig, (left, right) = plt.subplots(1, 2, figsize=text_width_size(0.45), layout="constrained")
     peak = table.groupby(list(CURVE))["M"].transform("max")
     left.hist(peak - table["M"], bins=40, color=anchor_color(style, "neutron_stars"))
     left.axvline(window, color="black", linestyle="--", linewidth=0.8)
@@ -684,7 +499,9 @@ def _charge_row(
 
 def _charge_target(table: pd.DataFrame, style: PlotStyle) -> Figure:
     """M against log10 D and log10 D/M, coloured by lambda and by beta."""
-    fig, axes = plt.subplots(2, 2, figsize=_size(0.9), sharex=True, layout="constrained")
+    fig, axes = plt.subplots(
+        2, 2, figsize=text_width_size(0.9), sharex=True, layout="constrained"
+    )
     _charge_row(fig, axes[0, :], table, "lambda", colormap(style.neutron_stars.lambda_cmap))
     _charge_row(fig, axes[1, :], table, "beta", colormap(style.neutron_stars.beta_cmap))
     for ax in axes[1, :]:
@@ -694,7 +511,7 @@ def _charge_target(table: pd.DataFrame, style: PlotStyle) -> Figure:
 
 def _mass_density(table: pd.DataFrame, style: PlotStyle) -> Figure:
     """M against log10 rho_c, one line per curve coloured by lambda, last points marked."""
-    fig, ax = plt.subplots(figsize=_size(0.62), layout="constrained")
+    fig, ax = plt.subplots(figsize=text_width_size(0.62), layout="constrained")
     cmap = colormap(style.neutron_stars.lambda_cmap)
     groups = [g for _, g in table.groupby(list(CURVE))]
     lines = LineCollection(
@@ -714,7 +531,7 @@ def _mass_density(table: pd.DataFrame, style: PlotStyle) -> Figure:
 
 def _grid_fill(table: pd.DataFrame, style: PlotStyle) -> Figure:
     """Rows per (beta, lambda) curve on the product grid; empty cells stay blank."""
-    fig, ax = plt.subplots(figsize=_size(0.62), layout="constrained")
+    fig, ax = plt.subplots(figsize=text_width_size(0.62), layout="constrained")
     counts = table.groupby(list(CURVE)).size().unstack("beta")
     cmap = colormap(style.neutron_stars.beta_cmap)
     mesh = ax.pcolormesh(
@@ -728,8 +545,8 @@ def _grid_fill(table: pd.DataFrame, style: PlotStyle) -> Figure:
 
 def _curve_adjacency(table: pd.DataFrame, style: PlotStyle) -> Figure:
     """Histograms of the nearest within-curve and across-curve distances."""
-    fig, ax = plt.subplots(figsize=_size(0.5), layout="constrained")
-    found = neighbour_distances(table)
+    fig, ax = plt.subplots(figsize=text_width_size(0.5), layout="constrained")
+    found = neighbour_distances(table, NS_SPACE)
     cmap = colormap(style.neutron_stars.beta_cmap)
     edges = np.geomspace(
         min(found.within.min(), found.across.min()), max(found.within.max(), found.across.max()), 50
