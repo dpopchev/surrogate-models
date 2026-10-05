@@ -188,6 +188,15 @@ def curve_adjacency(table: pd.DataFrame, space: CurveSpace, k: int = 16) -> Adja
     )
 
 
+def rim_mask(table: pd.DataFrame, outer: str, inner: str) -> pd.Series:
+    """Mark the rows on the rim of an (outer, inner) parameter grid: the grid's smallest and
+    largest values of either column, and each outer value's largest inner value (the boundary
+    of an empty corner)."""
+    first, second = table[outer], table[inner]
+    edges = first.isin([first.min(), first.max()]) | second.isin([second.min(), second.max()])
+    return edges | (second == table.groupby(outer)[inner].transform("max"))
+
+
 # --- 1-nearest-neighbour probes under a split -------------------------------------------------
 
 

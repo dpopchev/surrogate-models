@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 2 | done: 70 | pruned: 4
+open path: E-002 > W-010 > T-021   | blocked: 0 | todo roots: 2 | done: 70 | pruned: 4
 
 ## Tree
 
@@ -22,9 +22,9 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 70 | pruned: 4
 - T-019 [done] Write the NS preparation test-first -> 30_physical_framework/33_neutron_stars/prepare_neutron_stars.py with its tests
 - T-020 [done] Wire the NS preparation into make -> local/state/neutron_stars.parquet
 
-#### W-010 issue [todo] Frozen split grouped by curve
+#### W-010 issue [doing] Frozen split grouped by curve
 
-- T-021 [todo] Write the curve-grouped split test-first -> 50_methodology/51_algorithms/split_datasets.py with its tests
+- T-021 [doing] Write the curve-grouped split test-first -> 50_methodology/51_algorithms/split_datasets.py with its tests   <- ACTIVE LEAF
 - T-022 [todo] Wire the split into make with its invariant -> local/state/split.parquet, no curve in two sets
 
 #### W-011 issue [done] Section 3.1 numbers from generated macros
@@ -169,8 +169,8 @@ flowchart TD
   E002 --> W009["W-009 issue done: NS table from the filtered dataset"]
   W009 --> T019["T-019 done: Write the NS preparation test-first -> 30_physical_framework/33_neutron_stars/prepare_neutron_stars.py with its tests"]
   W009 --> T020["T-020 done: Wire the NS preparation into make -> local/state/neutron_stars.parquet"]
-  E002 --> W010["W-010 issue todo: Frozen split grouped by curve"]
-  W010 --> T021["T-021 todo: Write the curve-grouped split test-first -> 50_methodology/51_algorithms/split_datasets.py with its tests"]
+  E002 --> W010["W-010 issue doing: Frozen split grouped by curve"]
+  W010 --> T021["T-021 doing: Write the curve-grouped split test-first -> 50_methodology/51_algorithms/split_datasets.py with its tests -- ACTIVE LEAF"]
   W010 --> T022["T-022 todo: Wire the split into make with its invariant -> local/state/split.parquet, no curve in two sets"]
   E002 --> W011["W-011 issue done: Section 3.1 numbers from generated macros"]
   W011 --> T023["T-023 pruned: Write the EDA numbers test-first -> 40_data_analysis/41_eda/eda_numbers.py with its tests"]
@@ -196,8 +196,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002 doing
+  class E002,W010,T021 doing
   class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W011,W012,T025,T026,W019,T046,T047 done
-  class W010,T021,T022,W020,T048,T049,W015,T033,T034,T035,W021,T050,T051 todo
+  class T022,W020,T048,T049,W015,T033,T034,T035,W021,T050,T051 todo
   class T023,T024 pruned
 ```

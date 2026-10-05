@@ -14,6 +14,7 @@ from shared.eda import (
     neighbour_distances,
     number_tex,
     render_macros,
+    rim_mask,
     row_splitter,
     summarize,
     with_charge_targets,
@@ -108,6 +109,27 @@ def test_a_holdout_predicts_the_test_rows_from_the_nearest_other_curve() -> None
 
 def test_a_holdout_of_every_row_scores_nan() -> None:
     assert np.isnan(holdout_mae(OFFSETS, SPACE, "y", np.ones(len(OFFSETS), dtype=bool)))
+
+
+def grid(missing: tuple[tuple[int, int], ...] = (), size: int = 3) -> pd.DataFrame:
+    """One row per cell of a size x size (a, b) grid, without the missing cells."""
+    cells = [
+        (a, b)
+        for a in range(1, size + 1)
+        for b in range(1, size + 1)
+        if (a, b) not in missing
+    ]
+    return pd.DataFrame(cells, columns=["a", "b"])
+
+
+def test_only_the_centre_of_a_full_3x3_grid_is_off_the_rim() -> None:
+    assert int((~rim_mask(grid(), "a", "b")).sum()) == 1
+
+
+def test_the_boundary_of_an_empty_corner_is_on_the_rim() -> None:
+    table = grid(missing=((4, 4), (3, 4)), size=4)
+    on_rim = rim_mask(table, "a", "b")
+    assert bool(on_rim[(table["a"] == 3) & (table["b"] == 3)].all())
 
 
 def test_macros_render_one_newcommand_per_number() -> None:

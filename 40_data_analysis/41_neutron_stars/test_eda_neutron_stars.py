@@ -19,7 +19,6 @@ from eda_neutron_stars import (
     main,
     numbers,
     pile_up_share,
-    rim_mask,
     split_strategies,
     table_tex,
 )
@@ -98,16 +97,6 @@ def grid(betas: range, lambdas: range, missing: tuple[tuple[int, int], ...] = ()
             if (b, lam) not in missing
         }
     )
-
-
-def test_only_the_centre_of_a_full_3x3_grid_is_off_the_rim() -> None:
-    assert int((~rim_mask(grid(range(1, 4), range(1, 4)))).sum()) == 4
-
-
-def test_the_boundary_of_an_empty_corner_is_on_the_rim() -> None:
-    table = grid(range(1, 5), range(1, 5), missing=((4, 4), (3, 4)))
-    on_rim = rim_mask(table)
-    assert bool(on_rim[(table["beta"] == 3.0) & (table["lambda"] == 3.0)].all())
 
 
 def test_split_strategies_score_every_strategy_in_order() -> None:

@@ -38,6 +38,7 @@ from shared.eda import (
     number_tex,
     orders_of_magnitude,
     render_macros,
+    rim_mask,
     row_splitter,
     sci_tex,
     summarize,
@@ -139,14 +140,6 @@ def grid_fill(table: pd.DataFrame) -> GridFill:
     )
 
 
-def rim_mask(table: pd.DataFrame) -> pd.Series:
-    """Mark the rows of rim curves: the grid's outer beta and lambda lines, and each beta's
-    largest lambda (the boundary of an empty corner)."""
-    beta, lam = table["beta"], table["lambda"]
-    outer = beta.isin([beta.min(), beta.max()]) | lam.isin([lam.min(), lam.max()])
-    return outer | (lam == table.groupby("beta")["lambda"].transform("max"))
-
-
 def _score(
     table: pd.DataFrame, target: str, strategy: SplitStrategy, folds: int, seed: int
 ) -> float:
@@ -164,7 +157,8 @@ def _score(
             groups = table["lambda"].to_numpy()
             return kfold_mae(table, NS_SPACE, target, group_splitter(folds, seed), groups)
         case "rim":
-            return holdout_mae(table, NS_SPACE, target, rim_mask(table).to_numpy())
+            rim = rim_mask(table, "beta", "lambda").to_numpy()
+            return holdout_mae(table, NS_SPACE, target, rim)
         case _:
             assert_never(strategy)
 
