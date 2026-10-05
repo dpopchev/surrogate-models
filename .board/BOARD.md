@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002 > W-025   | blocked: 0 | todo roots: 2 | done: 79 | pruned: 4
+open path: E-002   | blocked: 0 | todo roots: 2 | done: 80 | pruned: 4
 
 ## Tree
 
@@ -49,7 +49,7 @@ open path: E-002 > W-025   | blocked: 0 | todo roots: 2 | done: 79 | pruned: 4
 - T-062 [done] Generate the Section 3.3 numbers test-first -> 40_data_analysis/43_preprocessing/preprocessing_numbers.py
 - T-064 [done] Report raw M everywhere in the BH analysis -> eda_black_holes.py, Sections 3.2 and 3.3
 
-#### W-025 bug [doing] Two generated EDA tables overflow the text width   (filed during T-048)
+#### W-025 bug [done] Two generated EDA tables overflow the text width   (filed during T-048)
 
 - T-063 [done] Make the generated EDA tables fit the text width -> shared/eda.py booktabs and the table headers
 
@@ -192,7 +192,7 @@ flowchart TD
   W020 --> T049["T-049 done: Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
   W020 --> T062["T-062 done: Generate the Section 3.3 numbers test-first -> 40_data_analysis/43_preprocessing/preprocessing_numbers.py"]
   W020 --> T064["T-064 done: Report raw M everywhere in the BH analysis -> eda_black_holes.py, Sections 3.2 and 3.3"]
-  E002 --> W025["W-025 bug doing: Two generated EDA tables overflow the text width"]
+  E002 --> W025["W-025 bug done: Two generated EDA tables overflow the text width"]
   W025 --> T063["T-063 done: Make the generated EDA tables fit the text width -> shared/eda.py booktabs and the table headers"]
   W015["W-015 issue todo, standalone: Paper text for the D floor and the sign symmetry of D"]
   W015 --> T033["T-033 todo: Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output"]
@@ -206,8 +206,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,W025 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,W012,T025,T026,W019,T046,T047,W020,T048,T049,T062,T064,T063 done
+  class E002 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,W012,T025,T026,W019,T046,T047,W020,T048,T049,T062,T064,W025,T063 done
   class W015,T033,T034,T035,W021,T050,T051 todo
   class T023,T024 pruned
 ```
