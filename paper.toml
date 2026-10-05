@@ -1,0 +1,23 @@
+# The paper's choices, read by shared/config.py (the schema: every key and its allowed values).
+# Edit a choice and re-run `make compile`; PAPER__<SECTION>__<FIELD> env vars override this file.
+
+[plot]
+context = "paper"         # paper | notebook | talk
+palette = "colorblind"    # colorblind | deep | muted
+font_size = 11.0
+usetex = true             # LaTeX text in Latin Modern, matching the article
+text_width_pt = 360.0     # 11pt a4paper \textwidth
+aspect = 0.62             # figure height / width
+
+[plot.neutron_stars]      # cool colormaps: crest | mako | Blues | GnBu | PuBu
+lambda_cmap = "crest"
+beta_cmap = "mako"
+anchor = 0                # palette index for single-color NS marks (blue)
+
+[plot.black_holes]        # warm colormaps: flare | rocket | Oranges | YlOrRd | OrRd
+beta_cmap = "flare"
+anchor = 1                # palette index for single-color BH marks (orange)
+
+# Section 4.1 -- which NS EDA figures eda_neutron_stars.py renders, in this order.
+[data_analysis.neutron_stars]
+figures = ["univariate", "charge_target", "mass_density", "grid_fill", "curve_adjacency"]
