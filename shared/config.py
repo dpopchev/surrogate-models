@@ -41,7 +41,7 @@ class NeutronStarsSection(BaseModel):
     tables: tuple[NsTable, ...] = get_args(NsTable)
 
 
-BhFigure = Literal["univariate_continuous", "mass_correction", "charge_target", "existence_edge"]
+BhFigure = Literal["univariate_continuous", "mass_radius", "charge_target", "existence_edge"]
 BhTable = Literal["univariate", "charge_correlation", "split_strategies"]
 
 

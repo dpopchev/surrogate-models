@@ -39,7 +39,7 @@ tables = ["univariate", "charge_correlation", "split_strategies"]
 [data_analysis.black_holes]
 figures = [
   "univariate_continuous",  # r_h, M, D, D/M raw and log10, one bar per grid value
-  "mass_correction",        # M - r_h/2 against r_h, one line per beta
+  "mass_radius",            # M against r_h, one line per beta
   "charge_target",          # M against log10 D and log10 D/M, by beta
   "existence_edge",         # each beta curve's r_h range, r_h,min marked
 ]

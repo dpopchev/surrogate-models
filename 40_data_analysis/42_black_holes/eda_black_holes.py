@@ -1,10 +1,10 @@
 """Exploratory analysis of the prepared BH table behind Section 4.2 (W-018).
 
 The BH data are 21 dense beta curves over the horizon radius r_h. The computations ask what the
-NS analysis asked, and find different answers: how far M is from r_h/2 (the mass correction),
-how much beta moves M and D at fixed r_h, where each curve starts (the existence edge), which
-charge target the data support, and which split the curves support. Numbers become \\bhEda...
-macros; the dataset-agnostic machinery lives in shared/eda.py.
+NS analysis asked, and find different answers: how closely M follows r_h, how much beta moves M
+and D at fixed r_h, where each curve starts (the existence edge), which charge target the data
+support, and which split the curves support. The mass is raw M throughout (developer). Numbers
+become \\bhEda... macros; the dataset-agnostic machinery lives in shared/eda.py.
 """
 
 import logging
@@ -73,16 +73,6 @@ class BetaEffect:
 
 
 @dataclass(frozen=True)
-class MassCorrection:
-    """The range of M - r_h/2 and how it follows r_h and beta."""
-
-    minimum: float
-    maximum: float
-    pearson_rh: float
-    pearson_beta: float
-
-
-@dataclass(frozen=True)
 class ExistenceEdge:
     """Where each beta curve starts: (beta, smallest r_h), ordered by beta."""
 
@@ -108,11 +98,6 @@ class SplitScore:
 # --- pure functions ---------------------------------------------------------------------------
 
 
-def with_mass_correction(table: pd.DataFrame) -> pd.DataFrame:
-    """Add M_correction = M - r_h/2 to a table with M and r_h."""
-    return table.assign(M_correction=table["M"] - table["r_h"] / 2)
-
-
 def charge_targets(table: pd.DataFrame) -> tuple[ChargeTarget, ...]:
     """Correlate each candidate charge target with M, beta and r_h, in CHARGE_TARGETS order."""
     return tuple(
@@ -135,17 +120,6 @@ def beta_effect(table: pd.DataFrame, target: str) -> BetaEffect:
     """
     across_beta = table.groupby("r_h")[target].std().dropna()
     return BetaEffect(target, float(across_beta.median() / table[target].std()))
-
-
-def mass_correction(table: pd.DataFrame) -> MassCorrection:
-    """Summarize M - r_h/2 from a table with M_correction."""
-    correction = table["M_correction"]
-    return MassCorrection(
-        float(correction.min()),
-        float(correction.max()),
-        float(correction.corr(table["r_h"])),
-        float(correction.corr(table["beta"])),
-    )
 
 
 def existence_edge(table: pd.DataFrame) -> ExistenceEdge:
@@ -183,9 +157,9 @@ def split_strategies(
 
 
 SUMMARY_COLUMNS = ("r_h", "M", "D", "D_over_M")
-BETA_EFFECT_TARGETS = ("M", "M_correction", "log10_D")
-# Macro tags of the split targets: M, the mass correction, log10 D.
-SPLIT_TAGS = {"M": "M", "M_correction": "MC", "log10_D": "LD"}
+BETA_EFFECT_TARGETS = ("M", "log10_D")
+# Macro tags of the split targets: M and log10 D.
+SPLIT_TAGS = {"M": "M", "log10_D": "LD"}
 
 
 @dataclass(frozen=True)
@@ -201,14 +175,13 @@ class Evidence:
     summaries: tuple[ColumnSummary, ...]
     targets: tuple[ChargeTarget, ...]
     beta_effects: tuple[BetaEffect, ...]
-    correction: MassCorrection
     edge: ExistenceEdge
     adjacency: Adjacency
     splits: tuple[SplitScore, ...]
 
 
 def evidence(table: pd.DataFrame, folds: int, seed: int) -> Evidence:
-    """Compute every Section 4.2 result from a table with the charge targets and correction."""
+    """Compute every Section 4.2 result from a table with the charge targets."""
     sizes = table.groupby(list(CURVE)).size()
     grid = np.unique(table["r_h"].to_numpy())
     return Evidence(
@@ -221,7 +194,6 @@ def evidence(table: pd.DataFrame, folds: int, seed: int) -> Evidence:
         summarize(table, SUMMARY_COLUMNS),
         charge_targets(table),
         tuple(beta_effect(table, target) for target in BETA_EFFECT_TARGETS),
-        mass_correction(table),
         existence_edge(table),
         curve_adjacency(table, BH_SPACE),
         tuple(s for t in SPLIT_TAGS for s in split_strategies(table, t, folds, seed)),
@@ -234,7 +206,8 @@ def numbers(found: Evidence) -> dict[str, str]:
     target = {t.target: t for t in found.targets}
     effect = {e.target: e.spread_ratio for e in found.beta_effects}
     (beta_low, rh_low), (beta_high, rh_high) = found.edge.starts[0], found.edge.starts[-1]
-    rh, d, dm = summary["r_h", "raw"], summary["D", "raw"], summary["D_over_M", "raw"]
+    rh, m = summary["r_h", "raw"], summary["M", "raw"]
+    d, dm = summary["D", "raw"], summary["D_over_M", "raw"]
     return {
         "bhEdaRows": f"{found.rows}",
         "bhEdaCurves": f"{found.curves}",
@@ -246,6 +219,8 @@ def numbers(found: Evidence) -> dict[str, str]:
         "bhEdaRhOrders": f"{orders_of_magnitude(rh):.2f}",
         "bhEdaRhRawSkew": f"{rh.skew:.2f}",
         "bhEdaPearsonMRh": f"{found.pearson_m_rh:.4f}",
+        "bhEdaMMin": f"{m.minimum:.3f}",
+        "bhEdaMMax": f"{m.maximum:.3f}",
         "bhEdaDMin": number_tex(d.minimum),
         "bhEdaDMax": number_tex(d.maximum),
         "bhEdaDOrders": f"{orders_of_magnitude(d):.2f}",
@@ -257,12 +232,7 @@ def numbers(found: Evidence) -> dict[str, str]:
         "bhEdaPearsonRhLogDM": f"{target['log10_D_over_M'].pearson_rh:.3f}",
         "bhEdaPearsonBetaLogD": f"{target['log10_D'].pearson_beta:.3f}",
         "bhEdaPearsonBetaLogDM": f"{target['log10_D_over_M'].pearson_beta:.3f}",
-        "bhEdaCorrectionMin": f"{found.correction.minimum:.3f}",
-        "bhEdaCorrectionMax": f"{found.correction.maximum:.3f}",
-        "bhEdaCorrectionPearsonRh": f"{found.correction.pearson_rh:.2f}",
-        "bhEdaCorrectionPearsonBeta": f"{found.correction.pearson_beta:.2f}",
         "bhEdaBetaEffectPercentM": f"{100 * effect['M']:.2f}",
-        "bhEdaBetaEffectPercentMC": f"{100 * effect['M_correction']:.1f}",
         "bhEdaBetaEffectPercentLD": f"{100 * effect['log10_D']:.1f}",
         "bhEdaEdgeBetaLow": f"{beta_low:.2f}",
         "bhEdaEdgeBetaHigh": f"{beta_high:.2f}",
@@ -331,15 +301,15 @@ def _split_table(found: Evidence) -> str:
     error = {(s.strategy, s.target): _split_error(s) for s in found.splits}
     rows = [
         f"{STRATEGY_LABELS[strategy]} & ${error[strategy, 'M']}$ & "
-        f"${error[strategy, 'M_correction']}$ & ${error[strategy, 'log10_D']}$"
+        f"${error[strategy, 'log10_D']}$"
         for strategy in get_args(BhSplitStrategy)
     ]
-    header = "Held out & $M$ & $M - r_h/2$ & $\\log_{10} D$"
+    header = "Held out & $M$ & $\\log_{10} D$"
     caption = (
         f"Black holes: 1-nearest-neighbour mean absolute error under each split "
         f"({found.folds} folds; the outer curves are predicted from the others)."
     )
-    return booktabs("bh-split-strategies", caption, "lrrr", header, rows)
+    return booktabs("bh-split-strategies", caption, "lrr", header, rows)
 
 
 def table_tex(found: Evidence, table: BhTable) -> str:
@@ -368,11 +338,8 @@ def caption(figure: BhFigure) -> str:
                 "Black holes: distributions of the continuous variables, raw (left) and "
                 "$\\log_{10}$ (right)."
             )
-        case "mass_correction":
-            return (
-                "Black holes: the mass correction $M - \\rh/2$ against $\\rh$, one line per "
-                "$\\beta$ curve."
-            )
+        case "mass_radius":
+            return "Black holes: the mass $M$ against $\\rh$, one line per $\\beta$ curve."
         case "charge_target":
             return (
                 "Black holes: $M$ against $\\log_{10}\\Dch$ (left) and $\\log_{10}(\\Dch/M)$ "
@@ -429,14 +396,14 @@ def _curve_lines(table: pd.DataFrame, y: str, cmap: Colormap) -> LineCollection:
     return lines
 
 
-def _mass_correction(table: pd.DataFrame, style: PlotStyle) -> Figure:
-    """M - r_h/2 against r_h, one line per beta curve."""
+def _mass_radius(table: pd.DataFrame, style: PlotStyle) -> Figure:
+    """M against r_h, one line per beta curve."""
     fig, ax = plt.subplots(figsize=text_width_size(0.55), layout="constrained")
-    lines = _curve_lines(table, "M_correction", colormap(style.black_holes.beta_cmap))
+    lines = _curve_lines(table, "M", colormap(style.black_holes.beta_cmap))
     ax.add_collection(lines)
     ax.autoscale()
     ax.set_xlabel(LABELS["r_h"])
-    ax.set_ylabel("$M - r_h/2$")
+    ax.set_ylabel(LABELS["M"])
     fig.colorbar(lines, ax=ax, label=LABELS["beta"])
     return fig
 
@@ -473,12 +440,12 @@ def _existence_edge(table: pd.DataFrame, style: PlotStyle) -> Figure:
 
 
 def draw(figure: BhFigure, table: pd.DataFrame, style: PlotStyle) -> Figure:
-    """Draw one BH EDA figure from a table with the charge targets and the mass correction."""
+    """Draw one BH EDA figure from a table with the charge targets."""
     match figure:
         case "univariate_continuous":
             return _univariate_continuous(table, style)
-        case "mass_correction":
-            return _mass_correction(table, style)
+        case "mass_radius":
+            return _mass_radius(table, style)
         case "charge_target":
             return _charge_target(table, style)
         case "existence_edge":
@@ -500,7 +467,7 @@ def main(
     assert source.is_file(), f"prepared BH table not found: {source}"
     config = config or load_config()
     apply_style(config.plot)
-    table = with_mass_correction(with_charge_targets(pd.read_parquet(source)))
+    table = with_charge_targets(pd.read_parquet(source))
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.glob("42_black_holes_*"):
         stale.unlink()

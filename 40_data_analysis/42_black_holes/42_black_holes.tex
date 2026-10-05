@@ -19,9 +19,9 @@ $\rh$ spans only $\bhEdaRhOrders$ orders of magnitude, from $\bhEdaRhMin$ to $\b
 \FloatBarrier
 
 \paragraph{2.\ The mass target is $M$, in solar masses.}
-The mass follows the horizon radius almost exactly, with Pearson $r = \bhEdaPearsonMRh$, close to the vacuum relation $M = \rh/2$. The dilaton shows in the remainder $M - \rh/2$, between $\bhEdaCorrectionMin$ and $\bhEdaCorrectionMax\,\Msun$: largest where each curve starts and decaying with $\rh$ (\cref{fig:bh-mass-correction}).
+The mass ranges from $\bhEdaMMin$ to $\bhEdaMMax\,\Msun$ and follows the horizon radius almost exactly, with Pearson $r = \bhEdaPearsonMRh$, one nearly straight line per $\beta$ curve (\cref{fig:bh-mass-radius}). It is bounded and of order one, so it enters as it is, like the neutron-star mass.
 
-\InputIfFileExists{42_black_holes_fig_mass_correction}{}{}
+\InputIfFileExists{42_black_holes_fig_mass_radius}{}{}
 \FloatBarrier
 
 \paragraph{3.\ Dividing the charge by the mass brings no improvement.}
@@ -32,14 +32,14 @@ For neutron stars, $\log_{10}(\Dch/M)$ separated the charge from the mass (Secti
 \FloatBarrier
 
 \paragraph{4.\ $\beta$ sets where each curve starts, not what it holds.}
-At fixed $\rh$, changing $\beta$ moves the mass by only $\bhEdaBetaEffectPercentM\%$ of its spread, the correction $M - \rh/2$ by $\bhEdaBetaEffectPercentMC\%$ and $\log_{10}\Dch$ by $\bhEdaBetaEffectPercentLD\%$. Its role is the existence edge: the smallest horizon radius rises from $\bhEdaEdgeRhMinLow$ at $\beta = \bhEdaEdgeBetaLow$ to $\bhEdaEdgeRhMinHigh$ at $\beta = \bhEdaEdgeBetaHigh$ (\cref{fig:bh-existence-edge}), and the correction is largest along that edge. $\beta$ therefore stays an input, and the domain of validity is the region above the edge.
+At fixed $\rh$, changing $\beta$ moves the mass by only $\bhEdaBetaEffectPercentM\%$ of its spread and $\log_{10}\Dch$ by $\bhEdaBetaEffectPercentLD\%$. Its role is the existence edge: the smallest horizon radius rises from $\bhEdaEdgeRhMinLow$ at $\beta = \bhEdaEdgeBetaLow$ to $\bhEdaEdgeRhMinHigh$ at $\beta = \bhEdaEdgeBetaHigh$ (\cref{fig:bh-existence-edge}). $\beta$ therefore stays an input, and the domain of validity is the region above the edge.
 \todo{Review: whether the black-hole and neutron-star datasets come from the same theory; $\beta$ spans $\bhEdaEdgeBetaLow$ to $\bhEdaEdgeBetaHigh$ here and $0.4$ to $49.4$ for neutron stars, and matters far less here.}
 
 \InputIfFileExists{42_black_holes_fig_existence_edge}{}{}
 \FloatBarrier
 
 \paragraph{5.\ The split groups whole $\beta$ curves.}
-Each curve is so dense that every row's nearest neighbour lies on its own curve ($\bhEdaSameCurvePercent\%$; median distance $\bhEdaWithinMedian$ against $\bhEdaAcrossMedian$ to the next curve), so a random split of rows leaks. A one-nearest-neighbour probe (\cref{tab:bh-split-strategies}, $\bhEdaFolds$ folds) shows it for the quantities $\beta$ affects: the correction $M - \rh/2$ scores $\bhEdaSplitRandomRowsMC$ with rows held out at random against $\bhEdaSplitCurvesMC$ with whole curves, and $\log_{10}\Dch$ $\bhEdaSplitRandomRowsLD$ against $\bhEdaSplitCurvesLD$. Holding out the outermost curves scores as holding out any curve ($\bhEdaSplitOuterCurvesLD$), so extrapolating in $\beta$ is no harder than interpolating; as for neutron stars, the mass alone reverses the order ($\bhEdaSplitRandomRowsM$ against $\bhEdaSplitCurvesM$), because all curves share one $\rh$ grid.
+Each curve is so dense that every row's nearest neighbour lies on its own curve ($\bhEdaSameCurvePercent\%$; median distance $\bhEdaWithinMedian$ against $\bhEdaAcrossMedian$ to the next curve), so a random split of rows leaks. A one-nearest-neighbour probe (\cref{tab:bh-split-strategies}, $\bhEdaFolds$ folds) shows it for the charge, which $\beta$ affects most: $\log_{10}\Dch$ scores $\bhEdaSplitRandomRowsLD$ with rows held out at random against $\bhEdaSplitCurvesLD$ with whole curves. Holding out the outermost curves scores as holding out any curve ($\bhEdaSplitOuterCurvesLD$), so extrapolating in $\beta$ is no harder than interpolating; as for neutron stars, the mass alone reverses the order ($\bhEdaSplitRandomRowsM$ against $\bhEdaSplitCurvesM$), because all curves share one $\rh$ grid.
 
 \InputIfFileExists{42_black_holes_tab_split_strategies}{}{}
 \FloatBarrier

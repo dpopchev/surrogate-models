@@ -45,6 +45,7 @@
 - 2026-10-05 E-002: AC3 amended to the W-019 split (15% test curves, GroupKFold 5); W-011 closed as realized by W-017
 - 2026-10-05 E-002: E-003 closed (v0.2.0); E-002 stays parked for W-024 (state rule), then resumes (developer order)
 - 2026-10-05 E-002: T-020's check amended to read the first 5 columns -- W-008 R3 (developer-confirmed) keeps the 16 varying NS columns, inputs and targets first, the rest for EDA (R for the mass-radius figure)
+- 2026-10-05 E-002: T-064 added to W-020: BH reports raw M everywhere (developer)
 - 2026-10-05 E-002: W-015 filed during T-020 (standalone): the D-floor and sign Decisions contradict the drafted H1 and EDA text
 - 2026-10-05 E-002: W-025 bug filed during T-048 (two EDA tables overflow the margin); queued
 - 2026-10-05 E-002: developer re-plan: the split comes from per-dataset EDA; E-002 parked for E-003 (config, style, EDA figures); W-019 spike and W-020 (AC5) added; W-010, W-015 wait on W-019; W-010's lines and edge to be revised (GroupKFold for NS)

@@ -17,11 +17,9 @@ from eda_black_holes import (
     existence_edge,
     figure_tex,
     main,
-    mass_correction,
     numbers,
     split_strategies,
     table_tex,
-    with_mass_correction,
 )
 
 from shared.config import PaperConfig
@@ -41,11 +39,7 @@ def curves(start_step: float = 0.5) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-TABLE = with_mass_correction(with_charge_targets(curves()))
-
-
-def test_mass_correction_is_m_minus_half_the_horizon_radius() -> None:
-    assert TABLE["M_correction"].iloc[0] == pytest.approx(0.01)
+TABLE = with_charge_targets(curves())
 
 
 def test_existence_edge_lists_where_each_curve_starts() -> None:
@@ -58,10 +52,6 @@ def test_a_target_free_of_beta_has_no_beta_effect() -> None:
 
 def test_a_target_driven_by_beta_has_a_beta_effect() -> None:
     assert beta_effect(TABLE.assign(y=TABLE["beta"]), "y").spread_ratio > 0.5
-
-
-def test_the_mass_correction_follows_beta_here() -> None:
-    assert mass_correction(TABLE).pearson_beta == pytest.approx(1.0)
 
 
 def test_charge_targets_are_compared_in_order() -> None:
@@ -101,11 +91,21 @@ class TestNumbers:
         assert found["bhEdaBetaEffectPercentM"].replace(".", "").isdigit()
 
     def test_split_errors_use_the_adaptive_number_format(self, found) -> None:
-        score = next(s for s in SCORES if (s.strategy, s.target) == ("curves", "M_correction"))
-        assert found["bhEdaSplitCurvesMC"] == number_tex(score.mae)
+        score = next(s for s in SCORES if (s.strategy, s.target) == ("curves", "M"))
+        assert found["bhEdaSplitCurvesM"] == number_tex(score.mae)
 
     def test_split_errors_are_named_per_strategy_and_target(self, found) -> None:
-        assert {"bhEdaSplitOuterCurvesMC", "bhEdaSplitCurvesLD"} <= found.keys()
+        assert {"bhEdaSplitOuterCurvesM", "bhEdaSplitCurvesLD"} <= found.keys()
+
+    def test_the_mass_range_starts_at_the_smallest_m(self, found) -> None:
+        assert found["bhEdaMMin"] == "0.510"
+
+    def test_no_number_concerns_a_mass_correction(self, found) -> None:
+        assert [name for name in found if "Correction" in name or name.endswith("MC")] == []
+
+
+def test_the_split_scores_raw_m_and_log10_d_only() -> None:
+    assert {s.target for s in SCORES} == {"M", "log10_D"}
 
 
 STYLE = PlotStyle(usetex=False)
@@ -124,8 +124,8 @@ class TestFigures:
         figure = draw("univariate_continuous", TABLE, STYLE)
         assert figure.axes[0].patches[0].get_linewidth() == 0
 
-    def test_mass_correction_has_one_panel_and_its_colorbar(self) -> None:
-        assert len(draw("mass_correction", TABLE, STYLE).axes) == 2
+    def test_mass_radius_has_one_panel_and_its_colorbar(self) -> None:
+        assert len(draw("mass_radius", TABLE, STYLE).axes) == 2
 
     def test_charge_target_has_two_panels_and_a_colorbar(self) -> None:
         assert len(draw("charge_target", TABLE, STYLE).axes) == 3
