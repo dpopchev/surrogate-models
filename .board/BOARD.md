@@ -1,14 +1,14 @@
 # Board -- surrogate-models
 record: local
-open path: W-015 > T-034   | blocked: 0 | todo roots: 1 | done: 84 | pruned: 4
+open path: W-015 > T-035   | blocked: 0 | todo roots: 1 | done: 85 | pruned: 4
 
 ## Tree
 
 ### W-015 issue [doing] (standalone) Paper text for the D floor and the sign symmetry of D   (filed during T-020)
 
 - T-033 [done] Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output
-- T-034 [doing] Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex   <- ACTIVE LEAF
-- T-035 [todo] State the sign symmetry of D in Section 2 -> 30_physical_framework/31_action/31_action.tex
+- T-034 [done] Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex
+- T-035 [doing] State the sign symmetry of D in Section 2 -> 30_physical_framework/31_action/31_action.tex   <- ACTIVE LEAF
 
 ### W-021 issue [todo] (standalone) Review markers in the paper with todonotes   (filed during T-041)
 
@@ -172,8 +172,8 @@ closed 2026-10-05 -- outcome: Given the base Makefile with STATE and no local/st
 flowchart TD
   W015["W-015 issue doing, standalone: Paper text for the D floor and the sign symmetry of D"]
   W015 --> T033["T-033 done: Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output"]
-  W015 --> T034["T-034 doing: Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex -- ACTIVE LEAF"]
-  W015 --> T035["T-035 todo: State the sign symmetry of D in Section 2 -> 30_physical_framework/31_action/31_action.tex"]
+  W015 --> T034["T-034 done: Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex"]
+  W015 --> T035["T-035 doing: State the sign symmetry of D in Section 2 -> 30_physical_framework/31_action/31_action.tex -- ACTIVE LEAF"]
   W021["W-021 issue todo, standalone: Review markers in the paper with todonotes"]
   W021 --> T050["T-050 todo: Replace the hand-made todo macro with todonotes -> 00_metadata/preamble.tex"]
   W021 --> T051["T-051 todo: Add the review note kind and mark the open claims -> preamble.tex and the review notes"]
@@ -182,7 +182,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W015,T034 doing
-  class T033 done
-  class T035,W021,T050,T051 todo
+  class W015,T035 doing
+  class T033,T034 done
+  class W021,T050,T051 todo
 ```
