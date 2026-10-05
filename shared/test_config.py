@@ -76,6 +76,10 @@ def test_the_shipped_paper_toml_selects_the_four_ns_figures_the_text_cites() -> 
     assert len(load_config().data_analysis.neutron_stars.figures) == 4
 
 
+def test_the_shipped_paper_toml_selects_the_four_bh_figures() -> None:
+    assert len(load_config().data_analysis.black_holes.figures) == 4
+
+
 def test_the_shipped_paper_toml_selects_every_ns_table() -> None:
     assert len(load_config().data_analysis.neutron_stars.tables) == 3
 

@@ -41,12 +41,26 @@ class NeutronStarsSection(BaseModel):
     tables: tuple[NsTable, ...] = get_args(NsTable)
 
 
+BhFigure = Literal["univariate_continuous", "mass_correction", "charge_target", "existence_edge"]
+BhTable = Literal["univariate", "charge_correlation", "split_strategies"]
+
+
+class BlackHolesSection(BaseModel):
+    """Section 4.2: which BH EDA figures and tables eda_black_holes.py renders."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    figures: tuple[BhFigure, ...] = get_args(BhFigure)
+    tables: tuple[BhTable, ...] = get_args(BhTable)
+
+
 class DataAnalysis(BaseModel):
     """Chapter 40_data_analysis."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     neutron_stars: NeutronStarsSection = NeutronStarsSection()
+    black_holes: BlackHolesSection = BlackHolesSection()
 
 
 class PaperConfig(BaseSettings):

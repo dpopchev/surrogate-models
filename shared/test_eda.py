@@ -74,6 +74,19 @@ def test_every_row_of_a_dense_curve_has_a_within_curve_distance() -> None:
     assert len(neighbour_distances(table, SPACE, k=3).within) == 8
 
 
+# Two dense curves: within k = 2 every neighbour is on the own curve.
+TWO = curves({p: [0.1] * 6 for p in (1.0, 2.0)})
+
+
+def test_every_row_gets_an_other_curve_distance_beyond_its_k_nearest() -> None:
+    assert len(neighbour_distances(TWO, SPACE, k=2).across) == 12
+
+
+def test_the_other_curve_distance_is_exact_beyond_its_k_nearest() -> None:
+    # p standardizes to -1 and +1, so the other curve at the same x lies 2 apart.
+    assert curve_adjacency(TWO, SPACE, k=2).across_median == pytest.approx(2.0)
+
+
 OFFSETS = curves({p: [off] * 6 for p, off in {1.0: 1.0, 2.0: 9.0, 3.0: 2.0, 4.0: 8.0}.items()})
 
 
@@ -107,6 +120,10 @@ def test_a_moderate_number_prints_plainly() -> None:
 
 def test_a_moderate_number_keeps_three_significant_digits() -> None:
     assert number_tex(0.47) == "0.470"
+
+
+def test_zero_prints_as_zero() -> None:
+    assert number_tex(0.0) == "0"
 
 
 def test_a_tiny_number_prints_in_scientific_notation() -> None:

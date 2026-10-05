@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 2 | done: 51 | pruned: 2
+open path: E-002   | blocked: 0 | todo roots: 2 | done: 52 | pruned: 2
 
 ## Tree
 
@@ -82,8 +82,8 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 51 | pruned: 2
 - T-043 [todo] Draw the BH EDA figures selected in paper.toml -> eda_black_holes.py figure functions and main
 - T-044 [todo] Wire the BH EDA into make and Section 4.2 -> mk/paper.mk rules and 42_black_holes.tex
 - T-045 [todo] Review the BH EDA figures with the developer -> Findings on W-018
-- T-055 [doing] Extract the dataset-agnostic EDA core -> shared/eda.py with shared/test_eda.py   <- ACTIVE LEAF
-- T-056 [todo] Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests
+- T-055 [done] Extract the dataset-agnostic EDA core -> shared/eda.py with shared/test_eda.py
+- T-056 [doing] Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests   <- ACTIVE LEAF
 - T-057 [todo] Write the BH insight paragraphs -> 40_data_analysis/42_black_holes/42_black_holes.tex
 
 ### W-015 issue [todo] (standalone) Paper text for the D floor and the sign symmetry of D   (filed during T-020)
@@ -192,8 +192,8 @@ flowchart TD
   W018 --> T043["T-043 todo: Draw the BH EDA figures selected in paper.toml -> eda_black_holes.py figure functions and main"]
   W018 --> T044["T-044 todo: Wire the BH EDA into make and Section 4.2 -> mk/paper.mk rules and 42_black_holes.tex"]
   W018 --> T045["T-045 todo: Review the BH EDA figures with the developer -> Findings on W-018"]
-  W018 --> T055["T-055 doing: Extract the dataset-agnostic EDA core -> shared/eda.py with shared/test_eda.py -- ACTIVE LEAF"]
-  W018 --> T056["T-056 todo: Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests"]
+  W018 --> T055["T-055 done: Extract the dataset-agnostic EDA core -> shared/eda.py with shared/test_eda.py"]
+  W018 --> T056["T-056 doing: Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests -- ACTIVE LEAF"]
   W018 --> T057["T-057 todo: Write the BH insight paragraphs -> 40_data_analysis/42_black_holes/42_black_holes.tex"]
   W015["W-015 issue todo, standalone: Paper text for the D floor and the sign symmetry of D"]
   W015 --> T033["T-033 todo: Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output"]
@@ -207,8 +207,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,E003,W018,T055 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W013,T027,T028,T029,W014,T030,T031,W016,T036,T037,W017,T038,T039,T040,T041,T052,T053,T054 done
-  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,T043,T044,T045,T056,T057,W015,T033,T034,T035,W021,T050,T051 todo
+  class E002,E003,W018,T056 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W013,T027,T028,T029,W014,T030,T031,W016,T036,T037,W017,T038,T039,T040,T041,T052,T053,T054,T055 done
+  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,T043,T044,T045,T057,W015,T033,T034,T035,W021,T050,T051 todo
   class T032,T042 pruned
 ```

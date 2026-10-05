@@ -145,25 +145,46 @@ def _first(distances: np.ndarray, mask: np.ndarray) -> np.ndarray:
     return distances[found, mask[found].argmax(axis=1)]
 
 
+def _across(
+    table: pd.DataFrame, space: CurveSpace, distances: np.ndarray, same: np.ndarray
+) -> np.ndarray:
+    """Every row's distance to the nearest row of another curve, in row order.
+
+    Taken from the k nearest where one of them lies on another curve; otherwise found exactly
+    by searching the other curves' rows (dense curves: all k nearest share the row's curve).
+    """
+    inputs, curve = standardized(table, space), curve_ids(table, space)
+    across = np.full(len(curve), np.nan)
+    found = (~same).any(axis=1)
+    across[found] = distances[found, (~same)[found].argmax(axis=1)]
+    for own in np.unique(curve[~found]):
+        rows, others = (curve == own) & ~found, curve != own
+        if others.any():
+            nearest = NearestNeighbors(n_neighbors=1).fit(inputs[others])
+            across[rows] = nearest.kneighbors(inputs[rows])[0][:, 0]
+    return across[~np.isnan(across)]
+
+
 def neighbour_distances(
     table: pd.DataFrame, space: CurveSpace, k: int = 16
 ) -> NeighbourDistances:
-    """Each row's distance to its nearest same-curve and other-curve row among its k nearest."""
+    """Each row's distance to its nearest same-curve row among its k nearest, and to the
+    nearest row of another curve."""
     distances, same = _nearest(table, space, k)
-    return NeighbourDistances(_first(distances, same), _first(distances, ~same))
+    return NeighbourDistances(_first(distances, same), _across(table, space, distances, same))
 
 
 def curve_adjacency(table: pd.DataFrame, space: CurveSpace, k: int = 16) -> Adjacency:
     """Find each row's nearest neighbour in the standardized inputs of the space.
 
-    Among the k nearest rows, the first of the same curve and the first of another give the
-    within- and across-curve distances; a row with none of a kind in k contributes no distance.
+    Among the k nearest rows, the first of the same curve gives the within-curve distance (a
+    row with none in k contributes none); the across-curve distance is exact for every row.
     """
     distances, same = _nearest(table, space, k)
     return Adjacency(
         float(same[:, 0].mean()),
         float(np.median(_first(distances, same))),
-        float(np.median(_first(distances, ~same))),
+        float(np.median(_across(table, space, distances, same))),
     )
 
 
@@ -217,8 +238,10 @@ def sci_tex(value: float) -> str:
 
 
 def number_tex(value: float) -> str:
-    """Format a number for LaTeX math mode: plain with three significant digits between 0.01
-    and 1000, else scientific."""
+    """Format a number for LaTeX math mode: 0 as 0, plain with three significant digits between
+    0.01 and 1000, else scientific."""
+    if value == 0:
+        return "0"
     if not 0.01 <= abs(value) < 1000:
         return sci_tex(value)
     decimals = max(2 - int(np.floor(np.log10(abs(value)))), 0)
