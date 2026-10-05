@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 2 | done: 69 | pruned: 2
+open path: E-002   | blocked: 0 | todo roots: 2 | done: 70 | pruned: 4
 
 ## Tree
 
@@ -27,10 +27,10 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 69 | pruned: 2
 - T-021 [todo] Write the curve-grouped split test-first -> 50_methodology/51_algorithms/split_datasets.py with its tests
 - T-022 [todo] Wire the split into make with its invariant -> local/state/split.parquet, no curve in two sets
 
-#### W-011 issue [todo] Section 3.1 numbers from generated macros
+#### W-011 issue [done] Section 3.1 numbers from generated macros
 
-- T-023 [todo] Write the EDA numbers test-first -> 40_data_analysis/41_eda/eda_numbers.py with its tests
-- T-024 [todo] Render Section 3.1 from the macros -> 41_eda.tex uses generated numbers and states the EDA scope
+- T-023 [pruned] Write the EDA numbers test-first -> 40_data_analysis/41_eda/eda_numbers.py with its tests   [pruned: superseded: W-017's eda_neutron_stars.py (and W-018's eda_black_holes.py) already generate every Section 3.1 and 3.2 number as macros]
+- T-024 [pruned] Render Section 3.1 from the macros -> 41_eda.tex uses generated numbers and states the EDA scope   [pruned: superseded: Section 3.1 was rewritten from the nsEda macros in W-017 (T-054), developer-approved]
 
 #### W-012 bug [done] BH parser fails on repeated block headers and blank lines   (filed during T-016)
 
@@ -172,9 +172,9 @@ flowchart TD
   E002 --> W010["W-010 issue todo: Frozen split grouped by curve"]
   W010 --> T021["T-021 todo: Write the curve-grouped split test-first -> 50_methodology/51_algorithms/split_datasets.py with its tests"]
   W010 --> T022["T-022 todo: Wire the split into make with its invariant -> local/state/split.parquet, no curve in two sets"]
-  E002 --> W011["W-011 issue todo: Section 3.1 numbers from generated macros"]
-  W011 --> T023["T-023 todo: Write the EDA numbers test-first -> 40_data_analysis/41_eda/eda_numbers.py with its tests"]
-  W011 --> T024["T-024 todo: Render Section 3.1 from the macros -> 41_eda.tex uses generated numbers and states the EDA scope"]
+  E002 --> W011["W-011 issue done: Section 3.1 numbers from generated macros"]
+  W011 --> T023["T-023 pruned: Write the EDA numbers test-first -> 40_data_analysis/41_eda/eda_numbers.py with its tests"]
+  W011 --> T024["T-024 pruned: Render Section 3.1 from the macros -> 41_eda.tex uses generated numbers and states the EDA scope"]
   E002 --> W012["W-012 bug done: BH parser fails on repeated block headers and blank lines"]
   W012 --> T025["T-025 done: Record the repeated-header case as a failing test -> test_prepare_black_holes.py RED"]
   W012 --> T026["T-026 done: Skip repeated headers and blank lines in parse_table -> prepare_black_holes.py GREEN"]
@@ -197,6 +197,7 @@ flowchart TD
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E002 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W019,T046,T047 done
-  class W010,T021,T022,W011,T023,T024,W020,T048,T049,W015,T033,T034,T035,W021,T050,T051 todo
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W011,W012,T025,T026,W019,T046,T047 done
+  class W010,T021,T022,W020,T048,T049,W015,T033,T034,T035,W021,T050,T051 todo
+  class T023,T024 pruned
 ```
