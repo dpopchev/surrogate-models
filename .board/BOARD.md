@@ -1,12 +1,8 @@
 # Board -- surrogate-models
 record: local
-open path: W-030   | blocked: 0 | todo roots: 0 | done: 97 | pruned: 4
+open path: none   | blocked: 0 | todo roots: 0 | done: 98 | pruned: 4
 
 ## Tree
-
-### W-030 issue [doing] (standalone) Figures at 450 dpi to keep the paper small
-
-- T-069 [done] Set plot.dpi to 450 -> paper.toml
 
 ## Closed
 
@@ -193,16 +189,18 @@ closed 2026-10-05 -- outcome: Given paper.toml with plot.dpi, When make compile 
 
 - T-068 [done] Write the EDA figures as PNG at plot.dpi -> shared/plots.py, both EDA modules, paper.toml
 
+### W-030 issue [done] (standalone) Figures at 450 dpi to keep the paper small
+
+closed 2026-10-05 -- outcome: Given paper.toml with plot.dpi = 450, When make compile runs, Then the figures in build/assets are PNGs written at 450 dpi. -- ledger: ledgers/W-030.md
+
+- T-069 [done] Set plot.dpi to 450 -> paper.toml
+
 ## Diagram
 ```mermaid
 flowchart TD
-  W030["W-030 issue doing, standalone: Figures at 450 dpi to keep the paper small"]
-  W030 --> T069["T-069 done: Set plot.dpi to 450 -> paper.toml"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W030 doing
-  class T069 done
 ```
