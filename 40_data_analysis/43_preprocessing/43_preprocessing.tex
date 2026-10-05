@@ -1,4 +1,43 @@
 \subsection{Preprocessing and Feature Decisions}
 \label{sec:preprocessing}
+\input{43_preprocessing_numbers}
 
-\todo{One decisions table per dataset (item, decision, grounds), neutron stars then black holes: input transforms and scaling, charge and mass targets, the curve-grouped split, and the domain of validity; every number a generated macro from Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}.}
+Both datasets are prepared the same way: the inputs are standardized on the training folds, the charge target is $\log_{10}(\max(\Dch, \varepsilon)/M)$, the mass target is $M$ in solar masses, and whole curves are split into a frozen test set and GroupKFold folds. \Cref{tab:decisions-ns,tab:decisions-bh} list each decision with its grounds from Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}; the three choices a table row cannot carry are argued first.
+
+\paragraph{The charge is floored before it is divided by the mass.}
+The charge target is $\log_{10}(\max(\Dch, \varepsilon)/M)$ with $\varepsilon = \prepChargeFloor$: a charge below $\varepsilon$ is treated as zero, and the floor acts on $\Dch$ itself, since it bounds the physical charge, not its ratio to the mass. It touches $\prepNsFloorRows$ neutron-star rows ($\prepNsFloorPercent\%$) and no black-hole row, whose smallest charge is $\bhEdaDMin$. Without the floor, the logarithm would give the smallest charges as much weight as the largest, $\nsEdaDOrders$ orders of magnitude away.
+
+\paragraph{Whole curves are split: a frozen test set, then GroupKFold folds.}
+Rows of one curve are each other's nearest neighbours ($\nsEdaSameCurvePercent\%$ of the neutron-star rows, $\bhEdaSameCurvePercent\%$ of the black-hole rows), so a split of rows would put near-copies of every test row into training and overstate accuracy (Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}). Every split therefore assigns whole curves. First, $\prepNsTestPercent\%$ of the curves are frozen as the test set, chosen with the fixed seed $\prepSeed$: $\prepNsTestCurves$ of the $\prepNsCurves$ neutron-star curves and $\prepBhTestCurves$ of the $\prepBhCurves$ black-hole curves. The test set is used once, for the final evaluation. The remaining curves are shuffled with the same seed into $\prepNsFolds$ GroupKFold folds for model selection, $\prepNsFoldMin$ to $\prepNsFoldMax$ neutron-star curves and $\prepBhFoldMin$ to $\prepBhFoldMax$ black-hole curves per fold. The standardization statistics are fitted on the training folds only, so no information from a held-out curve reaches the model.
+
+\paragraph{Extrapolation is measured in a separate ablation, not claimed.}
+The final model is trained on all curves outside the test set, so it covers the whole sampled domain, and its validity is claimed only there. How it degrades beyond the domain is measured apart: an ablation trains without the curves on the rim of the domain ($\prepNsAblationCurves$ neutron-star curves on the edges of the $(\beta, \lambda)$ grid and along its empty corner; the $\prepBhAblationCurves$ outermost black-hole curves) and tests on them. The data already indicate the outcome: for neutron stars, predicting the rim from the interior costs about six times the error of predicting an interior curve ($\nsEdaSplitRimDM$ against $\nsEdaSplitCurvesDM$), while for black holes the outermost curves cost no more than any other ($\bhEdaSplitOuterCurvesLD$ against $\bhEdaSplitCurvesLD$).
+
+\begin{table}[!htb]
+\centering
+\caption{Neutron stars: preprocessing and feature decisions with their grounds.}
+\label{tab:decisions-ns}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{p{2.4cm} p{3.6cm} p{5.3cm}}
+\toprule
+Item & Decision & Grounds \\
+\midrule
+$\rhoc$ input & $\log_{10}\rhoc$, standardized &
+Positive and multiplicative; $M$ follows $\log_{10}\rhoc$ as one smooth curve per $(\beta, \lambda)$ pair; skew $\nsEdaRhocRawSkew \to \nsEdaRhocLogSkew$, supporting only (the grid is about even in $\rhoc$). \\
+$\beta, \lambda$ inputs & Linear, standardized; \emph{both retained} &
+A straight line in $\lambda$ explains $\nsEdaLambdaLinearPercentLogDM\%$ of the charge target's variance; at fixed $\lambda$, $\beta$ explains $\nsEdaBetaSharePercent\%$: they interact. \\
+Charge target & $\log_{10}(\max(\Dch, \varepsilon)/M)$ &
+$\Dch$ spans $\nsEdaDOrders$ orders of magnitude; dividing by $M$ lowers the Spearman correlation with $M$ from $\nsEdaCorrMLogD$ to $\nsEdaCorrMLogDM$ and raises the Pearson correlation with $\lambda$ from $\nsEdaCorrLambdaLogD$ to $\nsEdaCorrLambdaLogDM$; the floor touches $\prepNsFloorPercent\%$ of rows. \\
+Mass target & $M$, in $\Msun$ &
+Bounded and of order one (up to $\nsEdaMassMax\,\Msun$); $\nsEdaPileUpPercent\%$ of rows lie within $\nsEdaPileUpWindow\,\Msun$ of their curve's maximum, a sampling artefact, disclosed. \\
+Input scaling & Standardization fitted on the training folds only &
+The inputs differ in scale by orders of magnitude; fitting on training folds only keeps held-out curves out of the model. \\
+Split & $\prepNsTestPercent\%$ of curves frozen as test; GroupKFold ($\prepNsFolds$ folds) over $(\beta, \lambda)$ curves &
+$\nsEdaSameCurvePercent\%$ of rows have their nearest neighbour on their own curve; a row-random split scores $\nsEdaSplitRandomRowsDM$ against $\nsEdaSplitCurvesDM$ for whole curves. \\
+Domain of validity & The filled $(\beta, \lambda)$ triangle and the sampled $\rhoc$ range; no extrapolation claimed &
+$\nsEdaGridFillPercent\%$ grid fill; predicting the rim from the interior scores $\nsEdaSplitRimDM$ (ablation). \\
+\bottomrule
+\end{tabular}
+\end{table}
+\FloatBarrier
