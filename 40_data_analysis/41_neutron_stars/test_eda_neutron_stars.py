@@ -14,15 +14,19 @@ from eda_neutron_stars import (
     charge_targets,
     curve_adjacency,
     draw,
+    evidence,
     figures_tex,
     grid_fill,
     main,
     neighbour_distances,
+    number_tex,
     numbers,
+    pile_up_share,
     render_macros,
     rim_mask,
     split_strategies,
     summarize,
+    tables_tex,
     with_charge_targets,
 )
 
@@ -117,7 +121,8 @@ def test_every_row_of_a_dense_curve_has_a_within_curve_distance() -> None:
 
 
 def test_numbers_name_the_grid_fill_in_percent() -> None:
-    assert numbers(with_charge_targets(DENSE), folds=2, seed=0)["nsEdaGridFillPercent"] == "100.0"
+    found = numbers(evidence(with_charge_targets(DENSE), folds=2, seed=0))
+    assert found["nsEdaGridFillPercent"] == "100.0"
 
 
 def test_figures_tex_includes_each_selected_figure() -> None:
@@ -161,7 +166,42 @@ def test_split_strategies_score_every_strategy_in_order() -> None:
 
 def test_numbers_name_the_rim_score_of_the_charge_target() -> None:
     table = with_charge_targets(grid(range(1, 4), range(1, 4)))
-    assert "nsEdaSplitRimDM" in numbers(table, folds=3, seed=0)
+    assert "nsEdaSplitRimDM" in numbers(evidence(table, folds=3, seed=0))
+
+
+def test_numbers_give_the_charge_range_in_orders_of_magnitude() -> None:
+    assert "nsEdaDOrders" in numbers(evidence(with_charge_targets(DENSE), folds=2, seed=0))
+
+
+def test_pile_up_share_counts_rows_within_the_window_of_their_curve_maximum() -> None:
+    assert pile_up_share(DENSE, window=0.15) == pytest.approx(0.5)
+
+
+GRID = evidence(with_charge_targets(grid(range(1, 4), range(1, 4))), folds=3, seed=0)
+
+
+def test_tables_tex_labels_each_selected_table() -> None:
+    assert "\\label{tab:ns-split-strategies}" in tables_tex(GRID, ("split_strategies",))
+
+
+def test_tables_tex_is_empty_when_no_table_is_selected() -> None:
+    assert tables_tex(GRID, ()) == ""
+
+
+def test_a_moderate_number_prints_plainly() -> None:
+    assert number_tex(0.4712) == "0.471"
+
+
+def test_a_moderate_number_keeps_three_significant_digits() -> None:
+    assert number_tex(0.47) == "0.470"
+
+
+def test_a_tiny_number_prints_in_scientific_notation() -> None:
+    assert number_tex(8.203e-8) == "8.20\\times 10^{-8}"
+
+
+def test_univariate_table_has_a_row_for_the_central_density() -> None:
+    assert "$\\rho_c$ &" in tables_tex(GRID, ("univariate",))
 
 
 STYLE = PlotStyle(usetex=False)
@@ -192,6 +232,20 @@ class TestFigures:
     def test_curve_adjacency_has_one_panel(self) -> None:
         assert len(draw("curve_adjacency", with_charge_targets(DENSE), STYLE).axes) == 1
 
+    def test_univariate_continuous_has_four_columns_raw_and_log10(self) -> None:
+        assert len(draw("univariate_continuous", with_charge_targets(DENSE), STYLE).axes) == 8
+
+    def test_univariate_continuous_gives_the_density_grid_one_bar_per_value(self) -> None:
+        figure = draw("univariate_continuous", with_charge_targets(DENSE), STYLE)
+        assert len(figure.axes[0].patches) == 4
+
+    def test_univariate_continuous_draws_bars_without_edges(self) -> None:
+        figure = draw("univariate_continuous", with_charge_targets(DENSE), STYLE)
+        assert figure.axes[0].patches[0].get_linewidth() == 0
+
+    def test_mass_max_has_two_panels_and_a_colorbar(self) -> None:
+        assert len(draw("mass_max", with_charge_targets(DENSE), STYLE).axes) == 3
+
 
 def test_main_writes_each_selected_figure_and_drops_stale_ones(tmp_path: Path) -> None:
     table = tmp_path / "ns.parquet"
@@ -205,4 +259,5 @@ def test_main_writes_each_selected_figure_and_drops_stale_ones(tmp_path: Path) -
         "41_neutron_stars_figures.tex",
         "41_neutron_stars_grid_fill.pdf",
         "41_neutron_stars_numbers.tex",
+        "41_neutron_stars_tables.tex",
     ]

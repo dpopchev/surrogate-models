@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 2 | done: 47 | pruned: 1
+open path: E-002   | blocked: 0 | todo roots: 2 | done: 48 | pruned: 1
 
 ## Tree
 
@@ -72,8 +72,8 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 47 | pruned: 1
 - T-039 [done] Draw the NS EDA figures selected in paper.toml -> eda_neutron_stars.py figure functions and main
 - T-040 [done] Wire the NS EDA into make and Section 4.1 -> mk/paper.mk rules and 41_neutron_stars.tex
 - T-041 [done] Review the NS EDA figures with the developer -> Findings on W-017
-- T-052 [doing] Compare split strategies on the NS table test-first -> split_strategies in eda_neutron_stars.py   <- ACTIVE LEAF
-- T-053 [todo] Add the NS tables and the extending figures selected in paper.toml -> eda_neutron_stars.py and shared/config.py
+- T-052 [done] Compare split strategies on the NS table test-first -> split_strategies in eda_neutron_stars.py
+- T-053 [doing] Add the NS tables and the extending figures selected in paper.toml -> eda_neutron_stars.py and shared/config.py   <- ACTIVE LEAF
 - T-054 [todo] Write the NS insight paragraphs -> 40_data_analysis/41_neutron_stars/41_neutron_stars.tex
 
 #### W-018 issue [todo] BH EDA figures and numbers selected in paper.toml
@@ -181,8 +181,8 @@ flowchart TD
   W017 --> T039["T-039 done: Draw the NS EDA figures selected in paper.toml -> eda_neutron_stars.py figure functions and main"]
   W017 --> T040["T-040 done: Wire the NS EDA into make and Section 4.1 -> mk/paper.mk rules and 41_neutron_stars.tex"]
   W017 --> T041["T-041 done: Review the NS EDA figures with the developer -> Findings on W-017"]
-  W017 --> T052["T-052 doing: Compare split strategies on the NS table test-first -> split_strategies in eda_neutron_stars.py -- ACTIVE LEAF"]
-  W017 --> T053["T-053 todo: Add the NS tables and the extending figures selected in paper.toml -> eda_neutron_stars.py and shared/config.py"]
+  W017 --> T052["T-052 done: Compare split strategies on the NS table test-first -> split_strategies in eda_neutron_stars.py"]
+  W017 --> T053["T-053 doing: Add the NS tables and the extending figures selected in paper.toml -> eda_neutron_stars.py and shared/config.py -- ACTIVE LEAF"]
   W017 --> T054["T-054 todo: Write the NS insight paragraphs -> 40_data_analysis/41_neutron_stars/41_neutron_stars.tex"]
   E003 --> W018["W-018 issue todo: BH EDA figures and numbers selected in paper.toml"]
   W018 --> T042["T-042 todo: Write the BH EDA computations test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py with its tests"]
@@ -201,8 +201,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,E003,W017,T052 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W013,T027,T028,T029,W014,T030,T031,W016,T036,T037,T038,T039,T040,T041 done
-  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,T053,T054,W018,T042,T043,T044,T045,W015,T033,T034,T035,W021,T050,T051 todo
+  class E002,E003,W017,T053 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W013,T027,T028,T029,W014,T030,T031,W016,T036,T037,T038,T039,T040,T041,T052 done
+  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,T054,W018,T042,T043,T044,T045,W015,T033,T034,T035,W021,T050,T051 todo
   class T032 pruned
 ```

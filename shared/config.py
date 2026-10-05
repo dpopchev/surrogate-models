@@ -20,15 +20,25 @@ PAPER_TOML = ROOT / "paper.toml"
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
-NsFigure = Literal["univariate", "charge_target", "mass_density", "grid_fill", "curve_adjacency"]
+NsFigure = Literal[
+    "univariate",
+    "charge_target",
+    "mass_density",
+    "grid_fill",
+    "curve_adjacency",
+    "univariate_continuous",
+    "mass_max",
+]
+NsTable = Literal["univariate", "charge_correlation", "split_strategies"]
 
 
 class NeutronStarsSection(BaseModel):
-    """Section 4.1: which NS EDA figures eda_neutron_stars.py renders."""
+    """Section 4.1: which NS EDA figures and tables eda_neutron_stars.py renders."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     figures: tuple[NsFigure, ...] = get_args(NsFigure)
+    tables: tuple[NsTable, ...] = get_args(NsTable)
 
 
 class DataAnalysis(BaseModel):

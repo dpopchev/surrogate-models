@@ -27,7 +27,7 @@ def test_a_choice_loads_as_its_typed_value(tmp_path: Path) -> None:
 
 
 def test_an_empty_file_gives_every_default_figure(tmp_path: Path) -> None:
-    assert len(load_config(write(tmp_path, "")).data_analysis.neutron_stars.figures) == 5
+    assert len(load_config(write(tmp_path, "")).data_analysis.neutron_stars.figures) == 7
 
 
 def test_an_unknown_key_is_rejected(tmp_path: Path) -> None:
@@ -73,7 +73,11 @@ def test_a_section_without_its_folder_is_reported(tmp_path: Path) -> None:
 
 
 def test_the_shipped_paper_toml_selects_every_ns_figure() -> None:
-    assert len(load_config().data_analysis.neutron_stars.figures) == 5
+    assert len(load_config().data_analysis.neutron_stars.figures) == 7
+
+
+def test_the_shipped_paper_toml_selects_every_ns_table() -> None:
+    assert len(load_config().data_analysis.neutron_stars.tables) == 3
 
 
 def test_every_paper_section_has_its_folder() -> None:

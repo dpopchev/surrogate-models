@@ -23,7 +23,7 @@ from scipy.stats import skew
 from sklearn.model_selection import GroupKFold, KFold, cross_val_predict
 from sklearn.neighbors import KNeighborsRegressor, NearestNeighbors
 
-from shared.config import NsFigure, PaperConfig, load_config
+from shared.config import NsFigure, NsTable, PaperConfig, load_config
 from shared.plots import PlotStyle, anchor_color, apply_style, colormap
 
 logger = logging.getLogger(__name__)
@@ -314,24 +314,75 @@ def _sci(value: float) -> str:
     return f"{mantissa}\\times 10^{{{int(exponent)}}}"
 
 
-def numbers(table: pd.DataFrame, folds: int, seed: int) -> dict[str, str]:
+def number_tex(value: float) -> str:
+    """Format a number for LaTeX math mode: plain with three significant digits between 0.01
+    and 1000, else scientific."""
+    if not 0.01 <= abs(value) < 1000:
+        return _sci(value)
+    decimals = max(2 - int(np.floor(np.log10(abs(value)))), 0)
+    return f"{value:.{decimals}f}"
+
+
+def pile_up_share(table: pd.DataFrame, window: float) -> float:
+    """The share of rows whose M lies within window of their own curve's maximum M."""
+    peak = table.groupby(list(CURVE))["M"].transform("max")
+    return float(((peak - table["M"]) < window).mean())
+
+
+SUMMARY_COLUMNS = ("rho_c", "M", "D", "D_over_M")
+SPLIT_TARGETS = ("log10_D_over_M", "M")
+
+
+@dataclass(frozen=True)
+class Evidence:
+    """Every computed result Section 4.1 cites, computed once for the macros and the tables."""
+
+    rows: int
+    folds: int
+    window: float
+    mass_max: float
+    pile_up: float
+    summaries: tuple[ColumnSummary, ...]
+    targets: tuple[ChargeTarget, ...]
+    beta_share: float
+    fill: GridFill
+    adjacency: Adjacency
+    splits: tuple[SplitScore, ...]
+
+
+def evidence(table: pd.DataFrame, folds: int, seed: int, window: float = 0.09) -> Evidence:
+    """Compute every Section 4.1 result from a table with the charge targets."""
+    return Evidence(
+        len(table),
+        folds,
+        window,
+        float(table["M"].max()),
+        pile_up_share(table, window),
+        summarize(table, SUMMARY_COLUMNS),
+        charge_targets(table),
+        beta_share_at_fixed_lambda(table, "log10_D_over_M"),
+        grid_fill(table),
+        curve_adjacency(table),
+        tuple(s for t in SPLIT_TARGETS for s in split_strategies(table, t, folds, seed)),
+    )
+
+
+def _orders(summary: ColumnSummary) -> float:
+    """The orders of magnitude a positive column spans."""
+    return float(np.log10(summary.maximum / summary.minimum))
+
+
+def numbers(found: Evidence) -> dict[str, str]:
     """Every number Section 4.1 cites, keyed by its \\nsEda macro name."""
-    summary = {(s.column, s.scale): s for s in summarize(table, ("rho_c", "D", "D_over_M"))}
-    log_d, log_dm = charge_targets(table)
-    fill = grid_fill(table)
-    adjacency = curve_adjacency(table)
-    splits = {
-        (s.target, s.strategy): s.mae
-        for target in ("M", "log10_D_over_M")
-        for s in split_strategies(table, target, folds, seed)
-    }
+    summary = {(s.column, s.scale): s for s in found.summaries}
+    log_d, log_dm = found.targets
     rho = summary["rho_c", "log10"]
     d = summary["D", "raw"]
     return {
-        "nsEdaRows": f"{len(table)}",
-        "nsEdaCurves": f"{fill.curves}",
-        "nsEdaGridCells": f"{fill.cells}",
-        "nsEdaGridFillPercent": f"{100 * fill.fill:.1f}",
+        "nsEdaRows": f"{found.rows}",
+        "nsEdaCurves": f"{found.fill.curves}",
+        "nsEdaGridCells": f"{found.fill.cells}",
+        "nsEdaGridFillPercent": f"{100 * found.fill.fill:.1f}",
         "nsEdaRhocLogMean": f"{rho.mean:.3f}",
         "nsEdaRhocLogMedian": f"{rho.median:.3f}",
         "nsEdaRhocLogStd": f"{rho.std:.3f}",
@@ -339,20 +390,108 @@ def numbers(table: pd.DataFrame, folds: int, seed: int) -> dict[str, str]:
         "nsEdaRhocLogSkew": f"{rho.skew:.2f}",
         "nsEdaDMin": _sci(d.minimum),
         "nsEdaDMax": f"{d.maximum:.3f}",
-        "nsEdaDDecades": f"{np.log10(d.maximum / d.minimum):.1f}",
+        "nsEdaDOrders": f"{_orders(d):.1f}",
         "nsEdaCorrMLogD": f"{log_d.spearman_m:.2f}",
         "nsEdaCorrMLogDM": f"{log_dm.spearman_m:.2f}",
         "nsEdaCorrLambdaLogD": f"{log_d.pearson_lambda:.2f}",
         "nsEdaCorrLambdaLogDM": f"{log_dm.pearson_lambda:.2f}",
-        "nsEdaBetaSharePercent": f"{100 * beta_share_at_fixed_lambda(table, 'log10_D_over_M'):.0f}",
-        "nsEdaSameCurvePercent": f"{100 * adjacency.same_curve_share:.1f}",
-        "nsEdaWithinMedian": f"{adjacency.within_median:.3f}",
-        "nsEdaAcrossMedian": f"{adjacency.across_median:.3f}",
-        "nsEdaFolds": f"{folds}",
+        "nsEdaBetaSharePercent": f"{100 * found.beta_share:.0f}",
+        "nsEdaSameCurvePercent": f"{100 * found.adjacency.same_curve_share:.1f}",
+        "nsEdaWithinMedian": f"{found.adjacency.within_median:.3f}",
+        "nsEdaAcrossMedian": f"{found.adjacency.across_median:.3f}",
+        "nsEdaFolds": f"{found.folds}",
+        "nsEdaMassMax": f"{found.mass_max:.2f}",
+        "nsEdaPileUpWindow": f"{found.window:.2f}",
+        "nsEdaPileUpPercent": f"{100 * found.pile_up:.0f}",
     } | {
-        f"nsEdaSplit{_camel(strategy)}{TARGET_TAGS[target]}": f"{mae:.4f}"
-        for (target, strategy), mae in splits.items()
+        f"nsEdaSplit{_camel(s.strategy)}{TARGET_TAGS[s.target]}": f"{s.mae:.4f}"
+        for s in found.splits
     }
+
+
+TABLE_LABELS = {"rho_c": "$\\rho_c$", "M": "$M$", "D": "$D$", "D_over_M": "$D/M$"}
+STRATEGY_LABELS: dict[SplitStrategy, str] = {
+    "random_rows": "random rows",
+    "curves": "$(\\beta, \\lambda)$ curves (GroupKFold)",
+    "beta_lines": "whole $\\beta$ lines",
+    "lambda_lines": "whole $\\lambda$ lines",
+    "rim": "rim curves, from the interior",
+}
+
+
+def _booktabs(label: str, caption: str, spec: str, header: str, rows: list[str]) -> str:
+    """One booktabs table environment."""
+    body = "".join(f"{row} \\\\\n" for row in rows)
+    return (
+        "\\begin{table}[htbp]\n\\centering\n"
+        f"\\caption{{{caption}}}\n\\label{{tab:ns-{label}}}\n"
+        f"\\begin{{tabular}}{{{spec}}}\n\\toprule\n{header} \\\\\n\\midrule\n{body}"
+        "\\bottomrule\n\\end{tabular}\n\\end{table}\n"
+    )
+
+
+def _univariate_table(found: Evidence) -> str:
+    """Table A: range, orders of magnitude and skew, raw against log10."""
+    summary = {(s.column, s.scale): s for s in found.summaries}
+    rows = [
+        f"{TABLE_LABELS[c]} & ${number_tex(summary[c, 'raw'].minimum)}$ & "
+        f"${number_tex(summary[c, 'raw'].maximum)}$ & {_orders(summary[c, 'raw']):.1f} & "
+        f"{summary[c, 'raw'].skew:.2f} & {summary[c, 'log10'].skew:.2f}"
+        for c in SUMMARY_COLUMNS
+    ]
+    header = "Variable & min & max & orders of magnitude & skew & skew of $\\log_{10}$"
+    caption = (
+        "Neutron stars: range and skewness of each continuous variable, raw and in $\\log_{10}$."
+    )
+    return _booktabs("univariate", caption, "lrrrrr", header, rows)
+
+
+def _charge_table(found: Evidence) -> str:
+    """Table B: how each charge target correlates with M and the free parameters."""
+    rows = [
+        f"{label} & {t.pearson_m:.2f} & {t.spearman_m:.2f} & {t.pearson_lambda:.2f} & "
+        f"{t.pearson_beta:.2f}"
+        for t, (_, label) in zip(found.targets, CHARGE_TARGETS, strict=True)
+    ]
+    header = (
+        "Target & Pearson $M$ & Spearman $M$ & Pearson $\\lambda$ & Pearson $\\beta$"
+    )
+    caption = "Neutron stars: correlation of the two candidate charge targets."
+    return _booktabs("charge-correlation", caption, "lrrrr", header, rows)
+
+
+def _split_table(found: Evidence) -> str:
+    """Table C: 1-NN error per split strategy and target."""
+    error = {(s.strategy, s.target): s.mae for s in found.splits}
+    rows = [
+        f"{STRATEGY_LABELS[strategy]} & {error[strategy, 'log10_D_over_M']:.3f} & "
+        f"{error[strategy, 'M']:.4f}"
+        for strategy in get_args(SplitStrategy)
+    ]
+    header = "Held out & $\\log_{10}(D/M)$ & $M$"
+    caption = (
+        f"Neutron stars: 1-nearest-neighbour mean absolute error under each split "
+        f"({found.folds} folds; the rim is predicted from the interior)."
+    )
+    return _booktabs("split-strategies", caption, "lrr", header, rows)
+
+
+def tables_tex(found: Evidence, tables: tuple[NsTable, ...]) -> str:
+    """One booktabs table per selected table, in order."""
+    return "".join(_table(found, table) for table in tables)
+
+
+def _table(found: Evidence, table: NsTable) -> str:
+    """Render one table."""
+    match table:
+        case "univariate":
+            return _univariate_table(found)
+        case "charge_correlation":
+            return _charge_table(found)
+        case "split_strategies":
+            return _split_table(found)
+        case _:
+            assert_never(table)
 
 
 TARGET_TAGS = {"M": "M", "log10_D_over_M": "DM"}
@@ -396,6 +535,17 @@ def caption(figure: NsFigure) -> str:
                 "Neutron stars: distance from each row to its nearest neighbour in its own curve "
                 "and in another curve, in standardized $(\\beta, \\lambda, \\log_{10}\\rhoc)$."
             )
+        case "univariate_continuous":
+            return (
+                "Neutron stars: distributions of the continuous variables, raw (left) and "
+                "$\\log_{10}$ (right), one bar per value where the variable sits on a grid."
+            )
+        case "mass_max":
+            return (
+                "Neutron stars: distance of each row to its own curve's maximum mass, the "
+                "pile-up window dashed (left), and each curve's maximum mass over the "
+                "$(\\beta, \\lambda)$ grid (right)."
+            )
         case _:
             assert_never(figure)
 
@@ -430,13 +580,13 @@ def _size(height_ratio: float) -> tuple[float, float]:
 GRID_VALUES = 60
 
 
-def _bins(values: np.ndarray) -> np.ndarray | int:
-    """One bin per value for a grid parameter (at most GRID_VALUES distinct values), else 40.
+def _bins(values: np.ndarray, limit: int = GRID_VALUES) -> np.ndarray | int:
+    """One bin per value for a variable on a grid (at most limit distinct values), else 40.
 
     Equal-width bins alias against a parameter grid and draw spikes that are not in the data.
     """
     grid = np.unique(values)
-    if len(grid) > GRID_VALUES:
+    if len(grid) > limit:
         return 40
     if len(grid) == 1:
         return np.array([grid[0] - 0.5, grid[0] + 0.5])
@@ -454,6 +604,45 @@ def _univariate(table: pd.DataFrame, style: PlotStyle) -> Figure:
         axes[row, 1].hist(np.log10(raw), bins=_bins(np.log10(raw)), color=color)
         axes[row, 0].set_xlabel(label)
         axes[row, 1].set_xlabel(f"$\\log_{{10}}$ {label}")
+    return fig
+
+
+# rho_c sits on a shared grid of a few hundred values; one bar per value avoids aliasing.
+DENSITY_GRID_VALUES = 250
+
+
+def _univariate_continuous(table: pd.DataFrame, style: PlotStyle) -> Figure:
+    """Histograms of the continuous variables, raw and in log10, grid-aware bins."""
+    fig, axes = plt.subplots(len(SUMMARY_COLUMNS), 2, figsize=_size(1.1), layout="constrained")
+    color = anchor_color(style, "neutron_stars")
+    for row, column in enumerate(SUMMARY_COLUMNS):
+        raw = table[column].to_numpy(dtype=float)
+        logged = np.log10(raw)
+        # Without edges: a few hundred thin bars would vanish under the style's white edges.
+        bars = {"color": color, "linewidth": 0}
+        axes[row, 0].hist(raw, bins=_bins(raw, DENSITY_GRID_VALUES), **bars)
+        axes[row, 1].hist(logged, bins=_bins(logged, DENSITY_GRID_VALUES), **bars)
+        axes[row, 0].set_xlabel(LABELS[column])
+        axes[row, 1].set_xlabel(f"$\\log_{{10}}$ {LABELS[column]}")
+    return fig
+
+
+def _mass_max(table: pd.DataFrame, style: PlotStyle, window: float = 0.09) -> Figure:
+    """Rows' distance to their curve's M_max, and each curve's M_max over the grid."""
+    fig, (left, right) = plt.subplots(1, 2, figsize=_size(0.45), layout="constrained")
+    peak = table.groupby(list(CURVE))["M"].transform("max")
+    left.hist(peak - table["M"], bins=40, color=anchor_color(style, "neutron_stars"))
+    left.axvline(window, color="black", linestyle="--", linewidth=0.8)
+    left.set_xlabel("$M_{\\max} - M$")
+    left.set_ylabel("rows")
+    maxima = table.groupby(list(CURVE))["M"].max().unstack("beta")
+    mesh = right.pcolormesh(
+        maxima.columns, maxima.index, maxima.to_numpy(),
+        cmap=colormap(style.neutron_stars.lambda_cmap), shading="nearest",
+    )
+    right.set_xlabel(LABELS["beta"])
+    right.set_ylabel(LABELS["lambda"])
+    fig.colorbar(mesh, ax=right, label="$M_{\\max}$")
     return fig
 
 
@@ -550,6 +739,10 @@ def draw(figure: NsFigure, table: pd.DataFrame, style: PlotStyle) -> Figure:
             return _grid_fill(table, style)
         case "curve_adjacency":
             return _curve_adjacency(table, style)
+        case "univariate_continuous":
+            return _univariate_continuous(table, style)
+        case "mass_max":
+            return _mass_max(table, style)
         case _:
             assert_never(figure)
 
@@ -560,7 +753,8 @@ def draw(figure: NsFigure, table: pd.DataFrame, style: PlotStyle) -> Figure:
 def main(
     argv: list[str], config: PaperConfig | None = None, folds: int = 5, seed: int = 20261005
 ) -> None:
-    """Write the selected figures, the numbers and the figures .tex into the asset folder."""
+    """Write the selected figures and tables, the numbers and the figures .tex into the asset
+    folder, after removing this section's assets from an earlier run."""
     assert len(argv) == 2, f"usage: eda_neutron_stars.py <table.parquet> <asset dir>, got {argv}"
     source, out = Path(argv[0]), Path(argv[1])
     assert source.is_file(), f"prepared NS table not found: {source}"
@@ -570,14 +764,18 @@ def main(
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.glob("41_neutron_stars_*"):
         stale.unlink()
-    figures = config.data_analysis.neutron_stars.figures
-    for figure in figures:
+    section = config.data_analysis.neutron_stars
+    for figure in section.figures:
         fig = draw(figure, table, config.plot)
         fig.savefig(out / f"{asset(figure)}.pdf", dpi=300)
         plt.close(fig)
-    (out / "41_neutron_stars_numbers.tex").write_text(render_macros(numbers(table, folds, seed)))
-    (out / "41_neutron_stars_figures.tex").write_text(figures_tex(figures))
-    logger.info("done: %d NS figures %s and their numbers -> %s", len(figures), figures, out)
+    found = evidence(table, folds, seed)
+    (out / "41_neutron_stars_numbers.tex").write_text(render_macros(numbers(found)))
+    (out / "41_neutron_stars_tables.tex").write_text(tables_tex(found, section.tables))
+    (out / "41_neutron_stars_figures.tex").write_text(figures_tex(section.figures))
+    logger.info(
+        "done: NS figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
+    )
 
 
 if __name__ == "__main__":
