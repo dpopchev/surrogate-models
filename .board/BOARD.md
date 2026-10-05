@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 2 | done: 66 | pruned: 2
+open path: E-002 > W-019 > T-047   | blocked: 0 | todo roots: 2 | done: 67 | pruned: 2
 
 ## Tree
 
@@ -37,10 +37,10 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 66 | pruned: 2
 - T-025 [done] Record the repeated-header case as a failing test -> test_prepare_black_holes.py RED
 - T-026 [done] Skip repeated headers and blank lines in parse_table -> prepare_black_holes.py GREEN
 
-#### W-019 spike [todo] Which preprocessing, targets and split each dataset's EDA supports
+#### W-019 spike [doing] Which preprocessing, targets and split each dataset's EDA supports
 
-- T-046 [todo] Decide the NS decisions rows with the developer -> NS part of W-019 spike.decision
-- T-047 [todo] Decide the BH decisions rows with the developer -> BH part of W-019 spike.decision
+- T-046 [done] Decide the NS decisions rows with the developer -> NS part of W-019 spike.decision
+- T-047 [doing] Decide the BH decisions rows with the developer -> BH part of W-019 spike.decision   <- ACTIVE LEAF
 
 #### W-020 issue [todo] Section 4.3 preprocessing and feature decisions tables
 
@@ -178,9 +178,9 @@ flowchart TD
   E002 --> W012["W-012 bug done: BH parser fails on repeated block headers and blank lines"]
   W012 --> T025["T-025 done: Record the repeated-header case as a failing test -> test_prepare_black_holes.py RED"]
   W012 --> T026["T-026 done: Skip repeated headers and blank lines in parse_table -> prepare_black_holes.py GREEN"]
-  E002 --> W019["W-019 spike todo: Which preprocessing, targets and split each dataset's EDA supports"]
-  W019 --> T046["T-046 todo: Decide the NS decisions rows with the developer -> NS part of W-019 spike.decision"]
-  W019 --> T047["T-047 todo: Decide the BH decisions rows with the developer -> BH part of W-019 spike.decision"]
+  E002 --> W019["W-019 spike doing: Which preprocessing, targets and split each dataset's EDA supports"]
+  W019 --> T046["T-046 done: Decide the NS decisions rows with the developer -> NS part of W-019 spike.decision"]
+  W019 --> T047["T-047 doing: Decide the BH decisions rows with the developer -> BH part of W-019 spike.decision -- ACTIVE LEAF"]
   E002 --> W020["W-020 issue todo: Section 4.3 preprocessing and feature decisions tables"]
   W020 --> T048["T-048 todo: Write the NS decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
   W020 --> T049["T-049 todo: Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
@@ -196,7 +196,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026 done
-  class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W015,T033,T034,T035,W021,T050,T051 todo
+  class E002,W019,T047 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,T046 done
+  class W010,T021,T022,W011,T023,T024,W020,T048,T049,W015,T033,T034,T035,W021,T050,T051 todo
 ```

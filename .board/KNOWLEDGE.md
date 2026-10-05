@@ -36,6 +36,7 @@
 - 2026-10-05 E-002: the theory is symmetric under D -> -D; the dataset holds the positive branch and the D > 0 check stays as a guard on that convention; Section 2 states the symmetry
 - 2026-10-05 E-002: units G = c = 1 in both datasets, masses in M_sun; stated in Section 2
 - 2026-10-05 W-008: Parse per block, fail on another header; assert the T-017 constants, drop them; inputs (beta, lambda, rho_c), targets (M, D); drop empty blocks; cut each curve after its M max, keep that row, keep peakless curves whole; N = 201047; the paper states the non-rectangular domain
+- 2026-10-05 W-019: NS: log10 rho_c, beta, lambda standardized on train folds; targets log10(max(D,eps)/M) and raw M; frozen 15% test curves, GroupKFold(5) over (beta,lambda) on the rest; rim as ablation; valid on the filled triangle
 
 ## Deviations
 - 2026-10-04 E-002: W-012 bug filed during T-016 and pre-empted W-007 (blocked, then unblocked) -- the BH file holds 21 header-repeated blocks; W-012 lands on main together with W-007 because it builds on W-007's unlanded commits
