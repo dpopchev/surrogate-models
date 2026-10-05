@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 2 | done: 73 | pruned: 4
+open path: E-002 > W-020 > T-062   | blocked: 0 | todo roots: 2 | done: 73 | pruned: 4
 
 ## Tree
 
@@ -42,11 +42,11 @@ open path: E-002   | blocked: 0 | todo roots: 2 | done: 73 | pruned: 4
 - T-046 [done] Decide the NS decisions rows with the developer -> NS part of W-019 spike.decision
 - T-047 [done] Decide the BH decisions rows with the developer -> BH part of W-019 spike.decision
 
-#### W-020 issue [todo] Section 4.3 preprocessing and feature decisions tables
+#### W-020 issue [doing] Section 4.3 preprocessing and feature decisions tables
 
 - T-048 [todo] Write the NS decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
 - T-049 [todo] Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
-- T-062 [todo] Generate the Section 3.3 numbers test-first -> 40_data_analysis/43_preprocessing/preprocessing_numbers.py
+- T-062 [doing] Generate the Section 3.3 numbers test-first -> 40_data_analysis/43_preprocessing/preprocessing_numbers.py   <- ACTIVE LEAF
 
 ### W-015 issue [todo] (standalone) Paper text for the D floor and the sign symmetry of D   (filed during T-020)
 
@@ -182,10 +182,10 @@ flowchart TD
   E002 --> W019["W-019 spike done: Which preprocessing, targets and split each dataset's EDA supports"]
   W019 --> T046["T-046 done: Decide the NS decisions rows with the developer -> NS part of W-019 spike.decision"]
   W019 --> T047["T-047 done: Decide the BH decisions rows with the developer -> BH part of W-019 spike.decision"]
-  E002 --> W020["W-020 issue todo: Section 4.3 preprocessing and feature decisions tables"]
+  E002 --> W020["W-020 issue doing: Section 4.3 preprocessing and feature decisions tables"]
   W020 --> T048["T-048 todo: Write the NS decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
   W020 --> T049["T-049 todo: Write the BH decisions table -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
-  W020 --> T062["T-062 todo: Generate the Section 3.3 numbers test-first -> 40_data_analysis/43_preprocessing/preprocessing_numbers.py"]
+  W020 --> T062["T-062 doing: Generate the Section 3.3 numbers test-first -> 40_data_analysis/43_preprocessing/preprocessing_numbers.py -- ACTIVE LEAF"]
   W015["W-015 issue todo, standalone: Paper text for the D floor and the sign symmetry of D"]
   W015 --> T033["T-033 todo: Add the D-floor macros -> eps and the share below it in the Section 3.1 macro output"]
   W015 --> T034["T-034 todo: Restate H1 and the EDA D bullet for the floor -> 42_hypotheses.tex, 41_eda.tex, 61_h1.tex"]
@@ -198,8 +198,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002 doing
+  class E002,W020,T062 doing
   class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,W012,T025,T026,W019,T046,T047 done
-  class W020,T048,T049,T062,W015,T033,T034,T035,W021,T050,T051 todo
+  class T048,T049,W015,T033,T034,T035,W021,T050,T051 todo
   class T023,T024 pruned
 ```

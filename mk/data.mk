@@ -28,12 +28,13 @@ $(STATE)/neutron_stars.parquet: $(NS_SCRIPT) $(NS_RAW)
 	@$(RUN) python $(NS_SCRIPT) $(NS_RAW) $@
 	$(call log_done,neutron-star table written to $@)
 
-# The frozen curve-grouped split of both tables (W-019): seed, test fraction and
-# folds are the script's defaults.
+# The frozen curve-grouped split of both tables (W-019): the seed is written once
+# here (Section 4.3 reports it); test fraction and folds are the script's defaults.
 SPLIT_SCRIPT := 50_methodology/51_algorithms/split_datasets.py
+SPLIT_SEED   := 20261005
 
 $(STATE)/split.parquet: $(SPLIT_SCRIPT) shared/eda.py $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet
-	@$(RUN) python $(SPLIT_SCRIPT) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $@
+	@$(RUN) python $(SPLIT_SCRIPT) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $@ --seed $(SPLIT_SEED)
 	$(call log_done,curve split written to $@)
 
 .PHONY: data

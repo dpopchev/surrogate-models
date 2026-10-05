@@ -60,6 +60,15 @@ $(BH_EDA_ASSETS): $(BH_EDA) paper.toml shared/config.py shared/plots.py shared/e
 	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS)
 	$(call log_done,BH EDA figures and numbers written to $(ASSETS)/)
 
+# Section 4.3: the split and charge-floor numbers, from the split file and both tables.
+PREP_NUMBERS := 40_data_analysis/43_preprocessing/preprocessing_numbers.py
+PREP_ASSETS  := $(ASSETS)/43_preprocessing_numbers.tex
+PAPER_ASSETS += $(PREP_ASSETS)
+
+$(PREP_ASSETS): $(PREP_NUMBERS) paper.toml shared/config.py $(STATE)/split.parquet $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet
+	@$(RUN) python $(PREP_NUMBERS) $(STATE)/split.parquet $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $@ --seed $(SPLIT_SEED)
+	$(call log_done,Section 4.3 numbers written to $@)
+
 .PHONY: compile
 compile: $(PAPER_ASSETS) ## Build the flat paper and its PDF under build/paper/
 	@dups=$$(printf '%s\n' $(notdir $(PAPER_SRC)) | sort | uniq -d); \
