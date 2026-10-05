@@ -1,0 +1,99 @@
+"""The paper's choices: paper.toml read into a typed PaperConfig (E-003).
+
+Each section model is keyed by its chapter folder name without the number prefix
+(data_analysis -> 40_data_analysis) and each choice is a Literal scoped to what its module can
+draw, so an unknown key or an unsupported value fails at load time. PAPER__<SECTION>__<FIELD>
+environment variables override the file.
+"""
+
+import tomllib
+from pathlib import Path
+from typing import Literal, get_args
+
+from pydantic import BaseModel, ConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+
+from shared.plots import PlotStyle
+
+ROOT = Path(__file__).resolve().parents[1]
+PAPER_TOML = ROOT / "paper.toml"
+
+# --- vocabulary and types ---------------------------------------------------------------------
+
+NsFigure = Literal["univariate", "charge_target", "mass_density", "grid_fill", "curve_adjacency"]
+
+
+class NeutronStarsSection(BaseModel):
+    """Section 4.1: which NS EDA figures eda_neutron_stars.py renders."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    figures: tuple[NsFigure, ...] = get_args(NsFigure)
+
+
+class DataAnalysis(BaseModel):
+    """Chapter 40_data_analysis."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    neutron_stars: NeutronStarsSection = NeutronStarsSection()
+
+
+class PaperConfig(BaseSettings):
+    """Every choice of the paper: the plot style and one model per chapter."""
+
+    model_config = SettingsConfigDict(
+        frozen=True, extra="forbid", env_prefix="PAPER__", env_nested_delimiter="__"
+    )
+
+    plot: PlotStyle = PlotStyle()
+    data_analysis: DataAnalysis = DataAnalysis()
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """Let the environment override the file, which load_config passes as init values."""
+        return (env_settings, init_settings)
+
+
+# --- behaviour --------------------------------------------------------------------------------
+
+
+def _sections(model: type[BaseModel], skip: tuple[str, ...]) -> list[tuple[str, type[BaseModel]]]:
+    """The fields of model whose type is itself a model, except those named in skip."""
+    return [
+        (name, field.annotation)
+        for name, field in model.model_fields.items()
+        if isinstance(field.annotation, type)
+        and issubclass(field.annotation, BaseModel)
+        and name not in skip
+    ]
+
+
+def missing_section_folders(
+    model: type[BaseModel], root: Path, skip: tuple[str, ...] = ("plot",)
+) -> tuple[str, ...]:
+    """Return the dotted section keys of model that name no <nn>_<key> folder under root.
+
+    Only fields whose type is itself a model count as sections; plot is a style, not a chapter.
+    """
+    missing: list[str] = []
+    for name, section in _sections(model, skip):
+        folders = sorted(root.glob(f"[0-9][0-9]_{name}"))
+        if not folders:
+            missing.append(name)
+            continue
+        missing += [f"{name}.{key}" for key in missing_section_folders(section, folders[0], ())]
+    return tuple(missing)
+
+
+def load_config(toml_file: Path = PAPER_TOML) -> PaperConfig:
+    """Read toml_file into a PaperConfig; environment variables override the file."""
+    with toml_file.open("rb") as handle:
+        return PaperConfig(**tomllib.load(handle))
