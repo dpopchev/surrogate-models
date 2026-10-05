@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002 > W-010   | blocked: 0 | todo roots: 2 | done: 72 | pruned: 4
+open path: E-002   | blocked: 0 | todo roots: 2 | done: 73 | pruned: 4
 
 ## Tree
 
@@ -22,7 +22,7 @@ open path: E-002 > W-010   | blocked: 0 | todo roots: 2 | done: 72 | pruned: 4
 - T-019 [done] Write the NS preparation test-first -> 30_physical_framework/33_neutron_stars/prepare_neutron_stars.py with its tests
 - T-020 [done] Wire the NS preparation into make -> local/state/neutron_stars.parquet
 
-#### W-010 issue [doing] Frozen split grouped by curve
+#### W-010 issue [done] Frozen split grouped by curve
 
 - T-021 [done] Write the curve-grouped split test-first -> 50_methodology/51_algorithms/split_datasets.py with its tests
 - T-022 [done] Wire the split into make with its invariant -> local/state/split.parquet, no curve in two sets
@@ -169,7 +169,7 @@ flowchart TD
   E002 --> W009["W-009 issue done: NS table from the filtered dataset"]
   W009 --> T019["T-019 done: Write the NS preparation test-first -> 30_physical_framework/33_neutron_stars/prepare_neutron_stars.py with its tests"]
   W009 --> T020["T-020 done: Wire the NS preparation into make -> local/state/neutron_stars.parquet"]
-  E002 --> W010["W-010 issue doing: Frozen split grouped by curve"]
+  E002 --> W010["W-010 issue done: Frozen split grouped by curve"]
   W010 --> T021["T-021 done: Write the curve-grouped split test-first -> 50_methodology/51_algorithms/split_datasets.py with its tests"]
   W010 --> T022["T-022 done: Wire the split into make with its invariant -> local/state/split.parquet, no curve in two sets"]
   E002 --> W011["W-011 issue done: Section 3.1 numbers from generated macros"]
@@ -196,8 +196,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,W010 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,T021,T022,W011,W012,T025,T026,W019,T046,T047 done
+  class E002 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W010,T021,T022,W011,W012,T025,T026,W019,T046,T047 done
   class W020,T048,T049,W015,T033,T034,T035,W021,T050,T051 todo
   class T023,T024 pruned
 ```
