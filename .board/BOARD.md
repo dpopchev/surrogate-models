@@ -1,12 +1,8 @@
 # Board -- surrogate-models
 record: local
-open path: W-029   | blocked: 0 | todo roots: 0 | done: 95 | pruned: 4
+open path: none   | blocked: 0 | todo roots: 0 | done: 96 | pruned: 4
 
 ## Tree
-
-### W-029 issue [doing] (standalone) Figures render as high-resolution PNG
-
-- T-068 [done] Write the EDA figures as PNG at plot.dpi -> shared/plots.py, both EDA modules, paper.toml
 
 ## Closed
 
@@ -187,16 +183,18 @@ closed 2026-10-05 -- outcome: Given the generated EDA and preprocessing macros, 
 
 - T-067 [done] Cite the generated numbers in the abstract and Section 2.3 -> 10_abstract.tex and 33_neutron_stars.tex
 
+### W-029 issue [done] (standalone) Figures render as high-resolution PNG
+
+closed 2026-10-05 -- outcome: Given paper.toml with plot.dpi, When make compile runs, Then every selected EDA figure reaches the PDF as a PNG written at that resolution. -- ledger: ledgers/W-029.md
+
+- T-068 [done] Write the EDA figures as PNG at plot.dpi -> shared/plots.py, both EDA modules, paper.toml
+
 ## Diagram
 ```mermaid
 flowchart TD
-  W029["W-029 issue doing, standalone: Figures render as high-resolution PNG"]
-  W029 --> T068["T-068 done: Write the EDA figures as PNG at plot.dpi -> shared/plots.py, both EDA modules, paper.toml"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W029 doing
-  class T068 done
 ```
