@@ -277,9 +277,10 @@ def _univariate_table(found: Evidence) -> str:
         f"{summary[c, 'raw'].skew:.2f} & {summary[c, 'log10'].skew:.2f}"
         for c in SUMMARY_COLUMNS
     ]
-    header = "Variable & min & max & orders of magnitude & skew & skew of $\\log_{10}$"
+    header = "Variable & min & max & orders & skew & skew of $\\log_{10}$"
     caption = (
-        "Black holes: range and skewness of each continuous variable, raw and in $\\log_{10}$."
+        "Black holes: range, orders of magnitude spanned (orders) and skewness of each "
+        "continuous variable, raw and in $\\log_{10}$."
     )
     return booktabs("bh-univariate", caption, "lrrrrr", header, rows)
 

@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from shared.eda import (
+    booktabs,
     curve_adjacency,
     grid_bins,
     group_splitter,
@@ -130,6 +131,10 @@ def test_the_boundary_of_an_empty_corner_is_on_the_rim() -> None:
     table = grid(missing=((4, 4), (3, 4)), size=4)
     on_rim = rim_mask(table, "a", "b")
     assert bool(on_rim[(table["a"] == 3) & (table["b"] == 3)].all())
+
+
+def test_a_generated_table_is_set_in_the_small_font() -> None:
+    assert "\\centering\n\\small\n" in booktabs("x", "A table.", "lr", "a & b", ["1 & 2"])
 
 
 def test_macros_render_one_newcommand_per_number() -> None:

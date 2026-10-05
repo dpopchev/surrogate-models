@@ -169,6 +169,12 @@ def test_table_tex_labels_its_table() -> None:
     assert "\\label{tab:ns-split-strategies}" in table_tex(GRID, "split_strategies")
 
 
+def test_univariate_table_header_is_short_enough_to_fit() -> None:
+    assert "Variable & min & max & orders & skew & skew of $\\log_{10}$" in table_tex(
+        GRID, "univariate"
+    )
+
+
 def test_univariate_table_has_a_row_for_the_central_density() -> None:
     assert "$\\rho_c$ &" in table_tex(GRID, "univariate")
 

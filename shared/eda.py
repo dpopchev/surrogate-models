@@ -268,10 +268,11 @@ def camel(name: str) -> str:
 
 
 def booktabs(label: str, caption: str, spec: str, header: str, rows: list[str]) -> str:
-    """One booktabs table environment, labelled tab:<label>, placed here or atop a page."""
+    """One booktabs table environment, labelled tab:<label>, placed here or atop a page, in the
+    small font so a table of several numeric columns fits the text width."""
     body = "".join(f"{row} \\\\\n" for row in rows)
     return (
-        "\\begin{table}[!htb]\n\\centering\n"
+        "\\begin{table}[!htb]\n\\centering\n\\small\n"
         f"\\caption{{{caption}}}\n\\label{{tab:{label}}}\n"
         f"\\begin{{tabular}}{{{spec}}}\n\\toprule\n{header} \\\\\n\\midrule\n{body}"
         "\\bottomrule\n\\end{tabular}\n\\end{table}\n"
