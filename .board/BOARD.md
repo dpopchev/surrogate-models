@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-002   | blocked: 0 | todo roots: 1 | done: 35 | pruned: 1
+open path: E-002   | blocked: 0 | todo roots: 1 | done: 36 | pruned: 1
 
 ## Tree
 
@@ -55,7 +55,7 @@ open path: E-002   | blocked: 0 | todo roots: 1 | done: 35 | pruned: 1
 - T-028 [todo] Write the config loader test-first -> shared/config.py with shared/test_config.py
 - T-029 [todo] Write paper.toml with the plot and NS EDA sections -> paper.toml
 
-#### W-014 issue [doing] One paper-wide plot style with a color family per dataset
+#### W-014 issue [done] One paper-wide plot style with a color family per dataset
 
 - T-030 [done] Add matplotlib and seaborn -> pyproject.toml and uv.lock
 - T-031 [done] Write the plot style test-first -> shared/plots.py with shared/test_plots.py
@@ -161,7 +161,7 @@ flowchart TD
   W013 --> T027["T-027 todo: Add pydantic-settings -> pyproject.toml and uv.lock"]
   W013 --> T028["T-028 todo: Write the config loader test-first -> shared/config.py with shared/test_config.py"]
   W013 --> T029["T-029 todo: Write paper.toml with the plot and NS EDA sections -> paper.toml"]
-  E003 --> W014["W-014 issue doing: One paper-wide plot style with a color family per dataset"]
+  E003 --> W014["W-014 issue done: One paper-wide plot style with a color family per dataset"]
   W014 --> T030["T-030 done: Add matplotlib and seaborn -> pyproject.toml and uv.lock"]
   W014 --> T031["T-031 done: Write the plot style test-first -> shared/plots.py with shared/test_plots.py"]
   W014 --> T032["T-032 pruned: Add the plot section and render a style sample -> paper.toml and local/scratch/style_sample.pdf"]
@@ -187,8 +187,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E002,E003,W014 doing
-  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,T030,T031 done
+  class E002,E003 doing
+  class W007,T014,T015,T016,W008,T017,T018,W009,T019,T020,W012,T025,T026,W014,T030,T031 done
   class W010,T021,T022,W011,T023,T024,W019,T046,T047,W020,T048,T049,W013,T027,T028,T029,W016,T036,T037,W017,T038,T039,T040,T041,W018,T042,T043,T044,T045,W015,T033,T034,T035 todo
   class T032 pruned
 ```
