@@ -1,12 +1,12 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 1 | done: 96 | pruned: 4
+open path: W-030 > T-069   | blocked: 0 | todo roots: 0 | done: 96 | pruned: 4
 
 ## Tree
 
-### W-030 issue [todo] (standalone) Figures at 450 dpi to keep the paper small
+### W-030 issue [doing] (standalone) Figures at 450 dpi to keep the paper small
 
-- T-069 [todo] Set plot.dpi to 450 -> paper.toml
+- T-069 [doing] Set plot.dpi to 450 -> paper.toml   <- ACTIVE LEAF
 
 ## Closed
 
@@ -196,12 +196,12 @@ closed 2026-10-05 -- outcome: Given paper.toml with plot.dpi, When make compile 
 ## Diagram
 ```mermaid
 flowchart TD
-  W030["W-030 issue todo, standalone: Figures at 450 dpi to keep the paper small"]
-  W030 --> T069["T-069 todo: Set plot.dpi to 450 -> paper.toml"]
+  W030["W-030 issue doing, standalone: Figures at 450 dpi to keep the paper small"]
+  W030 --> T069["T-069 doing: Set plot.dpi to 450 -> paper.toml -- ACTIVE LEAF"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W030,T069 todo
+  class W030,T069 doing
 ```

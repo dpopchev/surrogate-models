@@ -8,7 +8,7 @@ font_size = 11.0
 usetex = true             # LaTeX text in Latin Modern, matching the article
 text_width_pt = 360.0     # 11pt a4paper \textwidth
 aspect = 0.62             # figure height / width
-dpi = 600                 # figures are written as PNG at this resolution
+dpi = 450                 # figures are written as PNG at this resolution
 
 [plot.neutron_stars]      # cool colormaps: crest | mako | Blues | GnBu | PuBu
 lambda_cmap = "crest"
