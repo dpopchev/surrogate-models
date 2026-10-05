@@ -36,6 +36,8 @@
 - 2026-10-05 E-002: the theory is symmetric under D -> -D; the dataset holds the positive branch and the D > 0 check stays as a guard on that convention; Section 2 states the symmetry
 - 2026-10-05 E-002: units G = c = 1 in both datasets, masses in M_sun; stated in Section 2
 - 2026-10-05 W-008: Parse per block, fail on another header; assert the T-017 constants, drop them; inputs (beta, lambda, rho_c), targets (M, D); drop empty blocks; cut each curve after its M max, keep that row, keep peakless curves whole; N = 201047; the paper states the non-rectangular domain
+- 2026-10-05 W-019: BH: r_h, beta linear standardized on train folds; targets log10(max(D,eps)/M) (as NS; no decorrelation here) and raw M; frozen 3 of 21 test curves, GroupKFold(5) on the rest; outer curves as ablation
+- 2026-10-05 W-019: Both datasets -- inputs standardized on train folds (log10 rho_c; beta, lambda, r_h linear); targets log10(max(D,eps)/M) and raw M in M_sun; 15% of curves frozen as test, GroupKFold(5) over curves on the rest; rim (NS) and outer curves (BH) as extrapolation ablation
 - 2026-10-05 W-019: NS: log10 rho_c, beta, lambda standardized on train folds; targets log10(max(D,eps)/M) and raw M; frozen 15% test curves, GroupKFold(5) over (beta,lambda) on the rest; rim as ablation; valid on the filled triangle
 
 ## Deviations
