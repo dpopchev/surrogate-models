@@ -2,22 +2,25 @@
 
 ## Findings
 - 2026-10-04 E-001: standing: with pytest prepend mode, two same-named modules in different chapter folders import the first one silently (unlike duplicate test basenames, which error) -> every kept module basename is unique repo-wide and never shadows a stdlib module supersedes: E-001#1
-- 2026-10-04 W-007: T-016: fact: BH table has 21 beta curves (4.0 to 5.0, step 0.05), 5508-5942 rows each, r_h 4.059 to 10.0, D 0.105 to 0.506 (0.68 decades) -> the 6.7-decade D range is an NS property; BH D needs no log rescue
 - 2026-10-05 E-002: T-019: fact: none of the 21 BH curves in local/state/black_holes.parquet has an interior M maximum -> the cut-at-M_max rule changes only NS data; BH series are plotted whole
+- 2026-10-05 W-007: fact: carried by the bhEda macros -> W-018 supersedes: W-007#2
 - 2026-10-05 W-007: fact: kept in code -> prepare_black_holes.py tests supersedes: W-007#1
-- 2026-10-05 W-008: T-018: fact: header grid is 51 beta (0.4 to 50.4) x lambda 0.5 to 4.1; beta 50.4 is entirely empty; for beta >= 17.4 the empty blocks are the highest lambdas, growing from 1 (beta 17.4) to 12 (beta 49.4) -> the non-empty (beta, lambda) domain is non-rectangular
-- 2026-10-05 W-008: fact: the T-018 grid fact is the exact grid -> use it supersedes: W-008#2
-- 2026-10-05 W-009: T-019: fact: filtered NS table: 201047 rows, 1611 curves, 16 columns; D 8.203e-08 to 0.2338, rho_c 5.891e14 to 2.785e15 -> the Section 3.1 ranges after filtering (W-011)
+- 2026-10-05 W-008: fact: carried by the nsEda grid macros -> W-017 supersedes: W-008#7
+- 2026-10-05 W-008: fact: moot once W-008#7 is superseded -> drop supersedes: W-008#8
+- 2026-10-05 W-009: fact: W-017 macros carry the filtered ranges -> W-011 supersedes: W-009#4
 - 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-008#1
 - 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-008#3
 - 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-008#4
 - 2026-10-05 W-009: fact: kept in code -> prepare_neutron_stars.py tests supersedes: W-009#1
+- 2026-10-05 W-009: fact: now generated as nsEda macros -> eda_neutron_stars.py supersedes: W-009#3
 - 2026-10-05 W-009: fact: shown in the grid_fill figure -> W-017 supersedes: W-009#2
-- 2026-10-05 W-009: fact: the filtered ranges above replace the unfiltered outline ranges -> W-011 uses them supersedes: W-008#5
-- 2026-10-05 W-014: T-031: fact: article textwidth is 360.0pt (4.98 in) -> the PlotStyle text_width_pt default
+- 2026-10-05 W-014: fact: kept in code -> shared/plots.py supersedes: W-014#1
 - 2026-10-05 W-017: T-041: fact: 99.2% nearest rows in own curve; 1-NN log10(D/M) error 0.013 random vs 0.052 grouped -> split by curve
 - 2026-10-05 W-017: T-041: fact: log10 rho_c skew -0.03 (raw 0.57), sd 0.173 -> input log10 rho_c, standardized
 - 2026-10-05 W-017: T-041: fact: log10(D/M): Spearman with M 0.22->0.06, Pearson with lambda 0.58->0.69 -> target log10(D/M)
+- 2026-10-05 W-018: T-045: fact: beta moves M 0.01%, log10 D 2.9% at fixed r_h; sets r_h,min 4.059..4.493 -> GroupKFold over beta
+- 2026-10-05 W-018: T-045: fact: log10(D/M) no gain over log10 D (Spearman M -1.000 vs -0.999) -> unlike NS, noted in 3.2
+- 2026-10-05 W-018: T-045: fact: r_h linear (0.39 orders); M = r_h/2 + 0.006..0.120 (r 0.9999) -> raw M in M_sun
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
@@ -33,6 +36,7 @@
 - 2026-10-05 E-002: D has an artificial zero eps (about 1e-5, a knob): the prepared tables keep raw D; models regress log10(max(D, eps)); H1 is restated for D >= eps and the share below eps (0.5% of NS rows at 1e-5) is reported
 - 2026-10-05 E-002: models are built with PyTorch and the Lightning framework (CPU-only: torch from the pyproject's PyTorch CPU index); this governs every modeling Epic that follows
 - 2026-10-05 E-002: the theory is symmetric under D -> -D; the dataset holds the positive branch and the D > 0 check stays as a guard on that convention; Section 2 states the symmetry
+- 2026-10-05 E-002: units G = c = 1 in both datasets, masses in M_sun; stated in Section 2
 - 2026-10-05 E-003: EDA per dataset, to organize the split from the data; scripts beside their section, figures built into build/assets and chosen in paper.toml, never in local/scratch
 - 2026-10-05 E-003: NS and BH use distinct color families, so a beta colorbar tells the dataset; BH and NS may not share a theory
 - 2026-10-05 E-003: colors: NS cool (lambda crest, beta mako, anchor blue), BH warm (beta flare, anchor orange)
