@@ -199,6 +199,22 @@ def test_pile_up_share_counts_rows_within_the_window_of_their_curve_maximum() ->
 GRID = evidence(with_charge_targets(grid(range(1, 4), range(1, 4))), folds=3, seed=0)
 
 
+class TestChargeNumbers:
+    @pytest.fixture
+    def found(self):
+        return numbers(GRID)
+
+    def test_lambda_linear_share_is_the_squared_pearson_in_percent(self, found) -> None:
+        expected = f"{100 * GRID.targets[1].pearson_lambda ** 2:.0f}"
+        assert found["nsEdaLambdaLinearPercentLogDM"] == expected
+
+    def test_pearson_with_m_is_named_for_both_targets(self, found) -> None:
+        assert {"nsEdaPearsonMLogD", "nsEdaPearsonMLogDM"} <= found.keys()
+
+    def test_beta_correlation_is_named_for_both_targets(self, found) -> None:
+        assert {"nsEdaCorrBetaLogD", "nsEdaCorrBetaLogDM"} <= found.keys()
+
+
 def test_charge_split_macros_use_the_tables_three_decimals() -> None:
     assert len(numbers(GRID)["nsEdaSplitCurvesDM"].split(".")[1]) == 3
 

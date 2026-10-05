@@ -404,6 +404,13 @@ def numbers(found: Evidence) -> dict[str, str]:
         "nsEdaCorrMLogDM": f"{log_dm.spearman_m:.2f}",
         "nsEdaCorrLambdaLogD": f"{log_d.pearson_lambda:.2f}",
         "nsEdaCorrLambdaLogDM": f"{log_dm.pearson_lambda:.2f}",
+        "nsEdaPearsonMLogD": f"{log_d.pearson_m:.2f}",
+        "nsEdaPearsonMLogDM": f"{log_dm.pearson_m:.2f}",
+        "nsEdaCorrBetaLogD": f"{log_d.pearson_beta:.2f}",
+        "nsEdaCorrBetaLogDM": f"{log_dm.pearson_beta:.2f}",
+        # r squared: the share of the target's variance a straight line in lambda explains.
+        "nsEdaLambdaLinearPercentLogD": f"{100 * log_d.pearson_lambda ** 2:.0f}",
+        "nsEdaLambdaLinearPercentLogDM": f"{100 * log_dm.pearson_lambda ** 2:.0f}",
         "nsEdaBetaSharePercent": f"{100 * found.beta_share:.0f}",
         "nsEdaSameCurvePercent": f"{100 * found.adjacency.same_curve_share:.1f}",
         "nsEdaWithinMedian": f"{found.adjacency.within_median:.3f}",

@@ -20,14 +20,14 @@ anchor = 1                # palette index for single-color BH marks (orange)
 
 # Section 4.1 -- which NS EDA figures and tables eda_neutron_stars.py renders; the section text
 # places each one beside the paragraph that cites it, and a deselected one simply drops out.
-# Also available: "univariate" (every variable, equal bins) and "curve_adjacency"
-# (nearest-neighbour distance, own vs other curve).
+# Also available: "univariate" (every variable, equal bins), "curve_adjacency"
+# (nearest-neighbour distance, own vs other curve) and "grid_fill" (rows per curve; the
+# triangle already shows in mass_max).
 [data_analysis.neutron_stars]
 figures = [
   "univariate_continuous",  # rho_c, M, D, D/M raw and log10, one bar per grid value
   "mass_density",           # M vs log10 rho_c per curve
   "charge_target",          # M vs log10 D and log10 D/M, by lambda and beta
   "mass_max",               # distance to each curve's M_max, M_max over the grid
-  "grid_fill",              # rows per (beta, lambda) curve
 ]
 tables = ["univariate", "charge_correlation", "split_strategies"]
