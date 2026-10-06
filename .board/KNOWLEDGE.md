@@ -8,18 +8,19 @@
 - 2026-10-05 W-018: standing: beta moves M 0.01%, log10 D 2.9% at fixed r_h; sets r_h,min 4.059..4.493 -> GroupKFold over beta supersedes: W-018#3
 - 2026-10-05 W-018: standing: log10(D/M) no gain over log10 D (Spearman M -1.000 vs -0.999) -> unlike NS, noted in 3.2 supersedes: W-018#2
 - 2026-10-05 W-018: standing: r_h linear (0.39 orders); M 2.13..5.01 M_sun, Pearson 0.9999 with r_h -> raw M in M_sun supersedes: W-018#4
+- 2026-10-06 W-032: standing: make overleaf refreshes the upload list on every run -> run it only right before an upload, or the removed list of the earlier run is lost supersedes: W-032#1
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
 - 2026-10-04 E-002: open: Section 6 has no solver posterior -- the reference posterior must come from the dataset (dense-grid interpolation or nearest samples); which one?
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
-- 2026-10-06 W-032: open: each make overleaf run refreshes local/overleaf/last-upload.txt, so two runs before one upload lose the first run's removed list -- refresh only on an explicit 'uploaded' step instead?
 
 ## Decisions
 - 2026-10-05 E-004: Overleaf is the free plan: make overleaf prepares a flat drag-and-drop folder and lists removed files; no Git push
 - 2026-10-05 E-004: first thing next session (developer)
 - 2026-10-05 E-004: section previews resolve references to other sections through the full build (xr)
 - 2026-10-06 W-031: Decision (developer): T-070 closes on make test; its output is committed together with T-071, since make check needs the mk/paper.mk rewire
+- 2026-10-06 W-032: keep the refresh on every make overleaf run; run it only right before uploading (developer)
 
 ## Deviations
 - none recorded
