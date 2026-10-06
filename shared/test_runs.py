@@ -23,6 +23,7 @@ RECORD = RunRecord(
     target="mass",
     training=TRAINING,
     commit="abc1234",
+    dirty=True,
     started=datetime(2026, 10, 6, 10, 56, 0, tzinfo=UTC),
     seconds=12.5,
     epochs=3,
@@ -35,6 +36,10 @@ RECORD = RunRecord(
 def test_run_names_sort_by_start_time() -> None:
     later = replace(RECORD, started=datetime(2026, 10, 12, 9, 0, 0, tzinfo=UTC))
     assert sorted([run_name(later), run_name(RECORD)]) == [run_name(RECORD), run_name(later)]
+
+
+def test_the_record_keeps_whether_the_code_was_uncommitted() -> None:
+    assert from_json(to_json(RECORD)).dirty is True
 
 
 def test_the_record_round_trips_through_json() -> None:

@@ -150,6 +150,7 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
         [str(table), str(split_file), str(assets), str(state)],
         config,
         commit=lambda: "abc1234",
+        dirty=lambda: True,
         now=lambda: datetime(2026, 10, 6, 10, 56, 0, tzinfo=UTC),
     )
     return folder
@@ -166,6 +167,10 @@ class TestMain:
     def test_records_the_injected_commit(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
         assert from_json((run / "run.json").read_text()).commit == "abc1234"
+
+    def test_records_uncommitted_code(self, ran: Path) -> None:
+        run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
+        assert from_json((run / "run.json").read_text()).dirty is True
 
     def test_leaves_the_diagnostics_in_a_folder_named_after_the_run(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"

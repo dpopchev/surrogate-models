@@ -150,6 +150,7 @@ def main(
     argv: list[str],
     config: PaperConfig | None = None,
     commit: Callable[[], str] | None = None,
+    dirty: Callable[[], bool] | None = None,
     now: Callable[[], datetime] | None = None,
 ) -> None:
     """Fit the NS mass baseline and write its numbers and parity figure into the section's
@@ -163,7 +164,10 @@ def main(
     for path in (source, split_file):
         assert path.is_file(), f"input not found: {path}"
     config = config or load_config()
-    commit, now = commit or _git_commit, now or _utc_now
+    commit, dirty, now = commit or _git_commit, dirty or _git_dirty, now or _utc_now
+    uncommitted = dirty()
+    if uncommitted:
+        logger.info("the code holds uncommitted changes: run.json marks this run dirty")
     apply_style(config.plot)
     settings = config.methodology.algorithms
     training = Training(**settings.model_dump(exclude={"log_level"}))
@@ -201,6 +205,7 @@ def main(
         target="mass",
         training=training,
         commit=commit(),
+        dirty=uncommitted,
         started=started,
         seconds=fit.seconds,
         epochs=fit.epochs,
@@ -243,6 +248,14 @@ def _git_commit() -> str:
         ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
     )
     return done.stdout.strip()
+
+
+def _git_dirty() -> bool:
+    """Whether the work tree holds uncommitted changes (the query of 00_metadata/build_stamp.py)."""
+    done = subprocess.run(
+        ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
+    )
+    return bool(done.stdout.strip())
 
 
 def _utc_now() -> datetime:

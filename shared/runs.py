@@ -16,12 +16,14 @@ from shared.surrogate import Training
 
 @dataclass(frozen=True)
 class RunRecord:
-    """One fitted run: what, from where, when, how long and how well."""
+    """One fitted run: what, from where, when, how long and how well; `dirty` says the code
+    held uncommitted changes, so `commit` alone does not reproduce it."""
 
     dataset: str
     target: str
     training: Training
     commit: str
+    dirty: bool
     started: datetime
     seconds: float
     epochs: int
