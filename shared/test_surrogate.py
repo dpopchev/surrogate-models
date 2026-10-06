@@ -19,6 +19,8 @@ from shared.surrogate import (
     make_estimator,
     mare,
     rmse,
+    stop_window,
+    time_left,
 )
 
 
@@ -114,6 +116,18 @@ def test_the_epoch_table_reaches_the_logger(caplog: pytest.LogCaptureFixture) ->
     assert "valid_mare" in caplog.text
 
 
+class TestStopWindow:
+    def test_spans_patience_to_max_epochs_after_a_new_best(self) -> None:
+        assert stop_window(epoch=17, best_epoch=17, patience=20, max_epochs=500) == (20, 483)
+
+    def test_never_lets_the_earliest_stop_pass_max_epochs(self) -> None:
+        assert stop_window(epoch=495, best_epoch=490, patience=20, max_epochs=500) == (5, 5)
+
+
+def test_the_time_left_is_the_window_at_the_mean_epoch_time() -> None:
+    assert time_left((20, 483), mean_epoch_seconds=8.0) == "2m 40s-1h 4m 24s"
+
+
 def epoch_table(caplog: pytest.LogCaptureFixture) -> str:
     """The epoch table a two-epoch toy fit logs."""
     with caplog.at_level(logging.INFO, logger="shared.surrogate"):
@@ -124,6 +138,19 @@ def epoch_table(caplog: pytest.LogCaptureFixture) -> str:
 class TestEpochTable:
     def test_names_the_epoch_time_elapse_s(self, caplog: pytest.LogCaptureFixture) -> None:
         assert "elapse_s" in epoch_table(caplog)
+
+    def test_shows_the_epoch_out_of_max_epochs(self, caplog: pytest.LogCaptureFixture) -> None:
+        assert re.search(r"\b2/2\b", epoch_table(caplog)) is not None
+
+    def test_counts_the_epochs_since_the_best_against_patience(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        assert re.search(r"\b0/100\b", epoch_table(caplog)) is not None
+
+    def test_shows_the_time_left_until_the_earliest_and_latest_stop(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        assert re.search(r"\bleft\b", epoch_table(caplog)) is not None
 
     def test_no_longer_prints_dur(self, caplog: pytest.LogCaptureFixture) -> None:
         assert re.search(r"\bdur\b", epoch_table(caplog)) is None

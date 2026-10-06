@@ -59,6 +59,34 @@ def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return float(np.sqrt(np.mean((y_pred - y_true) ** 2)))
 
 
+# --- progress ---------------------------------------------------------------------------------
+
+
+def stop_window(epoch: int, best_epoch: int, patience: int, max_epochs: int) -> tuple[int, int]:
+    """Epochs left until the earliest stop (patience runs out without a new best) and the
+    latest (max_epochs)."""
+    latest = max_epochs - epoch
+    return min(patience - (epoch - best_epoch), latest), latest
+
+
+def duration_text(seconds: float) -> str:
+    """Seconds as "1h 4m 24s", "2m 40s" or "12s"."""
+    hours, rest = divmod(round(seconds), 3600)
+    minutes, secs = divmod(rest, 60)
+    if hours:
+        return f"{hours}h {minutes}m {secs}s"
+    return f"{minutes}m {secs}s" if minutes else f"{secs}s"
+
+
+def time_left(window: tuple[int, int], mean_epoch_seconds: float) -> str:
+    """The time until the earliest and the latest stop, at the mean epoch time so far."""
+    earliest, latest = window
+    return (
+        f"{duration_text(earliest * mean_epoch_seconds)}"
+        f"-{duration_text(latest * mean_epoch_seconds)}"
+    )
+
+
 # --- the network ------------------------------------------------------------------------------
 
 
@@ -155,6 +183,35 @@ class ElapseSeconds(Callback):
         net.history.record("elapse_s", net.history[-1, "dur"])
 
 
+class Progress(Callback):
+    """Record where a fit stands: the epoch out of max_epochs as at_epoch, the epochs since the
+    lowest valid loss out of the patience EarlyStopping allows as patience ("3/20"), and the
+    time until the earliest and the latest stop at the mean epoch time as left.
+
+    PrintLog drops every key ending in _best, hence patience, not since_best.
+    """
+
+    def __init__(self, patience: int) -> None:
+        self.patience = patience
+
+    def on_epoch_end(
+        self,
+        net: NeuralNetRegressor,
+        dataset_train: Any = None,
+        dataset_valid: Any = None,
+        **kwargs: Any,
+    ) -> None:
+        """Record this epoch's progress columns."""
+        rows = cast(list[dict[str, Any]], net.history)
+        epoch = int(rows[-1]["epoch"])
+        best = max(int(row["epoch"]) for row in rows if row.get("valid_loss_best"))
+        net.history.record("at_epoch", f"{epoch}/{net.max_epochs}")
+        net.history.record("patience", f"{epoch - best}/{self.patience}")
+        window = stop_window(epoch, best, self.patience, net.max_epochs)
+        mean_seconds = float(np.mean([row["dur"] for row in rows]))
+        net.history.record("left", time_left(window, mean_seconds))
+
+
 def _valid_mare(net: ScaledNetRegressor, X: Any, y: Any) -> float:  # noqa: N803
     """MARE on the validation curves, the standardized target turned back to its scale."""
     column = np.asarray(y, dtype=np.float32).reshape(-1, 1)
@@ -192,8 +249,10 @@ def make_estimator(training: Training, n_inputs: int) -> Pipeline:
             ("early_stopping", EarlyStopping(patience=training.patience, load_best=True)),
             ("finite_loss", FiniteLoss()),
             ("elapse_s", ElapseSeconds()),
+            ("progress", Progress(training.patience)),
         ],
-        callbacks__print_log__keys_ignored=["dur"],
+        # at_epoch (k/MAX) replaces the bare epoch and sorts first; elapse_s replaces dur.
+        callbacks__print_log__keys_ignored=["dur", "epoch"],
         callbacks__print_log__sink=logger.info,
         seed=training.seed,
     )
