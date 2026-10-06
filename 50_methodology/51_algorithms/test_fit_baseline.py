@@ -104,7 +104,22 @@ BOUNDED = replace(SHORT, max_epochs=500, patience=20)
 class TestStartBanner:
     @pytest.fixture
     def lines(self) -> list[str]:
-        return start_banner(Path("state/run-1"), BOUNDED, rows=(100, 20), curves=(10, 2))
+        return start_banner(
+            Path("state/run-1"),
+            Path("assets/51_algorithms"),
+            BOUNDED,
+            rows=(100, 20),
+            curves=(10, 2),
+        )
+
+    def test_opens_with_the_stop_criterion(self, lines: list[str]) -> None:
+        assert lines[:4] == [
+            "stop criterion:",
+            "  - early stop after 20 epochs in a row without a validation loss "
+            "0.01% below the best",
+            "  - the best epoch is then restored",
+            "  - at most 500 epochs",
+        ]
 
     def test_names_the_run_folder(self, lines: list[str]) -> None:
         assert "folder: state/run-1" in lines
@@ -112,16 +127,17 @@ class TestStartBanner:
     def test_states_the_rows_and_curves_it_trains_and_scores_on(self, lines: list[str]) -> None:
         assert "data: 100 training rows on 10 curves, 20 test rows on 2 curves" in lines
 
+    def test_states_the_validation_share(self, lines: list[str]) -> None:
+        assert "validation: 25% of the training curves" in lines
+
+    def test_lists_the_live_loss_curve(self, lines: list[str]) -> None:
+        assert "  - state/run-1/loss_curve.png (redrawn every 5 epochs)" in lines
+
+    def test_lists_the_paper_assets_written_at_the_end(self, lines: list[str]) -> None:
+        assert "  - assets/51_algorithms/ (Section 5.1 numbers, parity figure)" in lines
+
     def test_says_how_to_follow_the_run(self, lines: list[str]) -> None:
         assert "follow live: make follow" in lines
-
-    def test_lists_what_bounds_the_fit_one_per_line(self, lines: list[str]) -> None:
-        start = lines.index("bounds:")
-        assert lines[start + 1 : start + 4] == [
-            "  - at most 500 epochs",
-            "  - early stop after 20 epochs without a better validation loss",
-            "  - 25% of the training curves validate",
-        ]
 
 
 FILES = [Path("assets/51_algorithms/51_algorithms_num.tex"), Path("state/run-1/run.json")]

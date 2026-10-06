@@ -32,7 +32,7 @@ from shared.diagnostics import curve_overlay, error_cdf, loss_curve
 from shared.eda import curve_ids, render_macros, sci_tex
 from shared.plots import PlotStyle, anchor_color, apply_style
 from shared.runs import RunRecord, from_json, run_name, run_stem, to_json
-from shared.surrogate import Training, duration_text, make_estimator, mare, rmse
+from shared.surrogate import LIVE_EVERY, Training, duration_text, make_estimator, mare, rmse
 
 logger = logging.getLogger(__name__)
 
@@ -63,10 +63,13 @@ class Fit:
 # --- pure functions ---------------------------------------------------------------------------
 
 
-def fit_and_score(design: Design, training: Training, clock: Callable[[], float]) -> Fit:
-    """Fit on the non-test rows, score on the test rows; clock times the fit."""
+def fit_and_score(
+    design: Design, training: Training, clock: Callable[[], float], live_plot: Path | None = None
+) -> Fit:
+    """Fit on the non-test rows, score on the test rows; clock times the fit; with live_plot,
+    the loss curve is redrawn there while it trains."""
     train, test = ~design.test, design.test
-    estimator = make_estimator(training, n_inputs=design.X.shape[1])
+    estimator = make_estimator(training, n_inputs=design.X.shape[1], live_plot=live_plot)
     started = clock()
     estimator.fit(design.X[train], design.y[train], net__groups=design.groups[train])
     seconds = clock() - started
@@ -101,21 +104,32 @@ def numbers(fit: Fit) -> dict[str, str]:
 
 
 def start_banner(
-    run: Path, training: Training, rows: tuple[int, int], curves: tuple[int, int]
+    run: Path, out: Path, training: Training, rows: tuple[int, int], curves: tuple[int, int]
 ) -> list[str]:
-    """The lines a run's log opens with: where it writes, what it fits on, what bounds it and
-    how to watch it; rows and curves are (training, test)."""
-    bounds = [
-        "bounds:",
-        f"  - at most {training.max_epochs} epochs",
-        f"  - early stop after {training.patience} epochs without a better validation loss",
-        f"  - {training.valid_fraction:.0%} of the training curves validate",
-    ]
+    """The lines a run's log opens with: the stop criterion first, then what it fits on, the
+    files to watch while it runs and those it writes at the end; rows and curves are
+    (training, test)."""
     data = (
         f"data: {rows[0]} training rows on {curves[0]} curves, "
         f"{rows[1]} test rows on {curves[1]} curves"
     )
-    return [f"folder: {run}", data, *bounds, "follow live: make follow"]
+    return [
+        "stop criterion:",
+        f"  - early stop after {training.patience} epochs in a row without a validation loss "
+        "0.01% below the best",
+        "  - the best epoch is then restored",
+        f"  - at most {training.max_epochs} epochs",
+        f"folder: {run}",
+        data,
+        f"validation: {training.valid_fraction:.0%} of the training curves",
+        "live while it runs:",
+        f"  - {run / 'train.log'} (this log)",
+        f"  - {run / 'loss_curve.png'} (redrawn every {LIVE_EVERY} epochs)",
+        "at the end:",
+        f"  - {run}/ (run.json, error_cdf.png, curves.png)",
+        f"  - {out}/ (Section 5.1 numbers, parity figure)",
+        "follow live: make follow",
+    ]
 
 
 def end_banner(fit: Fit, training: Training, files: list[Path]) -> list[str]:
@@ -251,9 +265,9 @@ def _fit_and_write(
     rows = (int(train.sum()), int(data.test.sum()))
     curves = (len(np.unique(data.groups[train])), len(np.unique(data.groups[data.test])))
     logger.info("== baseline run: %s / mass ==", NEUTRON_STARS.dataset)
-    for line in start_banner(run, training, rows, curves):
+    for line in start_banner(run, out, training, rows, curves):
         logger.info(line)
-    fit = fit_and_score(data, training, time.perf_counter)
+    fit = fit_and_score(data, training, time.perf_counter, live_plot=run / "loss_curve.png")
     logger.info(progress_line(1, 1, fit.seconds))
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():

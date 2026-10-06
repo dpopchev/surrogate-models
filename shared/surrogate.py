@@ -9,8 +9,10 @@ stopping validates on whole held-out curves -- the fit passes the rows' curve id
 
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Literal, assert_never, cast
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from sklearn.model_selection import GroupShuffleSplit
@@ -22,9 +24,15 @@ from skorch.dataset import ValidSplit
 from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
+from shared.diagnostics import loss_curve
+
 logger = logging.getLogger(__name__)
 
 # --- vocabulary and types ---------------------------------------------------------------------
+
+# The live loss curve is redrawn every LIVE_EVERY epochs, at a screen resolution.
+LIVE_EVERY = 5
+LIVE_DPI = 100
 
 Activation = Literal["relu", "gelu", "tanh"]
 Loss = Literal["mse", "huber"]
@@ -86,14 +94,9 @@ def _minutes_text(seconds: float) -> str:
     return f"{minutes}m" if minutes else "<1m"
 
 
-def time_left(window: tuple[int, int], mean_epoch_seconds: float) -> str:
-    """The approximate time until the earliest and the latest stop, at the mean epoch time so
-    far, to the nearest minute."""
-    earliest, latest = window
-    return (
-        f"~{_minutes_text(earliest * mean_epoch_seconds)}"
-        f"-{_minutes_text(latest * mean_epoch_seconds)}"
-    )
+def approx_minutes(epochs: int, epoch_seconds: float) -> str:
+    """The approximate time a number of epochs takes, to the nearest minute: "~3m"."""
+    return f"~{_minutes_text(epochs * epoch_seconds)}"
 
 
 # --- the network ------------------------------------------------------------------------------
@@ -178,8 +181,9 @@ class FiniteLoss(Callback):
                 raise FloatingPointError(f"epoch {epoch['epoch']}: {key} is {epoch[key]}")
 
 
-class ElapseSeconds(Callback):
-    """Record the seconds an epoch took as elapse_s, the epoch table's time column."""
+class ElapsedSeconds(Callback):
+    """Record the seconds an epoch took, to a tenth, as elapsed_s, the epoch table's time
+    column."""
 
     def on_epoch_end(
         self,
@@ -188,17 +192,21 @@ class ElapseSeconds(Callback):
         dataset_valid: Any = None,
         **kwargs: Any,
     ) -> None:
-        """Copy skorch's dur (recorded by its EpochTimer, which runs first) into elapse_s."""
-        net.history.record("elapse_s", f"{net.history[-1, 'dur']:.1f}")
+        """Copy skorch's dur (recorded by its EpochTimer, which runs first) into elapsed_s."""
+        net.history.record("elapsed_s", f"{net.history[-1, 'dur']:.1f}")
 
 
 class Progress(Callback):
-    """Record where a fit stands: the epoch out of max_epochs as at_epoch, the epochs since the
-    lowest valid loss out of the patience EarlyStopping allows as patience ("3/20"), and the
-    approximate time until the earliest and the latest stop at the mean epoch time as time_left.
+    """Record where a fit stands: at_epoch (k/MAX); patience, EarlyStopping's own count of
+    epochs without a 0.01% better validation loss out of those allowed ("3/20"); and the
+    approximate time to the stop if no gain comes (stop_if_no_gain) and to max_epochs
+    (stop_at_max), at the median of the last ROLLING epoch times.
 
-    PrintLog drops every key ending in _best, hence patience, not since_best.
+    Runs after EarlyStopping, whose counter it reads. PrintLog drops every key ending in
+    _best, hence patience, not since_best.
     """
+
+    ROLLING = 5
 
     def __init__(self, patience: int) -> None:
         self.patience = patience
@@ -213,12 +221,42 @@ class Progress(Callback):
         """Record this epoch's progress columns."""
         rows = cast(list[dict[str, Any]], net.history)
         epoch = int(rows[-1]["epoch"])
-        best = max(int(row["epoch"]) for row in rows if row.get("valid_loss_best"))
+        misses = int(dict(net.callbacks_)["early_stopping"].misses_)
         net.history.record("at_epoch", f"{epoch}/{net.max_epochs}")
-        net.history.record("patience", f"{epoch - best}/{self.patience}")
-        window = stop_window(epoch, best, self.patience, net.max_epochs)
-        mean_seconds = float(np.mean([row["dur"] for row in rows]))
-        net.history.record("time_left", time_left(window, mean_seconds))
+        net.history.record("patience", f"{misses}/{self.patience}")
+        if_no_gain, at_max = stop_window(epoch, epoch - misses, self.patience, net.max_epochs)
+        epoch_seconds = float(np.median([row["dur"] for row in rows[-self.ROLLING :]]))
+        net.history.record("stop_if_no_gain", approx_minutes(if_no_gain, epoch_seconds))
+        net.history.record("stop_at_max", approx_minutes(at_max, epoch_seconds))
+
+
+class LiveLossCurve(Callback):
+    """Rewrite the loss curve at path every `every` epochs while the fit runs.
+
+    The image is written beside path and then moved over it, so a viewer never reads half a
+    file.
+    """
+
+    def __init__(self, path: Path, every: int) -> None:
+        self.path = path
+        self.every = every
+
+    def on_epoch_end(
+        self,
+        net: NeuralNetRegressor,
+        dataset_train: Any = None,
+        dataset_valid: Any = None,
+        **kwargs: Any,
+    ) -> None:
+        """Redraw the curve on every `every`-th epoch."""
+        rows = cast(list[dict[str, Any]], net.history)
+        if int(rows[-1]["epoch"]) % self.every:
+            return
+        figure = loss_curve([{k: v for k, v in row.items() if k != "batches"} for row in rows])
+        partial = self.path.with_name(f".{self.path.name}")
+        figure.savefig(partial, format="png", dpi=LIVE_DPI)
+        plt.close(figure)
+        partial.replace(self.path)
 
 
 def _valid_mare(net: ScaledNetRegressor, X: Any, y: Any) -> float:  # noqa: N803
@@ -234,8 +272,10 @@ def curve_valid_split(fraction: float, seed: int) -> ValidSplit:
     return ValidSplit(cast(Any, splitter))
 
 
-def make_estimator(training: Training, n_inputs: int) -> Pipeline:
-    """Pipeline(StandardScaler, ScaledNetRegressor) with the training callbacks."""
+def make_estimator(training: Training, n_inputs: int, live_plot: Path | None = None) -> Pipeline:
+    """Pipeline(StandardScaler, ScaledNetRegressor) with the training callbacks; with live_plot,
+    the loss curve is also redrawn there every LIVE_EVERY epochs while it trains."""
+    live = [("live_loss_curve", LiveLossCurve(live_plot, LIVE_EVERY))] if live_plot else []
     net = ScaledNetRegressor(
         module=MLP,
         module__n_inputs=n_inputs,
@@ -257,10 +297,11 @@ def make_estimator(training: Training, n_inputs: int) -> Pipeline:
             ("lr", LRScheduler(cast(Any, CosineAnnealingLR), T_max=training.max_epochs)),
             ("early_stopping", EarlyStopping(patience=training.patience, load_best=True)),
             ("finite_loss", FiniteLoss()),
-            ("elapse_s", ElapseSeconds()),
+            ("elapsed_s", ElapsedSeconds()),
             ("progress", Progress(training.patience)),
+            *live,
         ],
-        # at_epoch (k/MAX) replaces the bare epoch and sorts first; elapse_s replaces dur.
+        # at_epoch (k/MAX) replaces the bare epoch and sorts first; elapsed_s replaces dur.
         callbacks__print_log__keys_ignored=["dur", "epoch"],
         callbacks__print_log__sink=logger.info,
         seed=training.seed,

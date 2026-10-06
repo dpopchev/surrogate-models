@@ -3,6 +3,7 @@
 import logging
 import re
 from dataclasses import replace
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -15,12 +16,12 @@ from shared.surrogate import (
     Activation,
     Loss,
     Training,
+    approx_minutes,
     curve_valid_split,
     make_estimator,
     mare,
     rmse,
     stop_window,
-    time_left,
 )
 
 
@@ -124,12 +125,15 @@ class TestStopWindow:
         assert stop_window(epoch=495, best_epoch=490, patience=20, max_epochs=500) == (5, 5)
 
 
-def test_the_time_left_is_the_window_at_the_mean_epoch_time() -> None:
-    assert time_left((20, 483), mean_epoch_seconds=8.0) == "~3m-1h 4m"
+class TestApproxMinutes:
+    def test_rounds_to_the_nearest_minute(self) -> None:
+        assert approx_minutes(epochs=20, epoch_seconds=8.0) == "~3m"
 
+    def test_states_hours_beyond_an_hour(self) -> None:
+        assert approx_minutes(epochs=483, epoch_seconds=8.0) == "~1h 4m"
 
-def test_the_time_left_under_half_a_minute_reads_less_than_a_minute() -> None:
-    assert time_left((0, 3), mean_epoch_seconds=8.0) == "~<1m-<1m"
+    def test_reads_less_than_a_minute_under_half_a_minute(self) -> None:
+        assert approx_minutes(epochs=3, epoch_seconds=8.0) == "~<1m"
 
 
 def epoch_table(caplog: pytest.LogCaptureFixture) -> str:
@@ -140,8 +144,8 @@ def epoch_table(caplog: pytest.LogCaptureFixture) -> str:
 
 
 class TestEpochTable:
-    def test_names_the_epoch_time_elapse_s(self, caplog: pytest.LogCaptureFixture) -> None:
-        assert "elapse_s" in epoch_table(caplog)
+    def test_names_the_epoch_time_elapsed_s(self, caplog: pytest.LogCaptureFixture) -> None:
+        assert "elapsed_s" in epoch_table(caplog)
 
     def test_shows_the_epoch_out_of_max_epochs(self, caplog: pytest.LogCaptureFixture) -> None:
         assert re.search(r"\b2/2\b", epoch_table(caplog)) is not None
@@ -151,17 +155,30 @@ class TestEpochTable:
     ) -> None:
         assert re.search(r"\b0/100\b", epoch_table(caplog)) is not None
 
-    def test_shows_the_time_left_until_the_earliest_and_latest_stop(
+    def test_shows_the_time_to_the_stop_if_no_gain_comes(
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
-        assert re.search(r"\btime_left\b", epoch_table(caplog)) is not None
+        assert re.search(r"\bstop_if_no_gain\b", epoch_table(caplog)) is not None
+
+    def test_shows_the_time_to_the_stop_at_max_epochs(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        assert re.search(r"\bstop_at_max\b", epoch_table(caplog)) is not None
 
     def test_shows_the_epoch_time_to_a_tenth_of_a_second(self) -> None:
         net = fitted(replace(TOY, max_epochs=1)).named_steps["net"]
-        assert re.fullmatch(r"\d+\.\d", str(net.history[-1, "elapse_s"])) is not None
+        assert re.fullmatch(r"\d+\.\d", str(net.history[-1, "elapsed_s"])) is not None
 
     def test_no_longer_prints_dur(self, caplog: pytest.LogCaptureFixture) -> None:
         assert re.search(r"\bdur\b", epoch_table(caplog)) is None
+
+
+def test_the_loss_curve_is_drawn_live_while_training(tmp_path: Path) -> None:
+    live = tmp_path / "loss_curve.png"
+    keep = ~HELD_OUT
+    estimator = make_estimator(replace(TOY, max_epochs=5), n_inputs=2, live_plot=live)
+    estimator.fit(INPUTS[keep], TARGET[keep], net__groups=GROUPS[keep])
+    assert live.stat().st_size > 0
 
 
 def test_a_non_finite_training_loss_raises() -> None:
