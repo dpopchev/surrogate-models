@@ -8,8 +8,23 @@
 \providecommand{\baseNsMassFitSeconds}{\placeholder{run make baseline}}
 \providecommand{\baseNsMassEpochs}{\placeholder{run make baseline}}
 
-\todo{Draft from the outline.}
-\begin{itemize}
-  \item Data standardization: z-score normalization for the inputs $(\log\rhoc, \beta, \lambda, \rh)$.
-  \item Model pool: Gaussian process regression (GPR), XGBoost, feedforward MLPs and deep residual networks (ResNets).
-\end{itemize}
+Every surrogate in this work is trained and scored through one pipeline, so the models compared in Section~\ref{sec:results} differ only in the estimator. This section fixes that pipeline and its reference model, a plain multilayer perceptron, and reports how well it predicts the neutron-star mass.
+
+% Settings below are the [methodology.algorithms] values of paper.toml.
+\paragraph{One pipeline serves every model.}
+Each model reads the prepared tables through the same design: the inputs and targets of Section~\ref{sec:preprocessing}, one model per target, and the frozen split of whole curves. The inputs are standardized with statistics fitted on the training curves alone, and the target is standardized the same way and turned back before any error is measured, so no information from a held-out curve reaches the model.
+
+\paragraph{The baseline is a plain multilayer perceptron.}
+The reference network has three fully connected hidden layers of 64 units with ReLU activations and is trained on the mean squared error of the standardized target with AdamW, at a learning rate of $10^{-3}$ under a cosine schedule and in batches of 1024 rows. It is deliberately standard: it is the control against which the loss and activation choices of $H_2$ and the residual architecture of $H_3$ are measured (Section~\ref{sec:hypotheses}).
+
+\paragraph{Early stopping watches held-out curves, not held-out rows.}
+A fifth of the training curves is set aside for validation, and training stops once the validation loss has not improved for 20 epochs; the weights of the best epoch are restored. Validating on randomly chosen rows instead would let the network see neighbours of every validation row during training, since rows of one curve are each other's nearest neighbours (Section~\ref{sec:preprocessing}), and would stop it late.
+
+\paragraph{Errors are relative and on the target's own scale.}
+Models are compared by the mean absolute relative error, $\mathrm{MARE} = \langle |\hat{y} - y| / |y| \rangle$, on the target's original scale ($M$ in $\Msun$), with the root mean squared error alongside.
+
+\paragraph{The baseline predicts the neutron-star mass to a MARE of $\baseNsMassMare$ on unseen curves.}
+On the $\prepNsTestCurves$ test curves the network reaches a MARE of $\baseNsMassMare$ and an RMSE of $\baseNsMassRmse\,\Msun$ (\cref{fig:alg-parity}); training stopped after \baseNsMassEpochs{} epochs, a few minutes on a single CPU. Section~\ref{sec:h3} widens the comparison to Gaussian process regression, XGBoost and residual networks.
+
+\InputIfFileExists{51_algorithms_fig_parity}{}{}
+\FloatBarrier
