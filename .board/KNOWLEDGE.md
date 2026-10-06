@@ -9,6 +9,7 @@
 - 2026-10-05 W-018: standing: log10(D/M) no gain over log10 D (Spearman M -1.000 vs -0.999) -> unlike NS, noted in 3.2 supersedes: W-018#2
 - 2026-10-05 W-018: standing: r_h linear (0.39 orders); M 2.13..5.01 M_sun, Pearson 0.9999 with r_h -> raw M in M_sun supersedes: W-018#4
 - 2026-10-06 E-005: fact: every dataset value is dimensionless or normalized (developer), M in solar masses -> code, board and paper say 'original scale' (as opposed to standardized), never 'physical units'
+- 2026-10-06 E-009: fact: the abstract is unnumbered, so folder NN is paper Section N-1 (51_algorithms is Section 4.1, 43_preprocessing is 3.3) -> board items and code comments saying "Section 5.1" for 51_algorithms are off by one; W-060 aligns the code comments
 - 2026-10-06 T-077: fact: split.parquet holds both datasets, one row per curve (dataset, curve keys, label test|fold0-4, ablation; BH rows have lambda NaN) -> design() filters by dataset and joins many-to-one on the curve keys
 - 2026-10-06 W-032: standing: make overleaf refreshes the upload list on every run -> run it only right before an upload, or the removed list of the earlier run is lost supersedes: W-032#1
 - 2026-10-06 W-034: T-080: fact: baseline NS mass test MARE 0.0165 scored at epoch 37, but the best valid epoch was 17 (valid MARE 0.0062); valid loss spikes late, lr barely decays (cosine T_max 500) -> T-090 restores the best epoch
@@ -33,6 +34,8 @@
 - 2026-10-06 E-005: skorch over Lightning: one sklearn Pipeline, GroupKFold and scorer path for GPR, XGBoost and the networks; CPU-only tabular data needs none of Lightning's strengths
 - 2026-10-06 E-005: tests stay quick (developer): unit tests use tiny synthetic data and toy fits of a few epochs; real-data fits (fold scores, the four pairs) run only through make targets, never in make test
 - 2026-10-06 E-005: the mean and nearest-curve reference predictors are rows of the paper's baseline table; the baseline MLP (ReLU, MSE, AdamW) is the control arm of H2 and H3
+- 2026-10-06 E-009: numbers in the text come from the generated macros, never typed: N = 224,597 raw and 201,047 after cleaning, the orders of magnitude of D after the M_max cut
+- 2026-10-06 E-009: the revised paper structure is adopted (developer): Scalarization becomes its own Section 2.2 (folder 32_scalarization; BH and NS renumbered 33, 34); H1 keeps the decided target log10(max(D, eps)/M) of W-019, reworded, not log10 D
 - 2026-10-06 W-034: error macros (MARE, RMSE) print in scientific notation at every magnitude
 
 ## Deviations
@@ -40,4 +43,6 @@
 - 2026-10-06 E-005: AC6 and W-055 added, W-056 amends AC5 (developer): Section 5.1 is written from the NS mass baseline before W-036 widens it (T-087 shrinks to adding the table); the epoch table's dur column shows as elapse_s
 - 2026-10-06 E-005: AC7 and W-057 added (developer): epoch k/MAX, epochs since best and a time-left range, start and end banners, make runs, make run, make examples; W-036 waits for it
 - 2026-10-06 E-005: T-106's evidence says make check PASS, but make check failed (pyright, surrogate.py:196) -- the agent's command chain continued past the failure; fixed in 40bf205, make check PASS (310 tests)
+- 2026-10-06 E-005: parked for E-009 (developer): the revised paper structure and the dataset papers in refs.bib are adopted first; E-005 resumes at W-036 with no work item open
 - 2026-10-06 E-005: parked for W-058 (developer): the [landing] review runs as a standalone root; E-005 resumes at W-036 with no work item open
+- 2026-10-06 E-009: re-planned from the developer's revised paper structure and the dataset papers added to refs.bib (c83b6ef): W-059 and W-060 added, W-051 re-scoped to Sections 2.1 to 2.4
