@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 4 | done: 141 | pruned: 4
+open path: E-009 > W-059 > T-107   | blocked: 0 | todo roots: 3 | done: 141 | pruned: 4
 
 ## Tree
 
@@ -92,7 +92,7 @@ open path: none   | blocked: 0 | todo roots: 4 | done: 141 | pruned: 4
 
 #### W-050 issue [todo] Surrogate posterior validated against the reference
 
-### E-009 [todo] The paper follows the revised structure, and the release
+### E-009 [doing] The paper follows the revised structure, and the release
 
 #### W-051 issue [todo] Sections 2.1 to 2.4 written from the revised structure
 
@@ -106,9 +106,9 @@ open path: none   | blocked: 0 | todo roots: 4 | done: 141 | pruned: 4
 
 #### W-053 spike [todo] What the open-source release publishes
 
-#### W-059 spike [todo] Which refs.bib keys the revised structure's citations name
+#### W-059 spike [doing] Which refs.bib keys the revised structure's citations name
 
-- T-107 [todo] Map the numbered citations to refs.bib keys -> 00_metadata/citations.md
+- T-107 [doing] Map the numbered citations to refs.bib keys -> 00_metadata/citations.md   <- ACTIVE LEAF
 - T-108 [todo] Add the missing references to refs.bib -> 00_metadata/refs.bib
 
 #### W-060 issue [todo] Title and outline bullets aligned to the revised structure
@@ -391,7 +391,7 @@ flowchart TD
   E008 --> W048["W-048 issue todo: Pareto front of error against inference time"]
   E008 --> W049["W-049 issue todo: Mock MCMC recovery with emcee"]
   E008 --> W050["W-050 issue todo: Surrogate posterior validated against the reference"]
-  E009["E-009 todo: The paper follows the revised structure, and the release"]
+  E009["E-009 doing: The paper follows the revised structure, and the release"]
   E009 --> W051["W-051 issue todo: Sections 2.1 to 2.4 written from the revised structure"]
   W051 --> T109["T-109 todo: Add Section 2.2's folder and renumber the dataset sections -> 30_physical_framework/32_scalarization, 33_black_holes, 34_neutron_stars"]
   W051 --> T110["T-110 todo: Write Section 2.1, the action and field equations -> 30_physical_framework/31_action/31_action.tex"]
@@ -400,8 +400,8 @@ flowchart TD
   W051 --> T113["T-113 todo: Write Section 2.4, the neutron-star dataset -> 30_physical_framework/34_neutron_stars/34_neutron_stars.tex"]
   E009 --> W052["W-052 issue todo: Abstract, introduction, conclusion and title block"]
   E009 --> W053["W-053 spike todo: What the open-source release publishes"]
-  E009 --> W059["W-059 spike todo: Which refs.bib keys the revised structure's citations name"]
-  W059 --> T107["T-107 todo: Map the numbered citations to refs.bib keys -> 00_metadata/citations.md"]
+  E009 --> W059["W-059 spike doing: Which refs.bib keys the revised structure's citations name"]
+  W059 --> T107["T-107 doing: Map the numbered citations to refs.bib keys -> 00_metadata/citations.md -- ACTIVE LEAF"]
   W059 --> T108["T-108 todo: Add the missing references to refs.bib -> 00_metadata/refs.bib"]
   E009 --> W060["W-060 issue todo: Title and outline bullets aligned to the revised structure"]
   W060 --> T114["T-114 todo: Set the revised title -> 00_metadata/metadata.tex"]
@@ -412,7 +412,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005 doing
+  class E005,E009,W059,T107 doing
   class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106 done
-  class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,T109,T110,T111,T112,T113,W052,W053,W059,T107,T108,W060,T114,T115,T116 todo
+  class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W051,T109,T110,T111,T112,T113,W052,W053,T108,W060,T114,T115,T116 todo
 ```
