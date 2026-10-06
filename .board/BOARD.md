@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-004   | blocked: 0 | todo roots: 0 | done: 104 | pruned: 4
+open path: E-004 > W-033 > T-074   | blocked: 0 | todo roots: 0 | done: 104 | pruned: 4
 
 ## Tree
 
@@ -16,9 +16,9 @@ open path: E-004   | blocked: 0 | todo roots: 0 | done: 104 | pruned: 4
 - T-072 [done] Diff the upload folder against the last upload test-first -> 00_metadata/overleaf_upload.py
 - T-073 [done] Wire make overleaf -> mk/paper.mk, build/paper/overleaf/ and overleaf.zip
 
-#### W-033 issue [todo] One PDF per section with references resolved
+#### W-033 issue [doing] One PDF per section with references resolved
 
-- T-074 [todo] Write the section entry files test-first -> 00_metadata/section_entry.py
+- T-074 [doing] Write the section entry files test-first -> 00_metadata/section_entry.py   <- ACTIVE LEAF
 - T-075 [todo] Wire make section and make sections -> mk/paper.mk and build/paper/sections/
 
 ## Closed
@@ -222,15 +222,15 @@ flowchart TD
   E004 --> W032["W-032 issue done: make overleaf keeps a drag-and-drop Overleaf project in sync"]
   W032 --> T072["T-072 done: Diff the upload folder against the last upload test-first -> 00_metadata/overleaf_upload.py"]
   W032 --> T073["T-073 done: Wire make overleaf -> mk/paper.mk, build/paper/overleaf/ and overleaf.zip"]
-  E004 --> W033["W-033 issue todo: One PDF per section with references resolved"]
-  W033 --> T074["T-074 todo: Write the section entry files test-first -> 00_metadata/section_entry.py"]
+  E004 --> W033["W-033 issue doing: One PDF per section with references resolved"]
+  W033 --> T074["T-074 doing: Write the section entry files test-first -> 00_metadata/section_entry.py -- ACTIVE LEAF"]
   W033 --> T075["T-075 todo: Wire make section and make sections -> mk/paper.mk and build/paper/sections/"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E004 doing
+  class E004,W033,T074 doing
   class W031,T070,T071,W032,T072,T073 done
-  class W033,T074,T075 todo
+  class T075 todo
 ```
