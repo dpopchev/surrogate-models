@@ -34,6 +34,7 @@
 - 2026-10-06 E-005: tests stay quick (developer): unit tests use tiny synthetic data and toy fits of a few epochs; real-data fits (fold scores, the four pairs) run only through make targets, never in make test
 - 2026-10-06 E-005: the mean and nearest-curve reference predictors are rows of the paper's baseline table; the baseline MLP (ReLU, MSE, AdamW) is the control arm of H2 and H3
 - 2026-10-06 W-034: error macros (MARE, RMSE) print in scientific notation at every magnitude
+- 2026-10-06 W-058: [landing] worktree stays unset: branches switch in this checkout, since real-data targets need local/state, which lives only here; avoid branch switches during a long run
 
 ## Deviations
 - 2026-10-06 E-005: AC5 and W-054 added (developer): runs started through the chat showed nothing live (captured output, no TTY, tqdm off); W-036 now waits for W-054 so its fits are observable
