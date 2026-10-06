@@ -3,7 +3,7 @@
 from dataclasses import replace
 from datetime import UTC, datetime
 
-from shared.runs import RunRecord, from_json, run_name, to_json
+from shared.runs import RunRecord, from_json, run_name, run_stem, to_json
 from shared.surrogate import Training
 
 TRAINING = Training(
@@ -44,6 +44,10 @@ def test_the_record_keeps_whether_the_code_was_uncommitted() -> None:
 
 def test_the_record_round_trips_through_json() -> None:
     assert from_json(to_json(RECORD)) == RECORD
+
+
+def test_the_run_folder_is_known_before_the_fit_from_its_start() -> None:
+    assert run_stem("toy", "mass", RECORD.started) == run_name(RECORD)
 
 
 def test_the_run_name_is_dataset_target_and_utc_stamp() -> None:

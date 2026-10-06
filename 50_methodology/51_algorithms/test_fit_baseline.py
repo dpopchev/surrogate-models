@@ -172,6 +172,15 @@ class TestMain:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
         assert from_json((run / "run.json").read_text()).dirty is True
 
+    def test_logs_the_epoch_table_into_the_run_s_train_log(self, ran: Path) -> None:
+        run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
+        assert "valid_mare" in (run / "train.log").read_text()
+
+    def test_points_latest_log_at_the_run_s_train_log(self, ran: Path) -> None:
+        run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
+        latest = ran / "state" / SECTION / "latest.log"
+        assert latest.resolve() == (run / "train.log").resolve()
+
     def test_leaves_the_diagnostics_in_a_folder_named_after_the_run(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
         assert sorted(p.name for p in run.iterdir()) == [
@@ -179,6 +188,7 @@ class TestMain:
             "error_cdf.png",
             "loss_curve.png",
             "run.json",
+            "train.log",
         ]
 
 

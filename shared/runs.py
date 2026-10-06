@@ -35,9 +35,15 @@ class RunRecord:
 # --- pure functions ---------------------------------------------------------------------------
 
 
+def run_stem(dataset: str, target: str, started: datetime) -> str:
+    """<dataset>-<target>-<UTC start stamp>: a run's folder name, known before its fit and
+    sorting by time."""
+    return f"{dataset}-{target}-{started:%Y%m%dT%H%M%SZ}"
+
+
 def run_name(record: RunRecord) -> str:
-    """<dataset>-<target>-<UTC start stamp>: the run's folder name, sorting by time."""
-    return f"{record.dataset}-{record.target}-{record.started:%Y%m%dT%H%M%SZ}"
+    """The folder name of a recorded run."""
+    return run_stem(record.dataset, record.target, record.started)
 
 
 def to_json(record: RunRecord) -> str:

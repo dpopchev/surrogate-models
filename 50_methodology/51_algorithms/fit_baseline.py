@@ -14,7 +14,8 @@ import logging
 import subprocess
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -30,7 +31,7 @@ from shared.design import NEUTRON_STARS, Design, DesignSpec, design
 from shared.diagnostics import curve_overlay, error_cdf, loss_curve
 from shared.eda import curve_ids, render_macros, sci_tex
 from shared.plots import PlotStyle, anchor_color, apply_style
-from shared.runs import RunRecord, from_json, run_name, to_json
+from shared.runs import RunRecord, from_json, run_name, run_stem, to_json
 from shared.surrogate import Training, make_estimator, mare, rmse
 
 logger = logging.getLogger(__name__)
@@ -165,12 +166,33 @@ def main(
         assert path.is_file(), f"input not found: {path}"
     config = config or load_config()
     commit, dirty, now = commit or _git_commit, dirty or _git_dirty, now or _utc_now
-    uncommitted = dirty()
+    settings = config.methodology.algorithms
+    started = now()
+    run = state / run_stem(NEUTRON_STARS.dataset, "mass", started)
+    run.mkdir(parents=True, exist_ok=True)
+    # latest.log is what make follow tails: repointed at each run's log as the run starts.
+    latest = state / "latest.log"
+    latest.unlink(missing_ok=True)
+    latest.symlink_to(Path(run.name) / "train.log")
+    with _logging_into(run / "train.log", settings.log_level):
+        _fit_and_write(source, split_file, out, run, config, started, commit(), dirty())
+
+
+def _fit_and_write(
+    source: Path,
+    split_file: Path,
+    out: Path,
+    run: Path,
+    config: PaperConfig,
+    started: datetime,
+    commit: str,
+    uncommitted: bool,
+) -> None:
+    """The run itself, its log lines going to the console and to the run's train.log."""
     if uncommitted:
         logger.info("the code holds uncommitted changes: run.json marks this run dirty")
     apply_style(config.plot)
-    settings = config.methodology.algorithms
-    training = Training(**settings.model_dump(exclude={"log_level"}))
+    training = Training(**config.methodology.algorithms.model_dump(exclude={"log_level"}))
     table = pd.read_parquet(source)
     data = design(
         table, pd.read_parquet(split_file), NEUTRON_STARS, "mass", config.data_analysis.charge_floor
@@ -183,7 +205,6 @@ def main(
         data.test.sum(),
         len(np.unique(data.groups[data.test])),
     )
-    started = now()
     fit = fit_and_score(data, training, time.perf_counter)
     logger.info(
         "test: MARE %.4g, RMSE %.4g, %d epochs, fit %.0f s",
@@ -204,7 +225,7 @@ def main(
         dataset=NEUTRON_STARS.dataset,
         target="mass",
         training=training,
-        commit=commit(),
+        commit=commit,
         dirty=uncommitted,
         started=started,
         seconds=fit.seconds,
@@ -213,7 +234,7 @@ def main(
         mare=fit.mare,
         rmse=fit.rmse,
     )
-    run = state / run_name(record)
+    assert run.name == run_name(record), f"run folder {run.name} is not {run_name(record)}"
     write_diagnostics(fit, record, run, curve_names(table, NEUTRON_STARS))
     assert from_json((run / "run.json").read_text()) == record, (
         f"{run}/run.json does not round-trip"
@@ -242,6 +263,24 @@ def write_diagnostics(fit: Fit, record: RunRecord, run: Path, names: dict[int, s
         plt.close(figure)
 
 
+@contextmanager
+def _logging_into(log: Path, level: str) -> Iterator[None]:
+    """While the block runs, log at level to the console handlers and to the file log; then
+    detach the file and restore the level, also when the block raises."""
+    root = logging.getLogger()
+    handler = logging.FileHandler(log)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    previous = root.level
+    root.setLevel(level)
+    root.addHandler(handler)
+    try:
+        yield
+    finally:
+        root.removeHandler(handler)
+        handler.close()
+        root.setLevel(previous)
+
+
 def _git_commit() -> str:
     """The short hash of the checked-out commit."""
     done = subprocess.run(
@@ -264,6 +303,6 @@ def _utc_now() -> datetime:
 
 
 if __name__ == "__main__":
-    settings = load_config()
-    logging.basicConfig(level=settings.methodology.algorithms.log_level, format="%(message)s")
-    main(sys.argv[1:], settings)
+    # The console handler only; main sets the level from the config for the run's duration.
+    logging.basicConfig(format="%(message)s")
+    main(sys.argv[1:])
