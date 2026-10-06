@@ -118,3 +118,34 @@ OVERLEAF_LIST   := $(LOCAL)/overleaf/last-upload.txt
 overleaf: compile ## Prepare the Overleaf upload and list what changed
 	@$(RUN) python $(OVERLEAF_UPLOAD) $(PAPER_DIR) $(OVERLEAF_LIST)
 	$(call log_done,upload $(PAPER_DIR)/ or $(PAPER_ZIP) -- last upload listed in $(OVERLEAF_LIST))
+
+# Section previews for review: each top-level section (an \input of the entry's
+# document body) compiles on its own in $(SECTIONS_WORK)/<section>/, beside a copy
+# of the upload folder and the full build's main.aux, so its references to the
+# rest of the paper resolve through xr-hyper.
+SECTION_ENTRY := 00_metadata/section_entry.py
+SECTIONS      := $(shell sed -n '/begin{document}/,/end{document}/s/^\\input{\(.*\)}$$/\1/p' $(PAPER_ENTRY))
+SECTIONS_WORK := $(WORK)/sections
+SECTIONS_OUT  := $(BUILD)/paper/sections
+S ?=
+
+ifneq ($(filter section,$(MAKECMDGOALS)),)
+ifeq ($(filter $(S),$(SECTIONS)),)
+$(error make section S=<section> -- one of $(SECTIONS))
+endif
+endif
+
+$(SECTIONS_OUT)/%.pdf: compile
+	@rm -rf $(SECTIONS_WORK)/$* && mkdir -p $(SECTIONS_WORK)/$* $(@D)
+	@cp -R $(PAPER_DIR)/. $(PAPER_LATEX)/main.aux $(SECTIONS_WORK)/$*/
+	@$(RUN) python $(SECTION_ENTRY) $(PAPER_ENTRY) $* $(SECTIONS_WORK)/$*
+	@$(LATEXMK) -cd $(SECTIONS_WORK)/$*/section_$*.tex
+	@cp $(SECTIONS_WORK)/$*/section_$*.pdf $@
+	$(call log_done,section $* compiled on its own to $@)
+
+.PHONY: section
+section: $(SECTIONS_OUT)/$(S).pdf ## Compile section S alone into build/paper/sections/
+
+.PHONY: sections
+sections: $(SECTIONS:%=$(SECTIONS_OUT)/%.pdf) ## Compile each section alone into build/paper/sections/
+	$(call log_done,$(words $(SECTIONS)) sections compiled to $(SECTIONS_OUT)/)
