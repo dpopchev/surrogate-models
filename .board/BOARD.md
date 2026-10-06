@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-035   | blocked: 0 | todo roots: 4 | done: 121 | pruned: 4
+open path: E-005   | blocked: 0 | todo roots: 4 | done: 122 | pruned: 4
 
 ## Tree
 
@@ -16,7 +16,7 @@ open path: E-005 > W-035   | blocked: 0 | todo roots: 4 | done: 121 | pruned: 4
 - T-090 [done] Restore the best epoch's weights at early stopping -> shared/surrogate.py
 - T-091 [done] Print the baseline error macros in scientific notation -> 50_methodology/51_algorithms/fit_baseline.py
 
-#### W-035 issue [doing] Each baseline run leaves a diagnostics folder
+#### W-035 issue [done] Each baseline run leaves a diagnostics folder
 
 - T-081 [done] Write the run record test-first -> shared/runs.py with shared/test_runs.py
 - T-082 [done] Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py
@@ -297,7 +297,7 @@ flowchart TD
   W034 --> T080["T-080 done: Write the baseline fit script and make baseline -> build/assets/51_algorithms/"]
   W034 --> T090["T-090 done: Restore the best epoch's weights at early stopping -> shared/surrogate.py"]
   W034 --> T091["T-091 done: Print the baseline error macros in scientific notation -> 50_methodology/51_algorithms/fit_baseline.py"]
-  E005 --> W035["W-035 issue doing: Each baseline run leaves a diagnostics folder"]
+  E005 --> W035["W-035 issue done: Each baseline run leaves a diagnostics folder"]
   W035 --> T081["T-081 done: Write the run record test-first -> shared/runs.py with shared/test_runs.py"]
   W035 --> T082["T-082 done: Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py"]
   W035 --> T083["T-083 done: Write the worst and median curve overlays test-first -> shared/diagnostics.py"]
@@ -335,7 +335,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W035 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,T081,T082,T083,T084,T092 done
+  class E005 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092 done
   class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
