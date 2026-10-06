@@ -33,6 +33,48 @@ def loss_curve(history: Sequence[Mapping[str, Any]]) -> Figure:
     return figure
 
 
+def _curve_mare(y_true: np.ndarray, y_pred: np.ndarray, groups: np.ndarray) -> dict[int, float]:
+    """The MARE of each curve's rows."""
+    relative = np.abs((y_pred - y_true) / y_true)
+    return {int(curve): float(relative[groups == curve].mean()) for curve in np.unique(groups)}
+
+
+def chosen_curves(
+    y_true: np.ndarray, y_pred: np.ndarray, groups: np.ndarray, k: int
+) -> tuple[int, ...]:
+    """The k curves of highest MARE, worst first, then the curve of median MARE."""
+    scores = _curve_mare(y_true, y_pred, groups)
+    ranked = sorted(scores, key=scores.__getitem__, reverse=True)
+    median = ranked[len(ranked) // 2]
+    return (*ranked[:k], median)
+
+
+def curve_overlay(
+    x: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray, groups: np.ndarray, k: int
+) -> Figure:
+    """The chosen curves drawn true (line) against predicted (markers) along x, each labelled
+    with its curve id and MARE; the median curve is the last one."""
+    scores = _curve_mare(y_true, y_pred, groups)
+    figure, axes = plt.subplots(layout="constrained")
+    for curve in chosen_curves(y_true, y_pred, groups, k):
+        rows = groups == curve
+        order = np.argsort(x[rows])
+        (true_line,) = axes.plot(
+            x[rows][order], y_true[rows][order], label=f"curve {curve}, MARE {scores[curve]:.2e}"
+        )
+        axes.plot(
+            x[rows][order],
+            y_pred[rows][order],
+            linestyle="none",
+            marker="o",
+            markersize=2,
+            color=true_line.get_color(),
+        )
+    axes.set_ylabel("target (line true, dots predicted)")
+    axes.legend(loc="best", fontsize="small")
+    return figure
+
+
 def error_cdf(relative_errors: np.ndarray) -> Figure:
     """The empirical CDF of the relative errors with p50, p95, p99 and the maximum marked."""
     ordered = np.sort(relative_errors)
