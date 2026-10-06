@@ -13,6 +13,7 @@
 - 2026-10-06 W-032: standing: make overleaf refreshes the upload list on every run -> run it only right before an upload, or the removed list of the earlier run is lost supersedes: W-032#1
 - 2026-10-06 W-034: T-080: fact: baseline NS mass test MARE 0.0165 scored at epoch 37, but the best valid epoch was 17 (valid MARE 0.0062); valid loss spikes late, lr barely decays (cosine T_max 500) -> T-090 restores the best epoch
 - 2026-10-06 W-034: T-090: fact: restoring the best valid_loss epoch cuts the NS mass baseline test MARE 0.0165 -> 0.0066 (RMSE 0.0273 -> 0.0130), 213 s on CPU -> the baseline number Section 5.1 reports
+- 2026-10-06 W-035: T-084: fact: the worst NS mass test curves are short low-mass curves at small beta (0.4-2.4) and lambda \~4, underpredicted (MARE 3.7-6.6%); median relative error 0.48%, p99 3.0% -> E-006 error map (#7) and H2 should look there
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
