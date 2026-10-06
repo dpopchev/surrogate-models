@@ -99,6 +99,21 @@ follow: ## Follow the running baseline's log live
 	@tail -n 40 -F $(BASELINE_LOG)
 	$(call log_done,stopped following $(BASELINE_LOG))
 
+# The runs at a glance (W-057): one line per run from its run.json, newest first; make run
+# lists one run's files, the latest unless R names a run folder.
+LIST_RUNS := 50_methodology/51_algorithms/list_runs.py
+R         ?= latest
+
+.PHONY: runs
+runs: ## List the baseline runs, newest first
+	@$(RUN) python $(LIST_RUNS) $(STATE)
+	$(call log_done,baseline runs listed from $(STATE)/51_algorithms/)
+
+.PHONY: run
+run: ## Show one baseline run's files -- R=<run>, default latest
+	@$(RUN) python $(LIST_RUNS) $(STATE) --run $(R)
+	$(call log_done,files of baseline run $(R) listed)
+
 .PHONY: assets
 assets: $(PAPER_ASSETS) ## Generate the section assets under build/assets/
 	$(call log_done,assets in $(ASSETS)/: $(sort $(notdir $(patsubst %/,%,$(dir $(PAPER_ASSETS))))))
