@@ -1,12 +1,12 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-034   | blocked: 0 | todo roots: 4 | done: 115 | pruned: 4
+open path: E-005   | blocked: 0 | todo roots: 4 | done: 116 | pruned: 4
 
 ## Tree
 
 ### E-005 [doing] Baseline surrogate through one shared pipeline
 
-#### W-034 issue [doing] NS mass baseline runs end to end with live feedback
+#### W-034 issue [done] NS mass baseline runs end to end with live feedback
 
 - T-076 [done] Add torch and skorch -> pyproject.toml and uv.lock
 - T-077 [done] Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py
@@ -288,7 +288,7 @@ closed 2026-10-05 -- outcome: Given paper.toml with plot.dpi = 450, When make co
 ```mermaid
 flowchart TD
   E005["E-005 doing: Baseline surrogate through one shared pipeline"]
-  E005 --> W034["W-034 issue doing: NS mass baseline runs end to end with live feedback"]
+  E005 --> W034["W-034 issue done: NS mass baseline runs end to end with live feedback"]
   W034 --> T076["T-076 done: Add torch and skorch -> pyproject.toml and uv.lock"]
   W034 --> T077["T-077 done: Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py"]
   W034 --> T078["T-078 done: Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py"]
@@ -333,7 +333,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W034 doing
-  class T076,T077,T078,T079,T080,T090,T091 done
+  class E005 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091 done
   class W035,T081,T082,T083,T084,W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
