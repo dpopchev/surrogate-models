@@ -22,7 +22,7 @@ from matplotlib.figure import Figure
 
 from shared.config import PaperConfig, load_config
 from shared.design import NEUTRON_STARS, Design, design
-from shared.eda import number_tex, render_macros
+from shared.eda import render_macros, sci_tex
 from shared.plots import PlotStyle, anchor_color, apply_style
 from shared.surrogate import Training, make_estimator, mare, rmse
 
@@ -63,8 +63,8 @@ def fit_and_score(design: Design, training: Training, clock: Callable[[], float]
 def numbers(fit: Fit) -> dict[str, str]:
     """The \\baseNsMass... macros of one fit."""
     return {
-        "baseNsMassMare": number_tex(fit.mare),
-        "baseNsMassRmse": number_tex(fit.rmse),
+        "baseNsMassMare": sci_tex(fit.mare),
+        "baseNsMassRmse": sci_tex(fit.rmse),
         "baseNsMassFitSeconds": f"{fit.seconds:.0f}",
         "baseNsMassEpochs": str(fit.epochs),
     }

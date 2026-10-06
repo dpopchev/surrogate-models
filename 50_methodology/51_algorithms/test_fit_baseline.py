@@ -72,8 +72,11 @@ SCORED = Fit(
 
 
 class TestNumbers:
-    def test_the_test_mare(self) -> None:
-        assert numbers(SCORED)["baseNsMassMare"] == "0.0123"
+    def test_the_test_mare_is_scientific(self) -> None:
+        assert numbers(SCORED)["baseNsMassMare"] == "1.23\\times 10^{-2}"
+
+    def test_the_test_rmse_is_scientific(self) -> None:
+        assert numbers(SCORED)["baseNsMassRmse"] == "4.56\\times 10^{-2}"
 
     def test_names_the_rmse_seconds_and_epochs_too(self) -> None:
         assert sorted(numbers(SCORED)) == [
