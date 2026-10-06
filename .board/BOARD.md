@@ -1,25 +1,8 @@
 # Board -- surrogate-models
 record: local
-open path: E-004 > W-033   | blocked: 0 | todo roots: 0 | done: 106 | pruned: 4
+open path: none   | blocked: 0 | todo roots: 0 | done: 108 | pruned: 4
 
 ## Tree
-
-### E-004 [doing] The paper builds for Overleaf upload and section-by-section review
-
-#### W-031 issue [done] build/ grouped by section
-
-- T-070 [done] Write each section's assets into its own folder test-first -> both EDA modules and preprocessing_numbers.py
-- T-071 [done] Add make assets and move LaTeX residue to build/.work -> mk/paper.mk
-
-#### W-032 issue [done] make overleaf keeps a drag-and-drop Overleaf project in sync
-
-- T-072 [done] Diff the upload folder against the last upload test-first -> 00_metadata/overleaf_upload.py
-- T-073 [done] Wire make overleaf -> mk/paper.mk, build/paper/overleaf/ and overleaf.zip
-
-#### W-033 issue [doing] One PDF per section with references resolved
-
-- T-074 [done] Write the section entry files test-first -> 00_metadata/section_entry.py
-- T-075 [done] Wire make section and make sections -> mk/paper.mk and build/paper/sections/
 
 ## Closed
 
@@ -152,6 +135,25 @@ closed 2026-10-05 -- outcome: shared/plots.py and shared/config.py give a typed 
 
 - T-059 [done] Untrack and delete the bytecode caches -> a tree without __pycache__
 
+### E-004 [done] The paper builds for Overleaf upload and section-by-section review
+
+closed 2026-10-06 -- outcome: build/assets/ grouped by section with each figure's PNG and wrapper sharing a stem; make overleaf filling build/paper/overleaf/ (flat, plus overleaf.zip) and listing the files added and removed since the last upload; make sections writing one PDF per section with references resolved through the full build; build/paper/article.pdf stays the whole paper. -- ledger: ledgers/E-004.md
+
+#### W-031 issue [done] build/ grouped by section
+
+- T-070 [done] Write each section's assets into its own folder test-first -> both EDA modules and preprocessing_numbers.py
+- T-071 [done] Add make assets and move LaTeX residue to build/.work -> mk/paper.mk
+
+#### W-032 issue [done] make overleaf keeps a drag-and-drop Overleaf project in sync
+
+- T-072 [done] Diff the upload folder against the last upload test-first -> 00_metadata/overleaf_upload.py
+- T-073 [done] Wire make overleaf -> mk/paper.mk, build/paper/overleaf/ and overleaf.zip
+
+#### W-033 issue [done] One PDF per section with references resolved
+
+- T-074 [done] Write the section entry files test-first -> 00_metadata/section_entry.py
+- T-075 [done] Wire make section and make sections -> mk/paper.mk and build/paper/sections/
+
 ### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
 
 closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/python.md, When make check runs, Then it passes with the repository root on pytest pythonpath and the python files matching the add-python COLOCATED templates. -- ledger: ledgers/W-005.md
@@ -215,21 +217,9 @@ closed 2026-10-05 -- outcome: Given paper.toml with plot.dpi = 450, When make co
 ## Diagram
 ```mermaid
 flowchart TD
-  E004["E-004 doing: The paper builds for Overleaf upload and section-by-section review"]
-  E004 --> W031["W-031 issue done: build/ grouped by section"]
-  W031 --> T070["T-070 done: Write each section's assets into its own folder test-first -> both EDA modules and preprocessing_numbers.py"]
-  W031 --> T071["T-071 done: Add make assets and move LaTeX residue to build/.work -> mk/paper.mk"]
-  E004 --> W032["W-032 issue done: make overleaf keeps a drag-and-drop Overleaf project in sync"]
-  W032 --> T072["T-072 done: Diff the upload folder against the last upload test-first -> 00_metadata/overleaf_upload.py"]
-  W032 --> T073["T-073 done: Wire make overleaf -> mk/paper.mk, build/paper/overleaf/ and overleaf.zip"]
-  E004 --> W033["W-033 issue doing: One PDF per section with references resolved"]
-  W033 --> T074["T-074 done: Write the section entry files test-first -> 00_metadata/section_entry.py"]
-  W033 --> T075["T-075 done: Wire make section and make sections -> mk/paper.mk and build/paper/sections/"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E004,W033 doing
-  class W031,T070,T071,W032,T072,T073,T074,T075 done
 ```

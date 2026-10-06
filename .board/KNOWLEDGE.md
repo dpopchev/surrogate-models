@@ -16,12 +16,7 @@
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 
 ## Decisions
-- 2026-10-05 E-004: Overleaf is the free plan: make overleaf prepares a flat drag-and-drop folder and lists removed files; no Git push
-- 2026-10-05 E-004: first thing next session (developer)
-- 2026-10-05 E-004: section previews resolve references to other sections through the full build (xr)
-- 2026-10-06 W-031: Decision (developer): T-070 closes on make test; its output is committed together with T-071, since make check needs the mk/paper.mk rewire
-- 2026-10-06 W-032: keep the refresh on every make overleaf run; run it only right before uploading (developer)
+- none recorded
 
 ## Deviations
-- 2026-10-06 E-004: T-075's check amended to read build/.work/sections/40_data_analysis/section_40_data_analysis.log -- 43_preprocessing is a subsection inside 40_data_analysis, not a top-level section (T-074), so its own log never exists; 40's log covers its references
-- 2026-10-06 E-004: xr-hyper instead of the planned xr -- the preamble loads hyperref, which xr-hyper must precede
+- none recorded
