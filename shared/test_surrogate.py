@@ -165,9 +165,12 @@ class TestEpochTable:
     ) -> None:
         assert re.search(r"\bstop_at_max\b", epoch_table(caplog)) is not None
 
-    def test_shows_the_epoch_time_to_a_tenth_of_a_second(self) -> None:
+    def test_records_the_epoch_time_rounded_to_a_tenth(self) -> None:
         net = fitted(replace(TOY, max_epochs=1)).named_steps["net"]
-        assert re.fullmatch(r"\d+\.\d", str(net.history[-1, "elapsed_s"])) is not None
+        assert net.history[-1, "elapsed_s"] == round(net.history[-1, "dur"], 1)
+
+    def test_pads_no_value_with_zeros(self, caplog: pytest.LogCaptureFixture) -> None:
+        assert re.search(r"\b\d+\.\d*00\b", epoch_table(caplog)) is None
 
     def test_no_longer_prints_dur(self, caplog: pytest.LogCaptureFixture) -> None:
         assert re.search(r"\bdur\b", epoch_table(caplog)) is None

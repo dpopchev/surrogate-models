@@ -193,7 +193,7 @@ class ElapsedSeconds(Callback):
         **kwargs: Any,
     ) -> None:
         """Copy skorch's dur (recorded by its EpochTimer, which runs first) into elapsed_s."""
-        net.history.record("elapsed_s", f"{net.history[-1, 'dur']:.1f}")
+        net.history.record("elapsed_s", round(net.history[-1, "dur"], 1))
 
 
 class Progress(Callback):
@@ -303,6 +303,8 @@ def make_estimator(training: Training, n_inputs: int, live_plot: Path | None = N
         ],
         # at_epoch (k/MAX) replaces the bare epoch and sorts first; elapsed_s replaces dur.
         callbacks__print_log__keys_ignored=["dur", "epoch"],
+        # 4 significant figures, not 4 decimals: 15.1 not 15.1000, and the lr's small steps show.
+        callbacks__print_log__floatfmt=".4g",
         callbacks__print_log__sink=logger.info,
         seed=training.seed,
     )
