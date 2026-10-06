@@ -14,8 +14,9 @@
 - 2026-10-06 W-032: standing: make overleaf refreshes the upload list on every run -> run it only right before an upload, or the removed list of the earlier run is lost supersedes: W-032#1
 - 2026-10-06 W-034: T-080: fact: valid loss spikes late, lr barely decays (cosine T_max 500) -> tune the schedule in E-006/E-007
 - 2026-10-06 W-034: T-090: fact: restoring the best epoch cuts NS mass test MARE 0.0165 -> 0.0066 -> the reported baseline
-- 2026-10-06 W-035: T-084: fact: the worst NS mass test curves are short low-mass curves at small beta (0.4-2.4) and lambda \~4, underpredicted (MARE 3.7-6.6%); median relative error 0.48%, p99 3.0% -> E-006 error map (#7) and H2 should look there
-- 2026-10-06 W-035: T-092: fact: the same seeded baseline fit took 213 s, 281 s and 525 s on this machine (MARE identical) -> \baseNsMassFitSeconds is load-dependent; cite it as an order of magnitude or time it on an idle machine
+- 2026-10-06 W-035: T-084: fact: worst NS mass curves: short, low-mass, beta 0.4-2.4, lambda \~4 -> E-006 error map, H2
+- 2026-10-06 W-035: T-092: fact: one seeded fit took 213-525 s (load) -> cite the fit time as an order of magnitude
+- 2026-10-06 W-036: T-120: fact: epoch 11.4 s at torch's 7 threads, 2.6 s at 1 thread; parallel fits no faster -> serial, 1 thread
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?

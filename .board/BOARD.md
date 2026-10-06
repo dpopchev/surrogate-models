@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005   | blocked: 0 | todo roots: 4 | done: 156 | pruned: 5
+open path: E-005 > W-036 > T-121   | blocked: 0 | todo roots: 4 | done: 157 | pruned: 5
 
 ## Tree
 
@@ -24,11 +24,13 @@ open path: E-005   | blocked: 0 | todo roots: 4 | done: 156 | pruned: 5
 - T-084 [done] Wire the diagnostics into the baseline run -> local/state/51_algorithms/<run>/
 - T-092 [done] Flag a run made from uncommitted code -> shared/runs.py and fit_baseline.py
 
-#### W-036 issue [todo] Baseline table for four pairs with fold scores and reference predictors
+#### W-036 issue [doing] Baseline table for four pairs with fold scores and reference predictors
 
 - T-085 [todo] Write the reference predictors test-first -> shared/surrogate.py
 - T-086 [todo] Run the four pairs with fold scores -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
 - T-087 [todo] Add the four-pair baseline table to Section 5.1 -> 50_methodology/51_algorithms/51_algorithms.tex
+- T-120 [done] Measure fit throughput by thread count and parallel fits -> a probe in local/scratch and a Finding on W-036
+- T-121 [doing] Train on one torch thread by default -> a threads setting in paper.toml and fit_baseline.py   <- ACTIVE LEAF
 
 #### W-037 issue [todo] Charge rebuilt with the true and the predicted mass
 
@@ -360,10 +362,12 @@ flowchart TD
   W035 --> T083["T-083 done: Write the worst and median curve overlays test-first -> shared/diagnostics.py"]
   W035 --> T084["T-084 done: Wire the diagnostics into the baseline run -> local/state/51_algorithms/<run>/"]
   W035 --> T092["T-092 done: Flag a run made from uncommitted code -> shared/runs.py and fit_baseline.py"]
-  E005 --> W036["W-036 issue todo: Baseline table for four pairs with fold scores and reference predictors"]
+  E005 --> W036["W-036 issue doing: Baseline table for four pairs with fold scores and reference predictors"]
   W036 --> T085["T-085 todo: Write the reference predictors test-first -> shared/surrogate.py"]
   W036 --> T086["T-086 todo: Run the four pairs with fold scores -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
   W036 --> T087["T-087 todo: Add the four-pair baseline table to Section 5.1 -> 50_methodology/51_algorithms/51_algorithms.tex"]
+  W036 --> T120["T-120 done: Measure fit throughput by thread count and parallel fits -> a probe in local/scratch and a Finding on W-036"]
+  W036 --> T121["T-121 doing: Train on one torch thread by default -> a threads setting in paper.toml and fit_baseline.py -- ACTIVE LEAF"]
   E005 --> W037["W-037 issue todo: Charge rebuilt with the true and the predicted mass"]
   W037 --> T088["T-088 todo: Write the charge rebuild test-first -> shared/surrogate.py"]
   W037 --> T089["T-089 todo: Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1"]
@@ -426,8 +430,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,E009 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W036,T085,T086,T087,W037,T088,T089,W062,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W052,W061,T118 todo
+  class E005,W036,T121,E009 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,T120,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class T085,T086,T087,W037,T088,T089,W062,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W052,W061,T118 todo
   class T108 pruned
 ```
