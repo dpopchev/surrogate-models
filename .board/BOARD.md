@@ -60,6 +60,8 @@ open path: E-009   | blocked: 0 | todo roots: 4 | done: 154 | pruned: 5
 - T-105 [done] Two stop-time columns, the stop criterion on top and a live loss curve -> shared/surrogate.py and fit_baseline.py
 - T-106 [done] Print the epoch table at 4 significant figures, elapsed_s to a tenth -> shared/surrogate.py
 
+#### W-062 issue [todo] Section 4.1 lists the surrogate pipeline as an algorithm
+
 ### E-006 [todo] Data-guided choices tested -- rho_c input, H1, H2 and H3
 
 #### W-038 issue [todo] rho_c input check -- raw against log10
@@ -105,6 +107,8 @@ open path: E-009   | blocked: 0 | todo roots: 4 | done: 154 | pruned: 5
 #### W-052 issue [todo] Abstract, introduction, conclusion and title block
 
 #### W-053 spike [todo] What the open-source release publishes
+
+- T-119 [todo] Write the code and data availability statement -> 00_metadata/metadata.tex and 80_conclusion/80_conclusion.tex
 
 #### W-059 spike [done] Which refs.bib keys the revised structure's citations name
 
@@ -380,6 +384,7 @@ flowchart TD
   W057 --> T104["T-104 done: Refine the run log from the developer's first look -> shared/surrogate.py and fit_baseline.py"]
   W057 --> T105["T-105 done: Two stop-time columns, the stop criterion on top and a live loss curve -> shared/surrogate.py and fit_baseline.py"]
   W057 --> T106["T-106 done: Print the epoch table at 4 significant figures, elapsed_s to a tenth -> shared/surrogate.py"]
+  E005 --> W062["W-062 issue todo: Section 4.1 lists the surrogate pipeline as an algorithm"]
   E006["E-006 todo: Data-guided choices tested -- rho_c input, H1, H2 and H3"]
   E006 --> W038["W-038 issue todo: rho_c input check -- raw against log10"]
   E006 --> W039["W-039 issue todo: H1 -- log against linear charge target"]
@@ -405,6 +410,7 @@ flowchart TD
   W051 --> T113["T-113 done: Write Section 2.4, the neutron-star dataset -> 30_physical_framework/34_neutron_stars/34_neutron_stars.tex"]
   E009 --> W052["W-052 issue todo: Abstract, introduction, conclusion and title block"]
   E009 --> W053["W-053 spike todo: What the open-source release publishes"]
+  W053 --> T119["T-119 todo: Write the code and data availability statement -> 00_metadata/metadata.tex and 80_conclusion/80_conclusion.tex"]
   E009 --> W059["W-059 spike done: Which refs.bib keys the revised structure's citations name"]
   W059 --> T107["T-107 done: Map the numbered citations to refs.bib keys -> 00_metadata/citations.md"]
   W059 --> T108["T-108 pruned: Add the missing references to refs.bib -> 00_metadata/refs.bib"]
@@ -422,6 +428,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E005,E009 doing
   class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,W059,T107,T117,W060,T114,T115,T116 done
-  class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W052,W053,W061,T118 todo
+  class W036,T085,T086,T087,W037,T088,T089,W062,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W052,W053,T119,W061,T118 todo
   class T108 pruned
 ```
