@@ -28,6 +28,7 @@
 - 2026-10-06 E-005: one model per target: H1 varies only the charge model, H2 only the mass model; MCMC sees one predict -> (M, D)
 - 2026-10-06 E-005: skorch over Lightning: one sklearn Pipeline, GroupKFold and scorer path for GPR, XGBoost and the networks; CPU-only tabular data needs none of Lightning's strengths
 - 2026-10-06 E-005: the mean and nearest-curve reference predictors are rows of the paper's baseline table; the baseline MLP (ReLU, MSE, AdamW) is the control arm of H2 and H3
+- 2026-10-06 W-034: error macros (MARE, RMSE) print in scientific notation at every magnitude
 
 ## Deviations
 - none recorded
