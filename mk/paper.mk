@@ -80,13 +80,24 @@ BASELINE        := 50_methodology/51_algorithms/fit_baseline.py
 BASELINE_ASSETS := $(ASSETS)/51_algorithms/51_algorithms_num.tex
 
 $(BASELINE_ASSETS): $(BASELINE) paper.toml shared/config.py shared/design.py shared/surrogate.py shared/plots.py shared/eda.py shared/runs.py shared/diagnostics.py $(STATE)/neutron_stars.parquet $(STATE)/split.parquet
-	$(call log_info,fitting the NS mass baseline -- one line per epoch)
+	$(call log_info,fitting the NS mass baseline -- one line per epoch; make follow shows it from any terminal)
 	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/split.parquet $(ASSETS) $(STATE)
 	$(call log_done,baseline numbers and parity figure written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
 
 .PHONY: baseline
 baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 5.1
 	$(call log_done,baseline assets current in $(dir $(BASELINE_ASSETS)))
+
+# Each baseline run logs into its own <run>/train.log and repoints latest.log at it (W-054);
+# tail -F follows the name, so one make follow keeps up across runs. It ends with Ctrl-C, so
+# its log_done never prints.
+BASELINE_LOG := $(STATE)/51_algorithms/latest.log
+
+.PHONY: follow
+follow: ## Follow the running baseline's log live
+	$(call log_info,following $(BASELINE_LOG) -- waits for a run if none started yet; Ctrl-C ends it)
+	@tail -n 40 -F $(BASELINE_LOG)
+	$(call log_done,stopped following $(BASELINE_LOG))
 
 .PHONY: assets
 assets: $(PAPER_ASSETS) ## Generate the section assets under build/assets/
