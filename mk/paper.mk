@@ -1,19 +1,19 @@
 # mk/paper.mk -- the paper layer: assembles the chapter folders into one flat
-# LaTeX project per flavour under $(BUILD)/paper/ and compiles it. Uses the
-# base's BUILD, log_done / log_info.
+# LaTeX project, the Overleaf upload folder under $(BUILD)/paper/, and compiles
+# it. Uses the base's BUILD, LOCAL, log_done / log_info.
 
 # ------------------------------------------------------------------------------
 ### Paper
 # ------------------------------------------------------------------------------
 
 # A flavour is an entry file 00_metadata/<flavour>.tex (documentclass + inputs);
-# it becomes main.tex of $(BUILD)/paper/<flavour>/. Add a flavour by adding its
-# entry file and its name here.
+# it becomes main.tex of the upload folder $(BUILD)/paper/overleaf/. Add a
+# flavour by adding its entry file and its name here.
 PAPER_FLAVOURS := article
 PAPER_FLAVOUR  ?= article
 PAPER_ENTRY    := 00_metadata/$(PAPER_FLAVOUR).tex
-PAPER_DIR      := $(BUILD)/paper/$(PAPER_FLAVOUR)
-PAPER_ZIP      := $(BUILD)/paper/$(PAPER_FLAVOUR).zip
+PAPER_DIR      := $(BUILD)/paper/overleaf
+PAPER_ZIP      := $(BUILD)/paper/overleaf.zip
 PAPER_PDF      := $(BUILD)/paper/$(PAPER_FLAVOUR).pdf
 # LaTeX residue and the stand-alone check live under $(WORK), so $(BUILD)/paper/ holds
 # the deliverables only: the PDF, the zip and the upload folder (sources and assets).
@@ -106,3 +106,15 @@ paper-verify: compile ## Compile a copy of the upload folder in isolation
 	@$(LATEXMK) -cd $(PAPER_VERIFY)/main.tex
 	@test -f $(PAPER_VERIFY)/main.pdf
 	$(call log_done,$(PAPER_DIR)/ compiles on its own -- $(PAPER_VERIFY)/main.pdf)
+
+# Overleaf, free plan, one project: open it, Upload, drag in every file of
+# $(PAPER_DIR)/ (same names overwrite), then delete by hand the files the run
+# lists as removed. The list of the last run is machine-local and outside
+# $(STATE), so make clean keeps it (CLAUDE.md, Gate deviations).
+OVERLEAF_UPLOAD := 00_metadata/overleaf_upload.py
+OVERLEAF_LIST   := $(LOCAL)/overleaf/last-upload.txt
+
+.PHONY: overleaf
+overleaf: compile ## Prepare the Overleaf upload and list what changed
+	@$(RUN) python $(OVERLEAF_UPLOAD) $(PAPER_DIR) $(OVERLEAF_LIST)
+	$(call log_done,upload $(PAPER_DIR)/ or $(PAPER_ZIP) -- last upload listed in $(OVERLEAF_LIST))

@@ -5,4 +5,6 @@ what `~/.claude/rules/python.md` asks a repository to record here.
 
 ## Gate deviations
 
-None. (The former `local/state/` deviation is the global rule since `~/.claude` W-082; removed in W-024.)
+- `rules/makefile.md`, recipes write `$(LOCAL)` only under `$(STATE)`: `make overleaf` writes `local/overleaf/last-upload.txt`, the record of what the Overleaf project holds -- an external state make cannot rebuild, so `make clean` must keep it (W-032).
+
+(The former `local/state/` deviation is the global rule since `~/.claude` W-082; removed in W-024.)
