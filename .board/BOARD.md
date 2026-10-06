@@ -1,8 +1,76 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 0 | done: 108 | pruned: 4
+open path: none   | blocked: 0 | todo roots: 5 | done: 108 | pruned: 4
 
 ## Tree
+
+### E-005 [todo] Baseline surrogate through one shared pipeline
+
+#### W-034 issue [todo] NS mass baseline runs end to end with live feedback
+
+- T-076 [todo] Add torch and skorch -> pyproject.toml and uv.lock
+- T-077 [todo] Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py
+- T-078 [todo] Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py
+- T-079 [todo] Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py
+- T-080 [todo] Write the baseline fit script and make baseline -> build/assets/51_algorithms/
+
+#### W-035 issue [todo] Each baseline run leaves a diagnostics folder
+
+- T-081 [todo] Write the run record test-first -> shared/runs.py with shared/test_runs.py
+- T-082 [todo] Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py
+- T-083 [todo] Write the worst and median curve overlays test-first -> shared/diagnostics.py
+- T-084 [todo] Wire the diagnostics into the baseline run -> local/state/51_algorithms/<run>/
+
+#### W-036 issue [todo] Baseline table for four pairs with fold scores and reference predictors
+
+- T-085 [todo] Write the reference predictors test-first -> shared/surrogate.py
+- T-086 [todo] Run the four pairs with fold scores -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
+- T-087 [todo] Write the Section 5.1 pipeline text -> 50_methodology/51_algorithms/51_algorithms.tex
+
+#### W-037 issue [todo] Charge rebuilt with the true and the predicted mass
+
+- T-088 [todo] Write the charge rebuild test-first -> shared/surrogate.py
+- T-089 [todo] Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1
+
+### E-006 [todo] Data-guided choices tested -- rho_c input, H1, H2 and H3
+
+#### W-038 issue [todo] rho_c input check -- raw against log10
+
+#### W-039 issue [todo] H1 -- log against linear charge target
+
+#### W-040 issue [todo] H2 -- loss x activation at the M_max turning point
+
+#### W-041 issue [todo] H3a -- model pool GPR, XGBoost, MLP and ResNet
+
+#### W-042 issue [todo] H3b -- ripple metric of MLP against ResNet
+
+#### W-043 issue [todo] H3c -- GPR scaling wall
+
+### E-007 [todo] Training refinement, ensemble uncertainty and the final surrogate
+
+#### W-044 spike [todo] Is L-BFGS fine-tuning worth keeping
+
+#### W-045 issue [todo] Ensemble uncertainty over curve-bootstrap resamples
+
+#### W-046 issue [todo] Final surrogate saved and loadable
+
+### E-008 [todo] Speedup and the MCMC application
+
+#### W-047 spike [todo] Speedup baseline and reference posterior without the solver
+
+#### W-048 issue [todo] Pareto front of error against inference time
+
+#### W-049 issue [todo] Mock MCMC recovery with emcee
+
+#### W-050 issue [todo] Surrogate posterior validated against the reference
+
+### E-009 [todo] Manuscript sections no experiment writes, and the release
+
+#### W-051 issue [todo] Physical framework and hypotheses prose
+
+#### W-052 issue [todo] Abstract, introduction, conclusion and title block
+
+#### W-053 spike [todo] What the open-source release publishes
 
 ## Closed
 
@@ -217,9 +285,49 @@ closed 2026-10-05 -- outcome: Given paper.toml with plot.dpi = 450, When make co
 ## Diagram
 ```mermaid
 flowchart TD
+  E005["E-005 todo: Baseline surrogate through one shared pipeline"]
+  E005 --> W034["W-034 issue todo: NS mass baseline runs end to end with live feedback"]
+  W034 --> T076["T-076 todo: Add torch and skorch -> pyproject.toml and uv.lock"]
+  W034 --> T077["T-077 todo: Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py"]
+  W034 --> T078["T-078 todo: Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py"]
+  W034 --> T079["T-079 todo: Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py"]
+  W034 --> T080["T-080 todo: Write the baseline fit script and make baseline -> build/assets/51_algorithms/"]
+  E005 --> W035["W-035 issue todo: Each baseline run leaves a diagnostics folder"]
+  W035 --> T081["T-081 todo: Write the run record test-first -> shared/runs.py with shared/test_runs.py"]
+  W035 --> T082["T-082 todo: Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py"]
+  W035 --> T083["T-083 todo: Write the worst and median curve overlays test-first -> shared/diagnostics.py"]
+  W035 --> T084["T-084 todo: Wire the diagnostics into the baseline run -> local/state/51_algorithms/<run>/"]
+  E005 --> W036["W-036 issue todo: Baseline table for four pairs with fold scores and reference predictors"]
+  W036 --> T085["T-085 todo: Write the reference predictors test-first -> shared/surrogate.py"]
+  W036 --> T086["T-086 todo: Run the four pairs with fold scores -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
+  W036 --> T087["T-087 todo: Write the Section 5.1 pipeline text -> 50_methodology/51_algorithms/51_algorithms.tex"]
+  E005 --> W037["W-037 issue todo: Charge rebuilt with the true and the predicted mass"]
+  W037 --> T088["T-088 todo: Write the charge rebuild test-first -> shared/surrogate.py"]
+  W037 --> T089["T-089 todo: Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1"]
+  E006["E-006 todo: Data-guided choices tested -- rho_c input, H1, H2 and H3"]
+  E006 --> W038["W-038 issue todo: rho_c input check -- raw against log10"]
+  E006 --> W039["W-039 issue todo: H1 -- log against linear charge target"]
+  E006 --> W040["W-040 issue todo: H2 -- loss x activation at the M_max turning point"]
+  E006 --> W041["W-041 issue todo: H3a -- model pool GPR, XGBoost, MLP and ResNet"]
+  E006 --> W042["W-042 issue todo: H3b -- ripple metric of MLP against ResNet"]
+  E006 --> W043["W-043 issue todo: H3c -- GPR scaling wall"]
+  E007["E-007 todo: Training refinement, ensemble uncertainty and the final surrogate"]
+  E007 --> W044["W-044 spike todo: Is L-BFGS fine-tuning worth keeping"]
+  E007 --> W045["W-045 issue todo: Ensemble uncertainty over curve-bootstrap resamples"]
+  E007 --> W046["W-046 issue todo: Final surrogate saved and loadable"]
+  E008["E-008 todo: Speedup and the MCMC application"]
+  E008 --> W047["W-047 spike todo: Speedup baseline and reference posterior without the solver"]
+  E008 --> W048["W-048 issue todo: Pareto front of error against inference time"]
+  E008 --> W049["W-049 issue todo: Mock MCMC recovery with emcee"]
+  E008 --> W050["W-050 issue todo: Surrogate posterior validated against the reference"]
+  E009["E-009 todo: Manuscript sections no experiment writes, and the release"]
+  E009 --> W051["W-051 issue todo: Physical framework and hypotheses prose"]
+  E009 --> W052["W-052 issue todo: Abstract, introduction, conclusion and title block"]
+  E009 --> W053["W-053 spike todo: What the open-source release publishes"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
+  class E005,W034,T076,T077,T078,T079,T080,W035,T081,T082,T083,T084,W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```

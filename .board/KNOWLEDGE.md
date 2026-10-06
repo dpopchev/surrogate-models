@@ -16,7 +16,14 @@
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 
 ## Decisions
-- none recorded
+- 2026-10-06 E-005: H1 is scored on D rebuilt with the true M; D rebuilt with the predicted M is reported as the end-to-end number
+- 2026-10-06 E-005: adapted execution plan: Phase 1 closed as built (curve split, shared charge target, raw M); the H1-H3 configs leave Phase 2 for their own increments (E-006); roots E-005 to E-009 queued in that order
+- 2026-10-06 E-005: diagnostics #1-#6 in E-005 (valid MARE, lr, error CDF, worst/median curves, reference predictors, run record); #7-#12 go to the E-006/E-007 item whose hypothesis they test
+- 2026-10-06 E-005: early stopping validates on held-out curves, never skorch's default random rows (W-017: rows of one curve are each other's nearest neighbours)
+- 2026-10-06 E-005: feedback: make log lines, logger stage lines, per-epoch PrintLog to the logger with valid_mare and lr, an outer tqdm over fits, the batch bar opt-in
+- 2026-10-06 E-005: one model per target: H1 varies only the charge model, H2 only the mass model; MCMC sees one predict -> (M, D)
+- 2026-10-06 E-005: skorch over Lightning: one sklearn Pipeline, GroupKFold and scorer path for GPR, XGBoost and the networks; CPU-only tabular data needs none of Lightning's strengths
+- 2026-10-06 E-005: the mean and nearest-curve reference predictors are rows of the paper's baseline table; the baseline MLP (ReLU, MSE, AdamW) is the control arm of H2 and H3
 
 ## Deviations
 - none recorded
