@@ -186,8 +186,34 @@ $(SECTIONS_OUT)/%.pdf: compile
 	$(call log_done,section $* compiled on its own to $@)
 
 .PHONY: section
-section: $(SECTIONS_OUT)/$(S).pdf ## Compile section S alone into build/paper/sections/
+section: $(SECTIONS_OUT)/$(S).pdf ## Compile one section alone, e.g. S=50_methodology
 
 .PHONY: sections
 sections: $(SECTIONS:%=$(SECTIONS_OUT)/%.pdf) ## Compile each section alone into build/paper/sections/
 	$(call log_done,$(words $(SECTIONS)) sections compiled to $(SECTIONS_OUT)/)
+
+# The help menu holds one short line per target (rules/makefile.md); the worked examples of the
+# common commands live here, so they are one command away (W-057).
+.PHONY: examples
+examples: ## Show common commands with examples
+	@printf '%s\n' \
+	  'Train and watch the baseline surrogate' \
+	  '  make baseline                   fit it (minutes) -> Section 5.1 numbers and parity figure' \
+	  '  make follow                     watch the running fit live from any terminal (Ctrl-C ends)' \
+	  '  make runs                       one line per run, newest first -- MARE, epochs, commit' \
+	  '  make run                        the latest run files -- log, run.json, diagnostics PNGs' \
+	  '  make run R=<run folder>         one older run, its folder name taken from make runs' \
+	  '' \
+	  'The paper' \
+	  '  make section S=50_methodology   one section as its own PDF -> $(SECTIONS_OUT)/50_methodology.pdf' \
+	  '  make sections                   every section as its own PDF -> $(SECTIONS_OUT)/' \
+	  '  make compile                    the whole paper -> $(PAPER_PDF)' \
+	  '  make overleaf                   the upload folder and what changed since the last upload' \
+	  '  sections for S: $(SECTIONS)' \
+	  '' \
+	  'Checks and the board' \
+	  '  make check                      every check -- board, lint, types, tests, the paper build' \
+	  '  make test-quick                 the tests, stopping at the first failure' \
+	  '  make board-status               the open path and what is blocked' \
+	  '  make board-next                 the current and the next item per level'
+	$(call log_done,examples shown -- make help lists every target)
