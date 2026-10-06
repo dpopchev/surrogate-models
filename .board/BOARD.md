@@ -35,6 +35,12 @@ open path: E-005   | blocked: 0 | todo roots: 4 | done: 122 | pruned: 4
 - T-088 [todo] Write the charge rebuild test-first -> shared/surrogate.py
 - T-089 [todo] Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1
 
+#### W-054 issue [todo] A running fit is visible live from the developer's terminal
+
+- T-093 [todo] Write each run's log to its folder -> <run>/train.log and latest.log
+- T-094 [todo] Log a fit progress line with elapsed and remaining time -> fit_baseline.py
+- T-095 [todo] Add make follow -> tail the running baseline's log
+
 ### E-006 [todo] Data-guided choices tested -- rho_c input, H1, H2 and H3
 
 #### W-038 issue [todo] rho_c input check -- raw against log10
@@ -310,6 +316,10 @@ flowchart TD
   E005 --> W037["W-037 issue todo: Charge rebuilt with the true and the predicted mass"]
   W037 --> T088["T-088 todo: Write the charge rebuild test-first -> shared/surrogate.py"]
   W037 --> T089["T-089 todo: Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1"]
+  E005 --> W054["W-054 issue todo: A running fit is visible live from the developer's terminal"]
+  W054 --> T093["T-093 todo: Write each run's log to its folder -> <run>/train.log and latest.log"]
+  W054 --> T094["T-094 todo: Log a fit progress line with elapsed and remaining time -> fit_baseline.py"]
+  W054 --> T095["T-095 todo: Add make follow -> tail the running baseline's log"]
   E006["E-006 todo: Data-guided choices tested -- rho_c input, H1, H2 and H3"]
   E006 --> W038["W-038 issue todo: rho_c input check -- raw against log10"]
   E006 --> W039["W-039 issue todo: H1 -- log against linear charge target"]
@@ -337,5 +347,5 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E005 doing
   class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092 done
-  class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
+  class W036,T085,T086,T087,W037,T088,T089,W054,T093,T094,T095,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```

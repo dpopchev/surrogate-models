@@ -29,9 +29,10 @@
 - 2026-10-06 E-005: early stopping validates on held-out curves, never skorch's default random rows (W-017: rows of one curve are each other's nearest neighbours)
 - 2026-10-06 E-005: feedback: make log lines, logger stage lines, per-epoch PrintLog to the logger with valid_mare and lr, an outer tqdm over fits, the batch bar opt-in
 - 2026-10-06 E-005: one model per target: H1 varies only the charge model, H2 only the mass model; MCMC sees one predict -> (M, D)
+- 2026-10-06 E-005: progress relay (developer): when the agent runs a long target through the chat, it relays the run's progress lines into the chat every few minutes, beside make follow
 - 2026-10-06 E-005: skorch over Lightning: one sklearn Pipeline, GroupKFold and scorer path for GPR, XGBoost and the networks; CPU-only tabular data needs none of Lightning's strengths
 - 2026-10-06 E-005: the mean and nearest-curve reference predictors are rows of the paper's baseline table; the baseline MLP (ReLU, MSE, AdamW) is the control arm of H2 and H3
 - 2026-10-06 W-034: error macros (MARE, RMSE) print in scientific notation at every magnitude
 
 ## Deviations
-- none recorded
+- 2026-10-06 E-005: AC5 and W-054 added (developer): runs started through the chat showed nothing live (captured output, no TTY, tqdm off); W-036 now waits for W-054 so its fits are observable
