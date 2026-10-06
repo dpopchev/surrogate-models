@@ -28,7 +28,7 @@ open path: E-005   | blocked: 0 | todo roots: 4 | done: 126 | pruned: 4
 
 - T-085 [todo] Write the reference predictors test-first -> shared/surrogate.py
 - T-086 [todo] Run the four pairs with fold scores -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
-- T-087 [todo] Write the Section 5.1 pipeline text -> 50_methodology/51_algorithms/51_algorithms.tex
+- T-087 [todo] Add the four-pair baseline table to Section 5.1 -> 50_methodology/51_algorithms/51_algorithms.tex
 
 #### W-037 issue [todo] Charge rebuilt with the true and the predicted mass
 
@@ -40,6 +40,15 @@ open path: E-005   | blocked: 0 | todo roots: 4 | done: 126 | pruned: 4
 - T-093 [done] Write each run's log to its folder -> <run>/train.log and latest.log
 - T-094 [done] Log a fit progress line with elapsed and remaining time -> fit_baseline.py
 - T-095 [done] Add make follow -> tail the running baseline's log
+
+#### W-055 issue [todo] Section 5.1 describes the pipeline and the NS mass baseline
+
+- T-097 [todo] Load the baseline numbers only when present -> 00_metadata/article.tex and 51_algorithms.tex
+- T-098 [todo] Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex
+
+#### W-056 issue [todo] The epoch table names its time column lapse_s
+
+- T-096 [todo] Print the epoch time as lapse_s -> shared/surrogate.py
 
 ### E-006 [todo] Data-guided choices tested -- rho_c input, H1, H2 and H3
 
@@ -312,7 +321,7 @@ flowchart TD
   E005 --> W036["W-036 issue todo: Baseline table for four pairs with fold scores and reference predictors"]
   W036 --> T085["T-085 todo: Write the reference predictors test-first -> shared/surrogate.py"]
   W036 --> T086["T-086 todo: Run the four pairs with fold scores -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
-  W036 --> T087["T-087 todo: Write the Section 5.1 pipeline text -> 50_methodology/51_algorithms/51_algorithms.tex"]
+  W036 --> T087["T-087 todo: Add the four-pair baseline table to Section 5.1 -> 50_methodology/51_algorithms/51_algorithms.tex"]
   E005 --> W037["W-037 issue todo: Charge rebuilt with the true and the predicted mass"]
   W037 --> T088["T-088 todo: Write the charge rebuild test-first -> shared/surrogate.py"]
   W037 --> T089["T-089 todo: Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1"]
@@ -320,6 +329,11 @@ flowchart TD
   W054 --> T093["T-093 done: Write each run's log to its folder -> <run>/train.log and latest.log"]
   W054 --> T094["T-094 done: Log a fit progress line with elapsed and remaining time -> fit_baseline.py"]
   W054 --> T095["T-095 done: Add make follow -> tail the running baseline's log"]
+  E005 --> W055["W-055 issue todo: Section 5.1 describes the pipeline and the NS mass baseline"]
+  W055 --> T097["T-097 todo: Load the baseline numbers only when present -> 00_metadata/article.tex and 51_algorithms.tex"]
+  W055 --> T098["T-098 todo: Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex"]
+  E005 --> W056["W-056 issue todo: The epoch table names its time column lapse_s"]
+  W056 --> T096["T-096 todo: Print the epoch time as lapse_s -> shared/surrogate.py"]
   E006["E-006 todo: Data-guided choices tested -- rho_c input, H1, H2 and H3"]
   E006 --> W038["W-038 issue todo: rho_c input check -- raw against log10"]
   E006 --> W039["W-039 issue todo: H1 -- log against linear charge target"]
@@ -347,5 +361,5 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E005 doing
   class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095 done
-  class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
+  class W036,T085,T086,T087,W037,T088,T089,W055,T097,T098,W056,T096,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
