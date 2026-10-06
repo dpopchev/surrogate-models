@@ -19,6 +19,7 @@ from eda_neutron_stars import (
     main,
     numbers,
     pile_up_share,
+    raw_numbers,
     split_strategies,
     table_tex,
 )
@@ -39,6 +40,14 @@ def curves(target: dict[tuple[float, float], list[float]]) -> pd.DataFrame:
 
 
 TABLE = curves({(1.0, 1.0): [0.1, 0.2], (2.0, 1.0): [0.3, 0.4], (1.0, 2.0): [0.5, 0.6]})
+
+
+def test_the_raw_counts_become_macros() -> None:
+    assert raw_numbers({"runs": 3, "empty_runs": 1, "rows": 5}) == {
+        "nsEdaRawRuns": "3",
+        "nsEdaEmptyRuns": "1",
+        "nsEdaRawRows": "5",
+    }
 
 
 def test_charge_targets_compare_log10_d_and_log10_d_over_m() -> None:
@@ -226,7 +235,9 @@ class TestMain:
     @pytest.fixture
     def assets(self, tmp_path: Path) -> Path:
         table, assets = tmp_path / "ns.parquet", tmp_path / "assets"
-        DENSE.to_parquet(table)
+        prepared = DENSE.copy()
+        prepared.attrs.update({"runs": 5, "empty_runs": 1, "rows": 20})  # as preparation keeps
+        prepared.to_parquet(table)
         (assets / "41_neutron_stars").mkdir(parents=True)
         (assets / "41_neutron_stars" / "old.pdf").write_text("deselected since the last run")
         (assets / "42_black_holes").mkdir()
@@ -248,3 +259,7 @@ class TestMain:
 
     def test_leaves_other_sections_alone(self, assets) -> None:
         assert (assets / "42_black_holes" / "kept.tex").is_file()
+
+    def test_writes_the_raw_counts_into_the_numbers(self, assets) -> None:
+        numbers_tex = (assets / "41_neutron_stars" / "41_neutron_stars_num.tex").read_text()
+        assert "\\newcommand{\\nsEdaRawRows}{20}" in numbers_tex

@@ -10,6 +10,7 @@ The dataset-agnostic machinery lives in shared/eda.py.
 
 import logging
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, assert_never, get_args
@@ -222,6 +223,16 @@ def evidence(table: pd.DataFrame, folds: int, seed: int, window: float = 0.09) -
     )
 
 
+def raw_numbers(raw: Mapping[str, int]) -> dict[str, str]:
+    """The raw file's counts the preparation kept with the table (its runs, the empty ones,
+    its rows), as \\nsEda macros for Section 2.4."""
+    return {
+        "nsEdaRawRuns": str(raw["runs"]),
+        "nsEdaEmptyRuns": str(raw["empty_runs"]),
+        "nsEdaRawRows": str(raw["rows"]),
+    }
+
+
 def numbers(found: Evidence) -> dict[str, str]:
     """Every number Section 4.1 cites, keyed by its \\nsEda macro name."""
     summary = {(s.column, s.scale): s for s in found.summaries}
@@ -254,8 +265,8 @@ def numbers(found: Evidence) -> dict[str, str]:
         "nsEdaCorrBetaLogD": f"{log_d.pearson_beta:.2f}",
         "nsEdaCorrBetaLogDM": f"{log_dm.pearson_beta:.2f}",
         # r squared: the share of the target's variance a straight line in lambda explains.
-        "nsEdaLambdaLinearPercentLogD": f"{100 * log_d.pearson_lambda ** 2:.0f}",
-        "nsEdaLambdaLinearPercentLogDM": f"{100 * log_dm.pearson_lambda ** 2:.0f}",
+        "nsEdaLambdaLinearPercentLogD": f"{100 * log_d.pearson_lambda**2:.0f}",
+        "nsEdaLambdaLinearPercentLogDM": f"{100 * log_dm.pearson_lambda**2:.0f}",
         "nsEdaBetaSharePercent": f"{100 * found.beta_share:.0f}",
         "nsEdaSameCurvePercent": f"{100 * found.adjacency.same_curve_share:.1f}",
         "nsEdaWithinMedian": f"{found.adjacency.within_median:.3f}",
@@ -305,9 +316,7 @@ def _charge_table(found: Evidence) -> str:
         f"{t.pearson_beta:.2f}"
         for t, (_, label) in zip(found.targets, CHARGE_TARGETS, strict=True)
     ]
-    header = (
-        "Target & Pearson $M$ & Spearman $M$ & Pearson $\\lambda$ & Pearson $\\beta$"
-    )
+    header = "Target & Pearson $M$ & Spearman $M$ & Pearson $\\lambda$ & Pearson $\\beta$"
     caption = "Neutron stars: correlation of the two candidate charge targets."
     return booktabs("ns-charge-correlation", caption, "lrrrr", header, rows)
 
@@ -468,8 +477,11 @@ def _mass_max(table: pd.DataFrame, style: PlotStyle, window: float = 0.09) -> Fi
     left.set_ylabel("rows")
     maxima = table.groupby(list(CURVE))["M"].max().unstack("beta")
     mesh = right.pcolormesh(
-        maxima.columns, maxima.index, maxima.to_numpy(),
-        cmap=colormap(style.neutron_stars.lambda_cmap), shading="nearest",
+        maxima.columns,
+        maxima.index,
+        maxima.to_numpy(),
+        cmap=colormap(style.neutron_stars.lambda_cmap),
+        shading="nearest",
     )
     right.set_xlabel(LABELS["beta"])
     right.set_ylabel(LABELS["lambda"])
@@ -486,8 +498,13 @@ def _charge_row(
     """One row of the charge-target figure: both targets against M, coloured by column."""
     scatters = [
         ax.scatter(
-            table["M"], table[target], c=table[column], cmap=cmap,
-            s=0.2, linewidths=0, rasterized=True,
+            table["M"],
+            table[target],
+            c=table[column],
+            cmap=cmap,
+            s=0.2,
+            linewidths=0,
+            rasterized=True,
         )
         for ax, (target, _) in zip(axes, CHARGE_TARGETS, strict=True)
     ]
@@ -498,9 +515,7 @@ def _charge_row(
 
 def _charge_target(table: pd.DataFrame, style: PlotStyle) -> Figure:
     """M against log10 D and log10 D/M, coloured by lambda and by beta."""
-    fig, axes = plt.subplots(
-        2, 2, figsize=text_width_size(0.9), sharex=True, layout="constrained"
-    )
+    fig, axes = plt.subplots(2, 2, figsize=text_width_size(0.9), sharex=True, layout="constrained")
     _charge_row(fig, axes[0, :], table, "lambda", colormap(style.neutron_stars.lambda_cmap))
     _charge_row(fig, axes[1, :], table, "beta", colormap(style.neutron_stars.beta_cmap))
     for ax in axes[1, :]:
@@ -515,7 +530,9 @@ def _mass_density(table: pd.DataFrame, style: PlotStyle) -> Figure:
     groups = [g for _, g in table.groupby(list(CURVE))]
     lines = LineCollection(
         [np.column_stack((np.log10(g["rho_c"]), g["M"])) for g in groups],
-        array=np.array([g["lambda"].iloc[0] for g in groups]), cmap=cmap, linewidths=0.3,
+        array=np.array([g["lambda"].iloc[0] for g in groups]),
+        cmap=cmap,
+        linewidths=0.3,
     )
     lines.set_rasterized(True)
     ax.add_collection(lines)
@@ -593,7 +610,12 @@ def main(
     assert source.is_file(), f"prepared NS table not found: {source}"
     config = config or load_config()
     apply_style(config.plot)
-    table = with_charge_targets(pd.read_parquet(source))
+    prepared = pd.read_parquet(source)
+    raw = {str(key): int(value) for key, value in prepared.attrs.items()}
+    assert {"runs", "empty_runs", "rows"} <= raw.keys(), (
+        f"{source} carries no raw counts -- re-run make data, the preparation writes them"
+    )
+    table = with_charge_targets(prepared)
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
@@ -604,7 +626,7 @@ def main(
         plt.close(fig)
         (out / f"{asset(figure)}.tex").write_text(figure_tex(figure))
     found = evidence(table, folds, seed)
-    (out / f"{SECTION}_num.tex").write_text(render_macros(numbers(found)))
+    (out / f"{SECTION}_num.tex").write_text(render_macros(numbers(found) | raw_numbers(raw)))
     for name in section.tables:
         (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name))
     logger.info(

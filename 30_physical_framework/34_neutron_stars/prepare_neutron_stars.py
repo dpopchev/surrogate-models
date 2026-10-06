@@ -8,7 +8,7 @@ fixed settings, cut each curve after its first M maximum (keeping it), require D
 import logging
 import sys
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from itertools import pairwise
 from pathlib import Path
 
@@ -46,6 +46,16 @@ class Block:
     params: tuple[tuple[str, float], ...]
     names: tuple[str, ...]
     rows: tuple[tuple[float, ...], ...]
+
+
+@dataclass(frozen=True)
+class RawCounts:
+    """What the raw file held before preparation: its runs, the empty (non-converged) ones,
+    and its rows."""
+
+    runs: int
+    empty_runs: int
+    rows: int
 
 
 @dataclass(frozen=True)
@@ -159,6 +169,15 @@ def parse_blocks(text: str) -> tuple[Block, ...]:
     return tuple(_block(lines[a], lines[a + 1 : b]) for a, b in pairwise(starts))
 
 
+def raw_counts(blocks: tuple[Block, ...]) -> RawCounts:
+    """Count the raw runs, the empty ones and the rows, before any preparation."""
+    return RawCounts(
+        runs=len(blocks),
+        empty_runs=sum(1 for block in blocks if not block.rows),
+        rows=sum(len(block.rows) for block in blocks),
+    )
+
+
 def check_layout(blocks: list[Block]) -> list[Block]:
     """Return the blocks unchanged; raise HeaderLayoutError when their headers differ."""
     if (layouts := len({block.names for block in blocks})) != 1:
@@ -248,6 +267,8 @@ def main(argv: list[str], spec: CurveSpec = NEUTRON_STARS) -> None:
     assert source.is_file(), f"input dataset not found: {source}"
     blocks = parse_blocks(source.read_text())
     table = prepare_blocks(blocks, spec)
+    # The raw counts travel with the table (parquet metadata) to the EDA's numbers.
+    table.attrs.update(asdict(raw_counts(blocks)))
     out.parent.mkdir(parents=True, exist_ok=True)
     table.to_parquet(out, index=False)
     assert pd.read_parquet(out).equals(table), f"{out} does not round-trip"

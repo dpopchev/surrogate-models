@@ -10,20 +10,18 @@ from prepare_neutron_stars import (
     HeaderLayoutError,
     NonPositiveTargetError,
     NonRisingOrderError,
+    RawCounts,
     main,
     make_curve_spec,
     parse_blocks,
     parse_params,
     prepare,
+    raw_counts,
 )
 
 # Two runs of curve parameter g; the second did not converge and has no header or rows.
 TEXT = (
-    "# s = 7.0, g = 1.0\n"
-    "   o   y   g   k\n"
-    "1.0 2.0 1.0 9.0 \n"
-    "2.0 5.0 1.0 9.0 \n"
-    "# s = 7.0, g = 2.0\n"
+    "# s = 7.0, g = 1.0\n   o   y   g   k\n1.0 2.0 1.0 9.0 \n2.0 5.0 1.0 9.0 \n# s = 7.0, g = 2.0\n"
 )
 
 
@@ -37,6 +35,10 @@ def test_every_param_line_opens_a_block_even_without_rows() -> None:
 
 def test_empty_block_has_no_rows() -> None:
     assert parse_blocks(TEXT)[1].rows == ()
+
+
+def test_raw_counts_give_runs_empty_runs_and_rows() -> None:
+    assert raw_counts(parse_blocks(TEXT)) == RawCounts(runs=2, empty_runs=1, rows=2)
 
 
 def test_block_rows_are_read_under_its_header() -> None:
@@ -134,6 +136,13 @@ def test_main_writes_the_prepared_table_as_parquet(tmp_path: Path) -> None:
     source.write_text(curve((2.0, 5.0, 4.0)))
     main([str(source), str(out)], spec=SPEC)
     assert pd.read_parquet(out)["y"].tolist() == [2.0, 5.0]
+
+
+def test_main_keeps_the_raw_counts_with_the_table(tmp_path: Path) -> None:
+    source, out = tmp_path / "in.dat", tmp_path / "out.parquet"
+    source.write_text(curve((2.0, 5.0, 4.0)))
+    main([str(source), str(out)], spec=SPEC)
+    assert pd.read_parquet(out).attrs == {"runs": 1, "empty_runs": 0, "rows": 3}
 
 
 def test_spec_whose_positive_column_is_not_kept_is_rejected() -> None:
