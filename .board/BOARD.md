@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-004 > W-032   | blocked: 0 | todo roots: 0 | done: 103 | pruned: 4
+open path: E-004   | blocked: 0 | todo roots: 0 | done: 104 | pruned: 4
 
 ## Tree
 
@@ -11,7 +11,7 @@ open path: E-004 > W-032   | blocked: 0 | todo roots: 0 | done: 103 | pruned: 4
 - T-070 [done] Write each section's assets into its own folder test-first -> both EDA modules and preprocessing_numbers.py
 - T-071 [done] Add make assets and move LaTeX residue to build/.work -> mk/paper.mk
 
-#### W-032 issue [doing] make overleaf keeps a drag-and-drop Overleaf project in sync
+#### W-032 issue [done] make overleaf keeps a drag-and-drop Overleaf project in sync
 
 - T-072 [done] Diff the upload folder against the last upload test-first -> 00_metadata/overleaf_upload.py
 - T-073 [done] Wire make overleaf -> mk/paper.mk, build/paper/overleaf/ and overleaf.zip
@@ -219,7 +219,7 @@ flowchart TD
   E004 --> W031["W-031 issue done: build/ grouped by section"]
   W031 --> T070["T-070 done: Write each section's assets into its own folder test-first -> both EDA modules and preprocessing_numbers.py"]
   W031 --> T071["T-071 done: Add make assets and move LaTeX residue to build/.work -> mk/paper.mk"]
-  E004 --> W032["W-032 issue doing: make overleaf keeps a drag-and-drop Overleaf project in sync"]
+  E004 --> W032["W-032 issue done: make overleaf keeps a drag-and-drop Overleaf project in sync"]
   W032 --> T072["T-072 done: Diff the upload folder against the last upload test-first -> 00_metadata/overleaf_upload.py"]
   W032 --> T073["T-073 done: Wire make overleaf -> mk/paper.mk, build/paper/overleaf/ and overleaf.zip"]
   E004 --> W033["W-033 issue todo: One PDF per section with references resolved"]
@@ -230,7 +230,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E004,W032 doing
-  class W031,T070,T071,T072,T073 done
+  class E004 doing
+  class W031,T070,T071,W032,T072,T073 done
   class W033,T074,T075 todo
 ```
