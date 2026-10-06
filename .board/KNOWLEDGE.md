@@ -16,6 +16,7 @@
 - 2026-10-06 W-034: T-090: fact: restoring the best epoch cuts NS mass test MARE 0.0165 -> 0.0066 -> the reported baseline
 - 2026-10-06 W-035: T-084: fact: worst NS mass curves: short, low-mass, beta 0.4-2.4, lambda \~4 -> E-006 error map, H2
 - 2026-10-06 W-035: T-092: fact: one seeded fit took 213-525 s (load) -> cite the fit time as an order of magnitude
+- 2026-10-06 W-036: T-086: fact: nearest curve beats the MLP test MARE on NS M, BH M, BH Y; MLP wins NS Y only -> E-005 refuted as stated
 - 2026-10-06 W-036: T-120: fact: epoch 11.4 s at torch's 7 threads, 2.6 s at 1 thread; parallel fits no faster -> serial, 1 thread
 
 ## Open questions
