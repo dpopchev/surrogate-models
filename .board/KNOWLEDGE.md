@@ -48,5 +48,6 @@
 - 2026-10-06 E-005: parked for E-009 (developer): the revised paper structure and the dataset papers in refs.bib are adopted first; E-005 resumes at W-036 with no work item open
 - 2026-10-06 E-005: parked for W-058 (developer): the [landing] review runs as a standalone root; E-005 resumes at W-036 with no work item open
 - 2026-10-06 E-009: option B (developer): W-051 first, branch stacked on W-059's
+- 2026-10-06 E-009: parked for E-005 (developer); W-052 waits for results
 - 2026-10-06 E-009: placeholders (developer): 13 TODO_ refs.bib keys cited; real sources in standalone W-061
 - 2026-10-06 E-009: re-planned from the developer's revised paper structure and the dataset papers added to refs.bib (c83b6ef): W-059 and W-060 added, W-051 re-scoped to Sections 2.1 to 2.4
