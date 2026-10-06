@@ -11,6 +11,7 @@
 - 2026-10-06 E-005: fact: every dataset value is dimensionless or normalized (developer), M in solar masses -> code, board and paper say 'original scale' (as opposed to standardized), never 'physical units'
 - 2026-10-06 T-077: fact: split.parquet holds both datasets, one row per curve (dataset, curve keys, label test|fold0-4, ablation; BH rows have lambda NaN) -> design() filters by dataset and joins many-to-one on the curve keys
 - 2026-10-06 W-032: standing: make overleaf refreshes the upload list on every run -> run it only right before an upload, or the removed list of the earlier run is lost supersedes: W-032#1
+- 2026-10-06 W-034: T-080: fact: baseline NS mass test MARE 0.0165 scored at epoch 37, but the best valid epoch was 17 (valid MARE 0.0062); valid loss spikes late, lr barely decays (cosine T_max 500) -> T-090 restores the best epoch
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?

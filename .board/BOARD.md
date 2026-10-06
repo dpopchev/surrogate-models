@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-034 > T-080   | blocked: 0 | todo roots: 4 | done: 112 | pruned: 4
+open path: E-005 > W-034 > T-090   | blocked: 0 | todo roots: 4 | done: 113 | pruned: 4
 
 ## Tree
 
@@ -12,7 +12,8 @@ open path: E-005 > W-034 > T-080   | blocked: 0 | todo roots: 4 | done: 112 | pr
 - T-077 [done] Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py
 - T-078 [done] Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py
 - T-079 [done] Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py
-- T-080 [doing] Write the baseline fit script and make baseline -> build/assets/51_algorithms/   <- ACTIVE LEAF
+- T-080 [done] Write the baseline fit script and make baseline -> build/assets/51_algorithms/
+- T-090 [doing] Restore the best epoch's weights at early stopping -> shared/surrogate.py   <- ACTIVE LEAF
 
 #### W-035 issue [todo] Each baseline run leaves a diagnostics folder
 
@@ -291,7 +292,8 @@ flowchart TD
   W034 --> T077["T-077 done: Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py"]
   W034 --> T078["T-078 done: Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py"]
   W034 --> T079["T-079 done: Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py"]
-  W034 --> T080["T-080 doing: Write the baseline fit script and make baseline -> build/assets/51_algorithms/ -- ACTIVE LEAF"]
+  W034 --> T080["T-080 done: Write the baseline fit script and make baseline -> build/assets/51_algorithms/"]
+  W034 --> T090["T-090 doing: Restore the best epoch's weights at early stopping -> shared/surrogate.py -- ACTIVE LEAF"]
   E005 --> W035["W-035 issue todo: Each baseline run leaves a diagnostics folder"]
   W035 --> T081["T-081 todo: Write the run record test-first -> shared/runs.py with shared/test_runs.py"]
   W035 --> T082["T-082 todo: Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py"]
@@ -329,7 +331,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W034,T080 doing
-  class T076,T077,T078,T079 done
+  class E005,W034,T090 doing
+  class T076,T077,T078,T079,T080 done
   class W035,T081,T082,T083,T084,W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
