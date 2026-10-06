@@ -50,17 +50,26 @@ def chosen_curves(
 
 
 def curve_overlay(
-    x: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray, groups: np.ndarray, k: int
+    x: np.ndarray,
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    groups: np.ndarray,
+    k: int,
+    names: Mapping[int, str] | None = None,
 ) -> Figure:
     """The chosen curves drawn true (line) against predicted (markers) along x, each labelled
-    with its curve id and MARE; the median curve is the last one."""
+    with its name (its curve key; the curve id when unnamed) and MARE; the median curve is the
+    last one."""
+    names = names or {}
     scores = _curve_mare(y_true, y_pred, groups)
     figure, axes = plt.subplots(layout="constrained")
     for curve in chosen_curves(y_true, y_pred, groups, k):
         rows = groups == curve
         order = np.argsort(x[rows])
         (true_line,) = axes.plot(
-            x[rows][order], y_true[rows][order], label=f"curve {curve}, MARE {scores[curve]:.2e}"
+            x[rows][order],
+            y_true[rows][order],
+            label=f"{names.get(curve, f'curve {curve}')}, MARE {scores[curve]:.2e}",
         )
         axes.plot(
             x[rows][order],

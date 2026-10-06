@@ -79,10 +79,10 @@ $(PREP_ASSETS): $(PREP_NUMBERS) paper.toml shared/config.py $(STATE)/split.parqu
 BASELINE        := 50_methodology/51_algorithms/fit_baseline.py
 BASELINE_ASSETS := $(ASSETS)/51_algorithms/51_algorithms_num.tex
 
-$(BASELINE_ASSETS): $(BASELINE) paper.toml shared/config.py shared/design.py shared/surrogate.py shared/plots.py shared/eda.py $(STATE)/neutron_stars.parquet $(STATE)/split.parquet
+$(BASELINE_ASSETS): $(BASELINE) paper.toml shared/config.py shared/design.py shared/surrogate.py shared/plots.py shared/eda.py shared/runs.py shared/diagnostics.py $(STATE)/neutron_stars.parquet $(STATE)/split.parquet
 	$(call log_info,fitting the NS mass baseline -- one line per epoch)
-	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/split.parquet $(ASSETS)
-	$(call log_done,baseline numbers and parity figure written to $(@D)/)
+	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/split.parquet $(ASSETS) $(STATE)
+	$(call log_done,baseline numbers and parity figure written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
 
 .PHONY: baseline
 baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 5.1

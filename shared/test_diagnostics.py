@@ -39,6 +39,14 @@ def test_the_overlay_draws_a_true_and_a_predicted_line_per_chosen_curve() -> Non
     assert len(figure.axes[0].get_lines()) == 6
 
 
+def test_the_overlay_labels_each_curve_by_its_name() -> None:
+    names = {curve: f"p = {curve}" for curve in range(5)}
+    figure = curve_overlay(CURVE_X, CURVE_TRUE, CURVE_PRED, CURVE_IDS, k=2, names=names)
+    legend = figure.axes[0].get_legend()
+    texts = legend.get_texts() if legend is not None else []
+    assert texts[0].get_text().startswith("p = 3,")
+
+
 def test_the_error_cdf_legend_names_the_median_the_tail_and_the_worst() -> None:
     legend = error_cdf(np.linspace(0.001, 0.1, 100)).axes[0].get_legend()
     texts = legend.get_texts() if legend is not None else []

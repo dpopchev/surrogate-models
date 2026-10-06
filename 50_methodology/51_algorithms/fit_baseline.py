@@ -3,17 +3,22 @@
 Inputs: the prepared NS table and the frozen curve split (local/state/). The net trains on every
 non-test curve through shared/design.py and shared/surrogate.py, with early stopping on held-out
 training curves, and is scored once on the test curves. Outputs, in the section's asset folder:
-the \\baseNsMass... macros (test MARE, RMSE, fit seconds, epochs) and the parity figure.
+the \\baseNsMass... macros (test MARE, RMSE, fit seconds, epochs) and the parity figure; in
+<state dir>/51_algorithms/<run>/, the run record and the diagnostics for the developer (W-035).
 
-Run as `uv run python <this file> <ns.parquet> <split.parquet> <asset dir>` (mk/paper.mk does).
+Run as `uv run python <this file> <ns.parquet> <split.parquet> <asset dir> <state dir>`
+(mk/paper.mk does).
 """
 
 import logging
+import subprocess
 import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,21 +26,26 @@ import pandas as pd
 from matplotlib.figure import Figure
 
 from shared.config import PaperConfig, load_config
-from shared.design import NEUTRON_STARS, Design, design
-from shared.eda import render_macros, sci_tex
+from shared.design import NEUTRON_STARS, Design, DesignSpec, design
+from shared.diagnostics import curve_overlay, error_cdf, loss_curve
+from shared.eda import curve_ids, render_macros, sci_tex
 from shared.plots import PlotStyle, anchor_color, apply_style
+from shared.runs import RunRecord, from_json, run_name, to_json
 from shared.surrogate import Training, make_estimator, mare, rmse
 
 logger = logging.getLogger(__name__)
 
 SECTION = "51_algorithms"
+# The diagnostics are for the screen, not print: a lower resolution than the paper's figures.
+DIAGNOSTICS_DPI = 150
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
 class Fit:
-    """One fitted baseline scored on the test curves."""
+    """One fitted baseline scored on the test curves, with its per-epoch history (batches
+    dropped) and the test rows' inputs and curves for the diagnostics."""
 
     y_true: np.ndarray
     y_pred: np.ndarray
@@ -43,6 +53,10 @@ class Fit:
     rmse: float
     seconds: float
     epochs: int
+    best_epoch: int
+    history: tuple[dict[str, Any], ...]
+    x_test: np.ndarray
+    groups_test: np.ndarray
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -56,8 +70,23 @@ def fit_and_score(design: Design, training: Training, clock: Callable[[], float]
     estimator.fit(design.X[train], design.y[train], net__groups=design.groups[train])
     seconds = clock() - started
     y_true, y_pred = design.y[test], estimator.predict(design.X[test])
-    epochs = len(estimator.named_steps["net"].history)
-    return Fit(y_true, y_pred, mare(y_true, y_pred), rmse(y_true, y_pred), seconds, epochs)
+    history = tuple(
+        {key: value for key, value in row.items() if key != "batches"}
+        for row in estimator.named_steps["net"].history
+    )
+    best_epoch = int(min(history, key=lambda row: row["valid_loss"])["epoch"])
+    return Fit(
+        y_true=y_true,
+        y_pred=y_pred,
+        mare=mare(y_true, y_pred),
+        rmse=rmse(y_true, y_pred),
+        seconds=seconds,
+        epochs=len(history),
+        best_epoch=best_epoch,
+        history=history,
+        x_test=design.X[test],
+        groups_test=design.groups[test],
+    )
 
 
 def numbers(fit: Fit) -> dict[str, str]:
@@ -67,6 +96,20 @@ def numbers(fit: Fit) -> dict[str, str]:
         "baseNsMassRmse": sci_tex(fit.rmse),
         "baseNsMassFitSeconds": f"{fit.seconds:.0f}",
         "baseNsMassEpochs": str(fit.epochs),
+    }
+
+
+SYMBOLS = {"beta": "$\\beta$", "lambda": "$\\lambda$"}
+
+
+def curve_names(table: pd.DataFrame, spec: DesignSpec) -> dict[int, str]:
+    """Each curve id of the table named by its key, e.g. "$\\beta$ = 1, $\\lambda$ = 2"."""
+    keys = table[list(spec.space.curve)].assign(curve=curve_ids(table, spec.space))
+    return {
+        int(row["curve"]): ", ".join(
+            f"{SYMBOLS.get(column, column)} = {row[column]:g}" for column in spec.space.curve
+        )
+        for _, row in keys.drop_duplicates("curve").iterrows()
     }
 
 
@@ -103,25 +146,30 @@ def figure_tex() -> str:
 # --- shell ------------------------------------------------------------------------------------
 
 
-def main(argv: list[str], config: PaperConfig | None = None) -> None:
+def main(
+    argv: list[str],
+    config: PaperConfig | None = None,
+    commit: Callable[[], str] | None = None,
+    now: Callable[[], datetime] | None = None,
+) -> None:
     """Fit the NS mass baseline and write its numbers and parity figure into the section's
-    folder of the asset dir, after emptying that folder of an earlier run."""
-    assert len(argv) == 3, (
-        f"usage: fit_baseline.py <ns.parquet> <split.parquet> <asset dir>, got {argv}"
+    folder of the asset dir, after emptying that folder of an earlier run; leave the run's
+    record and diagnostics in a folder named after the run under the state dir."""
+    assert len(argv) == 4, (
+        f"usage: fit_baseline.py <ns.parquet> <split.parquet> <asset dir> <state dir>, got {argv}"
     )
     source, split_file, out = Path(argv[0]), Path(argv[1]), Path(argv[2]) / SECTION
+    state = Path(argv[3]) / SECTION
     for path in (source, split_file):
         assert path.is_file(), f"input not found: {path}"
     config = config or load_config()
+    commit, now = commit or _git_commit, now or _utc_now
     apply_style(config.plot)
     settings = config.methodology.algorithms
     training = Training(**settings.model_dump(exclude={"log_level"}))
+    table = pd.read_parquet(source)
     data = design(
-        pd.read_parquet(source),
-        pd.read_parquet(split_file),
-        NEUTRON_STARS,
-        "mass",
-        config.data_analysis.charge_floor,
+        table, pd.read_parquet(split_file), NEUTRON_STARS, "mass", config.data_analysis.charge_floor
     )
     train = ~data.test
     logger.info(
@@ -131,6 +179,7 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
         data.test.sum(),
         len(np.unique(data.groups[data.test])),
     )
+    started = now()
     fit = fit_and_score(data, training, time.perf_counter)
     logger.info(
         "test: MARE %.4g, RMSE %.4g, %d epochs, fit %.0f s",
@@ -147,7 +196,58 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
     plt.close(figure)
     (out / f"{PARITY}.tex").write_text(figure_tex())
     (out / f"{SECTION}_num.tex").write_text(render_macros(numbers(fit)))
-    logger.info("done: baseline NS mass numbers and parity figure -> %s", out)
+    record = RunRecord(
+        dataset=NEUTRON_STARS.dataset,
+        target="mass",
+        training=training,
+        commit=commit(),
+        started=started,
+        seconds=fit.seconds,
+        epochs=fit.epochs,
+        best_epoch=fit.best_epoch,
+        mare=fit.mare,
+        rmse=fit.rmse,
+    )
+    run = state / run_name(record)
+    write_diagnostics(fit, record, run, curve_names(table, NEUTRON_STARS))
+    assert from_json((run / "run.json").read_text()) == record, (
+        f"{run}/run.json does not round-trip"
+    )
+    logger.info(
+        "done: baseline NS mass numbers and parity figure -> %s, diagnostics -> %s", out, run
+    )
+
+
+def write_diagnostics(fit: Fit, record: RunRecord, run: Path, names: dict[int, str]) -> None:
+    """Write the run record, the loss curve, the error CDF and the curve overlay (curves
+    labelled by names) into run."""
+    run.mkdir(parents=True, exist_ok=True)
+    (run / "run.json").write_text(to_json(record))
+    overlay = curve_overlay(
+        fit.x_test[:, 0], fit.y_true, fit.y_pred, fit.groups_test, k=3, names=names
+    )
+    overlay.axes[0].set_xlabel("$\\log_{10}\\rho_c$")
+    figures = {
+        "loss_curve": loss_curve(fit.history),
+        "error_cdf": error_cdf(np.abs((fit.y_pred - fit.y_true) / fit.y_true)),
+        "curves": overlay,
+    }
+    for name, figure in figures.items():
+        figure.savefig(run / f"{name}.png", dpi=DIAGNOSTICS_DPI)
+        plt.close(figure)
+
+
+def _git_commit() -> str:
+    """The short hash of the checked-out commit."""
+    done = subprocess.run(
+        ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
+    )
+    return done.stdout.strip()
+
+
+def _utc_now() -> datetime:
+    """The current time in UTC."""
+    return datetime.now(UTC)
 
 
 if __name__ == "__main__":

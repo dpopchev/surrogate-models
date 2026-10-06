@@ -1,6 +1,7 @@
 """Facts about the baseline fit behind Section 5.1, on tiny synthetic curves."""
 
 from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
 
 import matplotlib
@@ -13,6 +14,7 @@ matplotlib.use("Agg")
 from fit_baseline import (
     SECTION,
     Fit,
+    curve_names,
     figure_tex,
     fit_and_score,
     main,
@@ -21,8 +23,9 @@ from fit_baseline import (
 )
 
 from shared.config import PaperConfig
-from shared.design import Design
+from shared.design import NEUTRON_STARS, Design
 from shared.plots import PlotStyle
+from shared.runs import from_json
 from shared.surrogate import Training
 
 # Six curves keyed by p along x in [0, 1]: y = 1 + 0.1 p + x^2; curve p = 2 is the test curve.
@@ -68,6 +71,10 @@ SCORED = Fit(
     rmse=0.0456,
     seconds=246.0,
     epochs=143,
+    best_epoch=123,
+    history=(),
+    x_test=np.array([[1.0], [2.0]]),
+    groups_test=np.array([0, 0]),
 )
 
 
@@ -120,21 +127,54 @@ def ns_like(tmp_path: Path) -> tuple[Path, Path]:
     return table, split_file
 
 
-def test_main_writes_the_numbers_and_the_parity_figure_into_its_section(tmp_path: Path) -> None:
-    table, split_file = ns_like(tmp_path)
-    assets = tmp_path / "assets"
+def test_each_curve_is_named_by_its_key(tmp_path: Path) -> None:
+    table, _ = ns_like(tmp_path)
+    names = curve_names(pd.read_parquet(table), NEUTRON_STARS)
+    assert names[1] == "$\\beta$ = 1, $\\lambda$ = 2"
+
+
+@pytest.fixture(scope="module")
+def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """One main run on the NS-like table, a stale asset left from an earlier run, the commit
+    and the clock injected; returns its working folder (assets/ and state/ inside)."""
+    folder = tmp_path_factory.mktemp("run")
+    table, split_file = ns_like(folder)
+    assets, state = folder / "assets", folder / "state"
     (assets / SECTION).mkdir(parents=True)
     (assets / SECTION / "stale.tex").write_text("from an earlier run")
     network = {"width": 8, "depth": 1, "max_epochs": 2, "batch_size": 8}
     config = PaperConfig.model_validate(
         {"plot": {"usetex": False}, "methodology": {"algorithms": network}}
     )
-    main([str(table), str(split_file), str(assets)], config)
-    assert sorted(p.name for p in (assets / SECTION).iterdir()) == [
-        "51_algorithms_fig_parity.png",
-        "51_algorithms_fig_parity.tex",
-        "51_algorithms_num.tex",
-    ]
+    main(
+        [str(table), str(split_file), str(assets), str(state)],
+        config,
+        commit=lambda: "abc1234",
+        now=lambda: datetime(2026, 10, 6, 10, 56, 0, tzinfo=UTC),
+    )
+    return folder
+
+
+class TestMain:
+    def test_writes_the_numbers_and_the_parity_figure_into_its_section(self, ran: Path) -> None:
+        assert sorted(p.name for p in (ran / "assets" / SECTION).iterdir()) == [
+            "51_algorithms_fig_parity.png",
+            "51_algorithms_fig_parity.tex",
+            "51_algorithms_num.tex",
+        ]
+
+    def test_records_the_injected_commit(self, ran: Path) -> None:
+        run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
+        assert from_json((run / "run.json").read_text()).commit == "abc1234"
+
+    def test_leaves_the_diagnostics_in_a_folder_named_after_the_run(self, ran: Path) -> None:
+        run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
+        assert sorted(p.name for p in run.iterdir()) == [
+            "curves.png",
+            "error_cdf.png",
+            "loss_curve.png",
+            "run.json",
+        ]
 
 
 class TestFitAndScore:
@@ -146,3 +186,6 @@ class TestFitAndScore:
 
     def test_counts_the_epochs_run(self, fit: Fit) -> None:
         assert fit.epochs == SHORT.max_epochs
+
+    def test_names_the_epoch_of_the_lowest_valid_loss(self, fit: Fit) -> None:
+        assert fit.best_epoch == min(fit.history, key=lambda row: row["valid_loss"])["epoch"]
