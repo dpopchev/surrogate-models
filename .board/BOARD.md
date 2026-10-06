@@ -1,12 +1,12 @@
 # Board -- surrogate-models
 record: local
-open path: E-004 > W-031   | blocked: 0 | todo roots: 0 | done: 100 | pruned: 4
+open path: E-004   | blocked: 0 | todo roots: 0 | done: 101 | pruned: 4
 
 ## Tree
 
 ### E-004 [doing] The paper builds for Overleaf upload and section-by-section review
 
-#### W-031 issue [doing] build/ grouped by section
+#### W-031 issue [done] build/ grouped by section
 
 - T-070 [done] Write each section's assets into its own folder test-first -> both EDA modules and preprocessing_numbers.py
 - T-071 [done] Add make assets and move LaTeX residue to build/.work -> mk/paper.mk
@@ -216,7 +216,7 @@ closed 2026-10-05 -- outcome: Given paper.toml with plot.dpi = 450, When make co
 ```mermaid
 flowchart TD
   E004["E-004 doing: The paper builds for Overleaf upload and section-by-section review"]
-  E004 --> W031["W-031 issue doing: build/ grouped by section"]
+  E004 --> W031["W-031 issue done: build/ grouped by section"]
   W031 --> T070["T-070 done: Write each section's assets into its own folder test-first -> both EDA modules and preprocessing_numbers.py"]
   W031 --> T071["T-071 done: Add make assets and move LaTeX residue to build/.work -> mk/paper.mk"]
   E004 --> W032["W-032 issue todo: make overleaf keeps a drag-and-drop Overleaf project in sync"]
@@ -230,7 +230,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E004,W031 doing
-  class T070,T071 done
+  class E004 doing
+  class W031,T070,T071 done
   class W032,T072,T073,W033,T074,T075 todo
 ```
