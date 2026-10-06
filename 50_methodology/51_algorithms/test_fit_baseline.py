@@ -16,14 +16,19 @@ matplotlib.use("Agg")
 from fit_baseline import (
     SECTION,
     Fit,
+    PairScores,
+    Scored,
+    baseline_table,
     curve_names,
     end_banner,
     figure_tex,
     fit_and_score,
+    fold_mares,
     main,
     numbers,
     parity,
     progress_line,
+    score_pair,
     start_banner,
 )
 
@@ -31,7 +36,7 @@ from shared.config import PaperConfig
 from shared.design import NEUTRON_STARS, Design
 from shared.plots import PlotStyle
 from shared.runs import from_json
-from shared.surrogate import Training
+from shared.surrogate import Training, make_mean_reference, mare
 
 # Six curves keyed by p along x in [0, 1]: y = 1 + 0.1 p + x^2; curve p = 2 is the test curve.
 P = np.repeat(np.arange(6.0), 10)
@@ -41,6 +46,7 @@ TOY = Design(
     y=(1.0 + 0.1 * P + X_ALONG**2).astype(np.float32),
     groups=P.astype(int),
     test=P == 2,
+    fold=np.where(P == 2, -1, P.astype(int) % 2),  # curves 0, 4 in fold 0; 1, 3, 5 in fold 1
     ablation=np.zeros(len(P), dtype=bool),
 )
 SHORT = Training(
@@ -81,6 +87,52 @@ SCORED = Fit(
     x_test=np.array([[1.0], [2.0]]),
     groups_test=np.array([0, 0]),
 )
+
+
+class TestFoldMares:
+    def test_scores_each_frozen_fold_once(self) -> None:
+        assert len(fold_mares(TOY, make_mean_reference)) == 2
+
+    def test_scores_a_fold_on_a_model_fitted_without_it(self) -> None:
+        fold0, train0 = TOY.fold == 0, ~TOY.test & (TOY.fold != 0)
+        expected = mare(TOY.y[fold0], np.full(fold0.sum(), TOY.y[train0].mean()))
+        assert fold_mares(TOY, make_mean_reference)[0] == pytest.approx(expected)
+
+
+NS_MASS = PairScores(
+    dataset="neutron_stars",
+    target="mass",
+    scored=(
+        Scored("MLP", test_mare=0.00662, fold_mares=(0.007, 0.009), seconds=213.4),
+        Scored("mean", test_mare=0.2, fold_mares=(0.2, 0.2), seconds=None),
+        Scored("nearest curve", test_mare=0.05, fold_mares=(0.04, 0.06), seconds=None),
+    ),
+)
+
+
+@pytest.fixture(scope="module")
+def pair() -> tuple[PairScores, Fit]:
+    """The toy curves scored as one pair: MLP fold fits and final fit, then the references."""
+    return score_pair(TOY, "toy", "mass", SHORT, clock(1.0, 2.0, 3.0, 4.0, 5.0, 6.0))
+
+
+class TestScorePair:
+    def test_scores_the_mlp_and_both_references(self, pair: tuple[PairScores, Fit]) -> None:
+        assert [s.predictor for s in pair[0].scored] == ["MLP", "mean", "nearest curve"]
+
+    def test_reports_after_every_mlp_fit(self) -> None:
+        fits: list[int] = []
+        short = replace(SHORT, max_epochs=1)
+        score_pair(TOY, "toy", "mass", short, clock(1.0, 2.0), after_fit=lambda: fits.append(1))
+        assert len(fits) == 3  # two folds and the final fit
+
+
+class TestBaselineTable:
+    def test_gives_the_mlp_its_test_mare_fold_spread_and_fit_seconds(self) -> None:
+        assert (
+            "NS & $M$ & MLP & $6.62\\times 10^{-3}$ & "
+            "$8.00\\times 10^{-3} \\pm 1.00\\times 10^{-3}$ & 213"
+        ) in baseline_table([NS_MASS])
 
 
 class TestNumbers:
@@ -191,43 +243,52 @@ def test_the_figure_wrapper_includes_the_parity_image() -> None:
     assert "{51_algorithms_fig_parity}" in figure_tex()
 
 
-def ns_like(tmp_path: Path) -> tuple[Path, Path]:
-    """A tiny NS-shaped table of five (beta, lambda) curves and its split, one curve in test."""
-    keys = [(1.0, 1.0), (1.0, 2.0), (2.0, 1.0), (2.0, 2.0), (3.0, 1.0)]
-    rows = [
-        {
-            "beta": b,
-            "lambda": lam,
-            "rho_c": 10.0 ** (i + 1),
-            "M": 1.0 + 0.1 * i + 0.05 * b,
-            "D": 0.1,
-        }
-        for b, lam in keys
+NS_KEYS = [(1.0, 1.0), (1.0, 2.0), (2.0, 1.0), (2.0, 2.0), (3.0, 1.0)]
+BH_KEYS = [1.0, 2.0, 3.0, 4.0, 5.0]
+LABELS = ["fold0", "fold1", "test", "fold0", "fold1"]
+
+
+def toy_inputs(folder: Path) -> tuple[Path, Path, Path]:
+    """Tiny NS- and BH-shaped tables and one split for both: five (beta, lambda) NS curves of
+    four rows, five beta BH curves of five rows; one curve of each in test, two in each of two
+    folds (a fold fit then trains on two curves, one left for its validation)."""
+    ns_rows = [
+        {"beta": b, "lambda": lam, "rho_c": 10.0 ** (i + 1), "M": 1.0 + 0.1 * i + 0.05 * b}
+        | {"D": 0.1}
+        for b, lam in NS_KEYS
         for i in range(4)
     ]
-    labels = ["fold0", "fold1", "test", "fold0", "fold1"]
+    bh_rows = [
+        {"r_h": 4.0 + i, "beta": b, "M": 2.0 + 0.5 * i + 0.01 * b, "D": 0.3 - 0.02 * i}
+        for b in BH_KEYS
+        for i in range(5)
+    ]
     split = [
         {"dataset": "neutron_stars", "beta": b, "lambda": lam, "label": label, "ablation": False}
-        for (b, lam), label in zip(keys, labels, strict=True)
+        for (b, lam), label in zip(NS_KEYS, LABELS, strict=True)
+    ] + [
+        {"dataset": "black_holes", "beta": b, "label": label, "ablation": False}
+        for b, label in zip(BH_KEYS, LABELS, strict=True)
     ]
-    table, split_file = tmp_path / "ns.parquet", tmp_path / "split.parquet"
-    pd.DataFrame(rows).to_parquet(table)
+    ns, bh, split_file = folder / "ns.parquet", folder / "bh.parquet", folder / "split.parquet"
+    pd.DataFrame(ns_rows).to_parquet(ns)
+    pd.DataFrame(bh_rows).to_parquet(bh)
     pd.DataFrame(split).to_parquet(split_file)
-    return table, split_file
+    return ns, bh, split_file
 
 
 def test_each_curve_is_named_by_its_key(tmp_path: Path) -> None:
-    table, _ = ns_like(tmp_path)
-    names = curve_names(pd.read_parquet(table), NEUTRON_STARS)
+    ns, _, _ = toy_inputs(tmp_path)
+    names = curve_names(pd.read_parquet(ns), NEUTRON_STARS)
     assert names[1] == "$\\beta$ = 1, $\\lambda$ = 2"
 
 
 @pytest.fixture(scope="module")
 def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """One main run on the NS-like table, a stale asset left from an earlier run, the commit
-    and the clock injected; returns its working folder (assets/ and state/ inside)."""
+    """One main run on the toy NS and BH tables, a stale asset left from an earlier run, the
+    commit and the clock injected; returns its working folder (assets/ and state/ inside)."""
     folder = tmp_path_factory.mktemp("run")
-    table, split_file = ns_like(folder)
+    ns, bh, split_file = toy_inputs(folder)
     assets, state = folder / "assets", folder / "state"
     (assets / SECTION).mkdir(parents=True)
     (assets / SECTION / "stale.tex").write_text("from an earlier run")
@@ -236,7 +297,7 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
         {"plot": {"usetex": False}, "methodology": {"algorithms": network}}
     )
     main(
-        [str(table), str(split_file), str(assets), str(state)],
+        [str(ns), str(bh), str(split_file), str(assets), str(state)],
         config,
         commit=lambda: "abc1234",
         dirty=lambda: True,
@@ -251,6 +312,20 @@ class TestMain:
             "51_algorithms_fig_parity.png",
             "51_algorithms_fig_parity.tex",
             "51_algorithms_num.tex",
+            "51_algorithms_tab_baseline.tex",
+        ]
+
+    def test_writes_one_mlp_row_per_dataset_and_target(self, ran: Path) -> None:
+        table = (ran / "assets" / SECTION / "51_algorithms_tab_baseline.tex").read_text()
+        assert table.count("& MLP &") == 4
+
+    def test_leaves_a_run_folder_per_dataset_and_target(self, ran: Path) -> None:
+        runs = sorted(p.name for p in (ran / "state" / SECTION).iterdir() if p.is_dir())
+        assert [name.rsplit("-", 1)[0] for name in runs] == [
+            "black_holes-charge",
+            "black_holes-mass",
+            "neutron_stars-charge",
+            "neutron_stars-mass",
         ]
 
     def test_records_the_injected_commit(self, ran: Path) -> None:
@@ -276,12 +351,12 @@ class TestMain:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
         assert "list runs: make runs" in (run / "train.log").read_text()
 
-    def test_logs_the_progress_after_the_fit(self, ran: Path) -> None:
+    def test_counts_the_progress_over_every_fit_of_every_pair(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
-        assert "fit 1/1 done" in (run / "train.log").read_text()
+        assert "fit 3/12 done" in (run / "train.log").read_text()  # 4 pairs x (2 folds + 1)
 
-    def test_points_latest_log_at_the_run_s_train_log(self, ran: Path) -> None:
-        run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
+    def test_points_latest_log_at_the_last_pair_s_train_log(self, ran: Path) -> None:
+        run = ran / "state" / SECTION / "black_holes-charge-20261006T105600Z"
         latest = ran / "state" / SECTION / "latest.log"
         assert latest.resolve() == (run / "train.log").resolve()
 

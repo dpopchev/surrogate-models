@@ -1,15 +1,18 @@
-"""The baseline surrogate behind Section 4.1 (W-034): a plain MLP fitted to the NS mass.
+"""The baseline surrogate behind Section 4.1 (W-034, W-036): a plain MLP on NS and BH, mass
+and charge, against the mean and nearest-curve references.
 
-Inputs: the prepared NS table and the frozen curve split (local/state/). The net trains on every
-non-test curve through shared/design.py and shared/surrogate.py, with early stopping on held-out
-training curves, and is scored once on the test curves. Outputs, in the section's asset folder:
-the \\baseNsMass... macros (test MARE, RMSE, fit seconds, epochs) and the parity figure; in
-<state dir>/51_algorithms/<run>/, the run record and the diagnostics for the developer (W-035).
+Inputs: the prepared NS and BH tables and the frozen curve split (local/state/). Per pair the
+net is scored on each frozen fold and, trained on every non-test curve through shared/design.py
+and shared/surrogate.py with early stopping on held-out training curves, once on the test
+curves. Outputs, in the section's asset folder: the baseline table, the \\baseNsMass... macros
+(test MARE, RMSE, fit seconds, epochs) and the NS mass parity figure; in
+<state dir>/51_algorithms/<run>/, one run record and its diagnostics per pair (W-035).
 
-Run as `uv run python <this file> <ns.parquet> <split.parquet> <asset dir> <state dir>`
-(mk/paper.mk does).
+Run as `uv run python <this file> <ns.parquet> <bh.parquet> <split.parquet> <asset dir>
+<state dir>` (mk/paper.mk does).
 """
 
+import itertools
 import logging
 import subprocess
 import sys
@@ -28,12 +31,21 @@ import torch
 from matplotlib.figure import Figure
 
 from shared.config import PaperConfig, load_config
-from shared.design import NEUTRON_STARS, Design, DesignSpec, design
+from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
 from shared.diagnostics import curve_overlay, error_cdf, loss_curve
-from shared.eda import curve_ids, render_macros, sci_tex
+from shared.eda import booktabs, curve_ids, render_macros, sci_tex
 from shared.plots import PlotStyle, anchor_color, apply_style
 from shared.runs import RunRecord, from_json, run_name, run_stem, to_json
-from shared.surrogate import LIVE_EVERY, Training, duration_text, make_estimator, mare, rmse
+from shared.surrogate import (
+    LIVE_EVERY,
+    Training,
+    duration_text,
+    make_estimator,
+    make_mean_reference,
+    make_nearest_reference,
+    mare,
+    rmse,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +71,37 @@ class Fit:
     history: tuple[dict[str, Any], ...]
     x_test: np.ndarray
     groups_test: np.ndarray
+
+
+@dataclass(frozen=True)
+class Scored:
+    """One predictor's scores on a pair: test MARE, MARE on each frozen fold, and the final
+    fit's seconds (None for the references, which fit in no time)."""
+
+    predictor: str
+    test_mare: float
+    fold_mares: tuple[float, ...]
+    seconds: float | None
+
+
+@dataclass(frozen=True)
+class PairScores:
+    """The scores of every predictor on one dataset and target."""
+
+    dataset: str
+    target: str
+    scored: tuple[Scored, ...]
+
+
+PAIRS: tuple[tuple[DesignSpec, Target], ...] = (
+    (NEUTRON_STARS, "mass"),
+    (NEUTRON_STARS, "charge"),
+    (BLACK_HOLES, "mass"),
+    (BLACK_HOLES, "charge"),
+)
+DATASET_TEX = {"neutron_stars": "NS", "black_holes": "BH"}
+TARGET_TEX = {"mass": "$M$", "charge": "$Y$"}
+X_LABELS = {"neutron_stars": "$\\log_{10}\\rho_c$", "black_holes": "$r_h$"}
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -91,6 +134,86 @@ def fit_and_score(
         history=history,
         x_test=design.X[test],
         groups_test=design.groups[test],
+    )
+
+
+def _fit(estimator: Any, X: np.ndarray, y: np.ndarray, groups: np.ndarray) -> Any:  # noqa: N803
+    """Fit an estimator; the network pipeline also gets the curve groups for its early stop."""
+    if "net" in getattr(estimator, "named_steps", {}):
+        return estimator.fit(X, y, net__groups=groups)
+    return estimator.fit(X, y)
+
+
+def fold_mares(
+    design: Design, make: Callable[[], Any], after_fit: Callable[[], None] = lambda: None
+) -> tuple[float, ...]:
+    """The MARE on each frozen fold of a model made fresh and fitted on the other folds;
+    after_fit is called once each fit is done."""
+    scores = []
+    for fold in sorted(set(design.fold[design.fold >= 0].tolist())):
+        held, train = design.fold == fold, ~design.test & (design.fold != fold)
+        model = _fit(make(), design.X[train], design.y[train], design.groups[train])
+        after_fit()
+        scores.append(mare(design.y[held], model.predict(design.X[held])))
+    return tuple(scores)
+
+
+def _reference(design: Design, make: Callable[[], Any], name: str) -> Scored:
+    """A reference predictor scored on the frozen folds and, fitted on every training curve,
+    on the test curves."""
+    train, test = ~design.test, design.test
+    model = make().fit(design.X[train], design.y[train])
+    test_mare = mare(design.y[test], model.predict(design.X[test]))
+    return Scored(name, test_mare, fold_mares(design, make), None)
+
+
+def score_pair(
+    design: Design,
+    dataset: str,
+    target: str,
+    training: Training,
+    clock: Callable[[], float],
+    live_plot: Path | None = None,
+    after_fit: Callable[[], None] = lambda: None,
+) -> tuple[PairScores, Fit]:
+    """Score one dataset and target: the MLP on every frozen fold and, fitted on every training
+    curve, on the test curves; then the mean and nearest-curve references on the same rows.
+    after_fit is called after every MLP fit. Returns the scores and the MLP's final fit, for
+    the figures and the run record."""
+    n_inputs = design.X.shape[1]
+    make = lambda: make_estimator(training, n_inputs=n_inputs)  # noqa: E731
+    mlp_folds = fold_mares(design, make, after_fit)
+    fit = fit_and_score(design, training, clock, live_plot=live_plot)
+    after_fit()
+    scored = (
+        Scored("MLP", fit.mare, mlp_folds, fit.seconds),
+        _reference(design, make_mean_reference, "mean"),
+        _reference(design, make_nearest_reference, "nearest curve"),
+    )
+    return PairScores(dataset, target, scored), fit
+
+
+def _row(pair: PairScores, scored: Scored) -> str:
+    """One table row: the pair, the predictor, its test MARE, fold mean +/- std, fit seconds."""
+    folds = np.array(scored.fold_mares)
+    seconds = "--" if scored.seconds is None else f"{scored.seconds:.0f}"
+    return (
+        f"{DATASET_TEX[pair.dataset]} & {TARGET_TEX[pair.target]} & {scored.predictor} & "
+        f"${sci_tex(scored.test_mare)}$ & "
+        f"${sci_tex(float(folds.mean()))} \\pm {sci_tex(float(folds.std()))}$ & {seconds}"
+    )
+
+
+def baseline_table(pairs: list[PairScores]) -> str:
+    """The Section 4.1 table: every predictor on every dataset and target."""
+    return booktabs(
+        "baseline",
+        "The baseline MLP against the mean and nearest-curve references: MARE on the test "
+        "curves and on the frozen folds (mean $\\pm$ standard deviation), and the MLP's fit "
+        "time in seconds.",
+        "llllll",
+        "Data & Target & Predictor & Test MARE & Fold MARE & Fit s",
+        [_row(pair, scored) for pair in pairs for scored in pair.scored],
     )
 
 
@@ -225,104 +348,160 @@ def main(
     dirty: Callable[[], bool] | None = None,
     now: Callable[[], datetime] | None = None,
 ) -> None:
-    """Fit the NS mass baseline and write its numbers and parity figure into the section's
-    folder of the asset dir, after emptying that folder of an earlier run; leave the run's
-    record and diagnostics in a folder named after the run under the state dir."""
-    assert len(argv) == 4, (
-        f"usage: fit_baseline.py <ns.parquet> <split.parquet> <asset dir> <state dir>, got {argv}"
+    """Score the baseline and its references on every dataset and target; write the baseline
+    table, the NS mass numbers and parity figure into the section's folder of the asset dir,
+    after emptying that folder of an earlier run; leave each pair's run record and diagnostics
+    in a folder named after its run under the state dir."""
+    assert len(argv) == 5, (
+        "usage: fit_baseline.py <ns.parquet> <bh.parquet> <split.parquet> <asset dir> "
+        f"<state dir>, got {argv}"
     )
-    source, split_file, out = Path(argv[0]), Path(argv[1]), Path(argv[2]) / SECTION
-    state = Path(argv[3]) / SECTION
-    for path in (source, split_file):
+    ns, bh, split_file = Path(argv[0]), Path(argv[1]), Path(argv[2])
+    out, state = Path(argv[3]) / SECTION, Path(argv[4]) / SECTION
+    for path in (ns, bh, split_file):
         assert path.is_file(), f"input not found: {path}"
     config = config or load_config()
     commit, dirty, now = commit or _git_commit, dirty or _git_dirty, now or _utc_now
     settings = config.methodology.algorithms
-    started = now()
-    run = state / run_stem(NEUTRON_STARS.dataset, "mass", started)
-    run.mkdir(parents=True, exist_ok=True)
-    # latest.log is what make follow tails: repointed at each run's log as the run starts.
-    latest = state / "latest.log"
-    latest.unlink(missing_ok=True)
-    latest.symlink_to(Path(run.name) / "train.log")
-    with _logging_into(run / "train.log", settings.log_level):
-        _fit_and_write(source, split_file, out, run, config, started, commit(), dirty())
-
-
-def _fit_and_write(
-    source: Path,
-    split_file: Path,
-    out: Path,
-    run: Path,
-    config: PaperConfig,
-    started: datetime,
-    commit: str,
-    uncommitted: bool,
-) -> None:
-    """The run itself, its log lines going to the console and to the run's train.log."""
-    if uncommitted:
-        logger.info("the code holds uncommitted changes: run.json marks this run dirty")
     apply_style(config.plot)
-    threads = config.methodology.algorithms.threads
-    torch.set_num_threads(threads)
-    training = Training(
-        **config.methodology.algorithms.model_dump(exclude={"log_level", "threads"})
-    )
-    table = pd.read_parquet(source)
-    data = design(
-        table, pd.read_parquet(split_file), NEUTRON_STARS, "mass", config.data_analysis.charge_floor
-    )
-    train = ~data.test
+    torch.set_num_threads(settings.threads)
+    training = Training(**settings.model_dump(exclude={"log_level", "threads"}))
+    tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
+    split = pd.read_parquet(split_file)
+    floor = config.data_analysis.charge_floor
+    designs: list[tuple[DesignSpec, Target, Design]] = [
+        (spec, target, design(tables[spec.dataset], split, spec, target, floor))
+        for spec, target in PAIRS
+    ]
+    total = sum(len(set(data.fold[data.fold >= 0].tolist())) + 1 for _, _, data in designs)
+    ticks, first = itertools.count(1), time.perf_counter()
+
+    def after_fit() -> None:
+        logger.info(progress_line(next(ticks), total, time.perf_counter() - first))
+
+    head, tail = commit(), dirty()
+    pairs, ns_mass, run = [], None, state
+    for spec, target, data in designs:
+        started = now()
+        run = state / run_stem(spec.dataset, target, started)
+        run.mkdir(parents=True, exist_ok=True)
+        # latest.log is what make follow tails: repointed at each run's log as the run starts.
+        latest = state / "latest.log"
+        latest.unlink(missing_ok=True)
+        latest.symlink_to(Path(run.name) / "train.log")
+        with _logging_into(run / "train.log", settings.log_level):
+            pair, fit = _run_pair(
+                _Pair(spec, target, data, tables[spec.dataset]),
+                _Run(run, out, started, head, tail),
+                training,
+                settings.threads,
+                after_fit,
+            )
+        pairs.append(pair)
+        if (spec, target) == (NEUTRON_STARS, "mass"):
+            ns_mass = fit
+    assert ns_mass is not None, "the NS mass pair did not run"
+    # The section's assets are written last, into the last run's log that make follow shows.
+    with _logging_into(run / "train.log", settings.log_level):
+        _write_section(out, pairs, ns_mass, config)
+        logger.info("all %d fits done in %s", total, duration_text(time.perf_counter() - first))
+        logger.info("done: baseline table, NS mass numbers and parity figure -> %s", out)
+
+
+@dataclass(frozen=True)
+class _Pair:
+    """One dataset and target to score, with the table its curve names come from."""
+
+    spec: DesignSpec
+    target: Target
+    data: Design
+    table: pd.DataFrame
+
+
+@dataclass(frozen=True)
+class _Run:
+    """Where and from what one pair's run is recorded."""
+
+    folder: Path
+    out: Path
+    started: datetime
+    commit: str
+    dirty: bool
+
+
+def _run_pair(
+    pair: _Pair, run: _Run, training: Training, threads: int, after_fit: Callable[[], None]
+) -> tuple[PairScores, Fit]:
+    """Score one pair, its log lines going to the console and to the run's train.log; leave
+    its run record and diagnostics in the run's folder."""
+    if run.dirty:
+        logger.info("the code holds uncommitted changes: run.json marks this run dirty")
+    data, train = pair.data, ~pair.data.test
     rows = (int(train.sum()), int(data.test.sum()))
     curves = (len(np.unique(data.groups[train])), len(np.unique(data.groups[data.test])))
-    logger.info("== baseline run: %s / mass ==", NEUTRON_STARS.dataset)
-    for line in start_banner(run, out, training, rows, curves, threads):
+    logger.info("== baseline run: %s / %s ==", pair.spec.dataset, pair.target)
+    for line in start_banner(run.folder, run.out, training, rows, curves, threads):
         logger.info(line)
-    fit = fit_and_score(data, training, time.perf_counter, live_plot=run / "loss_curve.png")
-    logger.info(progress_line(1, 1, fit.seconds))
-    out.mkdir(parents=True, exist_ok=True)
-    for stale in out.iterdir():
-        stale.unlink()
-    figure = parity(fit, config.plot)
-    figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)
-    plt.close(figure)
-    (out / f"{PARITY}.tex").write_text(figure_tex())
-    (out / f"{SECTION}_num.tex").write_text(render_macros(numbers(fit)))
+    scores, fit = score_pair(
+        data,
+        pair.spec.dataset,
+        pair.target,
+        training,
+        time.perf_counter,
+        live_plot=run.folder / "loss_curve.png",
+        after_fit=after_fit,
+    )
     record = RunRecord(
-        dataset=NEUTRON_STARS.dataset,
-        target="mass",
+        dataset=pair.spec.dataset,
+        target=pair.target,
         training=training,
-        commit=commit,
-        dirty=uncommitted,
-        started=started,
+        commit=run.commit,
+        dirty=run.dirty,
+        started=run.started,
         seconds=fit.seconds,
         epochs=fit.epochs,
         best_epoch=fit.best_epoch,
         mare=fit.mare,
         rmse=fit.rmse,
     )
-    assert run.name == run_name(record), f"run folder {run.name} is not {run_name(record)}"
-    write_diagnostics(fit, record, run, curve_names(table, NEUTRON_STARS))
-    assert from_json((run / "run.json").read_text()) == record, (
-        f"{run}/run.json does not round-trip"
+    folder = run.folder
+    assert folder.name == run_name(record), f"run folder {folder.name} is not {run_name(record)}"
+    names = curve_names(pair.table, pair.spec)
+    write_diagnostics(fit, record, folder, names, X_LABELS[pair.spec.dataset])
+    assert from_json((folder / "run.json").read_text()) == record, (
+        f"{folder}/run.json does not round-trip"
     )
     logger.info("== baseline run finished ==")
-    for line in end_banner(fit, training, sorted(out.iterdir()) + sorted(run.iterdir())):
+    for line in end_banner(fit, training, sorted(folder.iterdir())):
         logger.info(line)
-    logger.info(
-        "done: baseline NS mass numbers and parity figure -> %s, diagnostics -> %s", out, run
-    )
+    return scores, fit
 
 
-def write_diagnostics(fit: Fit, record: RunRecord, run: Path, names: dict[int, str]) -> None:
+def _write_section(out: Path, pairs: list[PairScores], ns_mass: Fit, config: PaperConfig) -> None:
+    """Empty the section's asset folder, then write the baseline table, the NS mass numbers
+    and its parity figure."""
+    out.mkdir(parents=True, exist_ok=True)
+    for stale in out.iterdir():
+        stale.unlink()
+    (out / f"{SECTION}_tab_baseline.tex").write_text(baseline_table(pairs))
+    figure = parity(ns_mass, config.plot)
+    figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)
+    plt.close(figure)
+    (out / f"{PARITY}.tex").write_text(figure_tex())
+    (out / f"{SECTION}_num.tex").write_text(render_macros(numbers(ns_mass)))
+
+
+def write_diagnostics(
+    fit: Fit, record: RunRecord, run: Path, names: dict[int, str], x_label: str
+) -> None:
     """Write the run record, the loss curve, the error CDF and the curve overlay (curves
-    labelled by names) into run."""
+    labelled by names, the first input on the x axis as x_label) into run."""
     run.mkdir(parents=True, exist_ok=True)
     (run / "run.json").write_text(to_json(record))
     overlay = curve_overlay(
         fit.x_test[:, 0], fit.y_true, fit.y_pred, fit.groups_test, k=3, names=names
     )
-    overlay.axes[0].set_xlabel("$\\log_{10}\\rho_c$")
+    overlay.axes[0].set_xlabel(x_label)
     figures = {
         "loss_curve": loss_curve(fit.history),
         "error_cdf": error_cdf(np.abs((fit.y_pred - fit.y_true) / fit.y_true)),

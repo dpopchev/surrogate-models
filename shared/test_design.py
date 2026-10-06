@@ -55,6 +55,12 @@ def test_rows_of_this_dataset_s_test_curves_are_test(
     assert design(table, split, SPEC, "mass", FLOOR).test.tolist() == [False, False, True]
 
 
+def test_each_row_carries_its_fold_and_test_rows_minus_one(
+    table: pd.DataFrame, split: pd.DataFrame
+) -> None:
+    assert design(table, split, SPEC, "mass", FLOOR).fold.tolist() == [0, 0, -1]
+
+
 def test_rows_of_flagged_curves_are_ablation(table: pd.DataFrame, split: pd.DataFrame) -> None:
     assert design(table, split, SPEC, "mass", FLOOR).ablation.tolist() == [False, False, True]
 

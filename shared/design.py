@@ -48,6 +48,7 @@ class Design:
     y: np.ndarray
     groups: np.ndarray
     test: np.ndarray
+    fold: np.ndarray
     ablation: np.ndarray
 
 
@@ -103,5 +104,13 @@ def design(
         y=_target(table, target, floor),
         groups=curve_ids(table, spec.space),
         test=(labelled["label"] == "test").to_numpy(),
+        fold=_folds(labelled["label"]),
         ablation=labelled["ablation"].to_numpy(bool),
+    )
+
+
+def _folds(labels: pd.Series) -> np.ndarray:
+    """Each row's frozen fold, k for "fold<k>", -1 for a test row."""
+    return np.array(
+        [-1 if label == "test" else int(str(label).removeprefix("fold")) for label in labels]
     )
