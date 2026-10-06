@@ -1,8 +1,8 @@
-\subsection{Optimization and Loss Formulation}
+\subsection{Optimization and Training Strategy}
 \label{sec:optimization}
 
 \todo{Draft from the outline.}
 \begin{itemize}
-  \item Huber loss for outlier robustness near physical boundaries.
-  \item Two-stage optimization: AdamW with cosine annealing, followed by second-order L-BFGS fine-tuning.
+  \item \textbf{Loss function:} the Huber loss ($\delta = 1.0$) for robustness against outliers near the structural boundaries~\citep{Huber1964}, as $H_2$ proposes; the baseline of Section~\ref{sec:algorithms} keeps the mean squared error as the control.
+  \item \textbf{Hybrid optimization:} AdamW~\citep{Loshchilov2017_AdamW} with a cosine-annealing learning-rate schedule\review{cite: Loshchilov and Hutter 2016 (SGDR) for cosine annealing}, fine-tuned by second-order L-BFGS optimization to loss floors of $10^{-8}$--$10^{-10}$~\citep{Michaud2023_PrecisionML}, if the L-BFGS stage pays off (to be decided by measurement).
 \end{itemize}

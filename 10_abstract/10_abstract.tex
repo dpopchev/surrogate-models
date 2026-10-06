@@ -1,9 +1,9 @@
 \begin{abstract}
 \todo{Draft from the outline.}
 \begin{itemize}
-  \item \textbf{Computational problem:} solving modified gravity field equations during Bayesian inference creates a severe computational bottleneck.
-  \item \textbf{Data-guided solution:} dual-branch neural surrogates for black holes (2D) and neutron stars (3D) in dilaton gravity.
-  \item \textbf{Key methodological novelty:} exploratory data analysis (EDA) guides feature extraction, loss choices and network architecture selection.
-  \item \textbf{Primary results:} sub-percent relative errors across the $\prepNsFloorOrders$ orders of magnitude the dilaton charge $\Dch$ spans above the floor $\varepsilon = \prepChargeFloor$, speedup factors of $10^2$--$10^4\times$, and unbiased MCMC posterior recovery.
+  \item \textbf{Computational problem:} solving the extended scalar-tensor-Gauss--Bonnet (ESTGB) field equations inside Bayesian inference, which needs $10^5$--$10^7$ evaluations, is a severe computational bottleneck~\citep{Reed2024}.
+  \item \textbf{Physical scope:} a dual-branch surrogate framework for vacuum curvature-induced scalarized black holes, the 2D map $(\rh, \beta) \to (M, \Dch)$~\citep{Doneva2017_BH}, and matter-coupled scalarized neutron stars, the 3D map $(\beta, \lambda, \rhoc) \to (M, \Dch)$~\citep{Doneva2017_NS}.
+  \item \textbf{Methodological novelty:} an exploratory data analysis of the $\nsEdaRawRows$ neutron-star configurations ($\nsEdaRows$ after cleaning) directly dictates feature extraction, target transformation, loss design and architecture selection ($H_1$, $H_2$, $H_3$).
+  \item \textbf{Key results:} sub-percent mean absolute relative errors across the $\prepNsFloorOrders$ orders of magnitude the dilaton charge $\Dch$ spans above the floor $\varepsilon = \prepChargeFloor$, speedups of $10^2$--$10^4\times$ (to be measured, Section~\ref{sec:speedup}), and unbiased MCMC recovery of the coupling parameters.
 \end{itemize}
 \end{abstract}

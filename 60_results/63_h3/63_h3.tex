@@ -3,6 +3,6 @@
 
 \todo{Draft from the outline.}
 \begin{itemize}
-  \item Parity plots and MARE/RMSE comparison across GPR, XGBoost, MLP and ResNet.
-  \item Scalability analysis demonstrating the GPR memory/time wall for $N \ge 10^5$ batch predictions.
+  \item \textbf{Ablation performance:} parity plots and the MARE/RMSE comparison across Gaussian process regression, XGBoost\review{cite: Chen and Guestrin 2016 for XGBoost}, feedforward networks and ResNets, set beside earlier neural surrogates~\citep{Liodis2024,Kaushikk2026,Liu2026}.
+  \item \textbf{Scalability:} the $O(N^3)$ computational wall of Gaussian process regression~\citep{Rasmussen2005_GP} in large batch evaluations ($N \ge 10^5$).
 \end{itemize}

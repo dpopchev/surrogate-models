@@ -3,13 +3,14 @@
 
 \todo{Draft from the outline.}
 \begin{itemize}
-  \item \textbf{Astrophysical context:} probing scalar-tensor / dilaton gravity using compact objects (black holes and neutron stars).
-  \item \textbf{The bottleneck:} high-fidelity ODE/PDE solvers require minutes per evaluation, making $10^5$--$10^7$ Bayesian MCMC samples computationally prohibitive.
-  \item \textbf{Literature gap:} existing surrogates treat dataset generation as an opaque step, missing key insights into data quality, target skewness and sampling artifacts.
+  \item \textbf{Astrophysical context:} probing strong-field modifications of general relativity with compact objects -- black holes and neutron stars -- in scalar-tensor-Gauss--Bonnet gravity.\review{cite: reviews of strong-field tests and of compact objects in scalar-Gauss--Bonnet gravity}
+  \item \textbf{Spontaneous scalarization:} matter-induced against curvature-induced scalarization; in extreme curvature the Gauss--Bonnet invariant $\RGB$ acts as an effective mass term for the scalar field~\citep{Doneva2017_BH,Doneva2017_NS,DamourEspositoFarese1993}.
+  \item \textbf{Computational bottleneck:} high-fidelity ODE integration -- shooting on the non-linear field equations with boundary conditions at $r \to \infty$ -- takes seconds to minutes per evaluation\review{cite: the solver behind the datasets, or a statement of its cost}, which makes large-scale Bayesian parameter estimation impractically slow~\citep{Reed2024}.
+  \item \textbf{Literature gap:} previous surrogates~\citep{Liodis2024,Kaushikk2026,Liu2026} treat training-data generation as a black box and overlook target skewness, sampling artifacts near $\Mmax$ and the suppression of a wide-dynamic-range target's scale.
   \item \textbf{Core contributions:}
   \begin{enumerate}
-    \item A unified neural surrogate predicting mass ($M$) and dilaton charge ($\Dch$) across the BH $(\rh, \beta)$ and NS $(\beta, \lambda, \rhoc)$ regimes.
-    \item A data-guided feature engineering framework with testable architectural hypotheses ($H_1$, $H_2$, $H_3$).
-    \item A rigorous ``scheme of elimination'' comparing classical ML (GPs, XGBoost) against deep ResNets.
+    \item A unified neural surrogate predicting the mass $M$ and the dilaton charge $\Dch$ for both the black-hole and the neutron-star sector of ESTGB gravity.
+    \item A data-guided feature-engineering framework backed by three testable architectural hypotheses ($H_1$, $H_2$, $H_3$).
+    \item A rigorous ``scheme of elimination'' benchmarking classical machine learning -- Gaussian processes, XGBoost -- against deep residual networks.
   \end{enumerate}
 \end{itemize}
