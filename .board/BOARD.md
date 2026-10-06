@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-009 > W-051   | blocked: 1 | todo roots: 3 | done: 147 | pruned: 4
+open path: E-009   | blocked: 1 | todo roots: 3 | done: 148 | pruned: 4
 
 ## Tree
 
@@ -94,7 +94,7 @@ open path: E-009 > W-051   | blocked: 1 | todo roots: 3 | done: 147 | pruned: 4
 
 ### E-009 [doing] The paper follows the revised structure, and the release
 
-#### W-051 issue [doing] Sections 2.1 to 2.4 written from the revised structure
+#### W-051 issue [done] Sections 2.1 to 2.4 written from the revised structure
 
 - T-109 [done] Add Section 2.2's folder and renumber the dataset sections -> 30_physical_framework/32_scalarization, 33_black_holes, 34_neutron_stars
 - T-110 [done] Write Section 2.1, the action and field equations -> 30_physical_framework/31_action/31_action.tex
@@ -392,7 +392,7 @@ flowchart TD
   E008 --> W049["W-049 issue todo: Mock MCMC recovery with emcee"]
   E008 --> W050["W-050 issue todo: Surrogate posterior validated against the reference"]
   E009["E-009 doing: The paper follows the revised structure, and the release"]
-  E009 --> W051["W-051 issue doing: Sections 2.1 to 2.4 written from the revised structure"]
+  E009 --> W051["W-051 issue done: Sections 2.1 to 2.4 written from the revised structure"]
   W051 --> T109["T-109 done: Add Section 2.2's folder and renumber the dataset sections -> 30_physical_framework/32_scalarization, 33_black_holes, 34_neutron_stars"]
   W051 --> T110["T-110 done: Write Section 2.1, the action and field equations -> 30_physical_framework/31_action/31_action.tex"]
   W051 --> T111["T-111 done: Write Section 2.2, the scalarization mechanism -> 30_physical_framework/32_scalarization/32_scalarization.tex"]
@@ -412,8 +412,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,E009,W051,T108 doing
+  class E005,E009,T108 doing
   class W059 blocked
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,T109,T110,T111,T112,T113,T107 done
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,T107 done
   class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W052,W053,W060,T114,T115,T116 todo
 ```
