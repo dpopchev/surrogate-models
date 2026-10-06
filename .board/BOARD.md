@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-035 > T-082   | blocked: 0 | todo roots: 4 | done: 117 | pruned: 4
+open path: E-005 > W-035 > T-083   | blocked: 0 | todo roots: 4 | done: 118 | pruned: 4
 
 ## Tree
 
@@ -19,8 +19,8 @@ open path: E-005 > W-035 > T-082   | blocked: 0 | todo roots: 4 | done: 117 | pr
 #### W-035 issue [doing] Each baseline run leaves a diagnostics folder
 
 - T-081 [done] Write the run record test-first -> shared/runs.py with shared/test_runs.py
-- T-082 [doing] Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py   <- ACTIVE LEAF
-- T-083 [todo] Write the worst and median curve overlays test-first -> shared/diagnostics.py
+- T-082 [done] Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py
+- T-083 [doing] Write the worst and median curve overlays test-first -> shared/diagnostics.py   <- ACTIVE LEAF
 - T-084 [todo] Wire the diagnostics into the baseline run -> local/state/51_algorithms/<run>/
 
 #### W-036 issue [todo] Baseline table for four pairs with fold scores and reference predictors
@@ -298,8 +298,8 @@ flowchart TD
   W034 --> T091["T-091 done: Print the baseline error macros in scientific notation -> 50_methodology/51_algorithms/fit_baseline.py"]
   E005 --> W035["W-035 issue doing: Each baseline run leaves a diagnostics folder"]
   W035 --> T081["T-081 done: Write the run record test-first -> shared/runs.py with shared/test_runs.py"]
-  W035 --> T082["T-082 doing: Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py -- ACTIVE LEAF"]
-  W035 --> T083["T-083 todo: Write the worst and median curve overlays test-first -> shared/diagnostics.py"]
+  W035 --> T082["T-082 done: Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py"]
+  W035 --> T083["T-083 doing: Write the worst and median curve overlays test-first -> shared/diagnostics.py -- ACTIVE LEAF"]
   W035 --> T084["T-084 todo: Wire the diagnostics into the baseline run -> local/state/51_algorithms/<run>/"]
   E005 --> W036["W-036 issue todo: Baseline table for four pairs with fold scores and reference predictors"]
   W036 --> T085["T-085 todo: Write the reference predictors test-first -> shared/surrogate.py"]
@@ -333,7 +333,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W035,T082 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,T081 done
-  class T083,T084,W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
+  class E005,W035,T083 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091,T081,T082 done
+  class T084,W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
