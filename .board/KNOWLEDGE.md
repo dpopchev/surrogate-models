@@ -40,3 +40,4 @@
 - 2026-10-06 E-005: AC6 and W-055 added, W-056 amends AC5 (developer): Section 5.1 is written from the NS mass baseline before W-036 widens it (T-087 shrinks to adding the table); the epoch table's dur column shows as elapse_s
 - 2026-10-06 E-005: AC7 and W-057 added (developer): epoch k/MAX, epochs since best and a time-left range, start and end banners, make runs, make run, make examples; W-036 waits for it
 - 2026-10-06 E-005: T-106's evidence says make check PASS, but make check failed (pyright, surrogate.py:196) -- the agent's command chain continued past the failure; fixed in 40bf205, make check PASS (310 tests)
+- 2026-10-06 E-005: parked for W-058 (developer): the [landing] review runs as a standalone root; E-005 resumes at W-036 with no work item open

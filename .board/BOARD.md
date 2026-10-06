@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005   | blocked: 0 | todo roots: 5 | done: 139 | pruned: 4
+open path: E-005   | blocked: 0 | todo roots: 4 | done: 139 | pruned: 4
 
 ## Tree
 
@@ -100,9 +100,9 @@ open path: E-005   | blocked: 0 | todo roots: 5 | done: 139 | pruned: 4
 
 #### W-053 spike [todo] What the open-source release publishes
 
-### W-058 issue [todo] (standalone) Landing settings follow the board tool of 2026-10-06
+### W-058 issue [doing] (standalone) Landing settings follow the board tool of 2026-10-06
 
-- T-103 [todo] Review [landing] and record the worktree decision -> .board/board.toml
+- T-103 [doing] Review [landing] and record the worktree decision -> .board/board.toml   <- ACTIVE LEAF
 
 ## Closed
 
@@ -376,14 +376,14 @@ flowchart TD
   E009 --> W051["W-051 issue todo: Physical framework and hypotheses prose"]
   E009 --> W052["W-052 issue todo: Abstract, introduction, conclusion and title block"]
   E009 --> W053["W-053 spike todo: What the open-source release publishes"]
-  W058["W-058 issue todo, standalone: Landing settings follow the board tool of 2026-10-06"]
-  W058 --> T103["T-103 todo: Review [landing] and record the worktree decision -> .board/board.toml"]
+  W058["W-058 issue doing, standalone: Landing settings follow the board tool of 2026-10-06"]
+  W058 --> T103["T-103 doing: Review [landing] and record the worktree decision -> .board/board.toml -- ACTIVE LEAF"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005 doing
+  class E005,W058,T103 doing
   class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106 done
-  class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053,W058,T103 todo
+  class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
