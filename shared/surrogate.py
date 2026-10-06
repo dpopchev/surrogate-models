@@ -15,7 +15,9 @@ from typing import Any, Literal, assert_never, cast
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from sklearn.dummy import DummyRegressor
 from sklearn.model_selection import GroupShuffleSplit
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from skorch import NeuralNetRegressor
@@ -270,6 +272,18 @@ def curve_valid_split(fraction: float, seed: int) -> ValidSplit:
     # skorch types `cv` from its default (5); it accepts any sklearn splitter.
     splitter = GroupShuffleSplit(n_splits=1, test_size=fraction, random_state=seed)
     return ValidSplit(cast(Any, splitter))
+
+
+def make_mean_reference() -> DummyRegressor:
+    """The mean predictor: every row gets the mean target of the training rows."""
+    return DummyRegressor(strategy="mean")
+
+
+def make_nearest_reference() -> Pipeline:
+    """The nearest-curve predictor: the target of the closest training row in inputs
+    standardized on the training rows. Test curves are never in training, so the closest row
+    always lies on another curve."""
+    return Pipeline([("scale", StandardScaler()), ("nearest", KNeighborsRegressor(n_neighbors=1))])
 
 
 def make_estimator(training: Training, n_inputs: int, live_plot: Path | None = None) -> Pipeline:

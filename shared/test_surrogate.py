@@ -19,6 +19,8 @@ from shared.surrogate import (
     approx_minutes,
     curve_valid_split,
     make_estimator,
+    make_mean_reference,
+    make_nearest_reference,
     mare,
     rmse,
     stop_window,
@@ -115,6 +117,21 @@ def test_the_epoch_table_reaches_the_logger(caplog: pytest.LogCaptureFixture) ->
     with caplog.at_level(logging.INFO, logger="shared.surrogate"):
         fitted(replace(TOY, max_epochs=2))
     assert "valid_mare" in caplog.text
+
+
+class TestReferences:
+    def test_the_mean_reference_predicts_the_training_mean(self) -> None:
+        mean = make_mean_reference().fit(INPUTS[~HELD_OUT], TARGET[~HELD_OUT])
+        assert mean.predict(INPUTS[HELD_OUT][:1])[0] == pytest.approx(TARGET[~HELD_OUT].mean())
+
+    def test_the_nearest_reference_reproduces_a_training_row(self) -> None:
+        nearest = make_nearest_reference().fit(INPUTS[~HELD_OUT], TARGET[~HELD_OUT])
+        assert nearest.predict(INPUTS[:1])[0] == pytest.approx(TARGET[0])
+
+    def test_the_nearest_reference_measures_distance_on_standardized_inputs(self) -> None:
+        inputs = np.array([[0.0, 0.0], [1.0, 100.0]])
+        nearest = make_nearest_reference().fit(inputs, np.array([10.0, 20.0]))
+        assert nearest.predict(np.array([[0.9, 40.0]]))[0] == 20.0
 
 
 class TestStopWindow:
