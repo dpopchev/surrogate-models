@@ -10,10 +10,10 @@
 - 2026-10-05 W-018: standing: r_h linear (0.39 orders); M 2.13..5.01 M_sun, Pearson 0.9999 with r_h -> raw M in M_sun supersedes: W-018#4
 - 2026-10-06 E-005: fact: every dataset value is dimensionless or normalized (developer), M in solar masses -> code, board and paper say 'original scale' (as opposed to standardized), never 'physical units'
 - 2026-10-06 E-009: fact: folder NN is paper Section N-1 (unnumbered abstract) -> code names the compiled number (T-116)
-- 2026-10-06 T-077: fact: split.parquet holds both datasets, one row per curve (dataset, curve keys, label test|fold0-4, ablation; BH rows have lambda NaN) -> design() filters by dataset and joins many-to-one on the curve keys
+- 2026-10-06 T-077: fact: split.parquet holds both datasets, one row per curve -> design() filters by dataset first
 - 2026-10-06 W-032: standing: make overleaf refreshes the upload list on every run -> run it only right before an upload, or the removed list of the earlier run is lost supersedes: W-032#1
-- 2026-10-06 W-034: T-080: fact: baseline NS mass test MARE 0.0165 scored at epoch 37, but the best valid epoch was 17 (valid MARE 0.0062); valid loss spikes late, lr barely decays (cosine T_max 500) -> T-090 restores the best epoch
-- 2026-10-06 W-034: T-090: fact: restoring the best valid_loss epoch cuts the NS mass baseline test MARE 0.0165 -> 0.0066 (RMSE 0.0273 -> 0.0130), 213 s on CPU -> the baseline number Section 5.1 reports
+- 2026-10-06 W-034: T-080: fact: valid loss spikes late, lr barely decays (cosine T_max 500) -> tune the schedule in E-006/E-007
+- 2026-10-06 W-034: T-090: fact: restoring the best epoch cuts NS mass test MARE 0.0165 -> 0.0066 -> the reported baseline
 - 2026-10-06 W-035: T-084: fact: the worst NS mass test curves are short low-mass curves at small beta (0.4-2.4) and lambda \~4, underpredicted (MARE 3.7-6.6%); median relative error 0.48%, p99 3.0% -> E-006 error map (#7) and H2 should look there
 - 2026-10-06 W-035: T-092: fact: the same seeded baseline fit took 213 s, 281 s and 525 s on this machine (MARE identical) -> \baseNsMassFitSeconds is load-dependent; cite it as an order of magnitude or time it on an idle machine
 
@@ -37,6 +37,7 @@
 - 2026-10-06 E-009: numbers in the text come from the generated macros, never typed: N = 224,597 raw and 201,047 after cleaning, the orders of magnitude of D after the M_max cut
 - 2026-10-06 E-009: the revised paper structure is adopted (developer): Scalarization becomes its own Section 2.2 (folder 32_scalarization; BH and NS renumbered 33, 34); H1 keeps the decided target log10(max(D, eps)/M) of W-019, reworded, not log10 D
 - 2026-10-06 W-034: error macros (MARE, RMSE) print in scientific notation at every magnitude
+- 2026-10-06 W-053: paper cites the repo (MIT); data and weights live in local/, built or provided, never tracked; no sample
 - 2026-10-06 W-059: per-site map in 00_metadata/citations.md; 13 TODO_ placeholders cited, real sources in W-061
 
 ## Deviations
