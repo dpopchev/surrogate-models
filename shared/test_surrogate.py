@@ -95,6 +95,18 @@ def test_training_stops_once_the_validation_loss_stalls() -> None:
     assert len(fitted(stalled).named_steps["net"].history) < stalled.max_epochs
 
 
+def test_an_early_stop_keeps_the_best_epoch_s_weights() -> None:
+    keep = ~HELD_OUT
+    estimator = fitted(replace(TOY, lr=5e-2, patience=2))
+    net = estimator.named_steps["net"]
+    inputs = estimator.named_steps["scale"].transform(INPUTS[keep])
+    _, valid = net.get_split_datasets(inputs, TARGET[keep], groups=GROUPS[keep])
+    best = int(np.argmin(net.history[:, "valid_loss"]))
+    rows = np.asarray(valid.indices)
+    scored = mare(TARGET[keep][rows], net.predict(inputs[rows]))
+    assert scored == pytest.approx(net.history[best, "valid_mare"], rel=1e-4)
+
+
 def test_the_epoch_table_reaches_the_logger(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.INFO, logger="shared.surrogate"):
         fitted(replace(TOY, max_epochs=2))

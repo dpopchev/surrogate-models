@@ -175,7 +175,7 @@ def make_estimator(training: Training, n_inputs: int) -> Pipeline:
             ),
             # skorch types `policy` from its default (a name); it accepts a scheduler class.
             ("lr", LRScheduler(cast(Any, CosineAnnealingLR), T_max=training.max_epochs)),
-            ("early_stopping", EarlyStopping(patience=training.patience)),
+            ("early_stopping", EarlyStopping(patience=training.patience, load_best=True)),
             ("finite_loss", FiniteLoss()),
         ],
         callbacks__print_log__sink=logger.info,
