@@ -20,6 +20,7 @@ from fit_baseline import (
     main,
     numbers,
     parity,
+    progress_line,
 )
 
 from shared.config import PaperConfig
@@ -92,6 +93,14 @@ class TestNumbers:
             "baseNsMassMare",
             "baseNsMassRmse",
         ]
+
+
+class TestProgressLine:
+    def test_estimates_the_time_left_from_the_mean_fit(self) -> None:
+        assert progress_line(3, 24, 252.0) == "fit 3/24 done, elapsed 4m 12s, about 29m 24s left"
+
+    def test_says_nothing_is_left_after_the_last_fit(self) -> None:
+        assert progress_line(1, 1, 12.0) == "fit 1/1 done, elapsed 12s, about 0s left"
 
 
 def test_the_parity_figure_draws_the_identity_line() -> None:
@@ -175,6 +184,10 @@ class TestMain:
     def test_logs_the_epoch_table_into_the_run_s_train_log(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
         assert "valid_mare" in (run / "train.log").read_text()
+
+    def test_logs_the_progress_after_the_fit(self, ran: Path) -> None:
+        run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
+        assert "fit 1/1 done" in (run / "train.log").read_text()
 
     def test_points_latest_log_at_the_run_s_train_log(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"

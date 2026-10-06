@@ -100,6 +100,18 @@ def numbers(fit: Fit) -> dict[str, str]:
     }
 
 
+def _duration(seconds: float) -> str:
+    """Seconds as "4m 12s", or "12s" under a minute."""
+    minutes, rest = divmod(round(seconds), 60)
+    return f"{minutes}m {rest}s" if minutes else f"{rest}s"
+
+
+def progress_line(done: int, total: int, elapsed: float) -> str:
+    """How far a series of fits has come and, from the mean time per fit, how long is left."""
+    left = elapsed / done * (total - done)
+    return f"fit {done}/{total} done, elapsed {_duration(elapsed)}, about {_duration(left)} left"
+
+
 SYMBOLS = {"beta": "$\\beta$", "lambda": "$\\lambda$"}
 
 
@@ -206,6 +218,7 @@ def _fit_and_write(
         len(np.unique(data.groups[data.test])),
     )
     fit = fit_and_score(data, training, time.perf_counter)
+    logger.info(progress_line(1, 1, fit.seconds))
     logger.info(
         "test: MARE %.4g, RMSE %.4g, %d epochs, fit %.0f s",
         fit.mare,
