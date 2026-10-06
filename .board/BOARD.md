@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-055 > T-098   | blocked: 0 | todo roots: 4 | done: 129 | pruned: 4
+open path: E-005 > W-055   | blocked: 0 | todo roots: 4 | done: 130 | pruned: 4
 
 ## Tree
 
@@ -44,7 +44,7 @@ open path: E-005 > W-055 > T-098   | blocked: 0 | todo roots: 4 | done: 129 | pr
 #### W-055 issue [doing] Section 5.1 describes the pipeline and the NS mass baseline
 
 - T-097 [done] Load the baseline numbers only when present -> 00_metadata/article.tex and 51_algorithms.tex
-- T-098 [doing] Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex   <- ACTIVE LEAF
+- T-098 [done] Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex
 
 #### W-056 issue [done] The epoch table names its time column elapse_s
 
@@ -331,7 +331,7 @@ flowchart TD
   W054 --> T095["T-095 done: Add make follow -> tail the running baseline's log"]
   E005 --> W055["W-055 issue doing: Section 5.1 describes the pipeline and the NS mass baseline"]
   W055 --> T097["T-097 done: Load the baseline numbers only when present -> 00_metadata/article.tex and 51_algorithms.tex"]
-  W055 --> T098["T-098 doing: Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex -- ACTIVE LEAF"]
+  W055 --> T098["T-098 done: Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex"]
   E005 --> W056["W-056 issue done: The epoch table names its time column elapse_s"]
   W056 --> T096["T-096 done: Print the epoch time as elapse_s -> shared/surrogate.py"]
   E006["E-006 todo: Data-guided choices tested -- rho_c input, H1, H2 and H3"]
@@ -359,7 +359,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W055,T098 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,T097,W056,T096 done
+  class E005,W055 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,T097,T098,W056,T096 done
   class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
