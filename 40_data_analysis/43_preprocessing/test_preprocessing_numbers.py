@@ -1,4 +1,4 @@
-"""Facts about the Section 4.3 numbers, on tiny synthetic split and tables."""
+"""Facts about the Section 3.3 numbers, on tiny synthetic split and tables."""
 
 from pathlib import Path
 

@@ -1,4 +1,4 @@
-"""The dataset-agnostic core of the exploratory analyses in Section 4 (W-018).
+"""The dataset-agnostic core of the exploratory analyses in Section 3 (W-018).
 
 Each dataset module (eda_neutron_stars.py, eda_black_holes.py) names its inputs and its curve
 key columns in a CurveSpace; the functions here summarize columns, measure how rows of one curve

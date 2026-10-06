@@ -2,7 +2,7 @@
 
 A prepared table and the frozen curve split (50_methodology/51_algorithms/split_datasets.py)
 become one Design per dataset and target: the inputs of the dataset's curve space, each raw or
-in log10, the target (M in M_sun, or the charge target log10(max(D, eps)/M) of Section 4.3), one
+in log10, the target (M in M_sun, or the charge target log10(max(D, eps)/M) of Section 3.3), one
 integer per curve for grouped splitting, and each row's test and ablation flags.
 """
 

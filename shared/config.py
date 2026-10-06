@@ -33,7 +33,7 @@ NsTable = Literal["univariate", "charge_correlation", "split_strategies"]
 
 
 class NeutronStarsSection(BaseModel):
-    """Section 4.1: which NS EDA figures and tables eda_neutron_stars.py renders."""
+    """Section 3.1: which NS EDA figures and tables eda_neutron_stars.py renders."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -46,7 +46,7 @@ BhTable = Literal["univariate", "charge_correlation", "split_strategies"]
 
 
 class BlackHolesSection(BaseModel):
-    """Section 4.2: which BH EDA figures and tables eda_black_holes.py renders."""
+    """Section 3.2: which BH EDA figures and tables eda_black_holes.py renders."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -72,7 +72,7 @@ NetLoss = Literal["mse", "huber"]
 
 
 class AlgorithmsSection(BaseModel):
-    """Section 5.1: the baseline network fit_baseline.py trains -- the H2 and H3 control arm."""
+    """Section 4.1: the baseline network fit_baseline.py trains -- the H2 and H3 control arm."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 

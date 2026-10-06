@@ -1,4 +1,4 @@
-"""Exploratory analysis of the prepared BH table behind Section 4.2 (W-018).
+"""Exploratory analysis of the prepared BH table behind Section 3.2 (W-018).
 
 The BH data are 21 dense beta curves over the horizon radius r_h. The computations ask what the
 NS analysis asked, and find different answers: how closely M follows r_h, how much beta moves M
@@ -165,7 +165,7 @@ SPLIT_TAGS = {"M": "M", "log10_D": "LD"}
 
 @dataclass(frozen=True)
 class Evidence:
-    """Every computed result Section 4.2 cites, computed once for the macros and the tables."""
+    """Every computed result Section 3.2 cites, computed once for the macros and the tables."""
 
     rows: int
     curves: int
@@ -182,7 +182,7 @@ class Evidence:
 
 
 def evidence(table: pd.DataFrame, folds: int, seed: int) -> Evidence:
-    """Compute every Section 4.2 result from a table with the charge targets."""
+    """Compute every Section 3.2 result from a table with the charge targets."""
     sizes = table.groupby(list(CURVE)).size()
     grid = np.unique(table["r_h"].to_numpy())
     return Evidence(
@@ -202,7 +202,7 @@ def evidence(table: pd.DataFrame, folds: int, seed: int) -> Evidence:
 
 
 def numbers(found: Evidence) -> dict[str, str]:
-    """Every number Section 4.2 cites, keyed by its \\bhEda macro name."""
+    """Every number Section 3.2 cites, keyed by its \\bhEda macro name."""
     summary = {(s.column, s.scale): s for s in found.summaries}
     target = {t.target: t for t in found.targets}
     effect = {e.target: e.spread_ratio for e in found.beta_effects}

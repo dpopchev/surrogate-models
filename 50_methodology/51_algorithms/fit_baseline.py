@@ -1,4 +1,4 @@
-"""The baseline surrogate behind Section 5.1 (W-034): a plain MLP fitted to the NS mass.
+"""The baseline surrogate behind Section 4.1 (W-034): a plain MLP fitted to the NS mass.
 
 Inputs: the prepared NS table and the frozen curve split (local/state/). The net trains on every
 non-test curve through shared/design.py and shared/surrogate.py, with early stopping on held-out
@@ -127,7 +127,7 @@ def start_banner(
         f"  - {run / 'loss_curve.png'} (redrawn every {LIVE_EVERY} epochs)",
         "at the end:",
         f"  - {run}/ (run.json, error_cdf.png, curves.png)",
-        f"  - {out}/ (Section 5.1 numbers, parity figure)",
+        f"  - {out}/ (Section 4.1 numbers, parity figure)",
         "follow live: make follow",
     ]
 

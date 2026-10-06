@@ -2,7 +2,7 @@
 
 make_estimator builds Pipeline(StandardScaler, ScaledNetRegressor): a skorch MLP that
 standardizes its target itself, so its predictions and its per-epoch valid_mare are on the
-target's original scale (Section 4.3: M in M_sun, the dimensionless charge target). Early
+target's original scale (Section 3.3: M in M_sun, the dimensionless charge target). Early
 stopping validates on whole held-out curves -- the fit passes the rows' curve ids as
 `net__groups` -- never on skorch's default random rows (W-017).
 """

@@ -1,4 +1,4 @@
-"""Exploratory analysis of the prepared NS table behind Section 4.1 (W-017).
+"""Exploratory analysis of the prepared NS table behind Section 3.1 (W-017).
 
 The computations are pure functions over the table, each returning a frozen record; their
 numbers become \\nsEda... LaTeX macros so the text and the decisions table cite generated values.
@@ -186,7 +186,7 @@ SPLIT_TARGETS = ("log10_D_over_M", "M")
 
 @dataclass(frozen=True)
 class Evidence:
-    """Every computed result Section 4.1 cites, computed once for the macros and the tables."""
+    """Every computed result Section 3.1 cites, computed once for the macros and the tables."""
 
     rows: int
     density_grid_values: int
@@ -204,7 +204,7 @@ class Evidence:
 
 
 def evidence(table: pd.DataFrame, folds: int, seed: int, window: float = 0.09) -> Evidence:
-    """Compute every Section 4.1 result from a table with the charge targets."""
+    """Compute every Section 3.1 result from a table with the charge targets."""
     sizes = table.groupby(list(CURVE)).size()
     return Evidence(
         len(table),
@@ -234,7 +234,7 @@ def raw_numbers(raw: Mapping[str, int]) -> dict[str, str]:
 
 
 def numbers(found: Evidence) -> dict[str, str]:
-    """Every number Section 4.1 cites, keyed by its \\nsEda macro name."""
+    """Every number Section 3.1 cites, keyed by its \\nsEda macro name."""
     summary = {(s.column, s.scale): s for s in found.summaries}
     log_d, log_dm = found.targets
     rho = summary["rho_c", "log10"]

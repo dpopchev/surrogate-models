@@ -1,4 +1,4 @@
-"""The numbers Section 4.3 cites about the split and the charge floor (W-020).
+"""The numbers Section 3.3 cites about the split and the charge floor (W-020).
 
 Reads the frozen split (local/state/split.parquet) and both prepared tables; writes \\prep...
 LaTeX macros: per dataset the curves in the test set and in each GroupKFold fold, the curves the
@@ -89,7 +89,7 @@ TAGS = {"neutron_stars": "Ns", "black_holes": "Bh"}
 def numbers(
     splits: tuple[SplitSummary, ...], floors: tuple[FloorShare, ...], eps: float, seed: int
 ) -> dict[str, str]:
-    """Every number Section 4.3 cites, keyed by its \\prep macro name."""
+    """Every number Section 3.3 cites, keyed by its \\prep macro name."""
     found = {"prepChargeFloor": sci_tex(eps), "prepSeed": f"{seed}"}
     for s in splits:
         tag = TAGS[s.dataset]
@@ -128,7 +128,7 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
 
 
 def main(argv: list[str], config: PaperConfig | None = None) -> None:
-    """Write the Section 4.3 numbers from the split file and both prepared tables into the
+    """Write the Section 3.3 numbers from the split file and both prepared tables into the
     section's folder of the asset dir, after emptying that folder of an earlier run."""
     args = _arguments(argv)
     for source in (args.split, args.neutron_stars, args.black_holes):
@@ -144,7 +144,7 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
         stale.unlink()
     numbers_tex = out / f"{SECTION}_num.tex"
     numbers_tex.write_text(render_macros(numbers(splits, floors, eps, args.seed)))
-    logger.info("done: Section 4.3 numbers -> %s", numbers_tex)
+    logger.info("done: Section 3.3 numbers -> %s", numbers_tex)
 
 
 if __name__ == "__main__":

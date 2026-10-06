@@ -30,7 +30,7 @@ $(STATE)/neutron_stars.parquet: $(NS_SCRIPT) $(NS_RAW) | $(STATE)
 	$(call log_done,neutron-star table written to $@)
 
 # The frozen curve-grouped split of both tables (W-019): the seed is written once
-# here (Section 4.3 reports it); test fraction and folds are the script's defaults.
+# here (Section 3.3 reports it); test fraction and folds are the script's defaults.
 SPLIT_SCRIPT := 50_methodology/51_algorithms/split_datasets.py
 SPLIT_SEED   := 20261005
 

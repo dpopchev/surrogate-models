@@ -43,7 +43,7 @@ $(ASSETS)/00_metadata/00_metadata_build_stamp.tex: 00_metadata/build_stamp.py FO
 	@$(RUN) python $< $@
 	$(call log_done,build stamp written to $@)
 
-# Section 4.1: the NS EDA writes the figures and tables paper.toml selects and their numbers;
+# Section 3.1: the NS EDA writes the figures and tables paper.toml selects and their numbers;
 # the numbers file, written on every run, stands for the whole set (the script empties its
 # own folder first).
 NS_EDA        := 40_data_analysis/41_neutron_stars/eda_neutron_stars.py
@@ -54,7 +54,7 @@ $(NS_EDA_ASSETS): $(NS_EDA) paper.toml shared/config.py shared/plots.py shared/e
 	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS)
 	$(call log_done,NS EDA figures and numbers written to $(@D)/)
 
-# Section 4.2: the BH EDA, the same way; its numbers file stands for the whole set.
+# Section 3.2: the BH EDA, the same way; its numbers file stands for the whole set.
 BH_EDA        := 40_data_analysis/42_black_holes/eda_black_holes.py
 BH_EDA_ASSETS := $(ASSETS)/42_black_holes/42_black_holes_num.tex
 PAPER_ASSETS  += $(BH_EDA_ASSETS)
@@ -63,16 +63,16 @@ $(BH_EDA_ASSETS): $(BH_EDA) paper.toml shared/config.py shared/plots.py shared/e
 	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS)
 	$(call log_done,BH EDA figures and numbers written to $(@D)/)
 
-# Section 4.3: the split and charge-floor numbers, from the split file and both tables.
+# Section 3.3: the split and charge-floor numbers, from the split file and both tables.
 PREP_NUMBERS := 40_data_analysis/43_preprocessing/preprocessing_numbers.py
 PREP_ASSETS  := $(ASSETS)/43_preprocessing/43_preprocessing_num.tex
 PAPER_ASSETS += $(PREP_ASSETS)
 
 $(PREP_ASSETS): $(PREP_NUMBERS) paper.toml shared/config.py $(STATE)/split.parquet $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet
 	@$(RUN) python $(PREP_NUMBERS) $(STATE)/split.parquet $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(ASSETS) --seed $(SPLIT_SEED)
-	$(call log_done,Section 4.3 numbers written to $@)
+	$(call log_done,Section 3.3 numbers written to $@)
 
-# Section 5.1: the baseline surrogate trains a network, minutes on this CPU, so it is its own
+# Section 4.1: the baseline surrogate trains a network, minutes on this CPU, so it is its own
 # target and not in PAPER_ASSETS -- make check (paper-verify) would retrain it on every change
 # of a shared module (T-080). The numbers file stands for the whole set; the epoch lines stream
 # while it trains.
@@ -85,7 +85,7 @@ $(BASELINE_ASSETS): $(BASELINE) paper.toml shared/config.py shared/design.py sha
 	$(call log_done,baseline numbers and parity figure written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
 
 .PHONY: baseline
-baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 5.1
+baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1
 	$(call log_done,baseline assets current in $(dir $(BASELINE_ASSETS)))
 
 # Each baseline run logs into its own <run>/train.log and repoints latest.log at it (W-054);
@@ -198,7 +198,7 @@ sections: $(SECTIONS:%=$(SECTIONS_OUT)/%.pdf) ## Compile each section alone into
 examples: ## Show common commands with examples
 	@printf '%s\n' \
 	  'Train and watch the baseline surrogate' \
-	  '  make baseline                   fit it (minutes) -> Section 5.1 numbers and parity figure' \
+	  '  make baseline                   fit it (minutes) -> Section 4.1 numbers and parity figure' \
 	  '  make follow                     watch the running fit live from any terminal (Ctrl-C ends)' \
 	  '  make runs                       one line per run, newest first -- MARE, epochs, commit' \
 	  '  make run                        the latest run files -- log, run.json, diagnostics PNGs' \
