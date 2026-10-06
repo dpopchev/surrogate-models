@@ -125,7 +125,11 @@ class TestStopWindow:
 
 
 def test_the_time_left_is_the_window_at_the_mean_epoch_time() -> None:
-    assert time_left((20, 483), mean_epoch_seconds=8.0) == "2m 40s-1h 4m 24s"
+    assert time_left((20, 483), mean_epoch_seconds=8.0) == "~3m-1h 4m"
+
+
+def test_the_time_left_under_half_a_minute_reads_less_than_a_minute() -> None:
+    assert time_left((0, 3), mean_epoch_seconds=8.0) == "~<1m-<1m"
 
 
 def epoch_table(caplog: pytest.LogCaptureFixture) -> str:
@@ -150,7 +154,11 @@ class TestEpochTable:
     def test_shows_the_time_left_until_the_earliest_and_latest_stop(
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
-        assert re.search(r"\bleft\b", epoch_table(caplog)) is not None
+        assert re.search(r"\btime_left\b", epoch_table(caplog)) is not None
+
+    def test_shows_the_epoch_time_to_a_tenth_of_a_second(self) -> None:
+        net = fitted(replace(TOY, max_epochs=1)).named_steps["net"]
+        assert re.fullmatch(r"\d+\.\d", str(net.history[-1, "elapse_s"])) is not None
 
     def test_no_longer_prints_dur(self, caplog: pytest.LogCaptureFixture) -> None:
         assert re.search(r"\bdur\b", epoch_table(caplog)) is None

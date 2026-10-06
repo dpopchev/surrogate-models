@@ -115,11 +115,13 @@ class TestStartBanner:
     def test_says_how_to_follow_the_run(self, lines: list[str]) -> None:
         assert "follow live: make follow" in lines
 
-    def test_states_what_bounds_the_fit(self, lines: list[str]) -> None:
-        assert (
-            "bounds: at most 500 epochs; early stop after 20 epochs without a better "
-            "validation loss; 25% of the training curves validate"
-        ) in lines
+    def test_lists_what_bounds_the_fit_one_per_line(self, lines: list[str]) -> None:
+        start = lines.index("bounds:")
+        assert lines[start + 1 : start + 4] == [
+            "  - at most 500 epochs",
+            "  - early stop after 20 epochs without a better validation loss",
+            "  - 25% of the training curves validate",
+        ]
 
 
 FILES = [Path("assets/51_algorithms/51_algorithms_num.tex"), Path("state/run-1/run.json")]

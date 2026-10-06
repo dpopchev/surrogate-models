@@ -78,12 +78,21 @@ def duration_text(seconds: float) -> str:
     return f"{minutes}m {secs}s" if minutes else f"{secs}s"
 
 
+def _minutes_text(seconds: float) -> str:
+    """Seconds to the nearest minute: "1h 4m", "3m", or "<1m" under half a minute."""
+    hours, minutes = divmod(round(seconds / 60), 60)
+    if hours:
+        return f"{hours}h {minutes}m"
+    return f"{minutes}m" if minutes else "<1m"
+
+
 def time_left(window: tuple[int, int], mean_epoch_seconds: float) -> str:
-    """The time until the earliest and the latest stop, at the mean epoch time so far."""
+    """The approximate time until the earliest and the latest stop, at the mean epoch time so
+    far, to the nearest minute."""
     earliest, latest = window
     return (
-        f"{duration_text(earliest * mean_epoch_seconds)}"
-        f"-{duration_text(latest * mean_epoch_seconds)}"
+        f"~{_minutes_text(earliest * mean_epoch_seconds)}"
+        f"-{_minutes_text(latest * mean_epoch_seconds)}"
     )
 
 
@@ -180,13 +189,13 @@ class ElapseSeconds(Callback):
         **kwargs: Any,
     ) -> None:
         """Copy skorch's dur (recorded by its EpochTimer, which runs first) into elapse_s."""
-        net.history.record("elapse_s", net.history[-1, "dur"])
+        net.history.record("elapse_s", f"{net.history[-1, 'dur']:.1f}")
 
 
 class Progress(Callback):
     """Record where a fit stands: the epoch out of max_epochs as at_epoch, the epochs since the
     lowest valid loss out of the patience EarlyStopping allows as patience ("3/20"), and the
-    time until the earliest and the latest stop at the mean epoch time as left.
+    approximate time until the earliest and the latest stop at the mean epoch time as time_left.
 
     PrintLog drops every key ending in _best, hence patience, not since_best.
     """
@@ -209,7 +218,7 @@ class Progress(Callback):
         net.history.record("patience", f"{epoch - best}/{self.patience}")
         window = stop_window(epoch, best, self.patience, net.max_epochs)
         mean_seconds = float(np.mean([row["dur"] for row in rows]))
-        net.history.record("left", time_left(window, mean_seconds))
+        net.history.record("time_left", time_left(window, mean_seconds))
 
 
 def _valid_mare(net: ScaledNetRegressor, X: Any, y: Any) -> float:  # noqa: N803

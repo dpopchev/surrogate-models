@@ -105,16 +105,17 @@ def start_banner(
 ) -> list[str]:
     """The lines a run's log opens with: where it writes, what it fits on, what bounds it and
     how to watch it; rows and curves are (training, test)."""
-    bounds = (
-        f"bounds: at most {training.max_epochs} epochs; early stop after {training.patience} "
-        f"epochs without a better validation loss; {training.valid_fraction:.0%} of the "
-        "training curves validate"
-    )
+    bounds = [
+        "bounds:",
+        f"  - at most {training.max_epochs} epochs",
+        f"  - early stop after {training.patience} epochs without a better validation loss",
+        f"  - {training.valid_fraction:.0%} of the training curves validate",
+    ]
     data = (
         f"data: {rows[0]} training rows on {curves[0]} curves, "
         f"{rows[1]} test rows on {curves[1]} curves"
     )
-    return [f"folder: {run}", data, bounds, "follow live: make follow"]
+    return [f"folder: {run}", data, *bounds, "follow live: make follow"]
 
 
 def end_banner(fit: Fit, training: Training, files: list[Path]) -> list[str]:
