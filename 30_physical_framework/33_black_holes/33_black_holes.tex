@@ -1,8 +1,30 @@
 \subsection{Vacuum Sector: Black Hole Dataset (2D Domain)}
 \label{sec:black-holes}
 
-\todo{Draft from the outline.}
-\begin{itemize}
-  \item Inputs: horizon radius $\rh$ and coupling strength $\beta$.
-  \item Targets: gravitational mass $M(\rh, \beta)$ and dilaton charge $\Dch(\rh, \beta)$.
-\end{itemize}
+For static, spherically symmetric black holes the metric is written in Schwarzschild coordinates\review{cite: a reference for the metric ansatz, e.g.\ a GR textbook}
+\begin{equation}
+  ds^2 = -e^{2\Phi(r)} dt^2 + e^{2\Lambda(r)} dr^2 + r^2 \left( d\theta^2 + \sin^2\theta\, d\varphi^2 \right).
+  \label{eq:metric}
+\end{equation}
+The coupling function of the black-hole branch is $f(\phi) = \frac{1}{2\beta} \left[ 1 - \exp(-\beta \phi^2) \right]$, which for $\beta = 6$ is the form $\frac{1}{12} \left[ 1 - \exp(-6\phi^2) \right]$ of Ref.~\citep{Doneva2017_BH}.\review{Confirm the coupling: the outline gives $f(\phi) = \frac{1}{12}[1 - \exp(-6\phi^2)]$, which has no $\beta$, while the dataset varies $\beta$ from $\bhEdaEdgeBetaLow$ to $\bhEdaEdgeBetaHigh$; the $\beta$-dependent form written here reduces to it at $\beta = 6$.}
+
+\paragraph{Horizon.}
+A black-hole horizon at $r = \rh$ requires $e^{2\Phi} \to 0$ and $e^{-2\Lambda} \to 0$ as $r \to \rh$~\citep{Doneva2017_BH}. Regularity of the scalar field there fixes its radial derivative~\citep{Doneva2017_BH},
+\begin{equation}
+  \left( \frac{d\phi}{dr} \right)_H = \frac{\rh}{4 \lambda^2 f'(\phi_H)} \left[ -1 + \sqrt{1 - \frac{24 \lambda^4}{\rh^4} \left( f'(\phi_H) \right)^2} \right],
+  \label{eq:horizon-regularity}
+\end{equation}
+so non-trivial scalarized black holes exist only when $\rh^4 > 24 \lambda^4 \left( f'(\phi_H) \right)^2$.
+
+\paragraph{Spatial infinity.}
+Asymptotic flatness, $\Phi \to 0$, $\Lambda \to 0$ and $\phi \to 0$, defines the two observables~\citep{Doneva2017_BH}
+\begin{equation}
+  \Lambda(r) \approx \frac{M}{r} + \order{\frac{1}{r^2}}, \quad
+  \Phi(r) \approx -\frac{M}{r} + \order{\frac{1}{r^2}}, \quad
+  \phi(r) \approx \frac{\Dch}{r} + \order{\frac{1}{r^2}},
+  \label{eq:asymptotics}
+\end{equation}
+the ADM gravitational mass $M$ and the asymptotic dilaton charge $\Dch$.
+
+\paragraph{The dataset.}
+The black-hole dataset~\citep{Doneva2017_BH} maps the two inputs $(\rh, \beta)$ to the two observables $(M, \Dch)$: $\bhEdaRows$ solutions on $\bhEdaCurves$ curves of fixed $\beta$, from $\bhEdaEdgeBetaLow$ to $\bhEdaEdgeBetaHigh$, each sampled in $\rh$ with step $\bhEdaRhStep$ from its existence edge, $\rh^{\min}$ between $\bhEdaEdgeRhMinLow$ and $\bhEdaEdgeRhMinHigh$, to $\bhEdaRhMax$.\review{State the unit of $\rh$ (geometrized, or in units of $\lambda$).} Section~\ref{sec:eda-bh} analyses it.
