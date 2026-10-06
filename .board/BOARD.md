@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-057 > T-101   | blocked: 0 | todo roots: 5 | done: 133 | pruned: 4
+open path: E-005 > W-057 > T-102   | blocked: 0 | todo roots: 5 | done: 134 | pruned: 4
 
 ## Tree
 
@@ -54,8 +54,8 @@ open path: E-005 > W-057 > T-101   | blocked: 0 | todo roots: 5 | done: 133 | pr
 
 - T-099 [done] Show k/MAX, epochs since best and the time-left range in the epoch table -> shared/surrogate.py
 - T-100 [done] Log a start and an end banner for each run -> 50_methodology/51_algorithms/fit_baseline.py
-- T-101 [doing] Add make runs and make run -> 50_methodology/51_algorithms/list_runs.py and mk/paper.mk   <- ACTIVE LEAF
-- T-102 [todo] Add make examples, the common commands with examples -> mk/paper.mk
+- T-101 [done] Add make runs and make run -> 50_methodology/51_algorithms/list_runs.py and mk/paper.mk
+- T-102 [doing] Add make examples, the common commands with examples -> mk/paper.mk   <- ACTIVE LEAF
 
 ### E-006 [todo] Data-guided choices tested -- rho_c input, H1, H2 and H3
 
@@ -348,8 +348,8 @@ flowchart TD
   E005 --> W057["W-057 issue doing: A run tells how far it is, when it may stop and where its outputs go"]
   W057 --> T099["T-099 done: Show k/MAX, epochs since best and the time-left range in the epoch table -> shared/surrogate.py"]
   W057 --> T100["T-100 done: Log a start and an end banner for each run -> 50_methodology/51_algorithms/fit_baseline.py"]
-  W057 --> T101["T-101 doing: Add make runs and make run -> 50_methodology/51_algorithms/list_runs.py and mk/paper.mk -- ACTIVE LEAF"]
-  W057 --> T102["T-102 todo: Add make examples, the common commands with examples -> mk/paper.mk"]
+  W057 --> T101["T-101 done: Add make runs and make run -> 50_methodology/51_algorithms/list_runs.py and mk/paper.mk"]
+  W057 --> T102["T-102 doing: Add make examples, the common commands with examples -> mk/paper.mk -- ACTIVE LEAF"]
   E006["E-006 todo: Data-guided choices tested -- rho_c input, H1, H2 and H3"]
   E006 --> W038["W-038 issue todo: rho_c input check -- raw against log10"]
   E006 --> W039["W-039 issue todo: H1 -- log against linear charge target"]
@@ -377,7 +377,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W057,T101 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,T099,T100 done
-  class W036,T085,T086,T087,W037,T088,T089,T102,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053,W058,T103 todo
+  class E005,W057,T102 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,T099,T100,T101 done
+  class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053,W058,T103 todo
 ```
