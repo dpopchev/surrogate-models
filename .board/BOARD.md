@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-009   | blocked: 1 | todo roots: 3 | done: 148 | pruned: 4
+open path: E-009 > W-060 > T-115   | blocked: 1 | todo roots: 3 | done: 149 | pruned: 4
 
 ## Tree
 
@@ -111,10 +111,10 @@ open path: E-009   | blocked: 1 | todo roots: 3 | done: 148 | pruned: 4
 - T-107 [done] Map the numbered citations to refs.bib keys -> 00_metadata/citations.md
 - T-108 [doing] Add the missing references to refs.bib -> 00_metadata/refs.bib
 
-#### W-060 issue [todo] Title and outline bullets aligned to the revised structure
+#### W-060 issue [doing] Title and outline bullets aligned to the revised structure
 
-- T-114 [todo] Set the revised title -> 00_metadata/metadata.tex
-- T-115 [todo] Align the remaining outline bullets to the revised structure -> the todo bullets of 10, 20, 41, 44, 51-53, 61-64, 70, 80
+- T-114 [done] Set the revised title -> 00_metadata/metadata.tex
+- T-115 [doing] Align the remaining outline bullets to the revised structure -> the todo bullets of 10, 20, 41, 44, 51-53, 61-64, 70, 80   <- ACTIVE LEAF
 - T-116 [todo] Name paper sections by their compiled number in code and make -> mk/, paper.toml, the colocated modules
 
 ## Closed
@@ -403,17 +403,17 @@ flowchart TD
   E009 --> W059["W-059 spike blocked on developer: Which refs.bib keys the revised structure's citations name"]
   W059 --> T107["T-107 done: Map the numbered citations to refs.bib keys -> 00_metadata/citations.md"]
   W059 --> T108["T-108 doing: Add the missing references to refs.bib -> 00_metadata/refs.bib"]
-  E009 --> W060["W-060 issue todo: Title and outline bullets aligned to the revised structure"]
-  W060 --> T114["T-114 todo: Set the revised title -> 00_metadata/metadata.tex"]
-  W060 --> T115["T-115 todo: Align the remaining outline bullets to the revised structure -> the todo bullets of 10, 20, 41, 44, 51-53, 61-64, 70, 80"]
+  E009 --> W060["W-060 issue doing: Title and outline bullets aligned to the revised structure"]
+  W060 --> T114["T-114 done: Set the revised title -> 00_metadata/metadata.tex"]
+  W060 --> T115["T-115 doing: Align the remaining outline bullets to the revised structure -> the todo bullets of 10, 20, 41, 44, 51-53, 61-64, 70, 80 -- ACTIVE LEAF"]
   W060 --> T116["T-116 todo: Name paper sections by their compiled number in code and make -> mk/, paper.toml, the colocated modules"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,E009,T108 doing
+  class E005,E009,T108,W060,T115 doing
   class W059 blocked
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,T107 done
-  class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W052,W053,W060,T114,T115,T116 todo
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,T107,T114 done
+  class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W052,W053,T116 todo
 ```
