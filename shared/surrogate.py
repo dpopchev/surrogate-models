@@ -193,7 +193,7 @@ class ElapsedSeconds(Callback):
         **kwargs: Any,
     ) -> None:
         """Copy skorch's dur (recorded by its EpochTimer, which runs first) into elapsed_s."""
-        net.history.record("elapsed_s", round(net.history[-1, "dur"], 1))
+        net.history.record("elapsed_s", round(cast(float, net.history[-1, "dur"]), 1))
 
 
 class Progress(Callback):
