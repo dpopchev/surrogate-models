@@ -45,3 +45,19 @@ figures = [
   "existence_edge",         # each beta curve's r_h range, r_h,min marked
 ]
 tables = ["univariate", "charge_correlation", "split_strategies"]
+
+# Section 5.1 -- the baseline network fit_baseline.py trains (E-005): a plain MLP, the control
+# arm of H2 (MSE, ReLU) and H3 (no skips). PAPER__METHODOLOGY__ALGORITHMS__MAX_EPOCHS=2 in the
+# environment gives a quick smoke run.
+[methodology.algorithms]
+width = 64                # units per hidden layer
+depth = 3                 # hidden layers
+activation = "relu"       # relu | gelu | tanh
+loss = "mse"              # mse | huber (delta 1.0 on the standardized target)
+lr = 1e-3                 # AdamW learning rate at the start of the cosine schedule
+max_epochs = 500          # upper bound; early stopping usually ends sooner
+batch_size = 1024         # rows per optimizer step
+patience = 20             # epochs without a better validation loss before stopping
+valid_fraction = 0.2      # share of the training curves held out for early stopping
+seed = 20261005           # torch initialization, batch order and validation curves
+log_level = "INFO"        # INFO: stage and epoch lines | DEBUG: more detail

@@ -65,6 +65,38 @@ class DataAnalysis(BaseModel):
     charge_floor: float = 1e-5
 
 
+# The network vocabulary of shared/surrogate.py, repeated so that loading the config never
+# imports torch; test_config.py holds the two equal.
+NetActivation = Literal["relu", "gelu", "tanh"]
+NetLoss = Literal["mse", "huber"]
+
+
+class AlgorithmsSection(BaseModel):
+    """Section 5.1: the baseline network fit_baseline.py trains -- the H2 and H3 control arm."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    width: int = 64
+    depth: int = 3
+    activation: NetActivation = "relu"
+    loss: NetLoss = "mse"
+    lr: float = 1e-3
+    max_epochs: int = 500
+    batch_size: int = 1024
+    patience: int = 20
+    valid_fraction: float = 0.2
+    seed: int = 20261005
+    log_level: Literal["INFO", "DEBUG"] = "INFO"
+
+
+class Methodology(BaseModel):
+    """Chapter 50_methodology."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    algorithms: AlgorithmsSection = AlgorithmsSection()
+
+
 class PaperConfig(BaseSettings):
     """Every choice of the paper: the plot style and one model per chapter."""
 
@@ -74,6 +106,7 @@ class PaperConfig(BaseSettings):
 
     plot: PlotStyle = PlotStyle()
     data_analysis: DataAnalysis = DataAnalysis()
+    methodology: Methodology = Methodology()
 
     @classmethod
     def settings_customise_sources(
