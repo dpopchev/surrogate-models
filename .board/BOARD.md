@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-009 > W-059 > T-108   | blocked: 0 | todo roots: 3 | done: 142 | pruned: 4
+open path: E-009   | blocked: 1 | todo roots: 3 | done: 142 | pruned: 4
 
 ## Tree
 
@@ -106,10 +106,10 @@ open path: E-009 > W-059 > T-108   | blocked: 0 | todo roots: 3 | done: 142 | pr
 
 #### W-053 spike [todo] What the open-source release publishes
 
-#### W-059 spike [doing] Which refs.bib keys the revised structure's citations name
+#### W-059 spike [blocked] Which refs.bib keys the revised structure's citations name   [blocked since 2026-10-06, waiting on developer: 14 missing references need sources from the developer; option B lets Section 2 go first with visible markers]
 
 - T-107 [done] Map the numbered citations to refs.bib keys -> 00_metadata/citations.md
-- T-108 [doing] Add the missing references to refs.bib -> 00_metadata/refs.bib   <- ACTIVE LEAF
+- T-108 [doing] Add the missing references to refs.bib -> 00_metadata/refs.bib
 
 #### W-060 issue [todo] Title and outline bullets aligned to the revised structure
 
@@ -400,9 +400,9 @@ flowchart TD
   W051 --> T113["T-113 todo: Write Section 2.4, the neutron-star dataset -> 30_physical_framework/34_neutron_stars/34_neutron_stars.tex"]
   E009 --> W052["W-052 issue todo: Abstract, introduction, conclusion and title block"]
   E009 --> W053["W-053 spike todo: What the open-source release publishes"]
-  E009 --> W059["W-059 spike doing: Which refs.bib keys the revised structure's citations name"]
+  E009 --> W059["W-059 spike blocked on developer: Which refs.bib keys the revised structure's citations name"]
   W059 --> T107["T-107 done: Map the numbered citations to refs.bib keys -> 00_metadata/citations.md"]
-  W059 --> T108["T-108 doing: Add the missing references to refs.bib -> 00_metadata/refs.bib -- ACTIVE LEAF"]
+  W059 --> T108["T-108 doing: Add the missing references to refs.bib -> 00_metadata/refs.bib"]
   E009 --> W060["W-060 issue todo: Title and outline bullets aligned to the revised structure"]
   W060 --> T114["T-114 todo: Set the revised title -> 00_metadata/metadata.tex"]
   W060 --> T115["T-115 todo: Align the remaining outline bullets to the revised structure -> the todo bullets of 10, 20, 41, 44, 51-53, 61-64, 70, 80"]
@@ -412,7 +412,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,E009,W059,T108 doing
+  class E005,E009,T108 doing
+  class W059 blocked
   class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,T107 done
   class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W051,T109,T110,T111,T112,T113,W052,W053,W060,T114,T115,T116 todo
 ```

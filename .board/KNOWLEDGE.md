@@ -45,4 +45,5 @@
 - 2026-10-06 E-005: T-106's evidence says make check PASS, but make check failed (pyright, surrogate.py:196) -- the agent's command chain continued past the failure; fixed in 40bf205, make check PASS (310 tests)
 - 2026-10-06 E-005: parked for E-009 (developer): the revised paper structure and the dataset papers in refs.bib are adopted first; E-005 resumes at W-036 with no work item open
 - 2026-10-06 E-005: parked for W-058 (developer): the [landing] review runs as a standalone root; E-005 resumes at W-036 with no work item open
+- 2026-10-06 E-009: option B (developer): W-059 blocked on 14 missing sources; W-051 goes first, \review{cite: ...} per missing key, its branch stacked on W-059's
 - 2026-10-06 E-009: re-planned from the developer's revised paper structure and the dataset papers added to refs.bib (c83b6ef): W-059 and W-060 added, W-051 re-scoped to Sections 2.1 to 2.4
