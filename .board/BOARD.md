@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-034 > T-078   | blocked: 0 | todo roots: 4 | done: 110 | pruned: 4
+open path: E-005 > W-034 > T-079   | blocked: 0 | todo roots: 4 | done: 111 | pruned: 4
 
 ## Tree
 
@@ -10,8 +10,8 @@ open path: E-005 > W-034 > T-078   | blocked: 0 | todo roots: 4 | done: 110 | pr
 
 - T-076 [done] Add torch and skorch -> pyproject.toml and uv.lock
 - T-077 [done] Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py
-- T-078 [doing] Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py   <- ACTIVE LEAF
-- T-079 [todo] Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py
+- T-078 [done] Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py
+- T-079 [doing] Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py   <- ACTIVE LEAF
 - T-080 [todo] Write the baseline fit script and make baseline -> build/assets/51_algorithms/
 
 #### W-035 issue [todo] Each baseline run leaves a diagnostics folder
@@ -289,8 +289,8 @@ flowchart TD
   E005 --> W034["W-034 issue doing: NS mass baseline runs end to end with live feedback"]
   W034 --> T076["T-076 done: Add torch and skorch -> pyproject.toml and uv.lock"]
   W034 --> T077["T-077 done: Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py"]
-  W034 --> T078["T-078 doing: Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py -- ACTIVE LEAF"]
-  W034 --> T079["T-079 todo: Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py"]
+  W034 --> T078["T-078 done: Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py"]
+  W034 --> T079["T-079 doing: Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py -- ACTIVE LEAF"]
   W034 --> T080["T-080 todo: Write the baseline fit script and make baseline -> build/assets/51_algorithms/"]
   E005 --> W035["W-035 issue todo: Each baseline run leaves a diagnostics folder"]
   W035 --> T081["T-081 todo: Write the run record test-first -> shared/runs.py with shared/test_runs.py"]
@@ -329,7 +329,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W034,T078 doing
-  class T076,T077 done
-  class T079,T080,W035,T081,T082,T083,T084,W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
+  class E005,W034,T079 doing
+  class T076,T077,T078 done
+  class T080,W035,T081,T082,T083,T084,W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
