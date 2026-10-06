@@ -1,6 +1,29 @@
 \subsection{Action and Modified Field Equations}
 \label{sec:action}
 
-\todo{Action of dilaton gravity, scalar coupling parameter $\beta$, and field equations.}
+We consider a broad class of extended scalar-tensor-Gauss--Bonnet (ESTGB) theories, in which a dynamical real scalar field $\phi$ couples non-minimally to the Gauss--Bonnet curvature invariant $\RGB$~\citep{Doneva2017_BH,Doneva2017_NS}. The action in four dimensions is~\citep{Doneva2017_BH}
+\begin{equation}
+  S = \frac{1}{16\pi} \int d^4x \sqrt{-g} \left[ R - 2\nabla_\mu \phi \nabla^\mu \phi - V(\phi) + \lambda^2 f(\phi)\, \RGB \right] + S_{\mathrm{matter}}(g_{\mu\nu}, \chi),
+  \label{eq:action}
+\end{equation}
+where $R$ is the Ricci scalar of the metric $g_{\mu\nu}$, $g = \det(g_{\mu\nu})$, $V(\phi)$ is the scalar potential, taken to vanish, $V(\phi) = 0$, throughout this work, and $\lambda$ is the Gauss--Bonnet coupling constant, which has dimensions of length. The Gauss--Bonnet invariant is\review{cite: a reference for the Gauss--Bonnet invariant}
+\begin{equation}
+  \RGB = R^2 - 4 R_{\mu\nu} R^{\mu\nu} + R_{\mu\nu\alpha\beta} R^{\mu\nu\alpha\beta},
+  \label{eq:gauss-bonnet}
+\end{equation}
+and the coupling function $f(\phi)$ sets how strongly the scalar degree of freedom interacts with the spacetime curvature. Varying the action~\eqref{eq:action} with respect to $g_{\mu\nu}$ and $\phi$ gives the field equations~\citep{Doneva2017_BH}
+\begin{align}
+  R_{\mu\nu} - \frac{1}{2} R g_{\mu\nu} + \Gamma_{\mu\nu} &= 2 \nabla_\mu \phi \nabla_\nu \phi - g_{\mu\nu} \nabla_\alpha \phi \nabla^\alpha \phi + 8\pi T^{\mathrm{matter}}_{\mu\nu}, \label{eq:field-metric} \\
+  \nabla_\alpha \nabla^\alpha \phi &= -\frac{\lambda^2}{4} \frac{df(\phi)}{d\phi} \RGB, \label{eq:field-scalar}
+\end{align}
+where $T^{\mathrm{matter}}_{\mu\nu}$ is the energy-momentum tensor of matter\review{cite: a reference for the matter stress-energy and its conservation} and the tensor $\Gamma_{\mu\nu}$ collects the second-order Gauss--Bonnet curvature-scalar interactions~\citep{Doneva2017_BH},
+\begin{equation}
+  \begin{split}
+    \Gamma_{\mu\nu} = {}& -R \left( \nabla_\mu \Psi_\nu + \nabla_\nu \Psi_\mu \right) - 4 \nabla_\alpha \Psi^\alpha \left( R_{\mu\nu} - \frac{1}{2} R g_{\mu\nu} \right) + 4 R_{\mu\alpha} \nabla^\alpha \Psi_\nu + 4 R_{\nu\alpha} \nabla^\alpha \Psi_\mu \\
+    & - 4 g_{\mu\nu} R_{\alpha\beta} \nabla^\alpha \Psi^\beta + 4 R^{\beta}{}_{\mu\alpha\nu} \nabla^\alpha \Psi_\beta,
+  \end{split}
+  \label{eq:gamma}
+\end{equation}
+with $\Psi_\mu \equiv \lambda^2 \frac{df(\phi)}{d\phi} \nabla_\mu \phi$. The contracted Bianchi identities guarantee that the matter stress-energy is conserved, $\nabla_\mu T^{\mathrm{matter}\,\mu\nu} = 0$.
 
 The action and the field equations are invariant under a sign flip of the dilaton field, which maps the charge $\Dch \to -\Dch$: every solution has a mirror image of opposite charge. Both datasets list the branch with $\Dch > 0$, which their preparation checks.
