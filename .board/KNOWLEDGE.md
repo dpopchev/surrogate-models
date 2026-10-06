@@ -13,6 +13,7 @@
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
 - 2026-10-04 E-002: open: Section 6 has no solver posterior -- the reference posterior must come from the dataset (dense-grid interpolation or nearest samples); which one?
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
+- 2026-10-06 W-032: open: each make overleaf run refreshes local/overleaf/last-upload.txt, so two runs before one upload lose the first run's removed list -- refresh only on an explicit 'uploaded' step instead?
 
 ## Decisions
 - 2026-10-05 E-004: Overleaf is the free plan: make overleaf prepares a flat drag-and-drop folder and lists removed files; no Git push
