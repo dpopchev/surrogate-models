@@ -11,6 +11,9 @@
 \input{41_neutron_stars_num}
 \input{42_black_holes_num}
 \input{43_preprocessing_num}
+% Section 5.1's numbers come from make baseline, a network fit kept out of make check (E-005):
+% loaded when present; 51_algorithms.tex falls back to a visible placeholder otherwise.
+\InputIfFileExists{51_algorithms_num}{}{}
 
 \title{\papertitle}
 \author{\paperauthors\\[0.5em]\small\paperaffiliations}
