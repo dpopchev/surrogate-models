@@ -1,6 +1,7 @@
 """Facts about the shared surrogate estimator, on tiny synthetic curves."""
 
 import logging
+import re
 from dataclasses import replace
 
 import numpy as np
@@ -111,6 +112,21 @@ def test_the_epoch_table_reaches_the_logger(caplog: pytest.LogCaptureFixture) ->
     with caplog.at_level(logging.INFO, logger="shared.surrogate"):
         fitted(replace(TOY, max_epochs=2))
     assert "valid_mare" in caplog.text
+
+
+def epoch_table(caplog: pytest.LogCaptureFixture) -> str:
+    """The epoch table a two-epoch toy fit logs."""
+    with caplog.at_level(logging.INFO, logger="shared.surrogate"):
+        fitted(replace(TOY, max_epochs=2))
+    return caplog.text
+
+
+class TestEpochTable:
+    def test_names_the_epoch_time_elapse_s(self, caplog: pytest.LogCaptureFixture) -> None:
+        assert "elapse_s" in epoch_table(caplog)
+
+    def test_no_longer_prints_dur(self, caplog: pytest.LogCaptureFixture) -> None:
+        assert re.search(r"\bdur\b", epoch_table(caplog)) is None
 
 
 def test_a_non_finite_training_loss_raises() -> None:

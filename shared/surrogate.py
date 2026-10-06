@@ -141,6 +141,20 @@ class FiniteLoss(Callback):
                 raise FloatingPointError(f"epoch {epoch['epoch']}: {key} is {epoch[key]}")
 
 
+class ElapseSeconds(Callback):
+    """Record the seconds an epoch took as elapse_s, the epoch table's time column."""
+
+    def on_epoch_end(
+        self,
+        net: NeuralNetRegressor,
+        dataset_train: Any = None,
+        dataset_valid: Any = None,
+        **kwargs: Any,
+    ) -> None:
+        """Copy skorch's dur (recorded by its EpochTimer, which runs first) into elapse_s."""
+        net.history.record("elapse_s", net.history[-1, "dur"])
+
+
 def _valid_mare(net: ScaledNetRegressor, X: Any, y: Any) -> float:  # noqa: N803
     """MARE on the validation curves, the standardized target turned back to its scale."""
     column = np.asarray(y, dtype=np.float32).reshape(-1, 1)
@@ -177,7 +191,9 @@ def make_estimator(training: Training, n_inputs: int) -> Pipeline:
             ("lr", LRScheduler(cast(Any, CosineAnnealingLR), T_max=training.max_epochs)),
             ("early_stopping", EarlyStopping(patience=training.patience, load_best=True)),
             ("finite_loss", FiniteLoss()),
+            ("elapse_s", ElapseSeconds()),
         ],
+        callbacks__print_log__keys_ignored=["dur"],
         callbacks__print_log__sink=logger.info,
         seed=training.seed,
     )
