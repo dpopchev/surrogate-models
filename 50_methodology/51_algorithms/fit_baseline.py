@@ -32,7 +32,7 @@ from shared.diagnostics import curve_overlay, error_cdf, loss_curve
 from shared.eda import curve_ids, render_macros, sci_tex
 from shared.plots import PlotStyle, anchor_color, apply_style
 from shared.runs import RunRecord, from_json, run_name, run_stem, to_json
-from shared.surrogate import Training, make_estimator, mare, rmse
+from shared.surrogate import Training, duration_text, make_estimator, mare, rmse
 
 logger = logging.getLogger(__name__)
 
@@ -100,16 +100,53 @@ def numbers(fit: Fit) -> dict[str, str]:
     }
 
 
-def _duration(seconds: float) -> str:
-    """Seconds as "4m 12s", or "12s" under a minute."""
-    minutes, rest = divmod(round(seconds), 60)
-    return f"{minutes}m {rest}s" if minutes else f"{rest}s"
+def start_banner(
+    run: Path, training: Training, rows: tuple[int, int], curves: tuple[int, int]
+) -> list[str]:
+    """The lines a run's log opens with: where it writes, what it fits on, what bounds it and
+    how to watch it; rows and curves are (training, test)."""
+    bounds = (
+        f"bounds: at most {training.max_epochs} epochs; early stop after {training.patience} "
+        f"epochs without a better validation loss; {training.valid_fraction:.0%} of the "
+        "training curves validate"
+    )
+    data = (
+        f"data: {rows[0]} training rows on {curves[0]} curves, "
+        f"{rows[1]} test rows on {curves[1]} curves"
+    )
+    return [f"folder: {run}", data, bounds, "follow live: make follow"]
+
+
+def end_banner(fit: Fit, training: Training, files: list[Path]) -> list[str]:
+    """The lines a run's log closes with: why it stopped, how it scored, what it wrote."""
+    stopped = (
+        f"stopped: max_epochs {training.max_epochs} reached"
+        if fit.epochs >= training.max_epochs
+        else (
+            f"stopped: early -- no better validation loss for {training.patience} epochs "
+            f"after epoch {fit.best_epoch}"
+        )
+    )
+    scores = (
+        f"best epoch {fit.best_epoch} restored; test MARE {fit.mare:.2e}, RMSE {fit.rmse:.2e}; "
+        f"fit {duration_text(fit.seconds)}"
+    )
+    return [
+        stopped,
+        scores,
+        "wrote:",
+        *(f"  {path}" for path in files),
+        "list runs: make runs; show this run: make run",
+    ]
 
 
 def progress_line(done: int, total: int, elapsed: float) -> str:
     """How far a series of fits has come and, from the mean time per fit, how long is left."""
     left = elapsed / done * (total - done)
-    return f"fit {done}/{total} done, elapsed {_duration(elapsed)}, about {_duration(left)} left"
+    return (
+        f"fit {done}/{total} done, elapsed {duration_text(elapsed)}, "
+        f"about {duration_text(left)} left"
+    )
 
 
 SYMBOLS = {"beta": "$\\beta$", "lambda": "$\\lambda$"}
@@ -210,22 +247,13 @@ def _fit_and_write(
         table, pd.read_parquet(split_file), NEUTRON_STARS, "mass", config.data_analysis.charge_floor
     )
     train = ~data.test
-    logger.info(
-        "neutron_stars / mass: %d training rows on %d curves, %d test rows on %d curves",
-        train.sum(),
-        len(np.unique(data.groups[train])),
-        data.test.sum(),
-        len(np.unique(data.groups[data.test])),
-    )
+    rows = (int(train.sum()), int(data.test.sum()))
+    curves = (len(np.unique(data.groups[train])), len(np.unique(data.groups[data.test])))
+    logger.info("== baseline run: %s / mass ==", NEUTRON_STARS.dataset)
+    for line in start_banner(run, training, rows, curves):
+        logger.info(line)
     fit = fit_and_score(data, training, time.perf_counter)
     logger.info(progress_line(1, 1, fit.seconds))
-    logger.info(
-        "test: MARE %.4g, RMSE %.4g, %d epochs, fit %.0f s",
-        fit.mare,
-        fit.rmse,
-        fit.epochs,
-        fit.seconds,
-    )
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
@@ -252,6 +280,9 @@ def _fit_and_write(
     assert from_json((run / "run.json").read_text()) == record, (
         f"{run}/run.json does not round-trip"
     )
+    logger.info("== baseline run finished ==")
+    for line in end_banner(fit, training, sorted(out.iterdir()) + sorted(run.iterdir())):
+        logger.info(line)
     logger.info(
         "done: baseline NS mass numbers and parity figure -> %s, diagnostics -> %s", out, run
     )

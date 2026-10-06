@@ -1,6 +1,7 @@
 """Facts about the baseline fit behind Section 5.1, on tiny synthetic curves."""
 
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -15,12 +16,14 @@ from fit_baseline import (
     SECTION,
     Fit,
     curve_names,
+    end_banner,
     figure_tex,
     fit_and_score,
     main,
     numbers,
     parity,
     progress_line,
+    start_banner,
 )
 
 from shared.config import PaperConfig
@@ -93,6 +96,60 @@ class TestNumbers:
             "baseNsMassMare",
             "baseNsMassRmse",
         ]
+
+
+BOUNDED = replace(SHORT, max_epochs=500, patience=20)
+
+
+class TestStartBanner:
+    @pytest.fixture
+    def lines(self) -> list[str]:
+        return start_banner(Path("state/run-1"), BOUNDED, rows=(100, 20), curves=(10, 2))
+
+    def test_names_the_run_folder(self, lines: list[str]) -> None:
+        assert "folder: state/run-1" in lines
+
+    def test_states_the_rows_and_curves_it_trains_and_scores_on(self, lines: list[str]) -> None:
+        assert "data: 100 training rows on 10 curves, 20 test rows on 2 curves" in lines
+
+    def test_says_how_to_follow_the_run(self, lines: list[str]) -> None:
+        assert "follow live: make follow" in lines
+
+    def test_states_what_bounds_the_fit(self, lines: list[str]) -> None:
+        assert (
+            "bounds: at most 500 epochs; early stop after 20 epochs without a better "
+            "validation loss; 25% of the training curves validate"
+        ) in lines
+
+
+FILES = [Path("assets/51_algorithms/51_algorithms_num.tex"), Path("state/run-1/run.json")]
+
+
+class TestEndBanner:
+    def test_says_an_early_stop_and_after_which_epoch(self) -> None:
+        assert (
+            "stopped: early -- no better validation loss for 20 epochs after epoch 123"
+            in end_banner(SCORED, BOUNDED, FILES)
+        )
+
+    def test_gives_the_restored_epoch_the_scores_and_the_time(self) -> None:
+        assert (
+            "best epoch 123 restored; test MARE 1.23e-02, RMSE 4.56e-02; fit 4m 6s"
+            in end_banner(SCORED, BOUNDED, FILES)
+        )
+
+    def test_lists_every_file_written(self) -> None:
+        lines = end_banner(SCORED, BOUNDED, FILES)
+        assert [f"  {path}" for path in FILES] == lines[lines.index("wrote:") + 1 :][:2]
+
+    def test_ends_with_how_to_see_the_runs(self) -> None:
+        assert end_banner(SCORED, BOUNDED, FILES)[-1] == (
+            "list runs: make runs; show this run: make run"
+        )
+
+    def test_says_when_max_epochs_ended_the_fit(self) -> None:
+        ran_out = replace(SCORED, epochs=500)
+        assert "stopped: max_epochs 500 reached" in end_banner(ran_out, BOUNDED, FILES)
 
 
 class TestProgressLine:
@@ -184,6 +241,14 @@ class TestMain:
     def test_logs_the_epoch_table_into_the_run_s_train_log(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
         assert "valid_mare" in (run / "train.log").read_text()
+
+    def test_opens_its_log_with_the_start_banner(self, ran: Path) -> None:
+        run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
+        assert "follow live: make follow" in (run / "train.log").read_text()
+
+    def test_closes_its_log_with_the_end_banner(self, ran: Path) -> None:
+        run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
+        assert "list runs: make runs" in (run / "train.log").read_text()
 
     def test_logs_the_progress_after_the_fit(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
