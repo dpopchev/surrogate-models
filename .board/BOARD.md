@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005   | blocked: 0 | todo roots: 4 | done: 140 | pruned: 4
+open path: E-005   | blocked: 0 | todo roots: 4 | done: 141 | pruned: 4
 
 ## Tree
 
@@ -99,10 +99,6 @@ open path: E-005   | blocked: 0 | todo roots: 4 | done: 140 | pruned: 4
 #### W-052 issue [todo] Abstract, introduction, conclusion and title block
 
 #### W-053 spike [todo] What the open-source release publishes
-
-### W-058 issue [doing] (standalone) Landing settings follow the board tool of 2026-10-06
-
-- T-103 [done] Review [landing] and record the worktree decision -> .board/board.toml
 
 ## Closed
 
@@ -314,6 +310,12 @@ closed 2026-10-05 -- outcome: Given paper.toml with plot.dpi = 450, When make co
 
 - T-069 [done] Set plot.dpi to 450 -> paper.toml
 
+### W-058 issue [done] (standalone) Landing settings follow the board tool of 2026-10-06
+
+closed 2026-10-06 -- outcome: Given the board skill's current [landing] keys, When the developer runs make board-status, Then the landing line prints with no [WARN]. -- ledger: ledgers/W-058.md
+
+- T-103 [done] Review [landing] and record the worktree decision -> .board/board.toml
+
 ## Diagram
 ```mermaid
 flowchart TD
@@ -376,14 +378,12 @@ flowchart TD
   E009 --> W051["W-051 issue todo: Physical framework and hypotheses prose"]
   E009 --> W052["W-052 issue todo: Abstract, introduction, conclusion and title block"]
   E009 --> W053["W-053 spike todo: What the open-source release publishes"]
-  W058["W-058 issue doing, standalone: Landing settings follow the board tool of 2026-10-06"]
-  W058 --> T103["T-103 done: Review [landing] and record the worktree decision -> .board/board.toml"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W058 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,T103 done
+  class E005 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106 done
   class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
