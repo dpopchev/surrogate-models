@@ -1,14 +1,14 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 5 | done: 108 | pruned: 4
+open path: E-005 > W-034 > T-076   | blocked: 0 | todo roots: 4 | done: 108 | pruned: 4
 
 ## Tree
 
-### E-005 [todo] Baseline surrogate through one shared pipeline
+### E-005 [doing] Baseline surrogate through one shared pipeline
 
-#### W-034 issue [todo] NS mass baseline runs end to end with live feedback
+#### W-034 issue [doing] NS mass baseline runs end to end with live feedback
 
-- T-076 [todo] Add torch and skorch -> pyproject.toml and uv.lock
+- T-076 [doing] Add torch and skorch -> pyproject.toml and uv.lock   <- ACTIVE LEAF
 - T-077 [todo] Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py
 - T-078 [todo] Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py
 - T-079 [todo] Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py
@@ -285,9 +285,9 @@ closed 2026-10-05 -- outcome: Given paper.toml with plot.dpi = 450, When make co
 ## Diagram
 ```mermaid
 flowchart TD
-  E005["E-005 todo: Baseline surrogate through one shared pipeline"]
-  E005 --> W034["W-034 issue todo: NS mass baseline runs end to end with live feedback"]
-  W034 --> T076["T-076 todo: Add torch and skorch -> pyproject.toml and uv.lock"]
+  E005["E-005 doing: Baseline surrogate through one shared pipeline"]
+  E005 --> W034["W-034 issue doing: NS mass baseline runs end to end with live feedback"]
+  W034 --> T076["T-076 doing: Add torch and skorch -> pyproject.toml and uv.lock -- ACTIVE LEAF"]
   W034 --> T077["T-077 todo: Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py"]
   W034 --> T078["T-078 todo: Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py"]
   W034 --> T079["T-079 todo: Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py"]
@@ -329,5 +329,6 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W034,T076,T077,T078,T079,T080,W035,T081,T082,T083,T084,W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
+  class E005,W034,T076 doing
+  class T077,T078,T079,T080,W035,T081,T082,T083,T084,W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
