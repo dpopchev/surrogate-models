@@ -8,6 +8,7 @@
 - 2026-10-05 W-018: standing: beta moves M 0.01%, log10 D 2.9% at fixed r_h; sets r_h,min 4.059..4.493 -> GroupKFold over beta supersedes: W-018#3
 - 2026-10-05 W-018: standing: log10(D/M) no gain over log10 D (Spearman M -1.000 vs -0.999) -> unlike NS, noted in 3.2 supersedes: W-018#2
 - 2026-10-05 W-018: standing: r_h linear (0.39 orders); M 2.13..5.01 M_sun, Pearson 0.9999 with r_h -> raw M in M_sun supersedes: W-018#4
+- 2026-10-06 T-077: fact: split.parquet holds both datasets, one row per curve (dataset, curve keys, label test|fold0-4, ablation; BH rows have lambda NaN) -> design() filters by dataset and joins many-to-one on the curve keys
 - 2026-10-06 W-032: standing: make overleaf refreshes the upload list on every run -> run it only right before an upload, or the removed list of the earlier run is lost supersedes: W-032#1
 
 ## Open questions
