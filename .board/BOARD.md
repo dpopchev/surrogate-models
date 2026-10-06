@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-004 > W-033 > T-075   | blocked: 0 | todo roots: 0 | done: 105 | pruned: 4
+open path: E-004 > W-033   | blocked: 0 | todo roots: 0 | done: 106 | pruned: 4
 
 ## Tree
 
@@ -19,7 +19,7 @@ open path: E-004 > W-033 > T-075   | blocked: 0 | todo roots: 0 | done: 105 | pr
 #### W-033 issue [doing] One PDF per section with references resolved
 
 - T-074 [done] Write the section entry files test-first -> 00_metadata/section_entry.py
-- T-075 [doing] Wire make section and make sections -> mk/paper.mk and build/paper/sections/   <- ACTIVE LEAF
+- T-075 [done] Wire make section and make sections -> mk/paper.mk and build/paper/sections/
 
 ## Closed
 
@@ -224,12 +224,12 @@ flowchart TD
   W032 --> T073["T-073 done: Wire make overleaf -> mk/paper.mk, build/paper/overleaf/ and overleaf.zip"]
   E004 --> W033["W-033 issue doing: One PDF per section with references resolved"]
   W033 --> T074["T-074 done: Write the section entry files test-first -> 00_metadata/section_entry.py"]
-  W033 --> T075["T-075 doing: Wire make section and make sections -> mk/paper.mk and build/paper/sections/ -- ACTIVE LEAF"]
+  W033 --> T075["T-075 done: Wire make section and make sections -> mk/paper.mk and build/paper/sections/"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E004,W033,T075 doing
-  class W031,T070,T071,W032,T072,T073,T074 done
+  class E004,W033 doing
+  class W031,T070,T071,W032,T072,T073,T074,T075 done
 ```

@@ -23,4 +23,5 @@
 - 2026-10-06 W-032: keep the refresh on every make overleaf run; run it only right before uploading (developer)
 
 ## Deviations
-- none recorded
+- 2026-10-06 E-004: T-075's check amended to read build/.work/sections/40_data_analysis/section_40_data_analysis.log -- 43_preprocessing is a subsection inside 40_data_analysis, not a top-level section (T-074), so its own log never exists; 40's log covers its references
+- 2026-10-06 E-004: xr-hyper instead of the planned xr -- the preamble loads hyperref, which xr-hyper must precede
