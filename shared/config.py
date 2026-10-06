@@ -10,7 +10,7 @@ import tomllib
 from pathlib import Path
 from typing import Literal, get_args
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, PositiveInt
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 from shared.plots import PlotStyle
@@ -87,6 +87,8 @@ class AlgorithmsSection(BaseModel):
     valid_fraction: float = 0.2
     seed: int = 20261005
     log_level: Literal["INFO", "DEBUG"] = "INFO"
+    # torch threads per fit: 1 is fastest for this small network on this CPU (W-036 Finding).
+    threads: PositiveInt = 1
 
 
 class Methodology(BaseModel):

@@ -61,3 +61,4 @@ patience = 20             # epochs without a better validation loss before stopp
 valid_fraction = 0.2      # share of the training curves held out for early stopping
 seed = 20261005           # torch initialization, batch order and validation curves
 log_level = "INFO"        # INFO: stage and epoch lines | DEBUG: more detail
+threads = 1               # torch threads per fit: 1 is fastest here (2.6 s vs 11.4 s an epoch at 7)

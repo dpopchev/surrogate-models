@@ -9,6 +9,7 @@ import matplotlib
 import numpy as np
 import pandas as pd
 import pytest
+import torch
 
 matplotlib.use("Agg")
 
@@ -110,7 +111,11 @@ class TestStartBanner:
             BOUNDED,
             rows=(100, 20),
             curves=(10, 2),
+            threads=2,
         )
+
+    def test_states_the_torch_threads_per_fit(self, lines: list[str]) -> None:
+        assert "threads: 2 torch threads per fit" in lines
 
     def test_opens_with_the_stop_criterion(self, lines: list[str]) -> None:
         assert lines[:4] == [
@@ -259,6 +264,9 @@ class TestMain:
     def test_logs_the_epoch_table_into_the_run_s_train_log(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
         assert "valid_mare" in (run / "train.log").read_text()
+
+    def test_trains_on_the_configured_thread_count(self, ran: Path) -> None:
+        assert torch.get_num_threads() == 1
 
     def test_opens_its_log_with_the_start_banner(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"

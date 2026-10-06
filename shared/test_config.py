@@ -107,6 +107,16 @@ def test_the_baseline_network_defaults_to_relu(tmp_path: Path) -> None:
     assert load_config(write(tmp_path, "")).methodology.algorithms.activation == "relu"
 
 
+def test_the_baseline_trains_on_one_thread_by_default(tmp_path: Path) -> None:
+    assert load_config(write(tmp_path, "")).methodology.algorithms.threads == 1
+
+
+def test_zero_threads_are_rejected(tmp_path: Path) -> None:
+    toml = write(tmp_path, "[methodology.algorithms]\nthreads = 0\n")
+    with pytest.raises(ValidationError, match="threads"):
+        load_config(toml)
+
+
 def test_an_activation_the_network_cannot_build_is_rejected(tmp_path: Path) -> None:
     toml = write(tmp_path, '[methodology.algorithms]\nactivation = "swish"\n')
     with pytest.raises(ValidationError, match="activation"):

@@ -24,6 +24,7 @@ from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import torch
 from matplotlib.figure import Figure
 
 from shared.config import PaperConfig, load_config
@@ -104,7 +105,12 @@ def numbers(fit: Fit) -> dict[str, str]:
 
 
 def start_banner(
-    run: Path, out: Path, training: Training, rows: tuple[int, int], curves: tuple[int, int]
+    run: Path,
+    out: Path,
+    training: Training,
+    rows: tuple[int, int],
+    curves: tuple[int, int],
+    threads: int,
 ) -> list[str]:
     """The lines a run's log opens with: the stop criterion first, then what it fits on, the
     files to watch while it runs and those it writes at the end; rows and curves are
@@ -122,6 +128,7 @@ def start_banner(
         f"folder: {run}",
         data,
         f"validation: {training.valid_fraction:.0%} of the training curves",
+        f"threads: {threads} torch threads per fit",
         "live while it runs:",
         f"  - {run / 'train.log'} (this log)",
         f"  - {run / 'loss_curve.png'} (redrawn every {LIVE_EVERY} epochs)",
@@ -256,7 +263,11 @@ def _fit_and_write(
     if uncommitted:
         logger.info("the code holds uncommitted changes: run.json marks this run dirty")
     apply_style(config.plot)
-    training = Training(**config.methodology.algorithms.model_dump(exclude={"log_level"}))
+    threads = config.methodology.algorithms.threads
+    torch.set_num_threads(threads)
+    training = Training(
+        **config.methodology.algorithms.model_dump(exclude={"log_level", "threads"})
+    )
     table = pd.read_parquet(source)
     data = design(
         table, pd.read_parquet(split_file), NEUTRON_STARS, "mass", config.data_analysis.charge_floor
@@ -265,7 +276,7 @@ def _fit_and_write(
     rows = (int(train.sum()), int(data.test.sum()))
     curves = (len(np.unique(data.groups[train])), len(np.unique(data.groups[data.test])))
     logger.info("== baseline run: %s / mass ==", NEUTRON_STARS.dataset)
-    for line in start_banner(run, out, training, rows, curves):
+    for line in start_banner(run, out, training, rows, curves, threads):
         logger.info(line)
     fit = fit_and_score(data, training, time.perf_counter, live_plot=run / "loss_curve.png")
     logger.info(progress_line(1, 1, fit.seconds))
