@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-054   | blocked: 0 | todo roots: 4 | done: 125 | pruned: 4
+open path: E-005   | blocked: 0 | todo roots: 4 | done: 126 | pruned: 4
 
 ## Tree
 
@@ -35,7 +35,7 @@ open path: E-005 > W-054   | blocked: 0 | todo roots: 4 | done: 125 | pruned: 4
 - T-088 [todo] Write the charge rebuild test-first -> shared/surrogate.py
 - T-089 [todo] Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1
 
-#### W-054 issue [doing] A running fit is visible live from the developer's terminal
+#### W-054 issue [done] A running fit is visible live from the developer's terminal
 
 - T-093 [done] Write each run's log to its folder -> <run>/train.log and latest.log
 - T-094 [done] Log a fit progress line with elapsed and remaining time -> fit_baseline.py
@@ -316,7 +316,7 @@ flowchart TD
   E005 --> W037["W-037 issue todo: Charge rebuilt with the true and the predicted mass"]
   W037 --> T088["T-088 todo: Write the charge rebuild test-first -> shared/surrogate.py"]
   W037 --> T089["T-089 todo: Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1"]
-  E005 --> W054["W-054 issue doing: A running fit is visible live from the developer's terminal"]
+  E005 --> W054["W-054 issue done: A running fit is visible live from the developer's terminal"]
   W054 --> T093["T-093 done: Write each run's log to its folder -> <run>/train.log and latest.log"]
   W054 --> T094["T-094 done: Log a fit progress line with elapsed and remaining time -> fit_baseline.py"]
   W054 --> T095["T-095 done: Add make follow -> tail the running baseline's log"]
@@ -345,7 +345,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W054 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,T093,T094,T095 done
+  class E005 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095 done
   class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
