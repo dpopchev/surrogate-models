@@ -72,6 +72,22 @@ $(PREP_ASSETS): $(PREP_NUMBERS) paper.toml shared/config.py $(STATE)/split.parqu
 	@$(RUN) python $(PREP_NUMBERS) $(STATE)/split.parquet $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(ASSETS) --seed $(SPLIT_SEED)
 	$(call log_done,Section 4.3 numbers written to $@)
 
+# Section 5.1: the baseline surrogate trains a network, minutes on this CPU, so it is its own
+# target and not in PAPER_ASSETS -- make check (paper-verify) would retrain it on every change
+# of a shared module (T-080). The numbers file stands for the whole set; the epoch lines stream
+# while it trains.
+BASELINE        := 50_methodology/51_algorithms/fit_baseline.py
+BASELINE_ASSETS := $(ASSETS)/51_algorithms/51_algorithms_num.tex
+
+$(BASELINE_ASSETS): $(BASELINE) paper.toml shared/config.py shared/design.py shared/surrogate.py shared/plots.py shared/eda.py $(STATE)/neutron_stars.parquet $(STATE)/split.parquet
+	$(call log_info,fitting the NS mass baseline -- one line per epoch)
+	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/split.parquet $(ASSETS)
+	$(call log_done,baseline numbers and parity figure written to $(@D)/)
+
+.PHONY: baseline
+baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 5.1
+	$(call log_done,baseline assets current in $(dir $(BASELINE_ASSETS)))
+
 .PHONY: assets
 assets: $(PAPER_ASSETS) ## Generate the section assets under build/assets/
 	$(call log_done,assets in $(ASSETS)/: $(sort $(notdir $(patsubst %/,%,$(dir $(PAPER_ASSETS))))))
