@@ -20,6 +20,7 @@
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 
 ## Decisions
+- 2026-10-06 E-005: CI/CD runs locally: [landing] ci = none, make check before each fast-forward (developer)
 - 2026-10-06 E-005: H1 is scored on D rebuilt with the true M; D rebuilt with the predicted M is reported as the end-to-end number
 - 2026-10-06 E-005: adapted execution plan: Phase 1 closed as built (curve split, shared charge target, raw M); the H1-H3 configs leave Phase 2 for their own increments (E-006); roots E-005 to E-009 queued in that order
 - 2026-10-06 E-005: diagnostics #1-#6 in E-005 (valid MARE, lr, error CDF, worst/median curves, reference predictors, run record); #7-#12 go to the E-006/E-007 item whose hypothesis they test

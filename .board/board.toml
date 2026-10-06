@@ -13,6 +13,7 @@ mode = "ff-main"          # pr | ff-main
 approver = "developer"    # developer | agent
 branch_id = "local"       # local | remote
 tag = "epic-close"        # epic-close | root-close | none
+ci = "none"               # pipeline | none -- everything runs locally: make check before each fast-forward
 
 [show]
 detail = "brief"          # board show default: title | brief | full
