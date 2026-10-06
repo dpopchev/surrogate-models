@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-009 > W-059   | blocked: 0 | todo roots: 4 | done: 153 | pruned: 5
+open path: E-009   | blocked: 0 | todo roots: 4 | done: 154 | pruned: 5
 
 ## Tree
 
@@ -106,7 +106,7 @@ open path: E-009 > W-059   | blocked: 0 | todo roots: 4 | done: 153 | pruned: 5
 
 #### W-053 spike [todo] What the open-source release publishes
 
-#### W-059 spike [doing] Which refs.bib keys the revised structure's citations name
+#### W-059 spike [done] Which refs.bib keys the revised structure's citations name
 
 - T-107 [done] Map the numbered citations to refs.bib keys -> 00_metadata/citations.md
 - T-108 [pruned] Add the missing references to refs.bib -> 00_metadata/refs.bib   [pruned: superseded: the real references move to the standalone spike W-061 (T-118); W-059 closes on placeholder keys (T-117)]
@@ -405,7 +405,7 @@ flowchart TD
   W051 --> T113["T-113 done: Write Section 2.4, the neutron-star dataset -> 30_physical_framework/34_neutron_stars/34_neutron_stars.tex"]
   E009 --> W052["W-052 issue todo: Abstract, introduction, conclusion and title block"]
   E009 --> W053["W-053 spike todo: What the open-source release publishes"]
-  E009 --> W059["W-059 spike doing: Which refs.bib keys the revised structure's citations name"]
+  E009 --> W059["W-059 spike done: Which refs.bib keys the revised structure's citations name"]
   W059 --> T107["T-107 done: Map the numbered citations to refs.bib keys -> 00_metadata/citations.md"]
   W059 --> T108["T-108 pruned: Add the missing references to refs.bib -> 00_metadata/refs.bib"]
   W059 --> T117["T-117 done: Cite placeholder entries for the missing references -> 00_metadata/refs.bib and the 13 cite markers"]
@@ -420,8 +420,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,E009,W059 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,T107,T117,W060,T114,T115,T116 done
+  class E005,E009 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,W059,T107,T117,W060,T114,T115,T116 done
   class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W052,W053,W061,T118 todo
   class T108 pruned
 ```
