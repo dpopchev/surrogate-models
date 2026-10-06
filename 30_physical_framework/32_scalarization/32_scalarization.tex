@@ -1,9 +1,16 @@
 \subsection{Mechanism of Curvature-Induced Spontaneous Scalarization}
 \label{sec:scalarization}
 
-\todo{Draft from the outline.}
-\begin{itemize}
-  \item Conditions on the coupling $f(\phi)$ at $\phi = 0$ that keep the general-relativistic solutions with $\phi = 0$ exact.
-  \item The linear scalar perturbation on a fixed general-relativistic background and its Schr\"odinger-like form.
-  \item The tachyonic instability once the Gauss--Bonnet term deepens the effective potential, and the bifurcation onto the scalarized branch.
-\end{itemize}
+For the general-relativistic solutions with a trivial scalar field, $\phi = 0$, to remain solutions of the theory, the coupling function must satisfy~\citep{Doneva2017_BH}
+\begin{equation}
+  \left. \frac{df}{d\phi} \right|_{\phi = 0} = 0
+  \quad \text{and} \quad
+  \left. \frac{d^2 f}{d\phi^2} \right|_{\phi = 0} = \epsilon = \pm 1.
+  \label{eq:coupling-conditions}
+\end{equation}
+Under these conditions the general-relativistic configurations with $\phi = 0$ are exact solutions of Eqs.~\eqref{eq:field-metric} and~\eqref{eq:field-scalar}~\citep{Doneva2017_BH,Doneva2017_NS}. Whether they are stable is another matter. A linear scalar perturbation $\delta\phi$ on a fixed general-relativistic background, marked $(*)$, obeys\review{cite: the linear stability analysis of the general-relativistic solutions}
+\begin{equation}
+  \Box^{(*)} \delta\phi + \frac{1}{4} \lambda^2 \epsilon\, \mathcal{R}^{2\,(*)}_{\mathrm{GB}} \delta\phi = 0.
+  \label{eq:perturbation}
+\end{equation}
+Cast into the one-dimensional Schr\"odinger-like form $d^2 u / dr_*^2 + \left[ \omega^2 - U(r) \right] u = 0$, Eq.~\eqref{eq:perturbation} shows that a sufficiently large curvature term $\RGB$ digs a deep negative well into the effective potential $U(r)$\review{cite: the effective-potential analysis}. Once the potential is negative enough, $\int_{-\infty}^{+\infty} U(r_*)\, dr_* < 0$, the trivial solution $\phi = 0$ develops a tachyonic instability, $\omega^2 < 0$~\citep{DamourEspositoFarese1993}. The system then scalarizes spontaneously: it bifurcates away from general relativity onto a new, energetically favourable branch with a non-trivial scalar profile $\phi(r) \neq 0$~\citep{Doneva2017_BH,Doneva2017_NS}.
