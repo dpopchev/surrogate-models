@@ -351,9 +351,13 @@ def _split_error(score: SplitScore) -> str:
     return f"{score.mae:.{SPLIT_DECIMALS[score.target]}f}"
 
 
+# The section's asset folder, and the prefix that keeps its basenames unique in the flat build.
+SECTION = "41_neutron_stars"
+
+
 def asset(figure: NsFigure) -> str:
-    """The flat asset basename of one figure."""
-    return f"41_neutron_stars_{figure}"
+    """The stem one figure's image and its .tex wrapper share."""
+    return f"{SECTION}_fig_{figure}"
 
 
 def caption(figure: NsFigure) -> str:
@@ -582,27 +586,27 @@ def draw(figure: NsFigure, table: pd.DataFrame, style: PlotStyle) -> Figure:
 def main(
     argv: list[str], config: PaperConfig | None = None, folds: int = 5, seed: int = 20261005
 ) -> None:
-    """Write the selected figures and tables, the numbers and the figures .tex into the asset
-    folder, after removing this section's assets from an earlier run."""
+    """Write the selected figures and tables, the numbers and the figures .tex into the section's
+    folder of the asset dir, after emptying that folder of an earlier run."""
     assert len(argv) == 2, f"usage: eda_neutron_stars.py <table.parquet> <asset dir>, got {argv}"
-    source, out = Path(argv[0]), Path(argv[1])
+    source, out = Path(argv[0]), Path(argv[1]) / SECTION
     assert source.is_file(), f"prepared NS table not found: {source}"
     config = config or load_config()
     apply_style(config.plot)
     table = with_charge_targets(pd.read_parquet(source))
     out.mkdir(parents=True, exist_ok=True)
-    for stale in out.glob("41_neutron_stars_*"):
+    for stale in out.iterdir():
         stale.unlink()
     section = config.data_analysis.neutron_stars
     for figure in section.figures:
         fig = draw(figure, table, config.plot)
         fig.savefig(out / f"{asset(figure)}.png", dpi=config.plot.dpi)
         plt.close(fig)
-        (out / f"41_neutron_stars_fig_{figure}.tex").write_text(figure_tex(figure))
+        (out / f"{asset(figure)}.tex").write_text(figure_tex(figure))
     found = evidence(table, folds, seed)
-    (out / "41_neutron_stars_numbers.tex").write_text(render_macros(numbers(found)))
+    (out / f"{SECTION}_num.tex").write_text(render_macros(numbers(found)))
     for name in section.tables:
-        (out / f"41_neutron_stars_tab_{name}.tex").write_text(table_tex(found, name))
+        (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name))
     logger.info(
         "done: NS figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
     )

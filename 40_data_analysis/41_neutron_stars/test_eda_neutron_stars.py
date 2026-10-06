@@ -82,7 +82,7 @@ def test_numbers_name_the_grid_fill_in_percent() -> None:
 
 
 def test_figure_tex_includes_its_figure() -> None:
-    assert "\\includegraphics[width=\\textwidth]{41_neutron_stars_grid_fill}" in figure_tex(
+    assert "\\includegraphics[width=\\textwidth]{41_neutron_stars_fig_grid_fill}" in figure_tex(
         "grid_fill"
     )
 
@@ -222,18 +222,29 @@ class TestFigures:
         assert len(draw("mass_max", with_charge_targets(DENSE), STYLE).axes) == 3
 
 
-def test_main_writes_each_selected_figure_and_drops_stale_ones(tmp_path: Path) -> None:
-    table = tmp_path / "ns.parquet"
-    DENSE.to_parquet(table)
-    (tmp_path / "41_neutron_stars_univariate.pdf").write_text("deselected since the last run")
-    selection = {"figures": ["grid_fill"], "tables": ["split_strategies"]}
-    config = PaperConfig.model_validate(
-        {"plot": {"usetex": False}, "data_analysis": {"neutron_stars": selection}}
-    )
-    main([str(table), str(tmp_path)], config=config, folds=2)
-    assert sorted(p.name for p in tmp_path.glob("41_neutron_stars_*")) == [
-        "41_neutron_stars_fig_grid_fill.tex",
-        "41_neutron_stars_grid_fill.png",
-        "41_neutron_stars_numbers.tex",
-        "41_neutron_stars_tab_split_strategies.tex",
-    ]
+class TestMain:
+    @pytest.fixture
+    def assets(self, tmp_path: Path) -> Path:
+        table, assets = tmp_path / "ns.parquet", tmp_path / "assets"
+        DENSE.to_parquet(table)
+        (assets / "41_neutron_stars").mkdir(parents=True)
+        (assets / "41_neutron_stars" / "old.pdf").write_text("deselected since the last run")
+        (assets / "42_black_holes").mkdir()
+        (assets / "42_black_holes" / "kept.tex").write_text("another section's asset")
+        selection = {"figures": ["grid_fill"], "tables": ["split_strategies"]}
+        config = PaperConfig.model_validate(
+            {"plot": {"usetex": False}, "data_analysis": {"neutron_stars": selection}}
+        )
+        main([str(table), str(assets)], config=config, folds=2)
+        return assets
+
+    def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:
+        assert sorted(p.name for p in (assets / "41_neutron_stars").iterdir()) == [
+            "41_neutron_stars_fig_grid_fill.png",
+            "41_neutron_stars_fig_grid_fill.tex",
+            "41_neutron_stars_num.tex",
+            "41_neutron_stars_tab_split_strategies.tex",
+        ]
+
+    def test_leaves_other_sections_alone(self, assets) -> None:
+        assert (assets / "42_black_holes" / "kept.tex").is_file()

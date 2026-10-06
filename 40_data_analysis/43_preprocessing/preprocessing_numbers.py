@@ -5,7 +5,7 @@ LaTeX macros: per dataset the curves in the test set and in each GroupKFold fold
 extrapolation ablation flags, and the rows whose charge D lies below the floor eps that the
 charge target log10(max(D, eps)/M) applies (W-019).
 
-Run as `uv run python <this file> <split> <ns> <bh> <out.tex> --seed <n>` (mk/paper.mk does).
+Run as `uv run python <this file> <split> <ns> <bh> <asset dir> --seed <n>` (mk/paper.mk does).
 """
 
 import argparse
@@ -114,18 +114,22 @@ def numbers(
 
 # --- shell ------------------------------------------------------------------------------------
 
+# The section's asset folder, and the prefix that keeps its basenames unique in the flat build.
+SECTION = "43_preprocessing"
+
 
 def _arguments(argv: list[str]) -> argparse.Namespace:
-    """Parse the input paths, the output path and the split seed."""
+    """Parse the input paths, the asset dir and the split seed."""
     parser = argparse.ArgumentParser(prog="preprocessing_numbers.py")
-    for name in ("split", "neutron_stars", "black_holes", "out"):
+    for name in ("split", "neutron_stars", "black_holes", "assets"):
         parser.add_argument(name, type=Path)
     parser.add_argument("--seed", type=int, required=True)
     return parser.parse_args(argv)
 
 
 def main(argv: list[str], config: PaperConfig | None = None) -> None:
-    """Write the Section 4.3 numbers from the split file and both prepared tables."""
+    """Write the Section 4.3 numbers from the split file and both prepared tables into the
+    section's folder of the asset dir, after emptying that folder of an earlier run."""
     args = _arguments(argv)
     for source in (args.split, args.neutron_stars, args.black_holes):
         assert source.is_file(), f"input not found: {source}"
@@ -134,9 +138,13 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
     datasets = (("neutron_stars", args.neutron_stars), ("black_holes", args.black_holes))
     splits = tuple(split_summary(split, name) for name, _ in datasets)
     floors = tuple(floor_share(pd.read_parquet(path), name, eps) for name, path in datasets)
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(render_macros(numbers(splits, floors, eps, args.seed)))
-    logger.info("done: Section 4.3 numbers -> %s", args.out)
+    out = args.assets / SECTION
+    out.mkdir(parents=True, exist_ok=True)
+    for stale in out.iterdir():
+        stale.unlink()
+    numbers_tex = out / f"{SECTION}_num.tex"
+    numbers_tex.write_text(render_macros(numbers(splits, floors, eps, args.seed)))
+    logger.info("done: Section 4.3 numbers -> %s", numbers_tex)
 
 
 if __name__ == "__main__":

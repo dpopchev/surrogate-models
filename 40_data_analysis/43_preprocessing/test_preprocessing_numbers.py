@@ -75,11 +75,29 @@ class TestNumbers:
         assert found["prepSeed"] == "7"
 
 
-def test_main_writes_the_numbers(tmp_path: Path) -> None:
-    split, ns, bh = tmp_path / "s.parquet", tmp_path / "ns.parquet", tmp_path / "bh.parquet"
-    SPLIT.to_parquet(split)
-    CHARGES.to_parquet(ns)
-    CHARGES.to_parquet(bh)
-    out = tmp_path / "43_preprocessing_numbers.tex"
-    main([str(split), str(ns), str(bh), str(out), "--seed", "7"], config=PaperConfig())
-    assert "\\newcommand{\\prepBhTestCurves}{1}" in out.read_text()
+class TestMain:
+    @pytest.fixture
+    def assets(self, tmp_path: Path) -> Path:
+        split, ns, bh = tmp_path / "s.parquet", tmp_path / "ns.parquet", tmp_path / "bh.parquet"
+        SPLIT.to_parquet(split)
+        CHARGES.to_parquet(ns)
+        CHARGES.to_parquet(bh)
+        assets = tmp_path / "assets"
+        (assets / "43_preprocessing").mkdir(parents=True)
+        (assets / "43_preprocessing" / "old.tex").write_text("from an earlier run")
+        (assets / "41_neutron_stars").mkdir()
+        (assets / "41_neutron_stars" / "kept.tex").write_text("another section's asset")
+        main([str(split), str(ns), str(bh), str(assets), "--seed", "7"], config=PaperConfig())
+        return assets
+
+    def test_writes_the_numbers_into_its_section_folder_alone(self, assets) -> None:
+        assert [p.name for p in (assets / "43_preprocessing").iterdir()] == [
+            "43_preprocessing_num.tex"
+        ]
+
+    def test_writes_the_numbers_as_macros(self, assets) -> None:
+        numbers_tex = assets / "43_preprocessing" / "43_preprocessing_num.tex"
+        assert "\\newcommand{\\prepBhTestCurves}{1}" in numbers_tex.read_text()
+
+    def test_leaves_other_sections_alone(self, assets) -> None:
+        assert (assets / "41_neutron_stars" / "kept.tex").is_file()

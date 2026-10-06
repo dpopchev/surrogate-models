@@ -18,6 +18,7 @@
 - 2026-10-05 E-004: Overleaf is the free plan: make overleaf prepares a flat drag-and-drop folder and lists removed files; no Git push
 - 2026-10-05 E-004: first thing next session (developer)
 - 2026-10-05 E-004: section previews resolve references to other sections through the full build (xr)
+- 2026-10-06 W-031: Decision (developer): T-070 closes on make test; its output is committed together with T-071, since make check needs the mk/paper.mk rewire
 
 ## Deviations
 - none recorded

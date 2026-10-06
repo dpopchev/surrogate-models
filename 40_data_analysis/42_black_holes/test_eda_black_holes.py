@@ -164,21 +164,36 @@ def test_charge_table_has_a_row_per_candidate_target() -> None:
     assert table_tex(FOUND, "charge_correlation").count("\\\\\n") == 5
 
 
-def test_main_writes_each_selected_asset_and_drops_stale_ones(tmp_path: Path) -> None:
-    table = tmp_path / "bh.parquet"
-    curves().to_parquet(table)
-    (tmp_path / "42_black_holes_univariate_continuous.pdf").write_text("deselected")
-    selection = {"figures": ["existence_edge"], "tables": ["split_strategies"]}
-    config = PaperConfig.model_validate(
-        {"plot": {"usetex": False}, "data_analysis": {"black_holes": selection}}
-    )
-    main([str(table), str(tmp_path)], config=config, folds=3)
-    assert sorted(p.name for p in tmp_path.glob("42_black_holes_*")) == [
-        "42_black_holes_existence_edge.png",
-        "42_black_holes_fig_existence_edge.tex",
-        "42_black_holes_numbers.tex",
-        "42_black_holes_tab_split_strategies.tex",
-    ]
+def test_figure_tex_includes_the_image_of_its_own_stem() -> None:
+    assert "{42_black_holes_fig_existence_edge}" in figure_tex("existence_edge")
+
+
+class TestMain:
+    @pytest.fixture
+    def assets(self, tmp_path: Path) -> Path:
+        table, assets = tmp_path / "bh.parquet", tmp_path / "assets"
+        curves().to_parquet(table)
+        (assets / "42_black_holes").mkdir(parents=True)
+        (assets / "42_black_holes" / "old.pdf").write_text("deselected")
+        (assets / "41_neutron_stars").mkdir()
+        (assets / "41_neutron_stars" / "kept.tex").write_text("another section's asset")
+        selection = {"figures": ["existence_edge"], "tables": ["split_strategies"]}
+        config = PaperConfig.model_validate(
+            {"plot": {"usetex": False}, "data_analysis": {"black_holes": selection}}
+        )
+        main([str(table), str(assets)], config=config, folds=3)
+        return assets
+
+    def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:
+        assert sorted(p.name for p in (assets / "42_black_holes").iterdir()) == [
+            "42_black_holes_fig_existence_edge.png",
+            "42_black_holes_fig_existence_edge.tex",
+            "42_black_holes_num.tex",
+            "42_black_holes_tab_split_strategies.tex",
+        ]
+
+    def test_leaves_other_sections_alone(self, assets) -> None:
+        assert (assets / "41_neutron_stars" / "kept.tex").is_file()
 
 
 def test_split_strategies_score_every_strategy_in_order() -> None:
