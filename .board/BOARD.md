@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-009 > W-051 > T-113   | blocked: 1 | todo roots: 3 | done: 146 | pruned: 4
+open path: E-009 > W-051   | blocked: 1 | todo roots: 3 | done: 147 | pruned: 4
 
 ## Tree
 
@@ -100,7 +100,7 @@ open path: E-009 > W-051 > T-113   | blocked: 1 | todo roots: 3 | done: 146 | pr
 - T-110 [done] Write Section 2.1, the action and field equations -> 30_physical_framework/31_action/31_action.tex
 - T-111 [done] Write Section 2.2, the scalarization mechanism -> 30_physical_framework/32_scalarization/32_scalarization.tex
 - T-112 [done] Write Section 2.3, the black-hole dataset -> 30_physical_framework/33_black_holes/33_black_holes.tex
-- T-113 [doing] Write Section 2.4, the neutron-star dataset -> 30_physical_framework/34_neutron_stars/34_neutron_stars.tex   <- ACTIVE LEAF
+- T-113 [done] Write Section 2.4, the neutron-star dataset -> 30_physical_framework/34_neutron_stars/34_neutron_stars.tex
 
 #### W-052 issue [todo] Abstract, introduction, conclusion and title block
 
@@ -397,7 +397,7 @@ flowchart TD
   W051 --> T110["T-110 done: Write Section 2.1, the action and field equations -> 30_physical_framework/31_action/31_action.tex"]
   W051 --> T111["T-111 done: Write Section 2.2, the scalarization mechanism -> 30_physical_framework/32_scalarization/32_scalarization.tex"]
   W051 --> T112["T-112 done: Write Section 2.3, the black-hole dataset -> 30_physical_framework/33_black_holes/33_black_holes.tex"]
-  W051 --> T113["T-113 doing: Write Section 2.4, the neutron-star dataset -> 30_physical_framework/34_neutron_stars/34_neutron_stars.tex -- ACTIVE LEAF"]
+  W051 --> T113["T-113 done: Write Section 2.4, the neutron-star dataset -> 30_physical_framework/34_neutron_stars/34_neutron_stars.tex"]
   E009 --> W052["W-052 issue todo: Abstract, introduction, conclusion and title block"]
   E009 --> W053["W-053 spike todo: What the open-source release publishes"]
   E009 --> W059["W-059 spike blocked on developer: Which refs.bib keys the revised structure's citations name"]
@@ -412,8 +412,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,E009,W051,T113,T108 doing
+  class E005,E009,W051,T108 doing
   class W059 blocked
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,T109,T110,T111,T112,T107 done
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,T109,T110,T111,T112,T113,T107 done
   class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W052,W053,W060,T114,T115,T116 todo
 ```
