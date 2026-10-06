@@ -50,6 +50,13 @@ open path: E-005   | blocked: 0 | todo roots: 4 | done: 131 | pruned: 4
 
 - T-096 [done] Print the epoch time as elapse_s -> shared/surrogate.py
 
+#### W-057 issue [todo] A run tells how far it is, when it may stop and where its outputs go
+
+- T-099 [todo] Show k/MAX, epochs since best and the time-left range in the epoch table -> shared/surrogate.py
+- T-100 [todo] Log a start and an end banner for each run -> 50_methodology/51_algorithms/fit_baseline.py
+- T-101 [todo] Add make runs and make run -> 50_methodology/51_algorithms/list_runs.py and mk/paper.mk
+- T-102 [todo] Add make examples, the common commands with examples -> mk/paper.mk
+
 ### E-006 [todo] Data-guided choices tested -- rho_c input, H1, H2 and H3
 
 #### W-038 issue [todo] rho_c input check -- raw against log10
@@ -334,6 +341,11 @@ flowchart TD
   W055 --> T098["T-098 done: Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex"]
   E005 --> W056["W-056 issue done: The epoch table names its time column elapse_s"]
   W056 --> T096["T-096 done: Print the epoch time as elapse_s -> shared/surrogate.py"]
+  E005 --> W057["W-057 issue todo: A run tells how far it is, when it may stop and where its outputs go"]
+  W057 --> T099["T-099 todo: Show k/MAX, epochs since best and the time-left range in the epoch table -> shared/surrogate.py"]
+  W057 --> T100["T-100 todo: Log a start and an end banner for each run -> 50_methodology/51_algorithms/fit_baseline.py"]
+  W057 --> T101["T-101 todo: Add make runs and make run -> 50_methodology/51_algorithms/list_runs.py and mk/paper.mk"]
+  W057 --> T102["T-102 todo: Add make examples, the common commands with examples -> mk/paper.mk"]
   E006["E-006 todo: Data-guided choices tested -- rho_c input, H1, H2 and H3"]
   E006 --> W038["W-038 issue todo: rho_c input check -- raw against log10"]
   E006 --> W039["W-039 issue todo: H1 -- log against linear charge target"]
@@ -361,5 +373,5 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E005 doing
   class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W055,T097,T098,W056,T096 done
-  class W036,T085,T086,T087,W037,T088,T089,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
+  class W036,T085,T086,T087,W037,T088,T089,W057,T099,T100,T101,T102,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
