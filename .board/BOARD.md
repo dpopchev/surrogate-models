@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-056   | blocked: 0 | todo roots: 4 | done: 127 | pruned: 4
+open path: E-005   | blocked: 0 | todo roots: 4 | done: 128 | pruned: 4
 
 ## Tree
 
@@ -46,7 +46,7 @@ open path: E-005 > W-056   | blocked: 0 | todo roots: 4 | done: 127 | pruned: 4
 - T-097 [todo] Load the baseline numbers only when present -> 00_metadata/article.tex and 51_algorithms.tex
 - T-098 [todo] Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex
 
-#### W-056 issue [doing] The epoch table names its time column elapse_s
+#### W-056 issue [done] The epoch table names its time column elapse_s
 
 - T-096 [done] Print the epoch time as elapse_s -> shared/surrogate.py
 
@@ -332,7 +332,7 @@ flowchart TD
   E005 --> W055["W-055 issue todo: Section 5.1 describes the pipeline and the NS mass baseline"]
   W055 --> T097["T-097 todo: Load the baseline numbers only when present -> 00_metadata/article.tex and 51_algorithms.tex"]
   W055 --> T098["T-098 todo: Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex"]
-  E005 --> W056["W-056 issue doing: The epoch table names its time column elapse_s"]
+  E005 --> W056["W-056 issue done: The epoch table names its time column elapse_s"]
   W056 --> T096["T-096 done: Print the epoch time as elapse_s -> shared/surrogate.py"]
   E006["E-006 todo: Data-guided choices tested -- rho_c input, H1, H2 and H3"]
   E006 --> W038["W-038 issue todo: rho_c input check -- raw against log10"]
@@ -359,7 +359,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W056 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,T096 done
+  class E005 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W054,T093,T094,T095,W056,T096 done
   class W036,T085,T086,T087,W037,T088,T089,W055,T097,T098,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,E009,W051,W052,W053 todo
 ```
