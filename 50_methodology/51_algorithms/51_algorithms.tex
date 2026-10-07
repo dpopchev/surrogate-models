@@ -16,7 +16,28 @@ Every surrogate in this work is trained and scored through one pipeline, so the 
 
 % Settings below are the [methodology.algorithms] values of paper.toml.
 \paragraph{One pipeline serves every model.}
-Each model reads the prepared tables through the same design: the inputs and targets of Section~\ref{sec:preprocessing}, one model per target, and the frozen split of whole curves. The inputs are standardized with statistics fitted on the training curves alone, and the target is standardized the same way and turned back before any error is measured, so no information from a held-out curve reaches the model.
+The surrogate learns two maps: for black holes $(\beta, \rh) \to (M, \Dch)$, for neutron stars $(\rhoc, \beta, \lambda) \to (M, \Dch)$. Each map is split into one model per target, the mass $M$ and the charge target $Y = \log_{10}(\Dch/M)$, and the charge is rebuilt as $\Dch = M\,10^{Y}$. Each model reads the prepared tables through the same design: the inputs and targets of Section~\ref{sec:preprocessing}, and the frozen split of whole curves. The inputs are standardized with statistics fitted on the training curves alone, and the target is standardized the same way and turned back before any error is measured, so no information from a held-out curve reaches the model. \Cref{alg:pipeline} lists the steps.
+
+\begin{algorithm}[!htb]
+\caption{The surrogate pipeline, run once per dataset; every model of this work passes through it.}
+\label{alg:pipeline}
+\begin{algorithmic}[1]
+\Require the prepared table of one dataset and its frozen split of whole curves into test curves and GroupKFold folds
+\Ensure the test and fold errors of each target, the number macros and the figures
+\For{each target $t \in \{M, Y\}$, $Y = \log_{10}(\Dch/M)$}
+  \State build the design: inputs $(\log_{10}\rhoc, \beta, \lambda)$ for neutron stars or $(\rh, \beta)$ for black holes, target $t$
+  \For{each fold $k$, then once on all non-test curves}
+    \State standardize the inputs and $t$ with statistics of the training curves alone
+    \State set aside a fifth of the training curves as validation curves
+    \State train with early stopping on the validation curves; restore the best epoch
+    \State predict the held-out fold (or the test curves) and turn $t$ back to its original scale
+  \EndFor
+  \State score: the MARE of $M$, or of $\Dch$ rebuilt as $M\,10^{Y}$ with the true $M$
+\EndFor
+\State score the end-to-end charge: $\Dch$ rebuilt with the predicted $M$
+\State write the table, the number macros and the figures
+\end{algorithmic}
+\end{algorithm}
 
 \paragraph{The baseline is a plain multilayer perceptron.}
 The reference network has three fully connected hidden layers of 64 units with ReLU activations and is trained on the mean squared error of the standardized target with AdamW, at a learning rate of $10^{-3}$ under a cosine schedule and in batches of 1024 rows. It is deliberately standard: it is the control against which the loss and activation choices of $H_2$ and the residual architecture of $H_3$ are measured (Section~\ref{sec:hypotheses}).
