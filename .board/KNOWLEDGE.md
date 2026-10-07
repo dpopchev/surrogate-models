@@ -33,7 +33,7 @@
 
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
-- 2026-10-07 E-006: parked -- 5 decisions, 9 deviations -> ledgers/E-006.md
+- 2026-10-07 E-006: parked -- 5 decisions, 10 deviations -> ledgers/E-006.md
 
 ## Deviations
 - none recorded
