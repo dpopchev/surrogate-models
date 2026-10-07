@@ -114,6 +114,17 @@ run: ## Show one baseline run's files -- R=<run>, default latest
 	@$(RUN) python $(LIST_RUNS) $(STATE) --run $(R)
 	$(call log_done,files of baseline run $(R) listed)
 
+# The run ledger (W-077): one line per harness run of every make baseline, newest first; B=<batch
+# id or its first characters> lists one batch.
+LIST_LEDGER := 50_methodology/51_algorithms/list_ledger.py
+LEDGER      := $(STATE)/ledger
+B           ?=
+
+.PHONY: ledger
+ledger: ## List the run ledger -- B=<batch> for one batch
+	@$(RUN) python $(LIST_LEDGER) $(STATE) $(if $(B),--batch $(B))
+	$(call log_done,ledger listed from $(LEDGER)/ -- $(words $(wildcard $(LEDGER)/*.json)) entries$(if $(B), in all$(comma) batch $(B) shown))
+
 .PHONY: assets
 assets: $(PAPER_ASSETS) ## Generate the section assets under build/assets/
 	$(call log_done,assets in $(ASSETS)/: $(sort $(notdir $(patsubst %/,%,$(dir $(PAPER_ASSETS))))))
