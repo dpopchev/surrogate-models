@@ -1,6 +1,7 @@
 """Facts about the harness's fits as Optuna trials, on in-memory studies and a hand-made entry."""
 
 from datetime import UTC, datetime
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -57,6 +58,12 @@ def test_a_reported_epoch_is_an_intermediate_value_of_the_trial() -> None:
     trial = study.ask()
     ReportEpochs(trial).on_epoch_end(net_at(3, 0.25))
     assert study.trials[0].intermediate_values == {3: 0.25}
+
+
+def test_a_study_on_a_journal_is_joined_by_a_second_opening(tmp_path: Path) -> None:
+    journal = tmp_path / "optuna" / "journal.log"
+    open_study("toy", journal).ask()
+    assert len(open_study("toy", journal).trials) == 1
 
 
 def test_an_offset_moves_the_reported_step_past_earlier_fits() -> None:

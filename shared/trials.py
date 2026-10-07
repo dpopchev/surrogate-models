@@ -11,6 +11,8 @@ from typing import Any
 
 import numpy as np
 import optuna
+from optuna.storages import JournalStorage
+from optuna.storages.journal import JournalFileBackend
 from skorch.callbacks import Callback
 
 from shared.runs import LedgerEntry
@@ -20,7 +22,13 @@ from shared.scorecard import significant_figures
 def open_study(name: str, journal: Path | None) -> optuna.Study:
     """The study of that name on the journal file (created or joined), or in memory without
     one; it maximizes the fold significant figures and prunes nothing."""
-    return optuna.create_study(study_name=name, direction="maximize")
+    if journal is None:
+        return optuna.create_study(study_name=name, direction="maximize")
+    journal.parent.mkdir(parents=True, exist_ok=True)
+    storage = JournalStorage(JournalFileBackend(str(journal)))
+    return optuna.create_study(
+        study_name=name, storage=storage, direction="maximize", load_if_exists=True
+    )
 
 
 class ReportEpochs(Callback):
