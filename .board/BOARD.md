@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-077   | blocked: 1 | todo roots: 6 | done: 196 | pruned: 13
+open path: E-006   | blocked: 0 | todo roots: 6 | done: 198 | pruned: 13
 
 ## Tree
 
@@ -24,7 +24,7 @@ open path: W-077   | blocked: 1 | todo roots: 6 | done: 196 | pruned: 13
 - T-127 [done] Wire the ceilings into both EDA scripts -> 41_neutron_stars_num.tex and 42_black_holes_num.tex
 - T-128 [done] Write paragraph 6 on the reachable error -> 41_neutron_stars.tex and 42_black_holes.tex
 
-#### W-065 issue [doing] One scorecard and a fair harness for every candidate
+#### W-065 issue [done] One scorecard and a fair harness for every candidate
 
 - T-129 [done] Write the scorecard test-first -> shared/scorecard.py
 - T-130 [done] Write the fair harness test-first -> shared/harness.py
@@ -131,12 +131,6 @@ open path: W-077   | blocked: 1 | todo roots: 6 | done: 196 | pruned: 13
 - T-148 [todo] Measure the throughput of k one-thread fits -> a probe in local/scratch and a Finding on W-072
 - T-149 [todo] Prototype Optuna storage as the run registry -> a probe in local/scratch and a Finding on W-072
 - T-150 [todo] Decide the parallelism and the run registry with the developer -> the W-072 spike decision
-
-### W-077 issue [blocked] (standalone) Every harness run leaves a record in the run ledger   [blocked since 2026-10-07, waiting on W-065: every Task done; lands after W-065 in one fast-forward (stacked branch)]   (filed during T-131)
-
-- T-162 [done] Write the ledger entry test-first -> shared/runs.py
-- T-163 [done] Save every harness run to the ledger -> shared/harness.py and fit_baseline.py
-- T-164 [done] List the ledger as a table -> make ledger
 
 ### W-078 issue [todo] (standalone) Console numbers read as orders of magnitude -- errors, losses and lr in e-notation   (filed during T-131)
 
@@ -447,6 +441,14 @@ closed 2026-10-06 -- outcome: Given the board skill's current [landing] keys, Wh
 
 - T-103 [done] Review [landing] and record the worktree decision -> .board/board.toml
 
+### W-077 issue [done] (standalone) Every harness run leaves a record in the run ledger
+
+closed 2026-10-07 -- outcome: Given a screen run through the harness, When the developer runs make ledger, Then every fit of it appears as one row with its candidate, settings, seed, fold and test significant figures and fit seconds. -- ledger: ledgers/W-077.md
+
+- T-162 [done] Write the ledger entry test-first -> shared/runs.py
+- T-163 [done] Save every harness run to the ledger -> shared/harness.py and fit_baseline.py
+- T-164 [done] List the ledger as a table -> make ledger
+
 ## Diagram
 ```mermaid
 flowchart TD
@@ -461,7 +463,7 @@ flowchart TD
   W064 --> T126["T-126 done: Write the data-ceiling functions test-first -> shared/ceilings.py"]
   W064 --> T127["T-127 done: Wire the ceilings into both EDA scripts -> 41_neutron_stars_num.tex and 42_black_holes_num.tex"]
   W064 --> T128["T-128 done: Write paragraph 6 on the reachable error -> 41_neutron_stars.tex and 42_black_holes.tex"]
-  E006 --> W065["W-065 issue doing: One scorecard and a fair harness for every candidate"]
+  E006 --> W065["W-065 issue done: One scorecard and a fair harness for every candidate"]
   W065 --> T129["T-129 done: Write the scorecard test-first -> shared/scorecard.py"]
   W065 --> T130["T-130 done: Write the fair harness test-first -> shared/harness.py"]
   W065 --> T131["T-131 done: Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
@@ -528,10 +530,6 @@ flowchart TD
   W072 --> T148["T-148 todo: Measure the throughput of k one-thread fits -> a probe in local/scratch and a Finding on W-072"]
   W072 --> T149["T-149 todo: Prototype Optuna storage as the run registry -> a probe in local/scratch and a Finding on W-072"]
   W072 --> T150["T-150 todo: Decide the parallelism and the run registry with the developer -> the W-072 spike decision"]
-  W077["W-077 issue blocked on W-065, standalone: Every harness run leaves a record in the run ledger"]
-  W077 --> T162["T-162 done: Write the ledger entry test-first -> shared/runs.py"]
-  W077 --> T163["T-163 done: Save every harness run to the ledger -> shared/harness.py and fit_baseline.py"]
-  W077 --> T164["T-164 done: List the ledger as a table -> make ledger"]
   W078["W-078 issue todo, standalone: Console numbers read as orders of magnitude -- errors, losses and lr in e-notation"]
   W078 --> T165["T-165 todo: Format the epoch table per column -> shared/surrogate.py"]
   W078 --> T166["T-166 todo: Put the other console numbers on the same rule -> banners, progress lines, run listings"]
@@ -543,9 +541,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,W065,E009 doing
-  class W077 blocked
-  class W064,T126,T127,T128,T129,T130,T131,T146,T169,W071,T144,T145,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T162,T163,T164 done
+  class E006,E009 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
   class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W076,T160,T161,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150,W078,T165,T166,W079,T167,T168 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
