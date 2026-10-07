@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-081   | blocked: 0 | todo roots: 6 | done: 221 | pruned: 15
+open path: W-082   | blocked: 0 | todo roots: 5 | done: 222 | pruned: 15
 
 ## Tree
 
@@ -131,17 +131,7 @@ open path: W-081   | blocked: 0 | todo roots: 6 | done: 221 | pruned: 15
 - T-167 [todo] Mark every test module with its category -> the test_*.py files
 - T-168 [todo] Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py
 
-### W-081 issue [doing] (standalone) Harness fits run on six workers as trials of an Optuna study, followed live   (filed during T-150)
-
-- T-178 [done] Write the trial bridge test-first -> shared/trials.py
-- T-179 [done] Run jobs on k one-thread workers test-first -> shared/workers.py
-- T-180 [done] Run make baseline on workers as trials, and make dashboard -> fit_baseline.py and mk/paper.mk
-- T-181 [done] Count a trial's reported steps across its fits -> shared/trials.py   (filed during T-180)
-- T-182 [done] Give network_fitter a hook before each fit -> shared/surrogate.py   (filed during T-180)
-- T-183 [done] Open a study on a journal file, created or joined -> shared/trials.py   (filed during T-180)
-- T-185 [done] Name a running trial by its pair and candidate -> fit_baseline.py   (filed during T-180)
-
-### W-082 bug [todo] (standalone) Format drift goes unnoticed -- make check runs ruff check but not ruff format --check   (filed during T-180)
+### W-082 bug [doing] (standalone) Format drift goes unnoticed -- make check runs ruff check but not ruff format --check   (filed during T-180)
 
 - T-184 [todo] Check the format in make check, and format the drifted files -> mk/python.mk and the three files
 
@@ -483,6 +473,18 @@ closed 2026-10-07 -- outcome: Given a clean tree, When a Task check runs uv run 
 
 - T-171 [done] Ignore __pycache__ in git -> .gitignore
 
+### W-081 issue [done] (standalone) Harness fits run on six workers as trials of an Optuna study, followed live
+
+closed 2026-10-07 -- outcome: Given make baseline with six workers, When it runs, Then make dashboard shows every fit of the run as a live trial of one study. -- ledger: ledgers/W-081.md
+
+- T-178 [done] Write the trial bridge test-first -> shared/trials.py
+- T-179 [done] Run jobs on k one-thread workers test-first -> shared/workers.py
+- T-180 [done] Run make baseline on workers as trials, and make dashboard -> fit_baseline.py and mk/paper.mk
+- T-181 [done] Count a trial's reported steps across its fits -> shared/trials.py   (filed during T-180)
+- T-182 [done] Give network_fitter a hook before each fit -> shared/surrogate.py   (filed during T-180)
+- T-183 [done] Open a study on a journal file, created or joined -> shared/trials.py   (filed during T-180)
+- T-185 [done] Name a running trial by its pair and candidate -> fit_baseline.py   (filed during T-180)
+
 ## Diagram
 ```mermaid
 flowchart TD
@@ -563,15 +565,7 @@ flowchart TD
   W079["W-079 issue todo, standalone: Every test carries one category marker, registered and enforced"]
   W079 --> T167["T-167 todo: Mark every test module with its category -> the test_*.py files"]
   W079 --> T168["T-168 todo: Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py"]
-  W081["W-081 issue doing, standalone: Harness fits run on six workers as trials of an Optuna study, followed live"]
-  W081 --> T178["T-178 done: Write the trial bridge test-first -> shared/trials.py"]
-  W081 --> T179["T-179 done: Run jobs on k one-thread workers test-first -> shared/workers.py"]
-  W081 --> T180["T-180 done: Run make baseline on workers as trials, and make dashboard -> fit_baseline.py and mk/paper.mk"]
-  W081 --> T181["T-181 done: Count a trial's reported steps across its fits -> shared/trials.py"]
-  W081 --> T182["T-182 done: Give network_fitter a hook before each fit -> shared/surrogate.py"]
-  W081 --> T183["T-183 done: Open a study on a journal file, created or joined -> shared/trials.py"]
-  W081 --> T185["T-185 done: Name a running trial by its pair and candidate -> fit_baseline.py"]
-  W082["W-082 bug todo, standalone: Format drift goes unnoticed -- make check runs ruff check but not ruff format --check"]
+  W082["W-082 bug doing, standalone: Format drift goes unnoticed -- make check runs ruff check but not ruff format --check"]
   W082 --> T184["T-184 todo: Check the format in make check, and format the drifted files -> mk/python.mk and the three files"]
   W083["W-083 issue todo, standalone: make baseline's console carries no Optuna chatter"]
   W083 --> T186["T-186 todo: Lower Optuna's verbosity to warnings in every process -> shared/trials.py"]
@@ -580,8 +574,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W081 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T178,T179,T180,T181,T182,T183,T185 done
-  class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168,W082,T184,W083,T186 todo
+  class E006,E009,W082 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168,T184,W083,T186 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
