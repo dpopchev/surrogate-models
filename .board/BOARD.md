@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-072   | blocked: 0 | todo roots: 4 | done: 211 | pruned: 15
+open path: W-072 > T-150   | blocked: 0 | todo roots: 4 | done: 212 | pruned: 15
 
 ## Tree
 
@@ -129,8 +129,8 @@ open path: W-072   | blocked: 0 | todo roots: 4 | done: 211 | pruned: 15
 ### W-072 spike [doing] (standalone) Should fits run as parallel tracked trials, and should Optuna be the registry
 
 - T-148 [done] Measure the throughput of k one-thread fits -> a probe in local/scratch and a Finding on W-072
-- T-149 [todo] Prototype Optuna storage as the run registry -> a probe in local/scratch and a Finding on W-072
-- T-150 [todo] Decide the parallelism and the run registry with the developer -> the W-072 spike decision
+- T-149 [done] Prototype Optuna storage as the run registry -> a probe in local/scratch and a Finding on W-072
+- T-150 [doing] Decide the parallelism and the run registry with the developer -> the W-072 spike decision   <- ACTIVE LEAF
 
 ### W-079 issue [todo] (standalone) Every test carries one category marker, registered and enforced   (filed during T-164)
 
@@ -542,8 +542,8 @@ flowchart TD
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W072["W-072 spike doing, standalone: Should fits run as parallel tracked trials, and should Optuna be the registry"]
   W072 --> T148["T-148 done: Measure the throughput of k one-thread fits -> a probe in local/scratch and a Finding on W-072"]
-  W072 --> T149["T-149 todo: Prototype Optuna storage as the run registry -> a probe in local/scratch and a Finding on W-072"]
-  W072 --> T150["T-150 todo: Decide the parallelism and the run registry with the developer -> the W-072 spike decision"]
+  W072 --> T149["T-149 done: Prototype Optuna storage as the run registry -> a probe in local/scratch and a Finding on W-072"]
+  W072 --> T150["T-150 doing: Decide the parallelism and the run registry with the developer -> the W-072 spike decision -- ACTIVE LEAF"]
   W079["W-079 issue todo, standalone: Every test carries one category marker, registered and enforced"]
   W079 --> T167["T-167 todo: Mark every test module with its category -> the test_*.py files"]
   W079 --> T168["T-168 todo: Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py"]
@@ -552,8 +552,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W072 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T148 done
-  class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,T149,T150,W079,T167,T168 todo
+  class E006,E009,W072,T150 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T148,T149 done
+  class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
