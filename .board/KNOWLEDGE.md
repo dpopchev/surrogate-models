@@ -21,6 +21,7 @@
 - 2026-10-07 W-037: T-089: standing: two identical baseline runs took 41 and 17 min (NS mass fit 132 s vs 53 s, same scores) -> fit seconds swing 2.5x with machine load; the cost axis needs repeated timing
 - 2026-10-07 W-064: fact: across-curve p95 ceilings: NS M 7.8e-5 (lambda) / 1.6e-5 (beta) = 4.1 figures, NS D 1.8e-3 / 3.6e-3 = 2.4; BH M 8.5e-8 = 7.1, D 1.0e-6 = 6.0; BH error sits at the existence edge -> the E-006 target per pair
 - 2026-10-07 W-065: fact: shared/scorecard.py ripple() has no caller; the harness Run, the baseline table and the ledger carry no ripple -> W-065's criterion 'beside its ripple' is unmet; landing halted for the developer
+- 2026-10-07 W-072: fact: k one-thread workers, 20-epoch NS mass fits: fits per hour 65/93/141/206/223 at k=1/2/4/6/7 (3.2x at 6), epoch 2.4->4.7 s per fit -> k=6, not linear; time the cost axis serially (T-148)
 - 2026-10-07 W-073: T-152: standing: in D the nearest curve beats the MLP on the test curves of all four pairs (NS D 1.18e-1 vs 1.94e-1, BH D 3.2e-3 vs 6.2e-3); the MLP leads only on the NS folds (1.00e-1 vs 1.30e-1) -> no pair is won by the baseline
 - 2026-10-07 W-073: standing: the charge is scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1); the floor moved nothing -> the nearest curve wins every test pair (W-073#1) supersedes: W-036#2, W-037#1, W-063#1
 - 2026-10-07 W-076: fact: the NS median mass is 1.75 M_sun, not 1.4: the p95 ceiling means 1.36e-4 M_sun there, 1.70e-4 at M_max 2.19, the charge 1.56e-3 dex; BH 3.05e-7 M_sun at M 3.58, 4.40e-7 dex -> Sections 3.1, 3.2 (T-161)
