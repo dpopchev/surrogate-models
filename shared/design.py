@@ -17,6 +17,10 @@ from shared.eda import CurveSpace, curve_ids, make_curve_space
 # --- vocabulary and types ---------------------------------------------------------------------
 
 Target = Literal["mass", "charge"]
+# How a target is presented to a model (W-066): the mass as M or log10 M, the charge as
+# Y = log10(D/M) ("charge", the default since W-063) or linear D. Every form is scored back
+# in M or D (shared/scorecard.py), so representations compare on one scale.
+TargetForm = Literal["mass", "log_mass", "charge", "linear_charge"]
 
 
 @dataclass(frozen=True)
@@ -62,14 +66,18 @@ def _inputs(table: pd.DataFrame, space: CurveSpace) -> np.ndarray:
     return np.column_stack(columns).astype(np.float32)
 
 
-def _target(table: pd.DataFrame, target: Target) -> np.ndarray:
+def _target(table: pd.DataFrame, target: TargetForm) -> np.ndarray:
     """M in M_sun, or the charge target log10(D/M); every prepared D is positive."""
     mass = table["M"].to_numpy(np.float64)
     match target:
         case "mass":
             values = mass
+        case "log_mass":
+            values = np.log10(mass)
         case "charge":
             values = np.log10(table["D"].to_numpy(np.float64) / mass)
+        case "linear_charge":
+            values = table["D"].to_numpy(np.float64)
         case _:
             assert_never(target)
     return values.astype(np.float32)
@@ -89,7 +97,9 @@ def _labels(table: pd.DataFrame, split: pd.DataFrame, spec: DesignSpec) -> pd.Da
     return labelled
 
 
-def design(table: pd.DataFrame, split: pd.DataFrame, spec: DesignSpec, target: Target) -> Design:
+def design(
+    table: pd.DataFrame, split: pd.DataFrame, spec: DesignSpec, target: TargetForm
+) -> Design:
     """The design of one dataset and target under the frozen split.
 
     Raises UnlabelledCurveError when a row's curve has no label for the dataset.

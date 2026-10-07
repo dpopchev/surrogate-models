@@ -17,6 +17,16 @@ def test_the_charge_error_is_relative_to_d_rebuilt_with_the_true_mass() -> None:
     assert errors.tolist() == pytest.approx([0.1, 0.1])
 
 
+def test_the_log_mass_form_errs_by_its_error_in_m() -> None:
+    errors = relative_errors(np.log10([2.0, 4.0]), np.log10([2.2, 3.6]), "log_mass")
+    assert errors.tolist() == pytest.approx([0.1, 0.1])
+
+
+def test_the_linear_charge_form_errs_by_its_error_in_d() -> None:
+    errors = relative_errors(np.array([0.2, 1e-9]), np.array([0.22, 0.9e-9]), "linear_charge")
+    assert errors.tolist() == pytest.approx([0.1, 0.1])
+
+
 def test_a_relative_error_of_one_in_a_thousand_keeps_three_figures() -> None:
     assert significant_figures(1e-3) == pytest.approx(3.0)
 

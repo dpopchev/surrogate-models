@@ -14,7 +14,7 @@ from typing import assert_never
 import numpy as np
 
 from shared.ceilings import Spread, spread
-from shared.design import Target
+from shared.design import TargetForm
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
@@ -30,14 +30,19 @@ class Scorecard:
 # --- pure functions ---------------------------------------------------------------------------
 
 
-def relative_errors(y_true: np.ndarray, y_pred: np.ndarray, target: Target) -> np.ndarray:
-    """Per row, the relative error of M, or of D rebuilt with the true M from Y = log10(D/M)
-    (the mass cancels: D_pred / D_true = 10^(Y_pred - Y_true))."""
+def relative_errors(y_true: np.ndarray, y_pred: np.ndarray, target: TargetForm) -> np.ndarray:
+    """Per row, the relative error of M, or of D, whatever form the target took: M or log10 M,
+    or D rebuilt with the true M from Y = log10(D/M) (the mass cancels: D_pred / D_true =
+    10^(Y_pred - Y_true)), or linear D."""
     match target:
         case "mass":
             return np.abs((y_pred - y_true) / y_true)
+        case "log_mass":
+            return np.abs(10.0 ** (y_pred - y_true) - 1.0)
         case "charge":
             return np.abs(10.0 ** (y_pred - y_true) - 1.0)
+        case "linear_charge":
+            return np.abs((y_pred - y_true) / y_true)
         case _:
             assert_never(target)
 

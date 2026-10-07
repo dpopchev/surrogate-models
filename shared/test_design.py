@@ -84,6 +84,15 @@ class TestFloat32:
         assert design(table, split, SPEC, "charge").y.dtype == np.float32
 
 
+def test_the_log_mass_form_is_log10_m(table: pd.DataFrame, split: pd.DataFrame) -> None:
+    expected = [math.log10(2.0), math.log10(4.0), 0.0]
+    assert design(table, split, SPEC, "log_mass").y.tolist() == pytest.approx(expected)
+
+
+def test_the_linear_charge_form_is_d(table: pd.DataFrame, split: pd.DataFrame) -> None:
+    assert design(table, split, SPEC, "linear_charge").y.tolist() == pytest.approx([0.2, 1e-9, 0.1])
+
+
 class TestChargeTarget:
     """The charge target is log10(D/M) for every D > 0, with no floor (W-063)."""
 
