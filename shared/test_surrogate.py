@@ -260,7 +260,7 @@ def test_a_held_out_curve_is_predicted_better_than_by_the_mean() -> None:
     assert mare(TARGET[HELD_OUT], predicted) < mare(TARGET[HELD_OUT], baseline)
 
 
-class TestEpochTable:
+class TestEpochTableCells:
     def test_epoch_table_writes_a_loss_in_e_notation_to_3_figures(self) -> None:
         assert EpochTable().format_row({"train_loss": 0.0007835}, "train_loss", "") == "7.84e-04"
 
