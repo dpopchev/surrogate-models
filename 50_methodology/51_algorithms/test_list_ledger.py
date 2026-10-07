@@ -91,6 +91,5 @@ def test_the_ledger_keeps_only_the_batch_its_prefix_names() -> None:
 
 def test_a_ledger_line_gives_the_pair_candidate_seed_figures_and_seconds() -> None:
     assert ledger_table([ENTRY], batch=None) == [
-        "0190a000-0000  toy mass  MLP  seed 1  figures folds 2.5 test 2.0  fit 2s  "
-        "call 1.00e-03 s"
+        "0190a000-0000  toy mass  MLP  seed 1  figures folds 2.5 test 2.0  fit 2s  call 1.00e-03 s"
     ]

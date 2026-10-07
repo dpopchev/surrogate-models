@@ -115,10 +115,7 @@ def test_a_holdout_of_every_row_scores_nan() -> None:
 def grid(missing: tuple[tuple[int, int], ...] = (), size: int = 3) -> pd.DataFrame:
     """One row per cell of a size x size (a, b) grid, without the missing cells."""
     cells = [
-        (a, b)
-        for a in range(1, size + 1)
-        for b in range(1, size + 1)
-        if (a, b) not in missing
+        (a, b) for a in range(1, size + 1) for b in range(1, size + 1) if (a, b) not in missing
     ]
     return pd.DataFrame(cells, columns=["a", "b"])
 

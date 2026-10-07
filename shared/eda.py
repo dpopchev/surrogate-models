@@ -165,9 +165,7 @@ def _across(
     return across[~np.isnan(across)]
 
 
-def neighbour_distances(
-    table: pd.DataFrame, space: CurveSpace, k: int = 16
-) -> NeighbourDistances:
+def neighbour_distances(table: pd.DataFrame, space: CurveSpace, k: int = 16) -> NeighbourDistances:
     """Each row's distance to its nearest same-curve row among its k nearest, and to the
     nearest row of another curve."""
     distances, same = _nearest(table, space, k)
