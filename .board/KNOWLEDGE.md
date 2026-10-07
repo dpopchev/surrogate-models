@@ -19,6 +19,7 @@
 - 2026-10-06 W-036: T-086: fact: nearest curve beats the MLP test MARE on NS M, BH M, BH Y; MLP wins NS Y only -> E-005 refuted as stated
 - 2026-10-06 W-036: T-120: fact: epoch 11.4 s at torch's 7 threads, 2.6 s at 1 thread; parallel fits no faster -> serial, 1 thread
 - 2026-10-07 W-036: fact: every prepared D > 0; the 1004 NS rows below 1e-5 (8.2e-8 to 1e-5) open 110 of 1611 curves at low rho_c, monotone in log10 D -> floor dropped (W-063)
+- 2026-10-07 W-063: T-124: fact: unfloored NS Y test MARE MLP 2.00e-2 (floored 2.02e-2), nearest curve 2.25e-2 (2.21e-2); other rows identical -> the floor did not drive the baseline; the MLP still wins NS Y only
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
@@ -37,17 +38,11 @@
 - 2026-10-06 E-005: skorch over Lightning: one sklearn Pipeline, GroupKFold and scorer path for GPR, XGBoost and the networks; CPU-only tabular data needs none of Lightning's strengths
 - 2026-10-06 E-005: tests stay quick (developer): unit tests use tiny synthetic data and toy fits of a few epochs; real-data fits (fold scores, the four pairs) run only through make targets, never in make test
 - 2026-10-06 E-005: the mean and nearest-curve reference predictors are rows of the paper's baseline table; the baseline MLP (ReLU, MSE, AdamW) is the control arm of H2 and H3
-- 2026-10-06 E-009: numbers in the text come from the generated macros, never typed: N = 224,597 raw and 201,047 after cleaning, the orders of magnitude of D after the M_max cut
-- 2026-10-06 E-009: the revised paper structure is adopted (developer): Scalarization becomes its own Section 2.2 (folder 32_scalarization; BH and NS renumbered 33, 34); H1 keeps the decided target log10(max(D, eps)/M) of W-019, reworded, not log10 D
+- 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
 - 2026-10-06 W-034: error macros (MARE, RMSE) print in scientific notation at every magnitude
-- 2026-10-06 W-053: paper cites the repo (MIT); data and weights live in local/, built or provided, never tracked; no sample
-- 2026-10-06 W-059: per-site map in 00_metadata/citations.md; 13 TODO_ placeholders cited, real sources in W-061
 - 2026-10-07 E-005: the charge target is log10(D/M) with no floor eps, reversing the E-002 / W-019 floor Decision; the D > 0 guard of the preparation stays (developer)
 - 2026-10-07 E-006: Section 3.4 and Section 5 follow the search space; H1-H3 stay as its named sub-questions (developer)
 - 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
 
 ## Deviations
-- 2026-10-06 E-009: option B (developer): W-051 first, branch stacked on W-059's
-- 2026-10-06 E-009: parked for E-005 (developer); W-052 waits for results
-- 2026-10-06 E-009: placeholders (developer): 13 TODO_ refs.bib keys cited; real sources in standalone W-061
-- 2026-10-06 E-009: re-planned from the developer's revised paper structure and the dataset papers added to refs.bib (c83b6ef): W-059 and W-060 added, W-051 re-scoped to Sections 2.1 to 2.4
+- none recorded
