@@ -33,7 +33,12 @@
 
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
-- 2026-10-07 E-006: parked -- 5 decisions, 12 deviations -> ledgers/E-006.md
+- 2026-10-07 E-006: AC2 and W-065's criterion drop the ripple; it is scored in the family screen (T-170 under W-067), where smoothness separates networks from interpolators (developer)
+- 2026-10-07 E-006: Section 3.4 and Section 5 follow the search space; H1-H3 stay as its named sub-questions (developer)
+- 2026-10-07 E-006: checkpoint after today's re-plan (Optuna leveraged, ripple moved to W-067, the harness on six workers): Deviations to ledgers/E-006.md (developer)
+- 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
+- 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
+- 2026-10-07 W-076: landing approved by the developer (2026-10-07)
 
 ## Deviations
 - none recorded

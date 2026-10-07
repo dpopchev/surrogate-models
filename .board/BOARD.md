@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 4 | done: 230 | pruned: 15
+open path: E-006   | blocked: 0 | todo roots: 4 | done: 230 | pruned: 15
 
 ## Tree
 
