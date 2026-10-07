@@ -1,0 +1,9 @@
+\subsection{Model Families and the Scheme of Elimination}
+\label{sec:families}
+
+\todo{Draft from the outline.}
+\begin{itemize}
+  \item \textbf{Family screen:} interpolation between curves, Gaussian process regression~\citep{Rasmussen2005_GP}, XGBoost~\citep{TODO_XGBoost}, multilayer perceptrons and residual networks on the chosen representation, at a fixed budget each, set beside earlier neural surrogates~\citep{Liodis2024,Kaushikk2026,Liu2026}; the best two or three per dataset and target survive.
+  \item $H_3$: the ripple of the residual across the grid steps of the curve parameters, a residual network against a plain multilayer perceptron of matched size.
+  \item \textbf{Scalability:} the error and the fit time against the number of training rows, with the $O(N^3)$ wall of Gaussian process regression.
+\end{itemize}

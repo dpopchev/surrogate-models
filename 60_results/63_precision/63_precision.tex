@@ -1,0 +1,9 @@
+\subsection{Tuning and Numerical Precision of the Survivors}
+\label{sec:precision}
+
+\todo{Draft from the outline.}
+\begin{itemize}
+  \item Each surviving family under the same search budget over its hyperparameters, scored against the reachable error of Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}.
+  \item $H_2$ (neutron stars): the mass error in the $\nsEdaPileUpWindow\,\Msun$ window below each curve's $\Mmax$, Huber loss with GELU against mean squared error with ReLU, each factor on its own with repeated seeds.
+  \item The precision regime: double precision, a second-order L-BFGS stage after AdamW and a residual stage, each kept only when it gains more than the seed spread.
+\end{itemize}
