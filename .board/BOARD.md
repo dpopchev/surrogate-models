@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-081 > T-180   | blocked: 0 | todo roots: 4 | done: 218 | pruned: 15
+open path: W-081 > T-180   | blocked: 0 | todo roots: 4 | done: 219 | pruned: 15
 
 ## Tree
 
@@ -138,6 +138,7 @@ open path: W-081 > T-180   | blocked: 0 | todo roots: 4 | done: 218 | pruned: 15
 - T-180 [doing] Run make baseline on workers as trials, and make dashboard -> fit_baseline.py and mk/paper.mk   <- ACTIVE LEAF
 - T-181 [done] Count a trial's reported steps across its fits -> shared/trials.py   (filed during T-180)
 - T-182 [done] Give network_fitter a hook before each fit -> shared/surrogate.py   (filed during T-180)
+- T-183 [done] Open a study on a journal file, created or joined -> shared/trials.py   (filed during T-180)
 
 ## Closed
 
@@ -559,13 +560,14 @@ flowchart TD
   W081 --> T180["T-180 doing: Run make baseline on workers as trials, and make dashboard -> fit_baseline.py and mk/paper.mk -- ACTIVE LEAF"]
   W081 --> T181["T-181 done: Count a trial's reported steps across its fits -> shared/trials.py"]
   W081 --> T182["T-182 done: Give network_fitter a hook before each fit -> shared/surrogate.py"]
+  W081 --> T183["T-183 done: Open a study on a journal file, created or joined -> shared/trials.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,E009,W081,T180 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T178,T179,T181,T182 done
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T178,T179,T181,T182,T183 done
   class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
