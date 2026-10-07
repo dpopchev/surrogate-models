@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-006   | blocked: 0 | todo roots: 6 | done: 198 | pruned: 13
+open path: E-006 > W-076 > T-160   | blocked: 0 | todo roots: 6 | done: 198 | pruned: 13
 
 ## Tree
 
@@ -71,9 +71,9 @@ open path: E-006   | blocked: 0 | todo roots: 6 | done: 198 | pruned: 13
 - T-158 [todo] Compare the derived and the direct M_max on the held-out curves -> a probe in local/scratch and a Finding on W-075
 - T-159 [todo] Decide how the surrogate predicts M_max with the developer -> the W-075 spike decision
 
-#### W-076 issue [todo] Sections 3.1 and 3.2 state the data ceilings as absolute uncertainties   (filed during T-131)
+#### W-076 issue [doing] Sections 3.1 and 3.2 state the data ceilings as absolute uncertainties   (filed during T-131)
 
-- T-160 [todo] Write the ceiling uncertainty macros test-first -> shared/ceilings.py
+- T-160 [doing] Write the ceiling uncertainty macros test-first -> shared/ceilings.py   <- ACTIVE LEAF
 - T-161 [todo] State the ceilings as uncertainties in paragraph 6 -> 41_neutron_stars.tex and 42_black_holes.tex
 
 ### E-007 [todo] Ensemble uncertainty and the final surrogate
@@ -494,8 +494,8 @@ flowchart TD
   W075 --> T157["T-157 todo: Measure the M_max ceiling across curves -> a probe in local/scratch and a Finding on W-075"]
   W075 --> T158["T-158 todo: Compare the derived and the direct M_max on the held-out curves -> a probe in local/scratch and a Finding on W-075"]
   W075 --> T159["T-159 todo: Decide how the surrogate predicts M_max with the developer -> the W-075 spike decision"]
-  E006 --> W076["W-076 issue todo: Sections 3.1 and 3.2 state the data ceilings as absolute uncertainties"]
-  W076 --> T160["T-160 todo: Write the ceiling uncertainty macros test-first -> shared/ceilings.py"]
+  E006 --> W076["W-076 issue doing: Sections 3.1 and 3.2 state the data ceilings as absolute uncertainties"]
+  W076 --> T160["T-160 doing: Write the ceiling uncertainty macros test-first -> shared/ceilings.py -- ACTIVE LEAF"]
   W076 --> T161["T-161 todo: State the ceilings as uncertainties in paragraph 6 -> 41_neutron_stars.tex and 42_black_holes.tex"]
   E007["E-007 todo: Ensemble uncertainty and the final surrogate"]
   E007 --> W044["W-044 spike pruned: Is L-BFGS fine-tuning worth keeping"]
@@ -541,8 +541,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009 doing
+  class E006,W076,T160,E009 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W076,T160,T161,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150,W078,T165,T166,W079,T167,T168 todo
+  class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,T161,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150,W078,T165,T166,W079,T167,T168 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
