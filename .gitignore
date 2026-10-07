@@ -14,5 +14,8 @@ local/
 # --- uv-managed environment (`make sync` recreates it)
 .venv/
 
+# --- bytecode of python run outside make (a bare uv run); make targets write it under local/pycache
+__pycache__/
+
 # --- hatchling writes no egg-info; a setuptools layout would, so it is ignored too
 *.egg-info/
