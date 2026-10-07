@@ -43,7 +43,7 @@ sync: $(PYVER) pyproject.toml | $(LOCAL) ## Create or refresh .venv and uv.lock
 lint: ## Ruff check and format check without fixes
 	@$(RUN) ruff check .
 	@$(RUN) ruff format --check .
-	$(call log_done,ruff check and ruff format --check clean)
+	$(call log_done,ruff check clean and the code ruff-formatted)
 
 .PHONY: format
 format: ## Ruff format and import ordering
