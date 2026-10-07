@@ -397,8 +397,11 @@ def make_estimator(
             *live,
         ],
         # at_epoch (k/MAX) replaces the bare epoch and sorts first; elapsed_s replaces dur. The
-        # losses, errors and lr are formatted per column (EpochTable, W-078).
-        callbacks__print_log=EpochTable(keys_ignored=["dur", "epoch"], sink=logger.info),
+        # losses, errors and lr are formatted per column (EpochTable, W-078); any other float keeps
+        # 4 significant figures, not 4 decimals: 15.1 not 15.1000.
+        callbacks__print_log=EpochTable(
+            keys_ignored=["dur", "epoch"], floatfmt=".4g", sink=logger.info
+        ),
         seed=training.seed,
     )
     return Pipeline([("scale", StandardScaler()), ("net", net)])
