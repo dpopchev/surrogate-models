@@ -65,6 +65,9 @@ open path: E-005 > W-073 > T-152   | blocked: 0 | todo roots: 5 | done: 172 | pr
 
 #### W-062 issue [todo] Section 4.1 lists the surrogate pipeline as an algorithm
 
+- T-153 [todo] Load the algorithm packages -> 00_metadata/preamble.tex
+- T-154 [todo] Typeset the pipeline as Algorithm 1 -> 50_methodology/51_algorithms/51_algorithms.tex
+
 #### W-063 issue [done] The charge target keeps every charge, the floor dropped   (filed during T-086)
 
 - T-122 [done] Drop the floor from the charge target test-first -> shared/design.py
@@ -454,6 +457,8 @@ flowchart TD
   W057 --> T105["T-105 done: Two stop-time columns, the stop criterion on top and a live loss curve -> shared/surrogate.py and fit_baseline.py"]
   W057 --> T106["T-106 done: Print the epoch table at 4 significant figures, elapsed_s to a tenth -> shared/surrogate.py"]
   E005 --> W062["W-062 issue todo: Section 4.1 lists the surrogate pipeline as an algorithm"]
+  W062 --> T153["T-153 todo: Load the algorithm packages -> 00_metadata/preamble.tex"]
+  W062 --> T154["T-154 todo: Typeset the pipeline as Algorithm 1 -> 50_methodology/51_algorithms/51_algorithms.tex"]
   E005 --> W063["W-063 issue done: The charge target keeps every charge, the floor dropped"]
   W063 --> T122["T-122 done: Drop the floor from the charge target test-first -> shared/design.py"]
   W063 --> T123["T-123 done: Restate Section 3.3, H1 and the abstract without the floor -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
@@ -538,6 +543,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E005,W073,T152,E009 doing
   class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W036,T085,T086,T087,T120,T121,T125,W037,T088,T089,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W063,T122,T123,T124,T147,T151,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W062,E006,W064,T126,T127,T128,W065,T129,T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W071,T144,T145,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150 todo
+  class W062,T153,T154,E006,W064,T126,T127,T128,W065,T129,T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W071,T144,T145,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
