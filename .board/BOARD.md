@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-078   | blocked: 0 | todo roots: 5 | done: 209 | pruned: 15
+open path: W-072   | blocked: 0 | todo roots: 4 | done: 210 | pruned: 15
 
 ## Tree
 
@@ -126,22 +126,11 @@ open path: W-078   | blocked: 0 | todo roots: 5 | done: 209 | pruned: 15
 
 - T-118 [todo] Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md
 
-### W-072 spike [todo] (standalone) Should fits run as parallel tracked trials, and should Optuna be the registry
+### W-072 spike [doing] (standalone) Should fits run as parallel tracked trials, and should Optuna be the registry
 
 - T-148 [todo] Measure the throughput of k one-thread fits -> a probe in local/scratch and a Finding on W-072
 - T-149 [todo] Prototype Optuna storage as the run registry -> a probe in local/scratch and a Finding on W-072
 - T-150 [todo] Decide the parallelism and the run registry with the developer -> the W-072 spike decision
-
-### W-078 issue [doing] (standalone) Console numbers read as orders of magnitude -- errors, losses and lr in e-notation   (filed during T-131)
-
-- T-165 [pruned] Format the epoch table per column -> shared/surrogate.py   [pruned: its check (-k epoch_table, 4 passed) also selects the existing test_the_epoch_table_reaches_the_logger, so it prints 5 passed when the Output exists; refiled as T-172 with the TestEpochTable node id]
-- T-166 [pruned] Put the other console numbers on the same rule -> banners, progress lines, run listings   [pruned: refuted by its review: every console error, loss and MARE in shared/ and 50_methodology/ is already .2e (list_runs.py:54, fit_baseline.py:345 end banner, list_ledger.py:38); the other float lines are durations, counts and figures, which stay; nothing to change, and its check would pass only on T-172's test name]
-- T-172 [done] Format the epoch table per column -> shared/surrogate.py
-- T-173 [done] Keep tabulate from re-formatting the epoch cells -> shared/surrogate.py   (filed during T-172)
-- T-174 [done] Rename T-172's test class so it stops shadowing TestEpochTable -> shared/test_surrogate.py   (filed during T-173)
-- T-175 [done] Keep floatfmt .4g on the columns EpochTable leaves to skorch -> shared/surrogate.py   (filed during T-174)
-- T-176 [done] Declare tabulate as a direct dependency -> pyproject.toml and uv.lock   (filed during T-173)
-- T-177 [done] Format the lr column by its history key event_lr -> shared/surrogate.py   (filed during T-166)
 
 ### W-079 issue [todo] (standalone) Every test carries one category marker, registered and enforced   (filed during T-164)
 
@@ -455,6 +444,19 @@ closed 2026-10-07 -- outcome: Given a screen run through the harness, When the d
 - T-163 [done] Save every harness run to the ledger -> shared/harness.py and fit_baseline.py
 - T-164 [done] List the ledger as a table -> make ledger
 
+### W-078 issue [done] (standalone) Console numbers read as orders of magnitude -- errors, losses and lr in e-notation
+
+closed 2026-10-07 -- outcome: Given a fit through make_estimator, When its epoch table is logged, Then every loss, error and lr cell is in e-notation of one width per column. -- ledger: ledgers/W-078.md
+
+- T-165 [pruned] Format the epoch table per column -> shared/surrogate.py   [pruned: its check (-k epoch_table, 4 passed) also selects the existing test_the_epoch_table_reaches_the_logger, so it prints 5 passed when the Output exists; refiled as T-172 with the TestEpochTable node id]
+- T-166 [pruned] Put the other console numbers on the same rule -> banners, progress lines, run listings   [pruned: refuted by its review: every console error, loss and MARE in shared/ and 50_methodology/ is already .2e (list_runs.py:54, fit_baseline.py:345 end banner, list_ledger.py:38); the other float lines are durations, counts and figures, which stay; nothing to change, and its check would pass only on T-172's test name]
+- T-172 [done] Format the epoch table per column -> shared/surrogate.py
+- T-173 [done] Keep tabulate from re-formatting the epoch cells -> shared/surrogate.py   (filed during T-172)
+- T-174 [done] Rename T-172's test class so it stops shadowing TestEpochTable -> shared/test_surrogate.py   (filed during T-173)
+- T-175 [done] Keep floatfmt .4g on the columns EpochTable leaves to skorch -> shared/surrogate.py   (filed during T-174)
+- T-176 [done] Declare tabulate as a direct dependency -> pyproject.toml and uv.lock   (filed during T-173)
+- T-177 [done] Format the lr column by its history key event_lr -> shared/surrogate.py   (filed during T-166)
+
 ### W-080 bug [done] (standalone) Task checks run outside make leave __pycache__ in the tree and mark runs dirty
 
 closed 2026-10-07 -- outcome: Given a clean tree, When a Task check runs uv run pytest outside make, Then git status --short prints nothing. -- ledger: ledgers/W-080.md
@@ -538,19 +540,10 @@ flowchart TD
   W060 --> T116["T-116 done: Name paper sections by their compiled number in code and make -> mk/, paper.toml, the colocated modules"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
-  W072["W-072 spike todo, standalone: Should fits run as parallel tracked trials, and should Optuna be the registry"]
+  W072["W-072 spike doing, standalone: Should fits run as parallel tracked trials, and should Optuna be the registry"]
   W072 --> T148["T-148 todo: Measure the throughput of k one-thread fits -> a probe in local/scratch and a Finding on W-072"]
   W072 --> T149["T-149 todo: Prototype Optuna storage as the run registry -> a probe in local/scratch and a Finding on W-072"]
   W072 --> T150["T-150 todo: Decide the parallelism and the run registry with the developer -> the W-072 spike decision"]
-  W078["W-078 issue doing, standalone: Console numbers read as orders of magnitude -- errors, losses and lr in e-notation"]
-  W078 --> T165["T-165 pruned: Format the epoch table per column -> shared/surrogate.py"]
-  W078 --> T166["T-166 pruned: Put the other console numbers on the same rule -> banners, progress lines, run listings"]
-  W078 --> T172["T-172 done: Format the epoch table per column -> shared/surrogate.py"]
-  W078 --> T173["T-173 done: Keep tabulate from re-formatting the epoch cells -> shared/surrogate.py"]
-  W078 --> T174["T-174 done: Rename T-172's test class so it stops shadowing TestEpochTable -> shared/test_surrogate.py"]
-  W078 --> T175["T-175 done: Keep floatfmt .4g on the columns EpochTable leaves to skorch -> shared/surrogate.py"]
-  W078 --> T176["T-176 done: Declare tabulate as a direct dependency -> pyproject.toml and uv.lock"]
-  W078 --> T177["T-177 done: Format the lr column by its history key event_lr -> shared/surrogate.py"]
   W079["W-079 issue todo, standalone: Every test carries one category marker, registered and enforced"]
   W079 --> T167["T-167 todo: Mark every test module with its category -> the test_*.py files"]
   W079 --> T168["T-168 todo: Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py"]
@@ -559,8 +552,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W078 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T172,T173,T174,T175,T176,T177 done
-  class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150,W079,T167,T168 todo
-  class W038,W039,W040,W041,W042,W043,W044,W048,T108,T165,T166 pruned
+  class E006,E009,W072 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,T148,T149,T150,W079,T167,T168 todo
+  class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
