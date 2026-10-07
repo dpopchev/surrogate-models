@@ -37,6 +37,7 @@
 - 2026-10-07 E-006: Section 3.4 and Section 5 follow the search space; H1-H3 stay as its named sub-questions (developer)
 - 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
 - 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
+- 2026-10-07 W-076: landing approved by the developer (2026-10-07)
 
 ## Deviations
 - 2026-10-07 E-006: AC2 / W-065 amended (developer): the ripple leaves W-065's criterion -- ripple() has no aligned grid on the test curves -- and moves to T-170 under W-067, before the family screen (T-135)
