@@ -19,6 +19,8 @@
 - 2026-10-06 W-036: T-086: fact: nearest curve beats the MLP test MARE on NS M, BH M, BH Y; MLP wins NS Y only -> E-005 refuted as stated
 - 2026-10-06 W-036: T-120: fact: epoch 11.4 s at torch's 7 threads, 2.6 s at 1 thread; parallel fits no faster -> serial, 1 thread
 - 2026-10-07 W-036: fact: every prepared D > 0; the 1004 NS rows below 1e-5 (8.2e-8 to 1e-5) open 110 of 1611 curves at low rho_c, monotone in log10 D -> floor dropped (W-063)
+- 2026-10-07 W-037: T-089: fact: D rebuilt from the charge model has MARE 1.94e-1 (NS) and 6.2e-3 (BH) with the true M, 2.00e-1 and 9.1e-3 with the predicted M, while MARE on Y reads 2.0e-2 and 2.3e-3 -> score the charge in D
+- 2026-10-07 W-037: T-089: fact: two identical baseline runs took 41 and 17 min (NS mass fit 132 s vs 53 s, same scores) -> fit seconds swing 2.5x with machine load; the cost axis needs repeated timing
 - 2026-10-07 W-063: T-124: fact: unfloored NS Y test MARE MLP 2.00e-2 (floored 2.02e-2), nearest curve 2.25e-2 (2.21e-2); other rows identical -> the floor did not drive the baseline; the MLP still wins NS Y only
 
 ## Open questions
@@ -47,4 +49,5 @@
 
 ## Deviations
 - 2026-10-07 E-005: W-036 and W-063 landed in one fast-forward (developer): W-063's branch was stacked on W-036's and its criterion needed W-036's T-087 table, so main moved to 3a4ca35 once for both
+- 2026-10-07 E-005: bug W-073 filed during T-089: the table's charge rows score Y, not D (NS D off by 19% where Y reads 2%); fixed before E-005 closes
 - 2026-10-07 E-005: standalone spike W-072 filed during T-089 (developer: later): parallel one-thread fits and Optuna storage as the run registry, decided before E-006's screens
