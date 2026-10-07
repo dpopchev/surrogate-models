@@ -325,9 +325,11 @@ def network_fitter(
     training: Training,
     live_plot: Path | None = None,
     on_fit: Callable[[Pipeline], None] = lambda _: None,
+    before_fit: Callable[[Pipeline], None] = lambda _: None,
 ) -> Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int], Callable[..., np.ndarray]]:
     """A harness fitter of the network: it early-stops on exactly the validation rows it is
-    handed, seeded by the harness's seed; on_fit receives each fitted pipeline."""
+    handed, seeded by the harness's seed; before_fit receives each built pipeline before it
+    trains (to add a callback), on_fit each fitted one."""
 
     def fit(
         x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
@@ -337,6 +339,7 @@ def network_fitter(
             replace(training, seed=seed), x_fit.shape[1], live_plot, valid_fold=fold
         )
         x = np.vstack([x_fit, x_valid]).astype(np.float32)
+        before_fit(estimator)
         estimator.fit(x, np.concatenate([y_fit, y_valid]).astype(np.float32))
         on_fit(estimator)
         return lambda rows: estimator.predict(np.asarray(rows, dtype=np.float32))

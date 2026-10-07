@@ -104,6 +104,15 @@ def fitted(training: Training) -> Pipeline:
 class TestNetworkFitter:
     """The harness hands the network its fit rows and its validation rows (W-065)."""
 
+    def test_before_fit_sees_the_network_before_it_trains(self) -> None:
+        seen: list[bool] = []
+        fitter = network_fitter(
+            replace(TOY, max_epochs=1),
+            before_fit=lambda pipeline: seen.append(pipeline.named_steps["net"].initialized_),
+        )
+        fitter(INPUTS[GROUPS < 4], TARGET[GROUPS < 4], INPUTS[GROUPS == 4], TARGET[GROUPS == 4], 0)
+        assert seen == [False]
+
     def test_validates_on_exactly_the_rows_it_is_handed(self) -> None:
         fit, valid = GROUPS < 4, (GROUPS == 4) | (GROUPS == 5)
         captured: list[Pipeline] = []
