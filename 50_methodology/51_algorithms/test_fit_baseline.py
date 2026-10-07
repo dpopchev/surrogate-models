@@ -28,6 +28,7 @@ from fit_baseline import (
     fit_and_score,
     fold_mares,
     main,
+    metric_for,
     numbers,
     parity,
     progress_line,
@@ -39,7 +40,7 @@ from shared.config import PaperConfig
 from shared.design import NEUTRON_STARS, Design
 from shared.plots import PlotStyle
 from shared.runs import from_json
-from shared.surrogate import Training, make_mean_reference, mare
+from shared.surrogate import Training, make_mean_reference, mare, mare_in_d
 
 # Six curves keyed by p along x in [0, 1]: y = 1 + 0.1 p + x^2; curve p = 2 is the test curve.
 P = np.repeat(np.arange(6.0), 10)
@@ -101,6 +102,12 @@ class TestFoldMares:
         expected = mare(TOY.y[fold0], np.full(fold0.sum(), TOY.y[train0].mean()))
         assert fold_mares(TOY, make_mean_reference)[0] == pytest.approx(expected)
 
+    def test_scores_a_fold_with_the_given_metric(self) -> None:
+        fold0, train0 = TOY.fold == 0, ~TOY.test & (TOY.fold != 0)
+        expected = mare_in_d(TOY.y[fold0], np.full(fold0.sum(), TOY.y[train0].mean()))
+        scored = fold_mares(TOY, make_mean_reference, score=mare_in_d)[0]
+        assert scored == pytest.approx(expected)
+
 
 NS_MASS = PairScores(
     dataset="neutron_stars",
@@ -129,6 +136,21 @@ class TestScorePair:
         score_pair(TOY, "toy", "mass", short, clock(1.0, 2.0), after_fit=lambda: fits.append(1))
         assert len(fits) == 3  # two folds and the final fit
 
+    def test_scores_the_references_with_the_given_metric(self) -> None:
+        short = replace(SHORT, max_epochs=1)
+        scores, _ = score_pair(TOY, "toy", "charge", short, clock(1.0, 2.0), score=mare_in_d)
+        mean_prediction = np.full(TOY.test.sum(), TOY.y[~TOY.test].mean())
+        expected = mare_in_d(TOY.y[TOY.test], mean_prediction)
+        assert scores.scored[1].test_mare == pytest.approx(expected)
+
+
+class TestMetricFor:
+    def test_scores_the_charge_in_d(self) -> None:
+        assert metric_for("charge") is mare_in_d
+
+    def test_scores_the_mass_by_its_mare(self) -> None:
+        assert metric_for("mass") is mare
+
 
 class TestBaselineTable:
     def test_gives_the_mlp_its_test_mare_fold_spread_and_fit_seconds(self) -> None:
@@ -136,6 +158,9 @@ class TestBaselineTable:
             "NS & $M$ & MLP & $6.62\\times 10^{-3}$ & "
             "$8.00\\times 10^{-3} \\pm 1.00\\times 10^{-3}$ & 213"
         ) in baseline_table([NS_MASS])
+
+    def test_says_the_charge_rows_are_scored_in_d(self) -> None:
+        assert "rebuilt with the true" in baseline_table([NS_MASS])
 
 
 class TestNumbers:
@@ -312,6 +337,14 @@ def test_each_curve_is_named_by_its_key(tmp_path: Path) -> None:
     assert names[1] == "$\\beta$ = 1, $\\lambda$ = 2"
 
 
+def first_group(pattern: str, path: Path) -> str:
+    """The first capture group of pattern in the file at path; a missing match fails loudly."""
+    match = re.search(pattern, path.read_text())
+    if match is None:
+        raise AssertionError(f"{pattern} not found in {path.name}")
+    return match.group(1)
+
+
 @pytest.fixture(scope="module")
 def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """One main run on the toy NS and BH tables, a stale asset left from an earlier run, the
@@ -349,6 +382,16 @@ class TestMain:
     ) -> None:
         numbers_tex = (ran / "assets" / SECTION / "51_algorithms_num.tex").read_text()
         assert len(re.findall(r"\\base(?:Ns|Bh)ChargeMare(?:True|Pred)M\}", numbers_tex)) == 4
+
+    def test_scores_the_charge_rows_in_d_like_the_true_mass_macro(self, ran: Path) -> None:
+        folder = ran / "assets" / SECTION
+        numbers_tex, table_tex = (
+            folder / "51_algorithms_num.tex",
+            folder / "51_algorithms_tab_baseline.tex",
+        )
+        macro = first_group(r"\\baseBhChargeMareTrueM\}\{(.*)\}\n", numbers_tex)
+        row = first_group(r"BH & \$Y\$ & MLP & \$([^$]*)\$", table_tex)
+        assert row == macro
 
     def test_writes_one_mlp_row_per_dataset_and_target(self, ran: Path) -> None:
         table = (ran / "assets" / SECTION / "51_algorithms_tab_baseline.tex").read_text()
@@ -418,3 +461,7 @@ class TestFitAndScore:
 
     def test_names_the_epoch_of_the_lowest_valid_loss(self, fit: Fit) -> None:
         assert fit.best_epoch == min(fit.history, key=lambda row: row["valid_loss"])["epoch"]
+
+    def test_scores_the_test_rows_with_the_given_metric(self) -> None:
+        scored = fit_and_score(TOY, SHORT, clock(10.0, 12.5), score=mare_in_d)
+        assert scored.mare == pytest.approx(mare_in_d(scored.y_true, scored.y_pred))

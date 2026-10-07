@@ -22,7 +22,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, assert_never
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -44,6 +44,7 @@ from shared.surrogate import (
     make_mean_reference,
     make_nearest_reference,
     mare,
+    mare_in_d,
     rebuild_charge,
     rmse,
 )
@@ -55,6 +56,10 @@ SECTION = "51_algorithms"
 DIAGNOSTICS_DPI = 150
 
 # --- vocabulary and types ---------------------------------------------------------------------
+
+# A score of predictions against the truth on the target's rows: mare, or mare_in_d for the
+# charge target, whose error is measured in D rebuilt with the true M (W-073).
+Metric = Callable[[np.ndarray, np.ndarray], float]
 
 
 @dataclass(frozen=True)
@@ -109,10 +114,14 @@ X_LABELS = {"neutron_stars": "$\\log_{10}\\rho_c$", "black_holes": "$r_h$"}
 
 
 def fit_and_score(
-    design: Design, training: Training, clock: Callable[[], float], live_plot: Path | None = None
+    design: Design,
+    training: Training,
+    clock: Callable[[], float],
+    live_plot: Path | None = None,
+    score: Metric = mare,
 ) -> Fit:
-    """Fit on the non-test rows, score on the test rows; clock times the fit; with live_plot,
-    the loss curve is redrawn there while it trains."""
+    """Fit on the non-test rows, score on the test rows (MARE by default); clock times the
+    fit; with live_plot, the loss curve is redrawn there while it trains."""
     train, test = ~design.test, design.test
     estimator = make_estimator(training, n_inputs=design.X.shape[1], live_plot=live_plot)
     started = clock()
@@ -127,7 +136,7 @@ def fit_and_score(
     return Fit(
         y_true=y_true,
         y_pred=y_pred,
-        mare=mare(y_true, y_pred),
+        mare=score(y_true, y_pred),
         rmse=rmse(y_true, y_pred),
         seconds=seconds,
         epochs=len(history),
@@ -146,26 +155,29 @@ def _fit(estimator: Any, X: np.ndarray, y: np.ndarray, groups: np.ndarray) -> An
 
 
 def fold_mares(
-    design: Design, make: Callable[[], Any], after_fit: Callable[[], None] = lambda: None
+    design: Design,
+    make: Callable[[], Any],
+    after_fit: Callable[[], None] = lambda: None,
+    score: Metric = mare,
 ) -> tuple[float, ...]:
-    """The MARE on each frozen fold of a model made fresh and fitted on the other folds;
-    after_fit is called once each fit is done."""
+    """The score (MARE by default) on each frozen fold of a model made fresh and fitted on the
+    other folds; after_fit is called once each fit is done."""
     scores = []
     for fold in sorted(set(design.fold[design.fold >= 0].tolist())):
         held, train = design.fold == fold, ~design.test & (design.fold != fold)
         model = _fit(make(), design.X[train], design.y[train], design.groups[train])
         after_fit()
-        scores.append(mare(design.y[held], model.predict(design.X[held])))
+        scores.append(score(design.y[held], model.predict(design.X[held])))
     return tuple(scores)
 
 
-def _reference(design: Design, make: Callable[[], Any], name: str) -> Scored:
+def _reference(design: Design, make: Callable[[], Any], name: str, score: Metric) -> Scored:
     """A reference predictor scored on the frozen folds and, fitted on every training curve,
     on the test curves."""
     train, test = ~design.test, design.test
     model = make().fit(design.X[train], design.y[train])
-    test_mare = mare(design.y[test], model.predict(design.X[test]))
-    return Scored(name, test_mare, fold_mares(design, make), None)
+    test_mare = score(design.y[test], model.predict(design.X[test]))
+    return Scored(name, test_mare, fold_mares(design, make, score=score), None)
 
 
 def score_pair(
@@ -176,22 +188,34 @@ def score_pair(
     clock: Callable[[], float],
     live_plot: Path | None = None,
     after_fit: Callable[[], None] = lambda: None,
+    score: Metric = mare,
 ) -> tuple[PairScores, Fit]:
-    """Score one dataset and target: the MLP on every frozen fold and, fitted on every training
-    curve, on the test curves; then the mean and nearest-curve references on the same rows.
-    after_fit is called after every MLP fit. Returns the scores and the MLP's final fit, for
-    the figures and the run record."""
+    """Score one dataset and target with score: the MLP on every frozen fold and, fitted on
+    every training curve, on the test curves; then the mean and nearest-curve references on
+    the same rows. after_fit is called after every MLP fit. Returns the scores and the MLP's
+    final fit, for the figures and the run record."""
     n_inputs = design.X.shape[1]
     make = lambda: make_estimator(training, n_inputs=n_inputs)  # noqa: E731
-    mlp_folds = fold_mares(design, make, after_fit)
-    fit = fit_and_score(design, training, clock, live_plot=live_plot)
+    mlp_folds = fold_mares(design, make, after_fit, score=score)
+    fit = fit_and_score(design, training, clock, live_plot=live_plot, score=score)
     after_fit()
     scored = (
         Scored("MLP", fit.mare, mlp_folds, fit.seconds),
-        _reference(design, make_mean_reference, "mean"),
-        _reference(design, make_nearest_reference, "nearest curve"),
+        _reference(design, make_mean_reference, "mean", score),
+        _reference(design, make_nearest_reference, "nearest curve", score),
     )
     return PairScores(dataset, target, scored), fit
+
+
+def metric_for(target: Target) -> Metric:
+    """The score of a target: the MARE of M, or of D rebuilt with the true M for the charge."""
+    match target:
+        case "mass":
+            return mare
+        case "charge":
+            return mare_in_d
+        case _:
+            assert_never(target)
 
 
 def _row(pair: PairScores, scored: Scored) -> str:
@@ -211,7 +235,8 @@ def baseline_table(pairs: list[PairScores]) -> str:
         "baseline",
         "The baseline MLP against the mean and nearest-curve references: MARE on the test "
         "curves and on the frozen folds (mean $\\pm$ standard deviation), and the MLP's fit "
-        "time in seconds.",
+        "time in seconds. The $Y$ rows give the MARE of the charge $\\Dch$ rebuilt with the "
+        "true $M$ from the predicted $Y$.",
         "llllll",
         "Data & Target & Predictor & Test MARE & Fold MARE & Fit s",
         [_row(pair, scored) for pair in pairs for scored in pair.scored],
@@ -475,6 +500,7 @@ def _run_pair(
         time.perf_counter,
         live_plot=run.folder / "loss_curve.png",
         after_fit=after_fit,
+        score=metric_for(pair.target),
     )
     record = RunRecord(
         dataset=pair.spec.dataset,

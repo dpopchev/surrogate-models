@@ -22,6 +22,7 @@ from shared.surrogate import (
     make_mean_reference,
     make_nearest_reference,
     mare,
+    mare_in_d,
     rebuild_charge,
     rmse,
     stop_window,
@@ -30,6 +31,11 @@ from shared.surrogate import (
 
 def test_mare_is_the_mean_absolute_relative_error() -> None:
     assert mare(np.array([1.0, 2.0]), np.array([1.1, 1.8])) == pytest.approx(0.1)
+
+
+def test_mare_in_d_turns_a_constant_offset_in_y_into_its_relative_error_in_d() -> None:
+    y_true = np.array([-1.0, -5.0])
+    assert mare_in_d(y_true, y_true + np.log10(1.1)) == pytest.approx(0.1)
 
 
 def test_rebuild_charge_inverts_the_charge_target_down_to_tiny_charges() -> None:

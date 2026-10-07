@@ -69,6 +69,14 @@ def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return float(np.sqrt(np.mean((y_pred - y_true) ** 2)))
 
 
+def mare_in_d(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """The MARE of the charge D rebuilt with the true M from charge targets Y = log10(D/M).
+
+    The mass cancels: D_pred / D_true = 10^(Y_pred - Y_true), so no M is needed.
+    """
+    return float(np.mean(np.abs(10.0 ** (y_pred - y_true) - 1.0)))
+
+
 def rebuild_charge(y_charge: np.ndarray, mass: np.ndarray) -> np.ndarray:
     """The charge D from the charge target Y = log10(D/M) and a mass M."""
     return mass * 10.0**y_charge
