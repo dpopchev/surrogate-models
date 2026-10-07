@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-084   | blocked: 0 | todo roots: 4 | done: 228 | pruned: 15
+open path: W-084 > T-187   | blocked: 0 | todo roots: 4 | done: 228 | pruned: 15
 
 ## Tree
 
@@ -133,7 +133,7 @@ open path: W-084   | blocked: 0 | todo roots: 4 | done: 228 | pruned: 15
 
 ### W-084 bug [doing] (standalone) make baseline's console never says how to follow the run   (filed during T-186)
 
-- T-187 [todo] Log main's own lines at the configured level -> fit_baseline.py
+- T-187 [doing] Log main's own lines at the configured level -> fit_baseline.py   <- ACTIVE LEAF
 
 ## Closed
 
@@ -580,14 +580,14 @@ flowchart TD
   W079 --> T167["T-167 todo: Mark every test module with its category -> the test_*.py files"]
   W079 --> T168["T-168 todo: Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py"]
   W084["W-084 bug doing, standalone: make baseline's console never says how to follow the run"]
-  W084 --> T187["T-187 todo: Log main's own lines at the configured level -> fit_baseline.py"]
+  W084 --> T187["T-187 doing: Log main's own lines at the configured level -> fit_baseline.py -- ACTIVE LEAF"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W084 doing
+  class E006,E009,W084,T187 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168,T187 todo
+  class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
