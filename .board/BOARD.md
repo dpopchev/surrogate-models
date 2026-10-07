@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-006 > W-066 > T-190   | blocked: 0 | todo roots: 4 | done: 233 | pruned: 16
+open path: E-006 > W-066 > T-133   | blocked: 0 | todo roots: 4 | done: 234 | pruned: 16
 
 ## Tree
 
@@ -35,9 +35,9 @@ open path: E-006 > W-066 > T-190   | blocked: 0 | todo roots: 4 | done: 233 | pr
 #### W-066 issue [doing] Representation screen -- inputs, targets, pointwise or curve-wise
 
 - T-132 [pruned] Add the curve-wise representation test-first -> shared/design.py   [pruned: split (developer, 2026-10-07): the target options into T-189, the curve-wise representation into T-190 as a harness fitter rather than a design]
-- T-133 [todo] Run the representation screen -> 60_results/61_representation/61_representation.tex
+- T-133 [doing] Run the representation screen -> 60_results/61_representation/61_representation.tex   <- ACTIVE LEAF
 - T-189 [done] Add the target options test-first -> shared/design.py and shared/scorecard.py
-- T-190 [doing] Write the curve-wise fitter test-first -> shared/curvewise.py   <- ACTIVE LEAF
+- T-190 [done] Write the curve-wise fitter test-first -> shared/curvewise.py
 - T-191 [done] Write the weighted k-NN and local-RBF fitters test-first -> shared/families.py
 - T-192 [done] Let the harness take any target form -> shared/harness.py   (filed during T-189)
 
@@ -527,9 +527,9 @@ flowchart TD
   W065 --> T169["T-169 done: Correct the NS charge fold margin -> 50_methodology/51_algorithms/51_algorithms.tex"]
   E006 --> W066["W-066 issue doing: Representation screen -- inputs, targets, pointwise or curve-wise"]
   W066 --> T132["T-132 pruned: Add the curve-wise representation test-first -> shared/design.py"]
-  W066 --> T133["T-133 todo: Run the representation screen -> 60_results/61_representation/61_representation.tex"]
+  W066 --> T133["T-133 doing: Run the representation screen -> 60_results/61_representation/61_representation.tex -- ACTIVE LEAF"]
   W066 --> T189["T-189 done: Add the target options test-first -> shared/design.py and shared/scorecard.py"]
-  W066 --> T190["T-190 doing: Write the curve-wise fitter test-first -> shared/curvewise.py -- ACTIVE LEAF"]
+  W066 --> T190["T-190 done: Write the curve-wise fitter test-first -> shared/curvewise.py"]
   W066 --> T191["T-191 done: Write the weighted k-NN and local-RBF fitters test-first -> shared/families.py"]
   W066 --> T192["T-192 done: Let the harness take any target form -> shared/harness.py"]
   E006 --> W067["W-067 issue todo: Family screen -- interpolators, GPR, XGBoost and networks"]
@@ -594,8 +594,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,W066,T190,E009 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,T189,T191,T192,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168 todo
+  class E006,W066,T133,E009 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,T189,T190,T191,T192,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168 todo
   class W038,W039,W040,W041,W042,W043,T132,W044,W048,T108 pruned
 ```
