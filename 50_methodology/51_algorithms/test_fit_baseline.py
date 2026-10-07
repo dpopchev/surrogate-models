@@ -382,6 +382,19 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return folder
 
 
+def test_the_run_names_make_dashboard_as_it_starts(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    ns, bh, split_file = toy_inputs(tmp_path)
+    network = {"width": 8, "depth": 1, "max_epochs": 1, "batch_size": 8, "workers": 1}
+    config = PaperConfig.model_validate(
+        {"plot": {"usetex": False}, "methodology": {"algorithms": network}}
+    )
+    paths = [str(ns), str(bh), str(split_file), str(tmp_path / "assets"), str(tmp_path / "state")]
+    main(paths, config, commit=lambda: "abc1234", dirty=lambda: False)
+    assert "make dashboard" in caplog.text
+
+
 def test_a_trial_names_its_candidate_while_it_runs() -> None:
     study = optuna.create_study(direction="maximize")
     ask_trial(study, "toy", "mass", "MLP")

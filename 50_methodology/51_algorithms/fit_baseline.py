@@ -502,10 +502,13 @@ def main(
                 partial(_score_job, _Job(pair, run, name, training, settings, progress))
                 for name in CANDIDATES
             ]
-        logger.info(
-            "%d jobs on %d workers; follow them with make dashboard", len(jobs), settings.workers
-        )
-        found = run_jobs(jobs, settings.workers)
+        with _at_level(settings.log_level):
+            logger.info(
+                "%d jobs on %d workers; follow them with make dashboard",
+                len(jobs),
+                settings.workers,
+            )
+            found = run_jobs(jobs, settings.workers)
     pairs, fits = [], {}
     for i, (pair, run) in enumerate(planned):
         mine = found[i * len(CANDIDATES) : (i + 1) * len(CANDIDATES)]
@@ -747,6 +750,18 @@ def write_diagnostics(
     for name, figure in figures.items():
         figure.savefig(run / f"{name}.png", dpi=DIAGNOSTICS_DPI)
         plt.close(figure)
+
+
+@contextmanager
+def _at_level(level: str) -> Iterator[None]:
+    """While the block runs, let the root logger pass records at level; then restore it."""
+    root = logging.getLogger()
+    previous = root.level
+    root.setLevel(level)
+    try:
+        yield
+    finally:
+        root.setLevel(previous)
 
 
 @contextmanager
