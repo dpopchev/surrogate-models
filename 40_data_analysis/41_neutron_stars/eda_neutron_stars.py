@@ -13,15 +13,24 @@ import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, assert_never, get_args
+from typing import Any, Literal, assert_never, get_args
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 
+from shared.ceilings import (
+    Ceilings,
+    ceiling_figure,
+    ceiling_macros,
+    ceiling_table,
+    decade_table,
+    measure,
+)
 from shared.config import NsFigure, NsTable, PaperConfig, load_config
 from shared.eda import (
     Adjacency,
@@ -626,11 +635,58 @@ def main(
         plt.close(fig)
         (out / f"{asset(figure)}.tex").write_text(figure_tex(figure))
     found = evidence(table, folds, seed)
-    (out / f"{SECTION}_num.tex").write_text(render_macros(numbers(found) | raw_numbers(raw)))
+    bounds = measure(
+        table.assign(log10_rho_c=np.log10(table["rho_c"])), CURVE, "log10_rho_c", ("M", "D"), "D"
+    )
+    macros = numbers(found) | raw_numbers(raw) | ceiling_macros("nsEda", bounds, CEILING_TAGS)
+    (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
     for name in section.tables:
         (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name))
+    _write_ceilings(out, bounds, config.plot)
     logger.info(
         "done: NS figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
+    )
+
+
+# The data limits (W-064): macro tags and TeX labels of the targets and of the curve keys varied.
+CEILING_TAGS = {"M": "M", "D": "D", "beta": "Beta", "lambda": "Lambda"}
+CEILING_LABELS = {"M": "$M$", "D": "$\\Dch$", "beta": "$\\beta$", "lambda": "$\\lambda$"}
+# Matplotlib knows no paper macros: the figure names the charge D, as the other figures do.
+CEILING_PLOT_LABELS = CEILING_LABELS | {"D": "$D$"}
+CEILINGS_CAPTION = (
+    "Neutron stars: the relative error the data allow, at the 95th percentile -- the noise "
+    "along a curve (median), a cubic spline through every other row of a curve (along), and a "
+    "curve predicted from the two curves on each side in $\\beta$ or in $\\lambda$ (across); "
+    "figures is $-\\log_{10}$ of the worse across-curve error."
+)
+DECADES_CAPTION = (
+    "Neutron stars: median relative error of $\\Dch$ predicted from the neighbouring curves, "
+    "per decade of $\\Dch$, and the significant figures the worse direction allows."
+)
+CEILINGS_FIGURE = (
+    "Neutron stars: relative error of a curve predicted from the two curves on each side in "
+    "$\\beta$ or in $\\lambda$, along $\\log_{10}\\rhoc$ -- median solid, 95th percentile dashed; "
+    "dotted lines mark 4 and 5 significant figures."
+)
+
+
+def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
+    """Write the ceilings table, the per-decade table and the figure of the data limits."""
+    (out / f"{SECTION}_tab_ceilings.tex").write_text(
+        ceiling_table("ns-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS)
+    )
+    (out / f"{SECTION}_tab_ceiling_decades.tex").write_text(
+        decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS)
+    )
+    palette = sns.color_palette(style.palette)
+    colors: dict[str, Any] = {"beta": palette[0], "lambda": palette[1]}
+    fig = ceiling_figure(bounds, CEILING_PLOT_LABELS, "$\\log_{10}\\rho_c$", colors)
+    fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
+    plt.close(fig)
+    (out / f"{SECTION}_fig_ceilings.tex").write_text(
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{SECTION}_fig_ceilings}}\n"
+        f"\\caption{{{CEILINGS_FIGURE}}}\n\\label{{fig:ns-ceilings}}\n\\end{{figure}}\n"
     )
 
 

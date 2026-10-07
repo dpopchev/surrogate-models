@@ -251,11 +251,19 @@ class TestMain:
 
     def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:
         assert sorted(p.name for p in (assets / "41_neutron_stars").iterdir()) == [
+            "41_neutron_stars_fig_ceilings.png",
+            "41_neutron_stars_fig_ceilings.tex",
             "41_neutron_stars_fig_grid_fill.png",
             "41_neutron_stars_fig_grid_fill.tex",
             "41_neutron_stars_num.tex",
+            "41_neutron_stars_tab_ceiling_decades.tex",
+            "41_neutron_stars_tab_ceilings.tex",
             "41_neutron_stars_tab_split_strategies.tex",
         ]
+
+    def test_writes_the_reachable_figures_into_the_numbers(self, assets) -> None:
+        numbers_tex = (assets / "41_neutron_stars" / "41_neutron_stars_num.tex").read_text()
+        assert "\\nsEdaCeilDFigures" in numbers_tex
 
     def test_leaves_other_sections_alone(self, assets) -> None:
         assert (assets / "42_black_holes" / "kept.tex").is_file()

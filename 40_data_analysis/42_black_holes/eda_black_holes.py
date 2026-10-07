@@ -21,6 +21,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 
+from shared.ceilings import Ceilings, ceiling_figure, ceiling_macros, ceiling_table, measure
 from shared.config import BhFigure, BhTable, PaperConfig, load_config
 from shared.eda import (
     Adjacency,
@@ -302,8 +303,7 @@ def _split_table(found: Evidence) -> str:
     """1-NN error per split strategy and target."""
     error = {(s.strategy, s.target): _split_error(s) for s in found.splits}
     rows = [
-        f"{STRATEGY_LABELS[strategy]} & ${error[strategy, 'M']}$ & "
-        f"${error[strategy, 'log10_D']}$"
+        f"{STRATEGY_LABELS[strategy]} & ${error[strategy, 'M']}$ & ${error[strategy, 'log10_D']}$"
         for strategy in get_args(BhSplitStrategy)
     ]
     header = "Held out & $M$ & $\\log_{10} D$"
@@ -400,7 +400,9 @@ def _curve_lines(table: pd.DataFrame, y: str, cmap: Colormap) -> LineCollection:
     groups = [g for _, g in table.groupby(list(CURVE))]
     lines = LineCollection(
         [np.column_stack((g["r_h"], g[y])) for g in groups],
-        array=np.array([g["beta"].iloc[0] for g in groups]), cmap=cmap, linewidths=0.6,
+        array=np.array([g["beta"].iloc[0] for g in groups]),
+        cmap=cmap,
+        linewidths=0.6,
     )
     lines.set_rasterized(True)
     return lines
@@ -446,8 +448,13 @@ def _charge_target(table: pd.DataFrame, style: PlotStyle) -> Figure:
     cmap = colormap(style.black_holes.beta_cmap)
     scatters = [
         ax.scatter(
-            table["M"], table[target], c=table["beta"], cmap=cmap,
-            s=0.2, linewidths=0, rasterized=True,
+            table["M"],
+            table[target],
+            c=table["beta"],
+            cmap=cmap,
+            s=0.2,
+            linewidths=0,
+            rasterized=True,
         )
         for ax, target in zip(axes, ("log10_D", "log10_D_over_M"), strict=True)
     ]
@@ -510,11 +517,49 @@ def main(
         plt.close(fig)
         (out / f"{asset(figure)}.tex").write_text(figure_tex(figure))
     found = evidence(table, folds, seed)
-    (out / f"{SECTION}_num.tex").write_text(render_macros(numbers(found)))
+    bounds = measure(table, CURVE, "r_h", ("M", "D"), "D")
+    macros = numbers(found) | ceiling_macros("bhEda", bounds, CEILING_TAGS)
+    (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
     for name in section.tables:
         (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name))
+    _write_ceilings(out, bounds, config.plot)
     logger.info(
         "done: BH figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
+    )
+
+
+# The data limits (W-064): macro tags and TeX labels of the targets and of the curve key varied.
+CEILING_TAGS = {"M": "M", "D": "D", "beta": "Beta"}
+CEILING_LABELS = {"M": "$M$", "D": "$\\Dch$", "beta": "$\\beta$"}
+# Matplotlib knows no paper macros: the figure names the charge D, as the other figures do.
+CEILING_PLOT_LABELS = CEILING_LABELS | {"D": "$D$"}
+CEILINGS_CAPTION = (
+    "Black holes: the relative error the data allow, at the 95th percentile -- the noise "
+    "along a curve (median), a cubic spline through every other row of a curve (along), and a "
+    "curve predicted from the two curves on each side in $\\beta$ (across); figures is "
+    "$-\\log_{10}$ of the across-curve error."
+)
+CEILINGS_FIGURE = (
+    "Black holes: relative error of a curve predicted from the two curves on each side in "
+    "$\\beta$, along $\\rh$ -- median solid, 95th percentile dashed; dotted lines mark 4 and 5 "
+    "significant figures."
+)
+
+
+def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
+    """Write the ceilings table and the figure of the data limits."""
+    (out / f"{SECTION}_tab_ceilings.tex").write_text(
+        ceiling_table("bh-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS)
+    )
+    fig = ceiling_figure(
+        bounds, CEILING_PLOT_LABELS, "$r_h$", {"beta": anchor_color(style, "black_holes")}
+    )
+    fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
+    plt.close(fig)
+    (out / f"{SECTION}_fig_ceilings.tex").write_text(
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{SECTION}_fig_ceilings}}\n"
+        f"\\caption{{{CEILINGS_FIGURE}}}\n\\label{{fig:bh-ceilings}}\n\\end{{figure}}\n"
     )
 
 

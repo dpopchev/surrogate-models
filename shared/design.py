@@ -31,9 +31,7 @@ NEUTRON_STARS = DesignSpec(
     "neutron_stars",
     make_curve_space({"rho_c": "log10", "beta": "raw", "lambda": "raw"}, ("beta", "lambda")),
 )
-BLACK_HOLES = DesignSpec(
-    "black_holes", make_curve_space({"r_h": "raw", "beta": "raw"}, ("beta",))
-)
+BLACK_HOLES = DesignSpec("black_holes", make_curve_space({"r_h": "raw", "beta": "raw"}, ("beta",)))
 
 
 class UnlabelledCurveError(ValueError):
@@ -91,9 +89,7 @@ def _labels(table: pd.DataFrame, split: pd.DataFrame, spec: DesignSpec) -> pd.Da
     return labelled
 
 
-def design(
-    table: pd.DataFrame, split: pd.DataFrame, spec: DesignSpec, target: Target
-) -> Design:
+def design(table: pd.DataFrame, split: pd.DataFrame, spec: DesignSpec, target: Target) -> Design:
     """The design of one dataset and target under the frozen split.
 
     Raises UnlabelledCurveError when a row's curve has no label for the dataset.

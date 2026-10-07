@@ -104,15 +104,15 @@ def measure(
 def ceiling_macros(prefix: str, found: Ceilings, tags: Mapping[str, str]) -> dict[str, str]:
     """The \\<prefix>Ceil... macros of the ceilings; tags name each target and curve key."""
     macros = {
-        f"{prefix}Ceil{tags[target]}Across{tags[key]}": sci_tex(found_spread.p95)
+        f"{prefix}Ceil{tags[target]}Across{tags[key]}": _sci(found_spread.p95)
         for (target, key), found_spread in found.across.items()
     }
     for target in {target for target, _ in found.across}:
         macros[f"{prefix}Ceil{tags[target]}Figures"] = f"{reachable_figures(found, target):.1f}"
     for target, noise in found.noise.items():
-        macros[f"{prefix}Ceil{tags[target]}Noise"] = sci_tex(noise.median)
+        macros[f"{prefix}Ceil{tags[target]}Noise"] = _sci(noise.median)
     for target, along in found.along.items():
-        macros[f"{prefix}Ceil{tags[target]}Along"] = sci_tex(along.p95)
+        macros[f"{prefix}Ceil{tags[target]}Along"] = _sci(along.p95)
     return macros
 
 
@@ -124,9 +124,9 @@ def ceiling_table(label: str, caption: str, found: Ceilings, labels: Mapping[str
         " & ".join(
             [
                 labels[target],
-                f"${sci_tex(found.noise[target].median)}$",
-                f"${sci_tex(found.along[target].p95)}$",
-                *(f"${sci_tex(found.across[target, key].p95)}$" for key in keys),
+                f"${_sci(found.noise[target].median)}$",
+                f"${_sci(found.along[target].p95)}$",
+                *(f"${_sci(found.across[target, key].p95)}$" for key in keys),
                 f"{reachable_figures(found, target):.1f}",
             ]
         )
@@ -145,7 +145,7 @@ def decade_table(label: str, caption: str, found: Ceilings, labels: Mapping[str,
     rows = []
     for decade in decades:
         medians = [found.decades[key].get(decade) for key in keys]
-        cells = [f"${sci_tex(s.median)}$" if s else "--" for s in medians]
+        cells = [f"${_sci(s.median)}$" if s else "--" for s in medians]
         worst = max(s.median for s in medians if s)
         rows.append(" & ".join([f"$10^{{{decade}}}$", *cells, f"{-np.log10(worst):.1f}"]))
     across = " & ".join(f"across {labels[key]}" for key in keys)
@@ -196,6 +196,11 @@ def ceiling_figure(
 FLOOR_ON_PLOT = 1e-12
 
 
+def _sci(value: float) -> str:
+    """A bound in scientific notation, or a dash when the data left it undefined."""
+    return sci_tex(value) if np.isfinite(value) else "--"
+
+
 def reachable_figures(found: Ceilings, target: str) -> float:
     """The significant figures, -log10 of the relative error, that the worst direction across
     curves allows the target at its 95th percentile."""
@@ -217,6 +222,8 @@ def profile(position: np.ndarray, errors: np.ndarray, bins: int) -> Profile:
 def spread(errors: np.ndarray) -> Spread:
     """The spread of the finite errors."""
     finite = errors[np.isfinite(errors)]
+    if not len(finite):
+        return Spread(np.nan, np.nan, np.nan)
     return Spread(float(np.median(finite)), float(np.quantile(finite, 0.95)), float(finite.max()))
 
 
@@ -250,7 +257,7 @@ def along_curve_errors(
         spline = CubicSpline(x[::2], np.log(y[::2]))
         odd = slice(1, len(x) - 1, 2)
         errors.append(np.abs(np.expm1(spline(x[odd]) - np.log(y[odd]))))
-    return np.concatenate(errors)
+    return np.concatenate(errors) if errors else np.array([])
 
 
 def across_curve_errors(

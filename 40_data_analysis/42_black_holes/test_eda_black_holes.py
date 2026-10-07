@@ -186,11 +186,18 @@ class TestMain:
 
     def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:
         assert sorted(p.name for p in (assets / "42_black_holes").iterdir()) == [
+            "42_black_holes_fig_ceilings.png",
+            "42_black_holes_fig_ceilings.tex",
             "42_black_holes_fig_existence_edge.png",
             "42_black_holes_fig_existence_edge.tex",
             "42_black_holes_num.tex",
+            "42_black_holes_tab_ceilings.tex",
             "42_black_holes_tab_split_strategies.tex",
         ]
+
+    def test_writes_the_reachable_figures_into_the_numbers(self, assets) -> None:
+        numbers_tex = (assets / "42_black_holes" / "42_black_holes_num.tex").read_text()
+        assert "\\bhEdaCeilDFigures" in numbers_tex
 
     def test_leaves_other_sections_alone(self, assets) -> None:
         assert (assets / "41_neutron_stars" / "kept.tex").is_file()

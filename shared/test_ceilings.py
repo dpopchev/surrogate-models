@@ -179,6 +179,19 @@ class TestCeilingFigure:
         assert figure.axes[0].get_yscale() == "log"
 
 
+TOO_FEW = family(lambda p: 0.1 * p).query("p <= 2.0 and x <= 0.3")  # 2 curves of 4 rows
+
+
+class TestTooFewCurves:
+    def test_measure_leaves_the_bounds_undefined(self) -> None:
+        found = measure(TOO_FEW, ["p"], "x", ["y"], decade_target="y")
+        assert np.isnan(found.across["y", "p"].p95)
+
+    def test_the_macros_show_an_undefined_bound_as_a_dash(self) -> None:
+        found = measure(TOO_FEW, ["p"], "x", ["y"], decade_target="y")
+        assert ceiling_macros("ex", found, TAGS)["exCeilYAcrossP"] == "--"
+
+
 def test_measure_keys_the_decade_ceilings_by_floor_log10_of_the_target(found) -> None:
     # y = exp(x + 0.1 p + 0.05 q) lies in [1.2, 7.8] on the held-out rows: decade 0 alone.
     assert sorted(found.decades["p"]) == [0]
