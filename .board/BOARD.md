@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-036 > T-125   | blocked: 0 | todo roots: 4 | done: 160 | pruned: 13
+open path: E-005 > W-036   | blocked: 0 | todo roots: 4 | done: 161 | pruned: 13
 
 ## Tree
 
@@ -31,7 +31,7 @@ open path: E-005 > W-036 > T-125   | blocked: 0 | todo roots: 4 | done: 160 | pr
 - T-087 [todo] Add the four-pair baseline table to Section 5.1 -> 50_methodology/51_algorithms/51_algorithms.tex
 - T-120 [done] Measure fit throughput by thread count and parallel fits -> a probe in local/scratch and a Finding on W-036
 - T-121 [done] Train on one torch thread by default -> a threads setting in paper.toml and fit_baseline.py
-- T-125 [doing] Record W-063 and the re-plan of E-006 to E-008 -> .board/   <- ACTIVE LEAF
+- T-125 [done] Record W-063 and the re-plan of E-006 to E-008 -> .board/
 
 #### W-037 issue [todo] Charge rebuilt with the true and the predicted mass
 
@@ -414,7 +414,7 @@ flowchart TD
   W036 --> T087["T-087 todo: Add the four-pair baseline table to Section 5.1 -> 50_methodology/51_algorithms/51_algorithms.tex"]
   W036 --> T120["T-120 done: Measure fit throughput by thread count and parallel fits -> a probe in local/scratch and a Finding on W-036"]
   W036 --> T121["T-121 done: Train on one torch thread by default -> a threads setting in paper.toml and fit_baseline.py"]
-  W036 --> T125["T-125 doing: Record W-063 and the re-plan of E-006 to E-008 -> .board/ -- ACTIVE LEAF"]
+  W036 --> T125["T-125 done: Record W-063 and the re-plan of E-006 to E-008 -> .board/"]
   E005 --> W037["W-037 issue todo: Charge rebuilt with the true and the predicted mass"]
   W037 --> T088["T-088 todo: Write the charge rebuild test-first -> shared/surrogate.py"]
   W037 --> T089["T-089 todo: Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1"]
@@ -506,8 +506,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W036,T125,E009 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,T085,T086,T120,T121,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class E005,W036,E009 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,T085,T086,T120,T121,T125,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
   class T087,W037,T088,T089,W062,W063,T122,T123,T124,E006,W064,T126,T127,T128,W065,T129,T130,T131,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
