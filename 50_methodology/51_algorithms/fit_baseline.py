@@ -106,7 +106,7 @@ PAIRS: tuple[tuple[DesignSpec, Target], ...] = (
     (BLACK_HOLES, "charge"),
 )
 DATASET_TEX = {"neutron_stars": "NS", "black_holes": "BH"}
-TARGET_TEX = {"mass": "$M$", "charge": "$Y$"}
+TARGET_TEX = {"mass": "$M$", "charge": "$\\Dch$"}
 X_LABELS = {"neutron_stars": "$\\log_{10}\\rho_c$", "black_holes": "$r_h$"}
 
 
@@ -235,8 +235,8 @@ def baseline_table(pairs: list[PairScores]) -> str:
         "baseline",
         "The baseline MLP against the mean and nearest-curve references: MARE on the test "
         "curves and on the frozen folds (mean $\\pm$ standard deviation), and the MLP's fit "
-        "time in seconds. The $Y$ rows give the MARE of the charge $\\Dch$ rebuilt with the "
-        "true $M$ from the predicted $Y$.",
+        "time in seconds. The $\\Dch$ rows give the MARE of the charge rebuilt with the true "
+        "$M$ from the predicted $Y = \\log_{10}(\\Dch/M)$.",
         "llllll",
         "Data & Target & Predictor & Test MARE & Fold MARE & Fit s",
         [_row(pair, scored) for pair in pairs for scored in pair.scored],

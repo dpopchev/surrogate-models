@@ -159,6 +159,10 @@ class TestBaselineTable:
             "$8.00\\times 10^{-3} \\pm 1.00\\times 10^{-3}$ & 213"
         ) in baseline_table([NS_MASS])
 
+    def test_labels_the_charge_rows_by_d(self) -> None:
+        ns_charge = replace(NS_MASS, target="charge")
+        assert "NS & $\\Dch$ & MLP &" in baseline_table([ns_charge])
+
     def test_says_the_charge_rows_are_scored_in_d(self) -> None:
         assert "rebuilt with the true" in baseline_table([NS_MASS])
 
@@ -390,7 +394,7 @@ class TestMain:
             folder / "51_algorithms_tab_baseline.tex",
         )
         macro = first_group(r"\\baseBhChargeMareTrueM\}\{(.*)\}\n", numbers_tex)
-        row = first_group(r"BH & \$Y\$ & MLP & \$([^$]*)\$", table_tex)
+        row = first_group(r"BH & \$\\Dch\$ & MLP & \$([^$]*)\$", table_tex)
         assert row == macro
 
     def test_writes_one_mlp_row_per_dataset_and_target(self, ran: Path) -> None:
