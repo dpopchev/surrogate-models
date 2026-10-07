@@ -33,18 +33,7 @@
 
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
-- 2026-10-07 E-006: AC2 and W-065's criterion drop the ripple; it is scored in the family screen (T-170 under W-067), where smoothness separates networks from interpolators (developer)
-- 2026-10-07 E-006: Section 3.4 and Section 5 follow the search space; H1-H3 stay as its named sub-questions (developer)
-- 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
-- 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
-- 2026-10-07 W-076: landing approved by the developer (2026-10-07)
+- 2026-10-07 E-006: parked -- 5 decisions, 9 deviations -> ledgers/E-006.md
 
 ## Deviations
-- 2026-10-07 E-006: AC2 / W-065 amended (developer): the ripple leaves W-065's criterion -- ripple() has no aligned grid on the test curves -- and moves to T-170 under W-067, before the family screen (T-135)
-- 2026-10-07 E-006: T-162, T-163 done; W-077 blocks on T-131's run (T-164 lists its ledger) and W-065 / T-131 resume while E-006 stays pre-empted by W-077 until W-077 closes
-- 2026-10-07 E-006: parked for W-077 BEFORE T-131's run (developer), so the baseline's fits enter the ledger; wi/W-077 stacks on wi/W-065 (needs the harness); T-162, T-163 first, the run from W-077's tip closes T-131, then W-065 and W-077 land in order
-- 2026-10-07 E-006: spike W-075 (can M_max be predicted for given beta, lambda) and AC9 / W-076 (the ceilings as absolute uncertainties) filed during T-131 (developer)
-- 2026-10-07 E-006: standalone W-077 (the run ledger) filed during T-131 (developer): every fit's statistics kept, so Optuna can be compared later; E-006 parks for it once W-065 lands, then resumes at W-076
-- 2026-10-07 E-006: standalone W-078 (console errors, losses and lr in e-notation, 3 figures, lr 4) filed during T-131 (developer): implemented later, before the next baseline run
-- 2026-10-07 E-006: standalone W-079 (every test carries one registered category marker, the new global rule) filed during T-164
-- 2026-10-07 E-006: while T-131's make baseline runs, W-065 and T-131 are blocked on the run and W-077 resumes for T-164 (developer); they swap back when the run ends
+- none recorded
