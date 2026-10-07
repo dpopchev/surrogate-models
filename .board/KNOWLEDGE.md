@@ -43,6 +43,7 @@
 - 2026-10-07 E-005: the charge target is log10(D/M) with no floor eps, reversing the E-002 / W-019 floor Decision; the D > 0 guard of the preparation stays (developer)
 - 2026-10-07 E-006: Section 3.4 and Section 5 follow the search space; H1-H3 stay as its named sub-questions (developer)
 - 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
+- 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
 
 ## Deviations
-- none recorded
+- 2026-10-07 E-005: W-036 and W-063 landed in one fast-forward (developer): W-063's branch was stacked on W-036's and its criterion needed W-036's T-087 table, so main moved to 3a4ca35 once for both
