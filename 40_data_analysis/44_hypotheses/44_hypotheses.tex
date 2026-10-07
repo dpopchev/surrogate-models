@@ -1,13 +1,26 @@
-\subsection{Data-Driven Design Hypotheses}
+\subsection{The Search Space and Its Question}
 \label{sec:hypotheses}
 
-\todo{Draft from the outline.}
+The exploratory analysis of Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh} fixes what the data allow: how closely a smooth interpolation between neighbouring curves reproduces a curve held out of them. That bound turns the design of a surrogate into one question per dataset and target. \emph{Which surrogate comes within one significant figure of the reachable relative error on held-out curves inside the sampled domain, and at what cost to fit and to call?} The question is asked of the two maps of this work -- black holes $(\beta, \rh) \to (M, \Dch)$ and neutron stars $(\rhoc, \beta, \lambda) \to (M, \Dch)$ -- with one model per target, the mass $M$ and the charge target $Y = \log_{10}(\Dch/M)$.
+
+\paragraph{The search space has five axes.}
+They are fixed in this order, because the earlier ones carry across models and the later ones depend on the model (Section~\ref{sec:methodology}):
+\begin{enumerate}
+  \item \emph{representation}: the scale of the inputs, the target of each model ($M$ or $\log_{10} M$; $Y$ or $\Dch$ itself), and whether a row or a whole curve is the unit of prediction (Section~\ref{sec:representation});
+  \item \emph{model family}: lookup and interpolation between curves, Gaussian process regression, gradient-boosted trees, multilayer perceptrons and residual networks (Section~\ref{sec:families});
+  \item \emph{hyperparameters} of each surviving family, every family under the same search budget;
+  \item \emph{training regime}: the loss, the activation, the optimizer and the numerical precision (Section~\ref{sec:precision});
+  \item \emph{data budget}: how the error falls with the number of training curves.
+\end{enumerate}
+Inside the sampled domain a candidate is scored by the significant figures it keeps on held-out curves; outside it, by how fast its error grows with the distance from the training curves (Section~\ref{sec:extrapolation}); and every candidate by its fit and call time, which closes the comparison on a front of accuracy against cost (Section~\ref{sec:budget}).
+
+\paragraph{Three choices the analysis suggests are tested on their own.}
 \begin{itemize}
-  \item \textbf{Hypothesis $H_1$ (continuous log-target regression):} regressing the charge target $Y = \log_{10}(\Dch/M)$ of Section~\ref{sec:preprocessing} directly minimizes the relative error: for $\Dch$ rebuilt with the true mass,
+  \item \textbf{$H_1$, the log target (representation).} Regressing $Y$ instead of $\Dch$ makes the squared error proportional to the squared relative error of the charge rebuilt with the true mass,
   \[
-    \left| Y_{\mathrm{pred}} - Y_{\mathrm{true}} \right|^2 \approx \left( \frac{\Dch_{\mathrm{pred}} - \Dch_{\mathrm{true}}}{\Dch_{\mathrm{true}} \ln 10} \right)^2 \propto \mathrm{MARE}^2,
+    \left| Y_{\mathrm{pred}} - Y_{\mathrm{true}} \right|^2 \approx \left( \frac{\Dch_{\mathrm{pred}} - \Dch_{\mathrm{true}}}{\Dch_{\mathrm{true}} \ln 10} \right)^2 ,
   \]
-  so sub-percent MARE holds across the $\nsEdaDOrders$ orders of magnitude the neutron-star charge spans, without a classify-then-regress pipeline.
-  \item \textbf{Hypothesis $H_2$ (turning-point gradient protection):} combining the Huber loss ($\delta = 1.0$)~\citep{Huber1964} with smooth GELU activations~\citep{Hendrycks2016_GELU} prevents gradient saturation at the turning point $dM/d\rhoc = 0$, reducing the $\Mmax$ boundary error by more than $50\%$ against standard MSE/ReLU networks.
-  \item \textbf{Hypothesis $H_3$ (ResNet grid smoothing):} identity skip connections, $h^{(l+1)} = h^{(l)} + F(h^{(l)})$~\citep{He2016_ResNet}, let the network model the continuous variation in $\log_{10}\rhoc$ while interpolating smoothly across the discrete $(\beta, \lambda)$ grid steps, without residual step ripples.
+  so one model can keep its relative error flat across the $\nsEdaDOrders$ orders of magnitude the neutron-star charge spans, without a classify-then-regress pipeline. Section~\ref{sec:representation} tests it against regressing $\Dch$ directly, per order of magnitude of $\Dch$.
+  \item \textbf{$H_2$, the turning point (training regime).} Combining the Huber loss ($\delta = 1.0$)~\citep{Huber1964} with smooth GELU activations~\citep{Hendrycks2016_GELU} prevents gradient saturation at the neutron-star turning point $dM/d\rhoc = 0$ and halves the mass error near $\Mmax$ against the mean squared error with ReLU. Section~\ref{sec:precision} tests it; the black holes have no interior maximum of the mass, so $H_2$ concerns the neutron stars alone.
+  \item \textbf{$H_3$, smoothing across the grid (model family).} Identity skip connections, $h^{(l+1)} = h^{(l)} + F(h^{(l)})$~\citep{He2016_ResNet}, let a network follow the continuous variation along a curve while interpolating smoothly between the discrete grid of curve parameters, $(\beta, \lambda)$ for neutron stars and $\beta$ for black holes, without ripples at the grid steps. Section~\ref{sec:families} tests it with a ripple measure against a plain multilayer perceptron of matched size.
 \end{itemize}
