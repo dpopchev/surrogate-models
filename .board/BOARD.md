@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-077   | blocked: 1 | todo roots: 6 | done: 195 | pruned: 13
+open path: W-077   | blocked: 1 | todo roots: 6 | done: 196 | pruned: 13
 
 ## Tree
 
@@ -30,6 +30,7 @@ open path: W-077   | blocked: 1 | todo roots: 6 | done: 195 | pruned: 13
 - T-130 [done] Write the fair harness test-first -> shared/harness.py
 - T-131 [done] Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
 - T-146 [done] Describe the search procedure in Section 4.2 -> 50_methodology/52_optimization/52_optimization.tex
+- T-169 [done] Correct the NS charge fold margin -> 50_methodology/51_algorithms/51_algorithms.tex
 
 #### W-066 issue [todo] Representation screen -- inputs, targets, pointwise or curve-wise
 
@@ -464,6 +465,7 @@ flowchart TD
   W065 --> T130["T-130 done: Write the fair harness test-first -> shared/harness.py"]
   W065 --> T131["T-131 done: Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
   W065 --> T146["T-146 done: Describe the search procedure in Section 4.2 -> 50_methodology/52_optimization/52_optimization.tex"]
+  W065 --> T169["T-169 done: Correct the NS charge fold margin -> 50_methodology/51_algorithms/51_algorithms.tex"]
   E006 --> W066["W-066 issue todo: Representation screen -- inputs, targets, pointwise or curve-wise"]
   W066 --> T132["T-132 todo: Add the curve-wise representation test-first -> shared/design.py"]
   W066 --> T133["T-133 todo: Run the representation screen -> 60_results/61_representation/61_representation.tex"]
@@ -541,7 +543,7 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,W065,E009 doing
   class W077 blocked
-  class W064,T126,T127,T128,T129,T130,T131,T146,W071,T144,T145,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T162,T163,T164 done
+  class W064,T126,T127,T128,T129,T130,T131,T146,T169,W071,T144,T145,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T162,T163,T164 done
   class W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W076,T160,T161,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150,W078,T165,T166,W079,T167,T168 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
