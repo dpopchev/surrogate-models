@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-073 > T-152   | blocked: 0 | todo roots: 5 | done: 172 | pruned: 13
+open path: E-005 > W-073   | blocked: 0 | todo roots: 5 | done: 173 | pruned: 13
 
 ## Tree
 
@@ -78,7 +78,7 @@ open path: E-005 > W-073 > T-152   | blocked: 0 | todo roots: 5 | done: 172 | pr
 #### W-073 bug [doing] The baseline table scores the charge on the log target, not on the charge D   (filed during T-089)
 
 - T-151 [done] Score the charge rows in D test-first -> 50_methodology/51_algorithms/fit_baseline.py
-- T-152 [doing] Rerun the four pairs and restate the Section 4.1 comparison in D -> 50_methodology/51_algorithms/51_algorithms.tex   <- ACTIVE LEAF
+- T-152 [done] Rerun the four pairs and restate the Section 4.1 comparison in D -> 50_methodology/51_algorithms/51_algorithms.tex
 
 ### E-006 [todo] Search space and the best surrogate per dataset
 
@@ -466,7 +466,7 @@ flowchart TD
   W063 --> T147["T-147 done: Checkpoint E-005 and restore the knowledge budget -> .board/board.toml"]
   E005 --> W073["W-073 bug doing: The baseline table scores the charge on the log target, not on the charge D"]
   W073 --> T151["T-151 done: Score the charge rows in D test-first -> 50_methodology/51_algorithms/fit_baseline.py"]
-  W073 --> T152["T-152 doing: Rerun the four pairs and restate the Section 4.1 comparison in D -> 50_methodology/51_algorithms/51_algorithms.tex -- ACTIVE LEAF"]
+  W073 --> T152["T-152 done: Rerun the four pairs and restate the Section 4.1 comparison in D -> 50_methodology/51_algorithms/51_algorithms.tex"]
   E006["E-006 todo: Search space and the best surrogate per dataset"]
   E006 --> W038["W-038 issue pruned: rho_c input check -- raw against log10"]
   E006 --> W039["W-039 issue pruned: H1 -- log against linear charge target"]
@@ -541,8 +541,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W073,T152,E009 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W036,T085,T086,T087,T120,T121,T125,W037,T088,T089,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W063,T122,T123,T124,T147,T151,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class E005,W073,E009 doing
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W036,T085,T086,T087,T120,T121,T125,W037,T088,T089,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W063,T122,T123,T124,T147,T151,T152,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
   class W062,T153,T154,E006,W064,T126,T127,T128,W065,T129,T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W071,T144,T145,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```

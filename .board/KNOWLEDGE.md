@@ -22,6 +22,7 @@
 - 2026-10-07 W-037: T-089: fact: D rebuilt from the charge model has MARE 1.94e-1 (NS) and 6.2e-3 (BH) with the true M, 2.00e-1 and 9.1e-3 with the predicted M, while MARE on Y reads 2.0e-2 and 2.3e-3 -> score the charge in D
 - 2026-10-07 W-037: T-089: fact: two identical baseline runs took 41 and 17 min (NS mass fit 132 s vs 53 s, same scores) -> fit seconds swing 2.5x with machine load; the cost axis needs repeated timing
 - 2026-10-07 W-063: T-124: fact: unfloored NS Y test MARE MLP 2.00e-2 (floored 2.02e-2), nearest curve 2.25e-2 (2.21e-2); other rows identical -> the floor did not drive the baseline; the MLP still wins NS Y only
+- 2026-10-07 W-073: T-152: fact: in D the nearest curve beats the MLP on the test curves of all four pairs (NS D 1.18e-1 vs 1.94e-1, BH D 3.2e-3 vs 6.2e-3); the MLP leads only on the NS folds (1.00e-1 vs 1.30e-1) -> no pair is won by the baseline
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
