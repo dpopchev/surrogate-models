@@ -1,5 +1,6 @@
 """Facts about the baseline fit behind Section 4.1, on tiny synthetic curves."""
 
+import re
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -19,6 +20,8 @@ from fit_baseline import (
     PairScores,
     Scored,
     baseline_table,
+    charge_mares,
+    charge_numbers,
     curve_names,
     end_banner,
     figure_tex,
@@ -149,6 +152,32 @@ class TestNumbers:
             "baseNsMassMare",
             "baseNsMassRmse",
         ]
+
+
+class TestChargeMares:
+    """D = M 10^Y on two test rows: the charge model is exact, the mass model misses row 0."""
+
+    @pytest.fixture
+    def mares(self) -> tuple[float, float]:
+        mass = replace(SCORED, y_true=np.array([2.0, 4.0]), y_pred=np.array([2.2, 4.0]))
+        charge = replace(SCORED, y_true=np.array([-1.0, -1.0]), y_pred=np.array([-1.0, -1.0]))
+        return charge_mares(mass, charge)
+
+    def test_with_the_true_mass_only_the_charge_model_errs(self, mares) -> None:
+        assert mares[0] == pytest.approx(0.0)
+
+    def test_with_the_predicted_mass_its_error_carries_into_d(self, mares) -> None:
+        assert mares[1] == pytest.approx(0.05)
+
+
+class TestChargeNumbers:
+    def test_names_the_true_mass_mare_per_dataset(self) -> None:
+        found = charge_numbers({"black_holes": (0.0123, 0.0456)})
+        assert found["baseBhChargeMareTrueM"] == "1.23\\times 10^{-2}"
+
+    def test_names_the_predicted_mass_mare_per_dataset(self) -> None:
+        found = charge_numbers({"neutron_stars": (0.0123, 0.0456)})
+        assert found["baseNsChargeMarePredM"] == "4.56\\times 10^{-2}"
 
 
 BOUNDED = replace(SHORT, max_epochs=500, patience=20)
@@ -314,6 +343,12 @@ class TestMain:
             "51_algorithms_num.tex",
             "51_algorithms_tab_baseline.tex",
         ]
+
+    def test_writes_the_charge_mare_with_true_and_predicted_mass_per_dataset(
+        self, ran: Path
+    ) -> None:
+        numbers_tex = (ran / "assets" / SECTION / "51_algorithms_num.tex").read_text()
+        assert len(re.findall(r"\\base(?:Ns|Bh)ChargeMare(?:True|Pred)M\}", numbers_tex)) == 4
 
     def test_writes_one_mlp_row_per_dataset_and_target(self, ran: Path) -> None:
         table = (ran / "assets" / SECTION / "51_algorithms_tab_baseline.tex").read_text()

@@ -44,6 +44,7 @@ from shared.surrogate import (
     make_mean_reference,
     make_nearest_reference,
     mare,
+    rebuild_charge,
     rmse,
 )
 
@@ -227,6 +228,25 @@ def numbers(fit: Fit) -> dict[str, str]:
     }
 
 
+def charge_mares(mass: Fit, charge: Fit) -> tuple[float, float]:
+    """The MARE of D rebuilt from the charge model's Y with the true M, and with the mass
+    model's predicted M; both fits are of one dataset, on the same test rows in the same order."""
+    d_true = rebuild_charge(charge.y_true, mass.y_true)
+    with_true_m = rebuild_charge(charge.y_pred, mass.y_true)
+    with_pred_m = rebuild_charge(charge.y_pred, mass.y_pred)
+    return mare(d_true, with_true_m), mare(d_true, with_pred_m)
+
+
+def charge_numbers(mares: dict[str, tuple[float, float]]) -> dict[str, str]:
+    """The \\base<Ns|Bh>ChargeMareTrueM and ...MarePredM macros, keyed by dataset."""
+    found = {}
+    for dataset, (true_m, pred_m) in mares.items():
+        tag = DATASET_TEX[dataset].capitalize()
+        found[f"base{tag}ChargeMareTrueM"] = sci_tex(true_m)
+        found[f"base{tag}ChargeMarePredM"] = sci_tex(pred_m)
+    return found
+
+
 def start_banner(
     run: Path,
     out: Path,
@@ -379,7 +399,7 @@ def main(
         logger.info(progress_line(next(ticks), total, time.perf_counter() - first))
 
     head, tail = commit(), dirty()
-    pairs, ns_mass, run = [], None, state
+    pairs, fits, run = [], {}, state
     for spec, target, data in designs:
         started = now()
         run = state / run_stem(spec.dataset, target, started)
@@ -397,12 +417,18 @@ def main(
                 after_fit,
             )
         pairs.append(pair)
-        if (spec, target) == (NEUTRON_STARS, "mass"):
-            ns_mass = fit
-    assert ns_mass is not None, "the NS mass pair did not run"
+        fits[spec.dataset, target] = fit
+    assert (NEUTRON_STARS.dataset, "mass") in fits, "the NS mass pair did not run"
+    mares = {}
+    for dataset in (NEUTRON_STARS.dataset, BLACK_HOLES.dataset):
+        mass, charge = fits[dataset, "mass"], fits[dataset, "charge"]
+        assert np.array_equal(mass.groups_test, charge.groups_test), (
+            f"{dataset}: the mass and charge fits are not scored on the same test rows"
+        )
+        mares[dataset] = charge_mares(mass, charge)
     # The section's assets are written last, into the last run's log that make follow shows.
     with _logging_into(run / "train.log", settings.log_level):
-        _write_section(out, pairs, ns_mass, config)
+        _write_section(out, pairs, fits[NEUTRON_STARS.dataset, "mass"], config, mares)
         logger.info("all %d fits done in %s", total, duration_text(time.perf_counter() - first))
         logger.info("done: baseline table, NS mass numbers and parity figure -> %s", out)
 
@@ -476,9 +502,15 @@ def _run_pair(
     return scores, fit
 
 
-def _write_section(out: Path, pairs: list[PairScores], ns_mass: Fit, config: PaperConfig) -> None:
+def _write_section(
+    out: Path,
+    pairs: list[PairScores],
+    ns_mass: Fit,
+    config: PaperConfig,
+    mares: dict[str, tuple[float, float]],
+) -> None:
     """Empty the section's asset folder, then write the baseline table, the NS mass numbers
-    and its parity figure."""
+    with the charge MAREs of each dataset, and the NS mass parity figure."""
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
@@ -487,7 +519,8 @@ def _write_section(out: Path, pairs: list[PairScores], ns_mass: Fit, config: Pap
     figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)
     plt.close(figure)
     (out / f"{PARITY}.tex").write_text(figure_tex())
-    (out / f"{SECTION}_num.tex").write_text(render_macros(numbers(ns_mass)))
+    macros = numbers(ns_mass) | charge_numbers(mares)
+    (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
 
 
 def write_diagnostics(

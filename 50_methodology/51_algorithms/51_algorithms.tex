@@ -7,6 +7,10 @@
 \providecommand{\baseNsMassRmse}{\placeholder{run make baseline}}
 \providecommand{\baseNsMassFitSeconds}{\placeholder{run make baseline}}
 \providecommand{\baseNsMassEpochs}{\placeholder{run make baseline}}
+\providecommand{\baseNsChargeMareTrueM}{\placeholder{run make baseline}}
+\providecommand{\baseNsChargeMarePredM}{\placeholder{run make baseline}}
+\providecommand{\baseBhChargeMareTrueM}{\placeholder{run make baseline}}
+\providecommand{\baseBhChargeMarePredM}{\placeholder{run make baseline}}
 
 Every surrogate in this work is trained and scored through one pipeline, so the models compared in Section~\ref{sec:results} differ only in the estimator. This section fixes that pipeline and its reference model, a plain multilayer perceptron, and reports how well it predicts the neutron-star mass.
 
@@ -28,6 +32,9 @@ On the $\prepNsTestCurves$ test curves the network reaches a MARE of $\baseNsMas
 
 \paragraph{Across the four dataset and target pairs, the nearest curve is the bar to beat.}
 The same pipeline fits all four pairs: the mass $M$ and the charge target $Y = \log_{10}(\Dch/M)$ of neutron stars and of black holes. Each pair is scored on the frozen test curves and on the $\prepNsFolds$ GroupKFold folds, where a fresh model fitted on the other folds gives one MARE per fold and the table reports their mean and spread (\cref{tab:baseline}). Two reference predictors are scored on the same curves: the mean of the training target, and the nearest curve, which returns the target of the closest training row in the standardized inputs. The mean shows that every model learns the structure of the data; the nearest curve shows how much of it a plain lookup already recovers. Because the rows along a curve are dense and neighbouring curves differ little, the nearest curve predicts the mass of both datasets and the black-hole charge target more accurately than the baseline network, which leads only on the neutron-star charge target. A surrogate therefore earns its place by beating this lookup, or by matching it while staying smooth enough for the likelihood surface of Section~\ref{sec:mcmc}.
+
+\paragraph{The charge is judged with the true mass, and end to end with the predicted one.}
+The charge model predicts $Y$, so the charge itself, $\Dch = M\,10^{Y}$, needs a mass. Rebuilt with the true $M$, the error isolates the charge model, and it is the number $H_1$ is judged by: a MARE in $\Dch$ of $\baseNsChargeMareTrueM$ for neutron stars and $\baseBhChargeMareTrueM$ for black holes on the test curves. Rebuilt with the mass model's prediction, as the inference of Section~\ref{sec:mcmc} will use it, the MARE becomes $\baseNsChargeMarePredM$ and $\baseBhChargeMarePredM$.
 
 \InputIfFileExists{51_algorithms_fig_parity}{}{}
 \InputIfFileExists{51_algorithms_tab_baseline}{}{}
