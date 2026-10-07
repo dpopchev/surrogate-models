@@ -225,8 +225,9 @@ class EpochTable(PrintLog):
         )
 
 
-# The epoch table's cell format per column; a column not named keeps skorch's own format.
-EPOCH_FORMATS = {"train_loss": ".2e", "valid_loss": ".2e", "valid_mare": ".2e", "lr": ".3e"}
+# The epoch table's cell format per history key (the lr is recorded as event_lr and shown as
+# lr); a column not named keeps skorch's own format.
+EPOCH_FORMATS = {"train_loss": ".2e", "valid_loss": ".2e", "valid_mare": ".2e", "event_lr": ".3e"}
 
 
 class ElapsedSeconds(Callback):

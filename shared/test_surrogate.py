@@ -265,7 +265,9 @@ class TestEpochTableCells:
         assert EpochTable().format_row({"train_loss": 0.0007835}, "train_loss", "") == "7.84e-04"
 
     def test_epoch_table_writes_the_lr_to_4_figures_so_its_decay_shows(self) -> None:
-        assert EpochTable().format_row({"lr": 0.0009999}, "lr", "") == "9.999e-04"
+        # skorch's LRScheduler records the lr as event_lr; the table shows it as lr.
+        row = {"event_lr": 0.0009999}
+        assert EpochTable().format_row(row, "event_lr", "") == "9.999e-04"
 
     def test_epoch_table_keeps_a_tenth_on_whole_seconds(self) -> None:
         assert EpochTable().format_row({"elapsed_s": 2.0}, "elapsed_s", "") == "2.0"
