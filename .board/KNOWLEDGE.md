@@ -19,6 +19,7 @@
 - 2026-10-06 W-036: T-120: standing: epoch 11.4 s at torch's 7 threads, 2.6 s at 1 thread; parallel fits no faster -> serial, 1 thread
 - 2026-10-07 W-036: standing: every prepared D > 0; the 1004 NS rows below 1e-5 (8.2e-8 to 1e-5) open 110 of 1611 curves at low rho_c, monotone in log10 D -> floor dropped (W-063)
 - 2026-10-07 W-037: T-089: standing: two identical baseline runs took 41 and 17 min (NS mass fit 132 s vs 53 s, same scores) -> fit seconds swing 2.5x with machine load; the cost axis needs repeated timing
+- 2026-10-07 W-064: fact: across-curve p95 ceilings: NS M 7.8e-5 (lambda) / 1.6e-5 (beta) = 4.1 figures, NS D 1.8e-3 / 3.6e-3 = 2.4; BH M 8.5e-8 = 7.1, D 1.0e-6 = 6.0; BH error sits at the existence edge -> the E-006 target per pair
 - 2026-10-07 W-073: T-152: standing: in D the nearest curve beats the MLP on the test curves of all four pairs (NS D 1.18e-1 vs 1.94e-1, BH D 3.2e-3 vs 6.2e-3); the MLP leads only on the NS folds (1.00e-1 vs 1.30e-1) -> no pair is won by the baseline
 - 2026-10-07 W-073: standing: the charge is scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1); the floor moved nothing -> the nearest curve wins every test pair (W-073#1) supersedes: W-036#2, W-037#1, W-063#1
 
