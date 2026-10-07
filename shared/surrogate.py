@@ -69,6 +69,11 @@ def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return float(np.sqrt(np.mean((y_pred - y_true) ** 2)))
 
 
+def rebuild_charge(y_charge: np.ndarray, mass: np.ndarray) -> np.ndarray:
+    """The charge D from the charge target Y = log10(D/M) and a mass M."""
+    return mass * 10.0**y_charge
+
+
 # --- progress ---------------------------------------------------------------------------------
 
 
