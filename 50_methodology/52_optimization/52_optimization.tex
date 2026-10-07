@@ -1,8 +1,13 @@
-\subsection{Optimization and Training Strategy}
+\subsection{The Search Procedure: One Harness, One Scorecard}
 \label{sec:optimization}
 
-\todo{Draft from the outline.}
-\begin{itemize}
-  \item \textbf{Loss function:} the Huber loss ($\delta = 1.0$) for robustness against outliers near the structural boundaries~\citep{Huber1964}, as $H_2$ proposes; the baseline of Section~\ref{sec:algorithms} keeps the mean squared error as the control.
-  \item \textbf{Hybrid optimization:} AdamW~\citep{Loshchilov2017_AdamW} with a cosine-annealing learning-rate schedule~\citep{TODO_SGDR}, fine-tuned by second-order L-BFGS optimization to loss floors of $10^{-8}$--$10^{-10}$~\citep{Michaud2023_PrecisionML}, if the L-BFGS stage pays off (to be decided by measurement).
-\end{itemize}
+The search of Section~\ref{sec:hypotheses} compares candidates of very different kinds -- a lookup, an interpolation, a Gaussian process, boosted trees, networks. The comparison is fair only if everything but the candidate is fixed, so every candidate passes through one harness and is judged by one scorecard.
+
+\paragraph{The harness fixes everything but the candidate.}
+A candidate is reduced to a single operation: given the rows to fit, the validation rows and a seed, it returns a predictor. The harness owns the rest. It holds the frozen test curves and folds of Section~\ref{sec:preprocessing}; it splits every training set into fit curves and validation curves, whole curves and the same ones for every candidate, so validation rows are never fit rows and a network early-stops on exactly the curves a Gaussian process may tune on; it runs every numerical library on one thread, so that times compare; it repeats each stochastic fit over seeds; and it times the fit, a call for a single input and a call for a batch the size of an ensemble of MCMC walkers.
+
+\paragraph{The scorecard measures what the inference needs.}
+A prediction is scored by its relative error on the held-out rows: the error of $M$, and for the charge the error of $\Dch$ rebuilt with the true mass, so that the charge target $Y = \log_{10}(\Dch/M)$ is judged on the quantity the inference uses. The errors are summarized by their median, 95th percentile and maximum, and read as significant figures, $-\log_{10}$ of the relative error, the unit of the data ceilings of Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}. They are reported per zone -- every test curve, the interior curves, the extrapolation curves -- and per decade of $\Dch$, because a mean over six orders of magnitude hides the weakest charges. Beside the error stands the ripple, the root mean square of the second difference of the residual across neighbouring grid values of the curve parameters, which a smooth surrogate keeps near zero and a lookup does not.
+
+\paragraph{The search eliminates candidates in a fixed order.}
+The representation is chosen first, at equal model, because it carries across families (Section~\ref{sec:representation}). The families are then screened at a small fixed budget each, and the best two or three per dataset and target survive by successive halving (Section~\ref{sec:families}). The survivors are tuned under the same search budget over their own hyperparameters -- for networks the width, the depth, the activation, the loss (the mean squared error against the Huber loss~\citep{Huber1964} of $H_2$) and the schedule of AdamW~\citep{Loshchilov2017_AdamW} with cosine annealing~\citep{TODO_SGDR} -- and then given the precision regime: double precision, a second-order L-BFGS stage after AdamW~\citep{Michaud2023_PrecisionML}, and a second model fitted to the residuals of the first (Section~\ref{sec:precision}). At every step a change is kept only when its gain exceeds the spread of the fold and seed scores; a change within that spread is reported and dropped.
