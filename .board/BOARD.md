@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-078 > T-166   | blocked: 0 | todo roots: 5 | done: 208 | pruned: 14
+open path: W-078   | blocked: 0 | todo roots: 5 | done: 208 | pruned: 15
 
 ## Tree
 
@@ -135,7 +135,7 @@ open path: W-078 > T-166   | blocked: 0 | todo roots: 5 | done: 208 | pruned: 14
 ### W-078 issue [doing] (standalone) Console numbers read as orders of magnitude -- errors, losses and lr in e-notation   (filed during T-131)
 
 - T-165 [pruned] Format the epoch table per column -> shared/surrogate.py   [pruned: its check (-k epoch_table, 4 passed) also selects the existing test_the_epoch_table_reaches_the_logger, so it prints 5 passed when the Output exists; refiled as T-172 with the TestEpochTable node id]
-- T-166 [doing] Put the other console numbers on the same rule -> banners, progress lines, run listings   <- ACTIVE LEAF
+- T-166 [pruned] Put the other console numbers on the same rule -> banners, progress lines, run listings   [pruned: refuted by its review: every console error, loss and MARE in shared/ and 50_methodology/ is already .2e (list_runs.py:54, fit_baseline.py:345 end banner, list_ledger.py:38); the other float lines are durations, counts and figures, which stay; nothing to change, and its check would pass only on T-172's test name]
 - T-172 [done] Format the epoch table per column -> shared/surrogate.py
 - T-173 [done] Keep tabulate from re-formatting the epoch cells -> shared/surrogate.py   (filed during T-172)
 - T-174 [done] Rename T-172's test class so it stops shadowing TestEpochTable -> shared/test_surrogate.py   (filed during T-173)
@@ -543,7 +543,7 @@ flowchart TD
   W072 --> T150["T-150 todo: Decide the parallelism and the run registry with the developer -> the W-072 spike decision"]
   W078["W-078 issue doing, standalone: Console numbers read as orders of magnitude -- errors, losses and lr in e-notation"]
   W078 --> T165["T-165 pruned: Format the epoch table per column -> shared/surrogate.py"]
-  W078 --> T166["T-166 doing: Put the other console numbers on the same rule -> banners, progress lines, run listings -- ACTIVE LEAF"]
+  W078 --> T166["T-166 pruned: Put the other console numbers on the same rule -> banners, progress lines, run listings"]
   W078 --> T172["T-172 done: Format the epoch table per column -> shared/surrogate.py"]
   W078 --> T173["T-173 done: Keep tabulate from re-formatting the epoch cells -> shared/surrogate.py"]
   W078 --> T174["T-174 done: Rename T-172's test class so it stops shadowing TestEpochTable -> shared/test_surrogate.py"]
@@ -557,8 +557,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W078,T166 doing
+  class E006,E009,W078 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T172,T173,T174,T175,T176 done
   class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150,W079,T167,T168 todo
-  class W038,W039,W040,W041,W042,W043,W044,W048,T108,T165 pruned
+  class W038,W039,W040,W041,W042,W043,W044,W048,T108,T165,T166 pruned
 ```
