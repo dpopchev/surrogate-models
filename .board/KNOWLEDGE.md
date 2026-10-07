@@ -43,6 +43,7 @@
 - 2026-10-06 W-053: paper cites the repo (MIT); data and weights live in local/, built or provided, never tracked; no sample
 - 2026-10-06 W-059: per-site map in 00_metadata/citations.md; 13 TODO_ placeholders cited, real sources in W-061
 - 2026-10-07 E-005: the charge target is log10(D/M) with no floor eps, reversing the E-002 / W-019 floor Decision; the D > 0 guard of the preparation stays (developer)
+- 2026-10-07 E-006: Section 3.4 and Section 5 follow the search space; H1-H3 stay as its named sub-questions (developer)
 - 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
 
 ## Deviations

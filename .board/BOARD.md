@@ -96,33 +96,39 @@ open path: E-005 > W-036   | blocked: 0 | todo roots: 4 | done: 161 | pruned: 13
 - T-129 [todo] Write the scorecard test-first -> shared/scorecard.py
 - T-130 [todo] Write the fair harness test-first -> shared/harness.py
 - T-131 [todo] Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
+- T-146 [todo] Describe the search procedure in Section 4.2 -> 50_methodology/52_optimization/52_optimization.tex
 
 #### W-066 issue [todo] Representation screen -- inputs, targets, pointwise or curve-wise
 
 - T-132 [todo] Add the curve-wise representation test-first -> shared/design.py
-- T-133 [todo] Run the representation screen -> 60_results/61_h1/61_h1.tex
+- T-133 [todo] Run the representation screen -> 60_results/61_representation/61_representation.tex
 
 #### W-067 issue [todo] Family screen -- interpolators, GPR, XGBoost and networks
 
 - T-134 [todo] Write the family factories test-first -> shared/families.py
-- T-135 [todo] Run the family screen with successive halving -> 60_results/63_h3/63_h3.tex
+- T-135 [todo] Run the family screen with successive halving -> 60_results/62_families/62_families.tex
 
 #### W-068 issue [todo] Tuning and precision of the surviving families
 
 - T-136 [todo] Write the equal-budget search test-first -> shared/search.py
 - T-137 [todo] Write the precision regime test-first -> shared/surrogate.py
-- T-138 [todo] Run tuning and precision on the survivors -> 60_results/62_h2/62_h2.tex
+- T-138 [todo] Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex
 
 #### W-069 issue [todo] Extrapolation error against the distance from the training hull
 
 - T-139 [todo] Write the distance from the training hull test-first -> shared/scorecard.py
-- T-140 [todo] Run the extrapolation probe on the rim and outer curves -> 60_results/63_h3/63_h3.tex
+- T-140 [todo] Run the extrapolation probe on the rim and outer curves -> 60_results/64_extrapolation/64_extrapolation.tex
 
 #### W-070 issue [todo] Pareto front and the best approach per pair
 
 - T-141 [todo] Write the Pareto front test-first -> shared/scorecard.py
-- T-142 [todo] Run the budget comparison -> 60_results/64_speedup/64_speedup.tex
+- T-142 [todo] Run the budget comparison -> 60_results/65_budget/65_budget.tex
 - T-143 [todo] State the best approach per pair in the conclusion -> 80_conclusion/80_conclusion.tex
+
+#### W-071 issue [todo] Section 3.4 and Section 5 follow the search space
+
+- T-144 [todo] Rewrite Section 3.4 as the search-space question -> 40_data_analysis/44_hypotheses/44_hypotheses.tex
+- T-145 [todo] Rename and reorder the Section 5 folders -> 60_results/61_representation to 65_budget
 
 ### E-007 [todo] Ensemble uncertainty and the final surrogate
 
@@ -455,23 +461,27 @@ flowchart TD
   W065 --> T129["T-129 todo: Write the scorecard test-first -> shared/scorecard.py"]
   W065 --> T130["T-130 todo: Write the fair harness test-first -> shared/harness.py"]
   W065 --> T131["T-131 todo: Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
+  W065 --> T146["T-146 todo: Describe the search procedure in Section 4.2 -> 50_methodology/52_optimization/52_optimization.tex"]
   E006 --> W066["W-066 issue todo: Representation screen -- inputs, targets, pointwise or curve-wise"]
   W066 --> T132["T-132 todo: Add the curve-wise representation test-first -> shared/design.py"]
-  W066 --> T133["T-133 todo: Run the representation screen -> 60_results/61_h1/61_h1.tex"]
+  W066 --> T133["T-133 todo: Run the representation screen -> 60_results/61_representation/61_representation.tex"]
   E006 --> W067["W-067 issue todo: Family screen -- interpolators, GPR, XGBoost and networks"]
   W067 --> T134["T-134 todo: Write the family factories test-first -> shared/families.py"]
-  W067 --> T135["T-135 todo: Run the family screen with successive halving -> 60_results/63_h3/63_h3.tex"]
+  W067 --> T135["T-135 todo: Run the family screen with successive halving -> 60_results/62_families/62_families.tex"]
   E006 --> W068["W-068 issue todo: Tuning and precision of the surviving families"]
   W068 --> T136["T-136 todo: Write the equal-budget search test-first -> shared/search.py"]
   W068 --> T137["T-137 todo: Write the precision regime test-first -> shared/surrogate.py"]
-  W068 --> T138["T-138 todo: Run tuning and precision on the survivors -> 60_results/62_h2/62_h2.tex"]
+  W068 --> T138["T-138 todo: Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex"]
   E006 --> W069["W-069 issue todo: Extrapolation error against the distance from the training hull"]
   W069 --> T139["T-139 todo: Write the distance from the training hull test-first -> shared/scorecard.py"]
-  W069 --> T140["T-140 todo: Run the extrapolation probe on the rim and outer curves -> 60_results/63_h3/63_h3.tex"]
+  W069 --> T140["T-140 todo: Run the extrapolation probe on the rim and outer curves -> 60_results/64_extrapolation/64_extrapolation.tex"]
   E006 --> W070["W-070 issue todo: Pareto front and the best approach per pair"]
   W070 --> T141["T-141 todo: Write the Pareto front test-first -> shared/scorecard.py"]
-  W070 --> T142["T-142 todo: Run the budget comparison -> 60_results/64_speedup/64_speedup.tex"]
+  W070 --> T142["T-142 todo: Run the budget comparison -> 60_results/65_budget/65_budget.tex"]
   W070 --> T143["T-143 todo: State the best approach per pair in the conclusion -> 80_conclusion/80_conclusion.tex"]
+  E006 --> W071["W-071 issue todo: Section 3.4 and Section 5 follow the search space"]
+  W071 --> T144["T-144 todo: Rewrite Section 3.4 as the search-space question -> 40_data_analysis/44_hypotheses/44_hypotheses.tex"]
+  W071 --> T145["T-145 todo: Rename and reorder the Section 5 folders -> 60_results/61_representation to 65_budget"]
   E007["E-007 todo: Ensemble uncertainty and the final surrogate"]
   E007 --> W044["W-044 spike pruned: Is L-BFGS fine-tuning worth keeping"]
   E007 --> W045["W-045 issue todo: Ensemble uncertainty over curve-bootstrap resamples"]
@@ -508,6 +518,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E005,W036,E009 doing
   class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,T085,T086,T120,T121,T125,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class T087,W037,T088,T089,W062,W063,T122,T123,T124,E006,W064,T126,T127,T128,W065,T129,T130,T131,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118 todo
+  class T087,W037,T088,T089,W062,W063,T122,T123,T124,E006,W064,T126,T127,T128,W065,T129,T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W071,T144,T145,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
