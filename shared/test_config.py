@@ -103,6 +103,10 @@ def test_the_baseline_trains_on_one_thread_by_default(tmp_path: Path) -> None:
     assert load_config(write(tmp_path, "")).methodology.algorithms.threads == 1
 
 
+def test_the_baseline_runs_on_six_workers_by_default(tmp_path: Path) -> None:
+    assert load_config(write(tmp_path, "")).methodology.algorithms.workers == 6
+
+
 def test_zero_threads_are_rejected(tmp_path: Path) -> None:
     toml = write(tmp_path, "[methodology.algorithms]\nthreads = 0\n")
     with pytest.raises(ValidationError, match="threads"):

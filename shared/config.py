@@ -87,6 +87,9 @@ class AlgorithmsSection(BaseModel):
     log_level: Literal["INFO", "DEBUG"] = "INFO"
     # torch threads per fit: 1 is fastest for this small network on this CPU (W-036 Finding).
     threads: PositiveInt = 1
+    # one-thread worker processes running the fits at once: 6 gives 3.2x the fits per hour of 1
+    # (W-072 T-148); 1 for a run whose fit seconds are reported, since sharing slows each fit.
+    workers: PositiveInt = 6
 
 
 class Methodology(BaseModel):

@@ -8,9 +8,13 @@ from pathlib import Path
 
 import matplotlib
 import numpy as np
+import optuna
 import pandas as pd
 import pytest
 import torch
+from optuna.storages import JournalStorage
+from optuna.storages.journal import JournalFileBackend
+from optuna.trial import TrialState
 
 matplotlib.use("Agg")
 
@@ -362,7 +366,8 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
     assets, state = folder / "assets", folder / "state"
     (assets / SECTION).mkdir(parents=True)
     (assets / SECTION / "stale.tex").write_text("from an earlier run")
-    network = {"width": 8, "depth": 1, "max_epochs": 2, "batch_size": 8}
+    # One worker: the shared fit count interleaves across pairs on several (T-179 covers those).
+    network = {"width": 8, "depth": 1, "max_epochs": 2, "batch_size": 8, "workers": 1}
     config = PaperConfig.model_validate(
         {"plot": {"usetex": False}, "methodology": {"algorithms": network}}
     )
@@ -416,6 +421,13 @@ class TestMain:
 
     def test_leaves_a_ledger_entry_per_predictor_pair_and_seed(self, ran: Path) -> None:
         assert len(list((ran / "state" / "ledger").glob("*.json"))) == 3 * 4 * 1
+
+    def test_leaves_a_completed_trial_naming_each_ledger_entry(self, ran: Path) -> None:
+        storage = JournalStorage(JournalFileBackend(str(ran / "state" / "optuna" / "journal.log")))
+        (summary,) = optuna.get_all_study_summaries(storage)
+        study = optuna.load_study(study_name=summary.study_name, storage=storage)
+        told = {t.user_attrs["ledger_id"] for t in study.get_trials(states=[TrialState.COMPLETE])}
+        assert told == {path.stem for path in (ran / "state" / "ledger").glob("*.json")}
 
     def test_records_the_injected_commit(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"

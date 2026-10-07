@@ -125,6 +125,18 @@ ledger: ## List the run ledger -- B=<batch> for one batch
 	@$(RUN) python $(LIST_LEDGER) $(STATE) $(if $(B),--batch $(B))
 	$(call log_done,ledger listed from $(LEDGER)/ -- $(words $(wildcard $(LEDGER)/*.json)) entries$(if $(B), in all$(comma) batch $(B) shown))
 
+# The fits as live trials (W-081): optuna-dashboard on the study journal every make baseline
+# writes, one study per run. It ends with Ctrl-C, so its log_done never prints.
+JOURNAL        := $(STATE)/optuna/journal.log
+DASHBOARD_PORT ?= 8080
+
+.PHONY: dashboard
+dashboard: ## Follow the fits live in optuna-dashboard
+	@test -f $(JOURNAL) || { echo "no study journal yet: make baseline writes $(JOURNAL)" >&2; exit 1; }
+	$(call log_info,optuna-dashboard on http://127.0.0.1:$(DASHBOARD_PORT) -- Ctrl-C ends it)
+	@$(RUN) optuna-dashboard $(JOURNAL) --port $(DASHBOARD_PORT)
+	$(call log_done,stopped optuna-dashboard)
+
 .PHONY: assets
 assets: $(PAPER_ASSETS) ## Generate the section assets under build/assets/
 	$(call log_done,assets in $(ASSETS)/: $(sort $(notdir $(patsubst %/,%,$(dir $(PAPER_ASSETS))))))

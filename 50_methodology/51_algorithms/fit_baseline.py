@@ -13,8 +13,8 @@ Run as `uv run python <this file> <ns.parquet> <bh.parquet> <split.parquet> <ass
 <state dir>` (mk/paper.mk does).
 """
 
-import itertools
 import logging
+import multiprocessing
 import subprocess
 import sys
 import time
@@ -23,6 +23,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 from typing import Any, assert_never
 
@@ -34,13 +35,14 @@ from matplotlib.figure import Figure
 from sklearn.pipeline import Pipeline
 
 from shared.ceilings import Spread
-from shared.config import PaperConfig, load_config
+from shared.config import AlgorithmsSection, PaperConfig, load_config
 from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
 from shared.diagnostics import curve_overlay, error_cdf, loss_curve
 from shared.eda import booktabs, curve_ids, render_macros, sci_tex
 from shared.harness import Fitter, Predictor, Run, Timing, harness
 from shared.plots import PlotStyle, anchor_color, apply_style
 from shared.runs import (
+    LedgerEntry,
     RunMetadata,
     RunRecord,
     Setting,
@@ -67,6 +69,8 @@ from shared.surrogate import (
     rmse,
     sklearn_fitter,
 )
+from shared.trials import ReportEpochs, open_study, tell_run
+from shared.workers import run_jobs
 
 logger = logging.getLogger(__name__)
 
@@ -188,6 +192,51 @@ def _recording(
     return lambda run: record(name, settings, run, epochs())
 
 
+# The predictors of the baseline table, in its row order.
+CANDIDATES = ("MLP", "mean", "nearest curve")
+
+
+def score_candidate(
+    design: Design,
+    target: Target,
+    training: Training,
+    name: str,
+    live_plot: Path | None = None,
+    after_fit: Callable[[], None] = lambda: None,
+    clock: Callable[[], float] | None = None,
+    record: Recorder = lambda name, settings, run, epochs: None,
+    before_fit: Callable[[Pipeline], None] = lambda _: None,
+) -> tuple[Scored, Run, Pipeline | None]:
+    """Score one candidate of CANDIDATES through the harness; after_fit and before_fit wrap
+    every MLP fit, record is handed its run as it ends. Returns its scores, its run and, for
+    the MLP, its last fitted network."""
+    networks: list[Pipeline] = []
+    fitter: Fitter
+    settings: dict[str, Setting]
+    match name:
+        case "MLP":
+            network = network_fitter(training, live_plot, networks.append, before_fit)
+            fitter, settings = _counted(network, after_fit), asdict(training)
+        case "mean":
+            fitter, settings = sklearn_fitter(make_mean_reference), {"estimator": name}
+        case "nearest curve":
+            fitter, settings = sklearn_fitter(make_nearest_reference), {"estimator": name}
+        case _:
+            raise ValueError(f"no candidate {name!r}; the candidates are {CANDIDATES}")
+    epochs = (lambda: _epochs(networks[-1])) if name == "MLP" else (lambda: None)
+    (run,) = harness(
+        design,
+        target,
+        fitter,
+        [training.seed],
+        training.valid_fraction,
+        clock=clock,
+        record=_recording(record, name, settings, epochs),
+    )
+    scored = Scored(name, run.test.zones["test"], run.folds, run.timing)
+    return scored, run, networks[-1] if networks else None
+
+
 def score_pair(
     design: Design,
     dataset: str,
@@ -202,29 +251,14 @@ def score_pair(
     nearest-curve references, each on the same folds, validation curves and test curves.
     after_fit is called after every MLP fit; record is handed each candidate's run as it ends.
     Returns the scores and the MLP's final fit, for the figures and the run record."""
-    networks: list[Pipeline] = []
-    mlp = _counted(network_fitter(training, live_plot, networks.append), after_fit)
-    candidates: tuple[tuple[str, Fitter, dict[str, Setting]], ...] = (
-        ("MLP", mlp, asdict(training)),
-        ("mean", sklearn_fitter(make_mean_reference), {"estimator": "mean"}),
-        ("nearest curve", sklearn_fitter(make_nearest_reference), {"estimator": "nearest curve"}),
-    )
-    scored, runs = [], []
-    for name, fitter, settings in candidates:
-        epochs = (lambda: _epochs(networks[-1])) if name == "MLP" else (lambda: None)
-        (run,) = harness(
-            design,
-            target,
-            fitter,
-            [training.seed],
-            training.valid_fraction,
-            clock=clock,
-            record=_recording(record, name, settings, epochs),
-        )
-        scored.append(Scored(name, run.test.zones["test"], run.folds, run.timing))
-        runs.append(run)
-    fit = final_fit(design, runs[0], networks[-1], metric_for(target))
-    return PairScores(dataset, target, tuple(scored)), fit
+    found = [
+        score_candidate(design, target, training, name, live_plot, after_fit, clock, record)
+        for name in CANDIDATES
+    ]
+    _, mlp_run, network = found[0]
+    assert network is not None, "the MLP left no fitted network"
+    fit = final_fit(design, mlp_run, network, metric_for(target))
+    return PairScores(dataset, target, tuple(scored for scored, _, _ in found)), fit
 
 
 def metric_for(target: Target) -> Metric:
@@ -434,40 +468,51 @@ def main(
     settings = config.methodology.algorithms
     apply_style(config.plot)
     torch.set_num_threads(settings.threads)
-    training = Training(**settings.model_dump(exclude={"log_level", "threads"}))
+    training = Training(**settings.model_dump(exclude={"log_level", "threads", "workers"}))
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
     split = pd.read_parquet(split_file)
     designs: list[tuple[DesignSpec, Target, Design]] = [
         (spec, target, design(tables[spec.dataset], split, spec, target)) for spec, target in PAIRS
     ]
     total = sum(len(set(data.fold[data.fold >= 0].tolist())) + 1 for _, _, data in designs)
-    ticks, first = itertools.count(1), time.perf_counter()
-
-    def after_fit() -> None:
-        logger.info(progress_line(next(ticks), total, time.perf_counter() - first))
-
+    first = time.time()
     head, tail = commit(), dirty()
     batch, ledger = _new_id(), Path(argv[4]) / "ledger"
+    journal = Path(argv[4]) / "optuna" / "journal.log"
     ledger.mkdir(parents=True, exist_ok=True)
-    pairs, fits, run = [], {}, state
-    for spec, target, data in designs:
-        started = now()
-        run = state / run_stem(spec.dataset, target, started)
-        run.mkdir(parents=True, exist_ok=True)
-        # latest.log is what make follow tails: repointed at each run's log as the run starts.
-        latest = state / "latest.log"
-        latest.unlink(missing_ok=True)
-        latest.symlink_to(Path(run.name) / "train.log")
-        with _logging_into(run / "train.log", settings.log_level):
-            pair, fit = _run_pair(
-                _Pair(spec, target, data, tables[spec.dataset]),
-                _Run(run, out, started, head, tail, batch, ledger),
-                training,
-                settings.threads,
-                after_fit,
-            )
-        pairs.append(pair)
-        fits[spec.dataset, target] = fit
+    # The batch's study is made once here; every job joins it as its trials run.
+    open_study(batch, journal)
+    planned: list[tuple[_Pair, _Run]] = []
+    with multiprocessing.Manager() as manager:
+        progress = _Progress(manager.Value("i", 0), manager.Lock(), total, first)
+        jobs = []
+        for spec, target, data in designs:
+            started = now()
+            folder = state / run_stem(spec.dataset, target, started)
+            folder.mkdir(parents=True, exist_ok=True)
+            # latest.log is what make follow tails: repointed at each run's log as it is made.
+            latest = state / "latest.log"
+            latest.unlink(missing_ok=True)
+            latest.symlink_to(Path(folder.name) / "train.log")
+            pair = _Pair(spec, target, data, tables[spec.dataset])
+            run = _Run(folder, out, started, head, tail, batch, ledger, journal)
+            planned.append((pair, run))
+            jobs += [
+                partial(_score_job, _Job(pair, run, name, training, settings, progress))
+                for name in CANDIDATES
+            ]
+        logger.info(
+            "%d jobs on %d workers; follow them with make dashboard", len(jobs), settings.workers
+        )
+        found = run_jobs(jobs, settings.workers)
+    pairs, fits = [], {}
+    for i, (pair, run) in enumerate(planned):
+        mine = found[i * len(CANDIDATES) : (i + 1) * len(CANDIDATES)]
+        pairs.append(PairScores(pair.spec.dataset, pair.target, tuple(s for s, _ in mine)))
+        mlp_fit = mine[0][1]
+        assert mlp_fit is not None, f"{run.folder.name}: the MLP job returned no fit"
+        fits[pair.spec.dataset, pair.target] = mlp_fit
+    run = planned[-1][1].folder
     assert (NEUTRON_STARS.dataset, "mass") in fits, "the NS mass pair did not run"
     mares = {}
     for dataset in (NEUTRON_STARS.dataset, BLACK_HOLES.dataset):
@@ -479,7 +524,7 @@ def main(
     # The section's assets are written last, into the last run's log that make follow shows.
     with _logging_into(run / "train.log", settings.log_level):
         _write_section(out, pairs, fits[NEUTRON_STARS.dataset, "mass"], config, mares)
-        logger.info("all %d fits done in %s", total, duration_text(time.perf_counter() - first))
+        logger.info("all %d fits done in %s", total, duration_text(time.time() - first))
         logger.info("done: baseline table, NS mass numbers and parity figure -> %s", out)
 
 
@@ -505,31 +550,93 @@ class _Run:
     dirty: bool
     batch: str
     ledger: Path
+    journal: Path
 
 
-def _run_pair(
-    pair: _Pair, run: _Run, training: Training, threads: int, after_fit: Callable[[], None]
-) -> tuple[PairScores, Fit]:
-    """Score one pair, its log lines going to the console and to the run's train.log; leave
-    its run record and diagnostics in the run's folder."""
+@dataclass(frozen=True)
+class _Progress:
+    """The fit count every worker shares for the progress line: a counter and its lock from a
+    multiprocessing manager, the fits in all and the wall-clock start."""
+
+    count: Any
+    lock: Any
+    total: int
+    first: float
+
+
+@dataclass(frozen=True)
+class _Job:
+    """One candidate on one pair, run in a worker process."""
+
+    pair: _Pair
+    run: _Run
+    candidate: str
+    training: Training
+    settings: AlgorithmsSection
+    progress: _Progress
+
+
+def _tick(progress: _Progress) -> None:
+    """Count one more MLP fit across every worker and log how far the run has come."""
+    with progress.lock:
+        progress.count.value += 1
+        done = progress.count.value
+    logger.info(progress_line(done, progress.total, time.time() - progress.first))
+
+
+def _score_job(job: _Job) -> tuple[Scored, Fit | None]:
+    """Score one candidate on one pair as a trial of the batch's study, logging into the
+    pair's train.log; every fit leaves its ledger entry, which the trial is told. The MLP job
+    reports each epoch to the trial and leaves the pair's run record and diagnostics."""
+    pair, run = job.pair, job.run
+    with _logging_into(run.folder / "train.log", job.settings.log_level):
+        study = open_study(run.batch, run.journal)
+        trial = study.ask()
+        record = _ledger_writer(pair, run, lambda entry: tell_run(study, trial, entry))
+        if job.candidate != "MLP":
+            scored, _, _ = score_candidate(
+                pair.data, pair.target, job.training, job.candidate, record=record
+            )
+            return scored, None
+        built: list[Pipeline] = []
+
+        def before_fit(pipeline: Pipeline) -> None:
+            """Report this fit's epochs to the trial after the epochs of its earlier fits."""
+            offset = sum(len(p.named_steps["net"].history) for p in built)
+            built.append(pipeline)
+            net = pipeline.named_steps["net"]
+            net.callbacks = [*net.callbacks, ("report", ReportEpochs(trial, offset))]
+
+        return _score_mlp(job, record, before_fit)
+
+
+def _score_mlp(
+    job: _Job, record: Recorder, before_fit: Callable[[Pipeline], None]
+) -> tuple[Scored, Fit]:
+    """Score the MLP on one pair, its log lines going to the run's train.log; leave its run
+    record and diagnostics in the run's folder."""
+    pair, run, training = job.pair, job.run, job.training
     if run.dirty:
         logger.info("the code holds uncommitted changes: run.json marks this run dirty")
     data, train = pair.data, ~pair.data.test
     rows = (int(train.sum()), int(data.test.sum()))
     curves = (len(np.unique(data.groups[train])), len(np.unique(data.groups[data.test])))
     logger.info("== baseline run: %s / %s ==", pair.spec.dataset, pair.target)
-    for line in start_banner(run.folder, run.out, training, rows, curves, threads):
+    for line in start_banner(run.folder, run.out, training, rows, curves, job.settings.threads):
         logger.info(line)
-    scores, fit = score_pair(
+    scored, ran, network = score_candidate(
         data,
-        pair.spec.dataset,
         pair.target,
         training,
+        "MLP",
         live_plot=run.folder / "loss_curve.png",
-        after_fit=after_fit,
-        record=_ledger_writer(pair, run),
+        after_fit=partial(_tick, job.progress),
+        record=record,
+        before_fit=before_fit,
     )
-    record = RunRecord(
+    assert network is not None, "the MLP left no fitted network"
+    fit = final_fit(data, ran, network, metric_for(pair.target))
+    summary = RunRecord(
         dataset=pair.spec.dataset,
         target=pair.target,
         training=training,
@@ -543,21 +650,24 @@ def _run_pair(
         rmse=fit.rmse,
     )
     folder = run.folder
-    assert folder.name == run_name(record), f"run folder {folder.name} is not {run_name(record)}"
+    assert folder.name == run_name(summary), f"run folder {folder.name} is not {run_name(summary)}"
     names = curve_names(pair.table, pair.spec)
-    write_diagnostics(fit, record, folder, names, X_LABELS[pair.spec.dataset])
-    assert from_json((folder / "run.json").read_text()) == record, (
+    write_diagnostics(fit, summary, folder, names, X_LABELS[pair.spec.dataset])
+    assert from_json((folder / "run.json").read_text()) == summary, (
         f"{folder}/run.json does not round-trip"
     )
     logger.info("== baseline run finished ==")
     for line in end_banner(fit, training, sorted(folder.iterdir())):
         logger.info(line)
-    return scores, fit
+    return scored, fit
 
 
-def _ledger_writer(pair: _Pair, run: _Run) -> Recorder:
+def _ledger_writer(
+    pair: _Pair, run: _Run, on_entry: Callable[[LedgerEntry], None] = lambda _: None
+) -> Recorder:
     """The recorder writing each harness run of the pair to <ledger>/<id>.json, a new uuid7
-    id per entry; the text must read back to itself (NaN spreads compare unequal as values)."""
+    id per entry, then handing the entry to on_entry (the trial is told it); the text must
+    read back to itself (NaN spreads compare unequal as values)."""
 
     def record(
         candidate: str, settings: dict[str, Setting], ran: Run, epochs: tuple[int, int] | None
@@ -582,6 +692,7 @@ def _ledger_writer(pair: _Pair, run: _Run) -> Recorder:
         assert entry_to_json(entry_from_json(path.read_text())) == text, (
             f"{path} does not round-trip"
         )
+        on_entry(entry)
 
     return record
 
