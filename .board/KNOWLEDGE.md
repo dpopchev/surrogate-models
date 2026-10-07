@@ -8,19 +8,19 @@
 - 2026-10-05 W-018: standing: beta moves M 0.01%, log10 D 2.9% at fixed r_h; sets r_h,min 4.059..4.493 -> GroupKFold over beta supersedes: W-018#3
 - 2026-10-05 W-018: standing: log10(D/M) no gain over log10 D (Spearman M -1.000 vs -0.999) -> unlike NS, noted in 3.2 supersedes: W-018#2
 - 2026-10-05 W-018: standing: r_h linear (0.39 orders); M 2.13..5.01 M_sun, Pearson 0.9999 with r_h -> raw M in M_sun supersedes: W-018#4
-- 2026-10-06 E-005: fact: every dataset value is dimensionless or normalized (developer), M in solar masses -> code, board and paper say 'original scale' (as opposed to standardized), never 'physical units'
+- 2026-10-06 E-005: standing: every dataset value is dimensionless or normalized (developer), M in solar masses -> code, board and paper say 'original scale' (as opposed to standardized), never 'physical units'
 - 2026-10-06 E-009: fact: folder NN is paper Section N-1 (unnumbered abstract) -> code names the compiled number (T-116)
-- 2026-10-06 T-077: fact: split.parquet holds both datasets, one row per curve -> design() filters by dataset first
+- 2026-10-06 T-077: standing: split.parquet holds both datasets, one row per curve -> design() filters by dataset first
 - 2026-10-06 W-032: standing: make overleaf refreshes the upload list on every run -> run it only right before an upload, or the removed list of the earlier run is lost supersedes: W-032#1
-- 2026-10-06 W-034: T-080: fact: valid loss spikes late, lr barely decays (cosine T_max 500) -> tune the schedule in E-006/E-007
-- 2026-10-06 W-034: T-090: fact: restoring the best epoch cuts NS mass test MARE 0.0165 -> 0.0066 -> the reported baseline
-- 2026-10-06 W-035: T-084: fact: worst NS mass curves: short, low-mass, beta 0.4-2.4, lambda \~4 -> E-006 error map, H2
-- 2026-10-06 W-035: T-092: fact: one seeded fit took 213-525 s (load) -> cite the fit time as an order of magnitude
-- 2026-10-06 W-036: T-120: fact: epoch 11.4 s at torch's 7 threads, 2.6 s at 1 thread; parallel fits no faster -> serial, 1 thread
-- 2026-10-07 W-036: fact: every prepared D > 0; the 1004 NS rows below 1e-5 (8.2e-8 to 1e-5) open 110 of 1611 curves at low rho_c, monotone in log10 D -> floor dropped (W-063)
-- 2026-10-07 W-037: T-089: fact: two identical baseline runs took 41 and 17 min (NS mass fit 132 s vs 53 s, same scores) -> fit seconds swing 2.5x with machine load; the cost axis needs repeated timing
-- 2026-10-07 W-073: T-152: fact: in D the nearest curve beats the MLP on the test curves of all four pairs (NS D 1.18e-1 vs 1.94e-1, BH D 3.2e-3 vs 6.2e-3); the MLP leads only on the NS folds (1.00e-1 vs 1.30e-1) -> no pair is won by the baseline
-- 2026-10-07 W-073: fact: the charge is scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1); the floor moved nothing -> the nearest curve wins every test pair (W-073#1) supersedes: W-036#2, W-037#1, W-063#1
+- 2026-10-06 W-034: T-080: standing: valid loss spikes late, lr barely decays (cosine T_max 500) -> tune the schedule in E-006/E-007
+- 2026-10-06 W-034: T-090: standing: restoring the best epoch cuts NS mass test MARE 0.0165 -> 0.0066 -> the reported baseline
+- 2026-10-06 W-035: T-084: standing: worst NS mass curves: short, low-mass, beta 0.4-2.4, lambda \~4 -> E-006 error map, H2
+- 2026-10-06 W-035: T-092: standing: one seeded fit took 213-525 s (load) -> cite the fit time as an order of magnitude
+- 2026-10-06 W-036: T-120: standing: epoch 11.4 s at torch's 7 threads, 2.6 s at 1 thread; parallel fits no faster -> serial, 1 thread
+- 2026-10-07 W-036: standing: every prepared D > 0; the 1004 NS rows below 1e-5 (8.2e-8 to 1e-5) open 110 of 1611 curves at low rho_c, monotone in log10 D -> floor dropped (W-063)
+- 2026-10-07 W-037: T-089: standing: two identical baseline runs took 41 and 17 min (NS mass fit 132 s vs 53 s, same scores) -> fit seconds swing 2.5x with machine load; the cost axis needs repeated timing
+- 2026-10-07 W-073: T-152: standing: in D the nearest curve beats the MLP on the test curves of all four pairs (NS D 1.18e-1 vs 1.94e-1, BH D 3.2e-3 vs 6.2e-3); the MLP leads only on the NS folds (1.00e-1 vs 1.30e-1) -> no pair is won by the baseline
+- 2026-10-07 W-073: standing: the charge is scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1); the floor moved nothing -> the nearest curve wins every test pair (W-073#1) supersedes: W-036#2, W-037#1, W-063#1
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
@@ -28,26 +28,10 @@
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 
 ## Decisions
-- 2026-10-06 E-005: CI/CD runs locally: [landing] ci = none, make check before each fast-forward (developer)
-- 2026-10-06 E-005: H1 is scored on D rebuilt with the true M; D rebuilt with the predicted M is reported as the end-to-end number
-- 2026-10-06 E-005: adapted execution plan: Phase 1 closed as built (curve split, shared charge target, raw M); the H1-H3 configs leave Phase 2 for their own increments (E-006); roots E-005 to E-009 queued in that order
-- 2026-10-06 E-005: diagnostics #1-#6 in E-005 (valid MARE, lr, error CDF, worst/median curves, reference predictors, run record); #7-#12 go to the E-006/E-007 item whose hypothesis they test
-- 2026-10-06 E-005: early stopping validates on held-out curves, never skorch's default random rows (W-017: rows of one curve are each other's nearest neighbours)
-- 2026-10-06 E-005: feedback: make log lines, logger stage lines, per-epoch PrintLog to the logger with valid_mare and lr, an outer tqdm over fits, the batch bar opt-in
-- 2026-10-06 E-005: one model per target: H1 varies only the charge model, H2 only the mass model; MCMC sees one predict -> (M, D)
-- 2026-10-06 E-005: progress relay (developer): when the agent runs a long target through the chat, it relays the run's progress lines into the chat every few minutes, beside make follow
-- 2026-10-06 E-005: skorch over Lightning: one sklearn Pipeline, GroupKFold and scorer path for GPR, XGBoost and the networks; CPU-only tabular data needs none of Lightning's strengths
-- 2026-10-06 E-005: tests stay quick (developer): unit tests use tiny synthetic data and toy fits of a few epochs; real-data fits (fold scores, the four pairs) run only through make targets, never in make test
-- 2026-10-06 E-005: the mean and nearest-curve reference predictors are rows of the paper's baseline table; the baseline MLP (ReLU, MSE, AdamW) is the control arm of H2 and H3
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
-- 2026-10-06 W-034: error macros (MARE, RMSE) print in scientific notation at every magnitude
-- 2026-10-07 E-005: the charge target is log10(D/M) with no floor eps, reversing the E-002 / W-019 floor Decision; the D > 0 guard of the preparation stays (developer)
 - 2026-10-07 E-006: Section 3.4 and Section 5 follow the search space; H1-H3 stay as its named sub-questions (developer)
 - 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
 - 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
 
 ## Deviations
-- 2026-10-07 E-005: W-036 and W-063 landed in one fast-forward (developer): W-063's branch was stacked on W-036's and its criterion needed W-036's T-087 table, so main moved to 3a4ca35 once for both
-- 2026-10-07 E-005: bug W-073 filed during T-089: the table's charge rows score Y, not D (NS D off by 19% where Y reads 2%); fixed before E-005 closes
-- 2026-10-07 E-005: bug W-074 filed during T-154: the table labels the charge rows Y though they score D
-- 2026-10-07 E-005: standalone spike W-072 filed during T-089 (developer: later): parallel one-thread fits and Optuna storage as the run registry, decided before E-006's screens
+- none recorded

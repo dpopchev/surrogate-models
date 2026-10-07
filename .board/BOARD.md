@@ -1,89 +1,8 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-074   | blocked: 0 | todo roots: 5 | done: 179 | pruned: 13
+open path: none   | blocked: 0 | todo roots: 5 | done: 181 | pruned: 13
 
 ## Tree
-
-### E-005 [doing] Baseline surrogate through one shared pipeline
-
-#### W-034 issue [done] NS mass baseline runs end to end with live feedback
-
-- T-076 [done] Add torch and skorch -> pyproject.toml and uv.lock
-- T-077 [done] Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py
-- T-078 [done] Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py
-- T-079 [done] Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py
-- T-080 [done] Write the baseline fit script and make baseline -> build/assets/51_algorithms/
-- T-090 [done] Restore the best epoch's weights at early stopping -> shared/surrogate.py
-- T-091 [done] Print the baseline error macros in scientific notation -> 50_methodology/51_algorithms/fit_baseline.py
-
-#### W-035 issue [done] Each baseline run leaves a diagnostics folder
-
-- T-081 [done] Write the run record test-first -> shared/runs.py with shared/test_runs.py
-- T-082 [done] Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py
-- T-083 [done] Write the worst and median curve overlays test-first -> shared/diagnostics.py
-- T-084 [done] Wire the diagnostics into the baseline run -> local/state/51_algorithms/<run>/
-- T-092 [done] Flag a run made from uncommitted code -> shared/runs.py and fit_baseline.py
-
-#### W-036 issue [done] Baseline table for four pairs with fold scores and reference predictors
-
-- T-085 [done] Write the reference predictors test-first -> shared/surrogate.py
-- T-086 [done] Run the four pairs with fold scores -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
-- T-087 [done] Add the four-pair baseline table to Section 5.1 -> 50_methodology/51_algorithms/51_algorithms.tex
-- T-120 [done] Measure fit throughput by thread count and parallel fits -> a probe in local/scratch and a Finding on W-036
-- T-121 [done] Train on one torch thread by default -> a threads setting in paper.toml and fit_baseline.py
-- T-125 [done] Record W-063 and the re-plan of E-006 to E-008 -> .board/
-
-#### W-037 issue [done] Charge rebuilt with the true and the predicted mass
-
-- T-088 [done] Write the charge rebuild test-first -> shared/surrogate.py
-- T-089 [done] Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1
-
-#### W-054 issue [done] A running fit is visible live from the developer's terminal
-
-- T-093 [done] Write each run's log to its folder -> <run>/train.log and latest.log
-- T-094 [done] Log a fit progress line with elapsed and remaining time -> fit_baseline.py
-- T-095 [done] Add make follow -> tail the running baseline's log
-
-#### W-055 issue [done] Section 5.1 describes the pipeline and the NS mass baseline
-
-- T-097 [done] Load the baseline numbers only when present -> 00_metadata/article.tex and 51_algorithms.tex
-- T-098 [done] Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex
-
-#### W-056 issue [done] The epoch table names its time column elapse_s
-
-- T-096 [done] Print the epoch time as elapse_s -> shared/surrogate.py
-
-#### W-057 issue [done] A run tells how far it is, when it may stop and where its outputs go
-
-- T-099 [done] Show k/MAX, epochs since best and the time-left range in the epoch table -> shared/surrogate.py
-- T-100 [done] Log a start and an end banner for each run -> 50_methodology/51_algorithms/fit_baseline.py
-- T-101 [done] Add make runs and make run -> 50_methodology/51_algorithms/list_runs.py and mk/paper.mk
-- T-102 [done] Add make examples, the common commands with examples -> mk/paper.mk
-- T-104 [done] Refine the run log from the developer's first look -> shared/surrogate.py and fit_baseline.py
-- T-105 [done] Two stop-time columns, the stop criterion on top and a live loss curve -> shared/surrogate.py and fit_baseline.py
-- T-106 [done] Print the epoch table at 4 significant figures, elapsed_s to a tenth -> shared/surrogate.py
-
-#### W-062 issue [done] Section 4.1 lists the surrogate pipeline as an algorithm
-
-- T-153 [done] Load the algorithm packages -> 00_metadata/preamble.tex
-- T-154 [done] Typeset the pipeline as Algorithm 1 -> 50_methodology/51_algorithms/51_algorithms.tex
-
-#### W-063 issue [done] The charge target keeps every charge, the floor dropped   (filed during T-086)
-
-- T-122 [done] Drop the floor from the charge target test-first -> shared/design.py
-- T-123 [done] Restate Section 3.3, H1 and the abstract without the floor -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
-- T-124 [done] Rerun the four pairs on the unfloored charge target -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
-- T-147 [done] Checkpoint E-005 and restore the knowledge budget -> .board/board.toml
-
-#### W-073 bug [done] The baseline table scores the charge on the log target, not on the charge D   (filed during T-089)
-
-- T-151 [done] Score the charge rows in D test-first -> 50_methodology/51_algorithms/fit_baseline.py
-- T-152 [done] Rerun the four pairs and restate the Section 4.1 comparison in D -> 50_methodology/51_algorithms/51_algorithms.tex
-
-#### W-074 bug [doing] The baseline table labels the charge rows Y although they score D   (filed during T-154)
-
-- T-155 [done] Label the charge rows by D test-first -> 50_methodology/51_algorithms/fit_baseline.py
-- T-156 [done] Rerun the four pairs with the D label -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
 
 ### E-006 [todo] Search space and the best surrogate per dataset
 
@@ -350,6 +269,89 @@ closed 2026-10-06 -- outcome: build/assets/ grouped by section with each figure'
 - T-074 [done] Write the section entry files test-first -> 00_metadata/section_entry.py
 - T-075 [done] Wire make section and make sections -> mk/paper.mk and build/paper/sections/
 
+### E-005 [done] Baseline surrogate through one shared pipeline
+
+closed 2026-10-07 -- outcome: make baseline fits the four dataset x target pairs with live per-epoch progress and writes the Section 5.1 baseline table (test and fold MARE beside the mean and nearest-curve references), the NS mass parity figure, the charge MARE rebuilt with the true and the predicted mass, and one diagnostics folder per run under local/state/51_algorithms/. -- ledger: ledgers/E-005.md
+
+#### W-034 issue [done] NS mass baseline runs end to end with live feedback
+
+- T-076 [done] Add torch and skorch -> pyproject.toml and uv.lock
+- T-077 [done] Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py
+- T-078 [done] Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py
+- T-079 [done] Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py
+- T-080 [done] Write the baseline fit script and make baseline -> build/assets/51_algorithms/
+- T-090 [done] Restore the best epoch's weights at early stopping -> shared/surrogate.py
+- T-091 [done] Print the baseline error macros in scientific notation -> 50_methodology/51_algorithms/fit_baseline.py
+
+#### W-035 issue [done] Each baseline run leaves a diagnostics folder
+
+- T-081 [done] Write the run record test-first -> shared/runs.py with shared/test_runs.py
+- T-082 [done] Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py
+- T-083 [done] Write the worst and median curve overlays test-first -> shared/diagnostics.py
+- T-084 [done] Wire the diagnostics into the baseline run -> local/state/51_algorithms/<run>/
+- T-092 [done] Flag a run made from uncommitted code -> shared/runs.py and fit_baseline.py
+
+#### W-036 issue [done] Baseline table for four pairs with fold scores and reference predictors
+
+- T-085 [done] Write the reference predictors test-first -> shared/surrogate.py
+- T-086 [done] Run the four pairs with fold scores -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
+- T-087 [done] Add the four-pair baseline table to Section 5.1 -> 50_methodology/51_algorithms/51_algorithms.tex
+- T-120 [done] Measure fit throughput by thread count and parallel fits -> a probe in local/scratch and a Finding on W-036
+- T-121 [done] Train on one torch thread by default -> a threads setting in paper.toml and fit_baseline.py
+- T-125 [done] Record W-063 and the re-plan of E-006 to E-008 -> .board/
+
+#### W-037 issue [done] Charge rebuilt with the true and the predicted mass
+
+- T-088 [done] Write the charge rebuild test-first -> shared/surrogate.py
+- T-089 [done] Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1
+
+#### W-054 issue [done] A running fit is visible live from the developer's terminal
+
+- T-093 [done] Write each run's log to its folder -> <run>/train.log and latest.log
+- T-094 [done] Log a fit progress line with elapsed and remaining time -> fit_baseline.py
+- T-095 [done] Add make follow -> tail the running baseline's log
+
+#### W-055 issue [done] Section 5.1 describes the pipeline and the NS mass baseline
+
+- T-097 [done] Load the baseline numbers only when present -> 00_metadata/article.tex and 51_algorithms.tex
+- T-098 [done] Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex
+
+#### W-056 issue [done] The epoch table names its time column elapse_s
+
+- T-096 [done] Print the epoch time as elapse_s -> shared/surrogate.py
+
+#### W-057 issue [done] A run tells how far it is, when it may stop and where its outputs go
+
+- T-099 [done] Show k/MAX, epochs since best and the time-left range in the epoch table -> shared/surrogate.py
+- T-100 [done] Log a start and an end banner for each run -> 50_methodology/51_algorithms/fit_baseline.py
+- T-101 [done] Add make runs and make run -> 50_methodology/51_algorithms/list_runs.py and mk/paper.mk
+- T-102 [done] Add make examples, the common commands with examples -> mk/paper.mk
+- T-104 [done] Refine the run log from the developer's first look -> shared/surrogate.py and fit_baseline.py
+- T-105 [done] Two stop-time columns, the stop criterion on top and a live loss curve -> shared/surrogate.py and fit_baseline.py
+- T-106 [done] Print the epoch table at 4 significant figures, elapsed_s to a tenth -> shared/surrogate.py
+
+#### W-062 issue [done] Section 4.1 lists the surrogate pipeline as an algorithm
+
+- T-153 [done] Load the algorithm packages -> 00_metadata/preamble.tex
+- T-154 [done] Typeset the pipeline as Algorithm 1 -> 50_methodology/51_algorithms/51_algorithms.tex
+
+#### W-063 issue [done] The charge target keeps every charge, the floor dropped   (filed during T-086)
+
+- T-122 [done] Drop the floor from the charge target test-first -> shared/design.py
+- T-123 [done] Restate Section 3.3, H1 and the abstract without the floor -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
+- T-124 [done] Rerun the four pairs on the unfloored charge target -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
+- T-147 [done] Checkpoint E-005 and restore the knowledge budget -> .board/board.toml
+
+#### W-073 bug [done] The baseline table scores the charge on the log target, not on the charge D   (filed during T-089)
+
+- T-151 [done] Score the charge rows in D test-first -> 50_methodology/51_algorithms/fit_baseline.py
+- T-152 [done] Rerun the four pairs and restate the Section 4.1 comparison in D -> 50_methodology/51_algorithms/51_algorithms.tex
+
+#### W-074 bug [done] The baseline table labels the charge rows Y although they score D   (filed during T-154)
+
+- T-155 [done] Label the charge rows by D test-first -> 50_methodology/51_algorithms/fit_baseline.py
+- T-156 [done] Rerun the four pairs with the D label -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
+
 ### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
 
 closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/python.md, When make check runs, Then it passes with the repository root on pytest pythonpath and the python files matching the add-python COLOCATED templates. -- ledger: ledgers/W-005.md
@@ -419,62 +421,6 @@ closed 2026-10-06 -- outcome: Given the board skill's current [landing] keys, Wh
 ## Diagram
 ```mermaid
 flowchart TD
-  E005["E-005 doing: Baseline surrogate through one shared pipeline"]
-  E005 --> W034["W-034 issue done: NS mass baseline runs end to end with live feedback"]
-  W034 --> T076["T-076 done: Add torch and skorch -> pyproject.toml and uv.lock"]
-  W034 --> T077["T-077 done: Write the design-matrix contract test-first -> shared/design.py with shared/test_design.py"]
-  W034 --> T078["T-078 done: Write the estimator, metrics and training callbacks test-first -> shared/surrogate.py with shared/test_surrogate.py"]
-  W034 --> T079["T-079 done: Add the baseline settings to paper.toml -> a typed methodology section in shared/config.py"]
-  W034 --> T080["T-080 done: Write the baseline fit script and make baseline -> build/assets/51_algorithms/"]
-  W034 --> T090["T-090 done: Restore the best epoch's weights at early stopping -> shared/surrogate.py"]
-  W034 --> T091["T-091 done: Print the baseline error macros in scientific notation -> 50_methodology/51_algorithms/fit_baseline.py"]
-  E005 --> W035["W-035 issue done: Each baseline run leaves a diagnostics folder"]
-  W035 --> T081["T-081 done: Write the run record test-first -> shared/runs.py with shared/test_runs.py"]
-  W035 --> T082["T-082 done: Write the loss curve and the error CDF test-first -> shared/diagnostics.py with shared/test_diagnostics.py"]
-  W035 --> T083["T-083 done: Write the worst and median curve overlays test-first -> shared/diagnostics.py"]
-  W035 --> T084["T-084 done: Wire the diagnostics into the baseline run -> local/state/51_algorithms/<run>/"]
-  W035 --> T092["T-092 done: Flag a run made from uncommitted code -> shared/runs.py and fit_baseline.py"]
-  E005 --> W036["W-036 issue done: Baseline table for four pairs with fold scores and reference predictors"]
-  W036 --> T085["T-085 done: Write the reference predictors test-first -> shared/surrogate.py"]
-  W036 --> T086["T-086 done: Run the four pairs with fold scores -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
-  W036 --> T087["T-087 done: Add the four-pair baseline table to Section 5.1 -> 50_methodology/51_algorithms/51_algorithms.tex"]
-  W036 --> T120["T-120 done: Measure fit throughput by thread count and parallel fits -> a probe in local/scratch and a Finding on W-036"]
-  W036 --> T121["T-121 done: Train on one torch thread by default -> a threads setting in paper.toml and fit_baseline.py"]
-  W036 --> T125["T-125 done: Record W-063 and the re-plan of E-006 to E-008 -> .board/"]
-  E005 --> W037["W-037 issue done: Charge rebuilt with the true and the predicted mass"]
-  W037 --> T088["T-088 done: Write the charge rebuild test-first -> shared/surrogate.py"]
-  W037 --> T089["T-089 done: Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1"]
-  E005 --> W054["W-054 issue done: A running fit is visible live from the developer's terminal"]
-  W054 --> T093["T-093 done: Write each run's log to its folder -> <run>/train.log and latest.log"]
-  W054 --> T094["T-094 done: Log a fit progress line with elapsed and remaining time -> fit_baseline.py"]
-  W054 --> T095["T-095 done: Add make follow -> tail the running baseline's log"]
-  E005 --> W055["W-055 issue done: Section 5.1 describes the pipeline and the NS mass baseline"]
-  W055 --> T097["T-097 done: Load the baseline numbers only when present -> 00_metadata/article.tex and 51_algorithms.tex"]
-  W055 --> T098["T-098 done: Write the Section 5.1 pipeline and baseline text -> 50_methodology/51_algorithms/51_algorithms.tex"]
-  E005 --> W056["W-056 issue done: The epoch table names its time column elapse_s"]
-  W056 --> T096["T-096 done: Print the epoch time as elapse_s -> shared/surrogate.py"]
-  E005 --> W057["W-057 issue done: A run tells how far it is, when it may stop and where its outputs go"]
-  W057 --> T099["T-099 done: Show k/MAX, epochs since best and the time-left range in the epoch table -> shared/surrogate.py"]
-  W057 --> T100["T-100 done: Log a start and an end banner for each run -> 50_methodology/51_algorithms/fit_baseline.py"]
-  W057 --> T101["T-101 done: Add make runs and make run -> 50_methodology/51_algorithms/list_runs.py and mk/paper.mk"]
-  W057 --> T102["T-102 done: Add make examples, the common commands with examples -> mk/paper.mk"]
-  W057 --> T104["T-104 done: Refine the run log from the developer's first look -> shared/surrogate.py and fit_baseline.py"]
-  W057 --> T105["T-105 done: Two stop-time columns, the stop criterion on top and a live loss curve -> shared/surrogate.py and fit_baseline.py"]
-  W057 --> T106["T-106 done: Print the epoch table at 4 significant figures, elapsed_s to a tenth -> shared/surrogate.py"]
-  E005 --> W062["W-062 issue done: Section 4.1 lists the surrogate pipeline as an algorithm"]
-  W062 --> T153["T-153 done: Load the algorithm packages -> 00_metadata/preamble.tex"]
-  W062 --> T154["T-154 done: Typeset the pipeline as Algorithm 1 -> 50_methodology/51_algorithms/51_algorithms.tex"]
-  E005 --> W063["W-063 issue done: The charge target keeps every charge, the floor dropped"]
-  W063 --> T122["T-122 done: Drop the floor from the charge target test-first -> shared/design.py"]
-  W063 --> T123["T-123 done: Restate Section 3.3, H1 and the abstract without the floor -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
-  W063 --> T124["T-124 done: Rerun the four pairs on the unfloored charge target -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
-  W063 --> T147["T-147 done: Checkpoint E-005 and restore the knowledge budget -> .board/board.toml"]
-  E005 --> W073["W-073 bug done: The baseline table scores the charge on the log target, not on the charge D"]
-  W073 --> T151["T-151 done: Score the charge rows in D test-first -> 50_methodology/51_algorithms/fit_baseline.py"]
-  W073 --> T152["T-152 done: Rerun the four pairs and restate the Section 4.1 comparison in D -> 50_methodology/51_algorithms/51_algorithms.tex"]
-  E005 --> W074["W-074 bug doing: The baseline table labels the charge rows Y although they score D"]
-  W074 --> T155["T-155 done: Label the charge rows by D test-first -> 50_methodology/51_algorithms/fit_baseline.py"]
-  W074 --> T156["T-156 done: Rerun the four pairs with the D label -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
   E006["E-006 todo: Search space and the best surrogate per dataset"]
   E006 --> W038["W-038 issue pruned: rho_c input check -- raw against log10"]
   E006 --> W039["W-039 issue pruned: H1 -- log against linear charge target"]
@@ -549,8 +495,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W074,E009 doing
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W036,T085,T086,T087,T120,T121,T125,W037,T088,T089,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W062,T153,T154,W063,T122,T123,T124,T147,W073,T151,T152,T155,T156,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class E009 doing
+  class W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
   class E006,W064,T126,T127,T128,W065,T129,T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W071,T144,T145,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
