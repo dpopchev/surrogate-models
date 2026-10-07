@@ -29,6 +29,7 @@ from typing import Any, assert_never
 
 import matplotlib.pyplot as plt
 import numpy as np
+import optuna
 import pandas as pd
 import torch
 from matplotlib.figure import Figure
@@ -576,6 +577,15 @@ class _Job:
     progress: _Progress
 
 
+def ask_trial(study: optuna.Study, dataset: str, target: str, candidate: str) -> optuna.Trial:
+    """A new trial of the study, named by its pair and candidate from its start, so the
+    dashboard tells the running trials apart."""
+    trial = study.ask()
+    for key, value in {"dataset": dataset, "target": target, "candidate": candidate}.items():
+        trial.set_user_attr(key, value)
+    return trial
+
+
 def _tick(progress: _Progress) -> None:
     """Count one more MLP fit across every worker and log how far the run has come."""
     with progress.lock:
@@ -591,7 +601,7 @@ def _score_job(job: _Job) -> tuple[Scored, Fit | None]:
     pair, run = job.pair, job.run
     with _logging_into(run.folder / "train.log", job.settings.log_level):
         study = open_study(run.batch, run.journal)
-        trial = study.ask()
+        trial = ask_trial(study, pair.spec.dataset, pair.target, job.candidate)
         record = _ledger_writer(pair, run, lambda entry: tell_run(study, trial, entry))
         if job.candidate != "MLP":
             scored, _, _ = score_candidate(

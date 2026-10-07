@@ -23,6 +23,7 @@ from fit_baseline import (
     Fit,
     PairScores,
     Scored,
+    ask_trial,
     baseline_table,
     charge_mares,
     charge_numbers,
@@ -379,6 +380,12 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
         now=lambda: datetime(2026, 10, 6, 10, 56, 0, tzinfo=UTC),
     )
     return folder
+
+
+def test_a_trial_names_its_candidate_while_it_runs() -> None:
+    study = optuna.create_study(direction="maximize")
+    ask_trial(study, "toy", "mass", "MLP")
+    assert study.trials[0].user_attrs["candidate"] == "MLP"
 
 
 class TestMain:
