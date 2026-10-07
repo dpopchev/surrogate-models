@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-006 > W-065 > T-129   | blocked: 0 | todo roots: 4 | done: 188 | pruned: 13
+open path: E-006 > W-065 > T-131   | blocked: 0 | todo roots: 4 | done: 190 | pruned: 13
 
 ## Tree
 
@@ -26,9 +26,9 @@ open path: E-006 > W-065 > T-129   | blocked: 0 | todo roots: 4 | done: 188 | pr
 
 #### W-065 issue [doing] One scorecard and a fair harness for every candidate
 
-- T-129 [doing] Write the scorecard test-first -> shared/scorecard.py   <- ACTIVE LEAF
-- T-130 [todo] Write the fair harness test-first -> shared/harness.py
-- T-131 [todo] Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
+- T-129 [done] Write the scorecard test-first -> shared/scorecard.py
+- T-130 [done] Write the fair harness test-first -> shared/harness.py
+- T-131 [doing] Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex   <- ACTIVE LEAF
 - T-146 [todo] Describe the search procedure in Section 4.2 -> 50_methodology/52_optimization/52_optimization.tex
 
 #### W-066 issue [todo] Representation screen -- inputs, targets, pointwise or curve-wise
@@ -433,9 +433,9 @@ flowchart TD
   W064 --> T127["T-127 done: Wire the ceilings into both EDA scripts -> 41_neutron_stars_num.tex and 42_black_holes_num.tex"]
   W064 --> T128["T-128 done: Write paragraph 6 on the reachable error -> 41_neutron_stars.tex and 42_black_holes.tex"]
   E006 --> W065["W-065 issue doing: One scorecard and a fair harness for every candidate"]
-  W065 --> T129["T-129 doing: Write the scorecard test-first -> shared/scorecard.py -- ACTIVE LEAF"]
-  W065 --> T130["T-130 todo: Write the fair harness test-first -> shared/harness.py"]
-  W065 --> T131["T-131 todo: Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
+  W065 --> T129["T-129 done: Write the scorecard test-first -> shared/scorecard.py"]
+  W065 --> T130["T-130 done: Write the fair harness test-first -> shared/harness.py"]
+  W065 --> T131["T-131 doing: Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex -- ACTIVE LEAF"]
   W065 --> T146["T-146 todo: Describe the search procedure in Section 4.2 -> 50_methodology/52_optimization/52_optimization.tex"]
   E006 --> W066["W-066 issue todo: Representation screen -- inputs, targets, pointwise or curve-wise"]
   W066 --> T132["T-132 todo: Add the curve-wise representation test-first -> shared/design.py"]
@@ -495,8 +495,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,W065,T129,E009 doing
-  class W064,T126,T127,T128,W071,T144,T145,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150 todo
+  class E006,W065,T131,E009 doing
+  class W064,T126,T127,T128,T129,T130,W071,T144,T145,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
