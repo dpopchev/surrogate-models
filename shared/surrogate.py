@@ -22,8 +22,9 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from skorch import NeuralNetRegressor
-from skorch.callbacks import Callback, EarlyStopping, EpochScoring, LRScheduler
+from skorch.callbacks import Callback, EarlyStopping, EpochScoring, LRScheduler, PrintLog
 from skorch.dataset import ValidSplit
+from skorch.utils import Ansi
 from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
@@ -195,6 +196,24 @@ class FiniteLoss(Callback):
         for key in ("train_loss", "valid_loss"):
             if key in epoch and not np.isfinite(epoch[key]):
                 raise FloatingPointError(f"epoch {epoch['epoch']}: {key} is {epoch[key]}")
+
+
+class EpochTable(PrintLog):
+    """skorch's epoch table with a format per column (W-078): losses and errors in e-notation
+    to 3 significant figures, the lr to 4 so the cosine decay shows, the seconds to a tenth;
+    every other column as skorch formats it."""
+
+    def format_row(self, row: dict[str, Any], key: str, color: str) -> str:
+        """The cell of key in row, wrapped in color when it is the column's best so far."""
+        spec = EPOCH_FORMATS.get(key)
+        if spec is None:
+            return cast(str, super().format_row(row, key, color))
+        cell = f"{row[key]:{spec}}"
+        return f"{color}{cell}{Ansi.ENDC.value}" if row.get(f"{key}_best") else cell
+
+
+# The epoch table's cell format per column; a column not named keeps skorch's own format.
+EPOCH_FORMATS = {"train_loss": ".2e", "valid_loss": ".2e", "valid_mare": ".2e", "lr": ".3e"}
 
 
 class ElapsedSeconds(Callback):
@@ -377,11 +396,9 @@ def make_estimator(
             ("progress", Progress(training.patience)),
             *live,
         ],
-        # at_epoch (k/MAX) replaces the bare epoch and sorts first; elapsed_s replaces dur.
-        callbacks__print_log__keys_ignored=["dur", "epoch"],
-        # 4 significant figures, not 4 decimals: 15.1 not 15.1000, and the lr's small steps show.
-        callbacks__print_log__floatfmt=".4g",
-        callbacks__print_log__sink=logger.info,
+        # at_epoch (k/MAX) replaces the bare epoch and sorts first; elapsed_s replaces dur. The
+        # losses, errors and lr are formatted per column (EpochTable, W-078).
+        callbacks__print_log=EpochTable(keys_ignored=["dur", "epoch"], sink=logger.info),
         seed=training.seed,
     )
     return Pipeline([("scale", StandardScaler()), ("net", net)])

@@ -9,11 +9,13 @@ import numpy as np
 import pytest
 from sklearn.pipeline import Pipeline
 from skorch.dataset import Dataset
+from skorch.utils import Ansi
 from torch import nn
 
 from shared.surrogate import (
     MLP,
     Activation,
+    EpochTable,
     Loss,
     Training,
     approx_minutes,
@@ -256,3 +258,18 @@ def test_a_held_out_curve_is_predicted_better_than_by_the_mean() -> None:
     predicted = fitted(TOY).predict(INPUTS[HELD_OUT])
     baseline = np.full(HELD_OUT.sum(), TARGET[~HELD_OUT].mean())
     assert mare(TARGET[HELD_OUT], predicted) < mare(TARGET[HELD_OUT], baseline)
+
+
+class TestEpochTable:
+    def test_epoch_table_writes_a_loss_in_e_notation_to_3_figures(self) -> None:
+        assert EpochTable().format_row({"train_loss": 0.0007835}, "train_loss", "") == "7.84e-04"
+
+    def test_epoch_table_writes_the_lr_to_4_figures_so_its_decay_shows(self) -> None:
+        assert EpochTable().format_row({"lr": 0.0009999}, "lr", "") == "9.999e-04"
+
+    def test_epoch_table_keeps_a_tenth_on_whole_seconds(self) -> None:
+        assert EpochTable().format_row({"elapsed_s": 2.0}, "elapsed_s", "") == "2.0"
+
+    def test_epoch_table_keeps_the_colour_of_a_best_cell(self) -> None:
+        row = {"valid_loss": 0.0123, "valid_loss_best": True}
+        assert EpochTable().format_row(row, "valid_loss", "<c>") == f"<c>1.23e-02{Ansi.ENDC.value}"
