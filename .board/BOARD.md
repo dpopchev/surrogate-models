@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-063 > T-147   | blocked: 1 | todo roots: 4 | done: 163 | pruned: 13
+open path: E-005 > W-063 > T-124   | blocked: 1 | todo roots: 4 | done: 164 | pruned: 13
 
 ## Tree
 
@@ -69,8 +69,8 @@ open path: E-005 > W-063 > T-147   | blocked: 1 | todo roots: 4 | done: 163 | pr
 
 - T-122 [done] Drop the floor from the charge target test-first -> shared/design.py
 - T-123 [done] Restate Section 3.3, H1 and the abstract without the floor -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
-- T-124 [todo] Rerun the four pairs on the unfloored charge target -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
-- T-147 [doing] Checkpoint E-005 and restore the knowledge budget -> .board/board.toml   <- ACTIVE LEAF
+- T-124 [doing] Rerun the four pairs on the unfloored charge target -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex   <- ACTIVE LEAF
+- T-147 [done] Checkpoint E-005 and restore the knowledge budget -> .board/board.toml
 
 ### E-006 [todo] Search space and the best surrogate per dataset
 
@@ -446,8 +446,8 @@ flowchart TD
   E005 --> W063["W-063 issue doing: The charge target keeps every charge, the floor dropped"]
   W063 --> T122["T-122 done: Drop the floor from the charge target test-first -> shared/design.py"]
   W063 --> T123["T-123 done: Restate Section 3.3, H1 and the abstract without the floor -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
-  W063 --> T124["T-124 todo: Rerun the four pairs on the unfloored charge target -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
-  W063 --> T147["T-147 doing: Checkpoint E-005 and restore the knowledge budget -> .board/board.toml -- ACTIVE LEAF"]
+  W063 --> T124["T-124 doing: Rerun the four pairs on the unfloored charge target -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex -- ACTIVE LEAF"]
+  W063 --> T147["T-147 done: Checkpoint E-005 and restore the knowledge budget -> .board/board.toml"]
   E006["E-006 todo: Search space and the best surrogate per dataset"]
   E006 --> W038["W-038 issue pruned: rho_c input check -- raw against log10"]
   E006 --> W039["W-039 issue pruned: H1 -- log against linear charge target"]
@@ -518,9 +518,9 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W063,T147,E009 doing
+  class E005,W063,T124,E009 doing
   class W036 blocked
-  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,T085,T086,T120,T121,T125,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,T122,T123,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class T087,W037,T088,T089,W062,T124,E006,W064,T126,T127,T128,W065,T129,T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W071,T144,T145,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118 todo
+  class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,T085,T086,T120,T121,T125,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,T122,T123,T147,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class T087,W037,T088,T089,W062,E006,W064,T126,T127,T128,W065,T129,T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W071,T144,T145,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
