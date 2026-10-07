@@ -37,3 +37,4 @@
 
 ## Deviations
 - 2026-10-07 E-006: spike W-075 (can M_max be predicted for given beta, lambda) and AC9 / W-076 (the ceilings as absolute uncertainties) filed during T-131 (developer)
+- 2026-10-07 E-006: standalone W-077 (the run ledger) filed during T-131 (developer): every fit's statistics kept, so Optuna can be compared later; E-006 parks for it once W-065 lands, then resumes at W-076
