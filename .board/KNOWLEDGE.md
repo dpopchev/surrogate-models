@@ -24,6 +24,7 @@
 - 2026-10-07 W-073: T-152: standing: in D the nearest curve beats the MLP on the test curves of all four pairs (NS D 1.18e-1 vs 1.94e-1, BH D 3.2e-3 vs 6.2e-3); the MLP leads only on the NS folds (1.00e-1 vs 1.30e-1) -> no pair is won by the baseline
 - 2026-10-07 W-073: standing: the charge is scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1); the floor moved nothing -> the nearest curve wins every test pair (W-073#1) supersedes: W-036#2, W-037#1, W-063#1
 - 2026-10-07 W-076: fact: the NS median mass is 1.75 M_sun, not 1.4: the p95 ceiling means 1.36e-4 M_sun there, 1.70e-4 at M_max 2.19, the charge 1.56e-3 dex; BH 3.05e-7 M_sun at M 3.58, 4.40e-7 dex -> Sections 3.1, 3.2 (T-161)
+- 2026-10-07 W-081: fact: make baseline on 6 workers took 24m 9s against 50m 48s serial (2.1x, not T-148's 3.2x: the 4 MLP jobs are the critical path); same seed, equal figures -> finer jobs (per fold) would use all 6 (T-180)
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
