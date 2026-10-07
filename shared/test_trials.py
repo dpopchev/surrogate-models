@@ -59,6 +59,13 @@ def test_a_reported_epoch_is_an_intermediate_value_of_the_trial() -> None:
     assert study.trials[0].intermediate_values == {3: 0.25}
 
 
+def test_an_offset_moves_the_reported_step_past_earlier_fits() -> None:
+    study = open_study("toy", None)
+    trial = study.ask()
+    ReportEpochs(trial, offset=20).on_epoch_end(net_at(3, 0.25))
+    assert study.trials[0].intermediate_values == {23: 0.25}
+
+
 def test_a_told_run_completes_the_trial_with_its_mean_fold_figures() -> None:
     study = open_study("toy", None)
     tell_run(study, study.ask(), ENTRY)

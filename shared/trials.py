@@ -24,16 +24,20 @@ def open_study(name: str, journal: Path | None) -> optuna.Study:
 
 
 class ReportEpochs(Callback):
-    """Report a network's valid_mare to its trial after every epoch."""
+    """Report a network's valid_mare to its trial after every epoch, at offset + epoch: one
+    trial spans several fits (a harness run fits every fold, then all curves), each numbering
+    its epochs from 1, so the offset carries the epochs of the trial's earlier fits."""
 
-    def __init__(self, trial: optuna.Trial) -> None:
+    def __init__(self, trial: optuna.Trial, offset: int = 0) -> None:
         self.trial = trial
+        self.offset = offset
 
     def on_epoch_end(
         self, net: Any, dataset_train: Any = None, dataset_valid: Any = None, **kwargs: Any
     ) -> None:
         """Report this epoch's valid_mare at its epoch number."""
-        self.trial.report(float(net.history[-1, "valid_mare"]), int(net.history[-1, "epoch"]))
+        step = self.offset + int(net.history[-1, "epoch"])
+        self.trial.report(float(net.history[-1, "valid_mare"]), step)
 
 
 def tell_run(study: optuna.Study, trial: optuna.Trial, entry: LedgerEntry) -> None:
