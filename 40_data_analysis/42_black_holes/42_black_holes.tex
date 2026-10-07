@@ -1,13 +1,14 @@
 \subsection{Black Holes: Exploratory Data Analysis}
 \label{sec:eda-bh}
 
-The black-hole table holds $\bhEdaRows$ configurations on $\bhEdaCurves$ curves, one per $\beta$, each sampled densely in the horizon radius $\rh$. Its answers differ from the neutron stars' in three of five places (1, 3 and 4):
+The black-hole table holds $\bhEdaRows$ configurations on $\bhEdaCurves$ curves, one per $\beta$, each sampled densely in the horizon radius $\rh$. Its answers differ from the neutron stars' in three of five places (1, 3 and 4), and its data allow far more precision (6):
 \begin{enumerate}
   \item the horizon radius enters linearly, standardized;
   \item the mass target is $M$ itself, in solar masses;
   \item dividing the charge by the mass brings no improvement, unlike for neutron stars;
   \item $\beta$ barely changes $M$ or $\Dch$ at fixed $\rh$; it sets where each curve starts;
-  \item the split groups whole $\beta$ curves: GroupKFold over $\beta$.
+  \item the split groups whole $\beta$ curves: GroupKFold over $\beta$;
+  \item the spacing between curves bounds the reachable error, here far less than for neutron stars: about $\bhEdaCeilMFigures$ significant figures for the mass and $\bhEdaCeilDFigures$ for the charge.
 \end{enumerate}
 
 \paragraph{1.\ The horizon radius enters linearly, standardized.}
@@ -41,4 +42,11 @@ At fixed $\rh$, changing $\beta$ moves the mass by only $\bhEdaBetaEffectPercent
 Each curve is so dense that every row's nearest neighbour lies on its own curve ($\bhEdaSameCurvePercent\%$; median distance $\bhEdaWithinMedian$ against $\bhEdaAcrossMedian$ to the next curve), so a random split of rows leaks. A one-nearest-neighbour probe (\cref{tab:bh-split-strategies}, $\bhEdaFolds$ folds) shows it for the charge, which $\beta$ affects most: $\log_{10}\Dch$ scores $\bhEdaSplitRandomRowsLD$ with rows held out at random against $\bhEdaSplitCurvesLD$ with whole curves. Holding out the outermost curves scores as holding out any curve ($\bhEdaSplitOuterCurvesLD$), so extrapolating in $\beta$ is no harder than interpolating; as for neutron stars, the mass alone reverses the order ($\bhEdaSplitRandomRowsM$ against $\bhEdaSplitCurvesM$), because all curves share one $\rh$ grid.
 
 \InputIfFileExists{42_black_holes_tab_split_strategies}{}{}
+\FloatBarrier
+
+\paragraph{6.\ The data bound the reachable error.}
+The same test as for neutron stars -- each interior curve predicted from the two curves on each side, a cubic spline in $\beta$ after interpolating each neighbour along $\rh$ -- gives the error a smooth interpolation of the $\beta$ grid already reaches (\cref{tab:bh-ceilings}, \cref{fig:bh-ceilings}). The noise along a curve is $\bhEdaCeilMNoise$ for the mass and $\bhEdaCeilDNoise$ for the charge (median), a spline through every other row predicts the rows between to $\bhEdaCeilMAlong$ and $\bhEdaCeilDAlong$, and across curves the 95th percentile of the error is $\bhEdaCeilMAcrossBeta$ for the mass and $\bhEdaCeilDAcrossBeta$ for the charge: about $\bhEdaCeilMFigures$ and $\bhEdaCeilDFigures$ significant figures. The error is not spread evenly: it rises by orders of magnitude at the smallest radii, where each curve starts at its own existence edge (decision~4), and stays near the noise everywhere else. Even with only $\bhEdaCurves$ curves, interpolation between them reaches this bound; whether a surrogate keeps it between curves it was not trained on, and near the existence edge, is the black-hole question for Section~\ref{sec:results}.
+
+\InputIfFileExists{42_black_holes_tab_ceilings}{}{}
+\InputIfFileExists{42_black_holes_fig_ceilings}{}{}
 \FloatBarrier
