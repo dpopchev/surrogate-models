@@ -63,13 +63,13 @@ $(BH_EDA_ASSETS): $(BH_EDA) paper.toml shared/config.py shared/plots.py shared/e
 	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS)
 	$(call log_done,BH EDA figures and numbers written to $(@D)/)
 
-# Section 3.3: the split and charge-floor numbers, from the split file and both tables.
+# Section 3.3: the split numbers, from the split file.
 PREP_NUMBERS := 40_data_analysis/43_preprocessing/preprocessing_numbers.py
 PREP_ASSETS  := $(ASSETS)/43_preprocessing/43_preprocessing_num.tex
 PAPER_ASSETS += $(PREP_ASSETS)
 
-$(PREP_ASSETS): $(PREP_NUMBERS) paper.toml shared/config.py $(STATE)/split.parquet $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet
-	@$(RUN) python $(PREP_NUMBERS) $(STATE)/split.parquet $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(ASSETS) --seed $(SPLIT_SEED)
+$(PREP_ASSETS): $(PREP_NUMBERS) $(STATE)/split.parquet
+	@$(RUN) python $(PREP_NUMBERS) $(STATE)/split.parquet $(ASSETS) --seed $(SPLIT_SEED)
 	$(call log_done,Section 3.3 numbers written to $@)
 
 # Section 4.1: the baseline surrogate trains a network, minutes on this CPU, so it is its own

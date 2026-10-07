@@ -4,9 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from preprocessing_numbers import floor_share, main, numbers, split_summary
-
-from shared.config import PaperConfig
+from preprocessing_numbers import main, numbers, split_summary
 
 # Five NS curves: two test curves, folds of size 2 and 1, one flagged for the ablation.
 NS, BH = "neutron_stars", "black_holes"
@@ -17,7 +15,6 @@ SPLIT = pd.DataFrame(
         "ablation": [True, False, False, False, False, False, True],
     }
 )
-CHARGES = pd.DataFrame({"D": [1e-7, 1e-3, 1e-2, 2e-6]})
 
 
 class TestSplitSummary:
@@ -44,32 +41,13 @@ class TestSplitSummary:
         assert summary.ablation == 1
 
 
-def test_floor_share_counts_rows_below_the_floor() -> None:
-    assert floor_share(CHARGES, NS, eps=1e-5).below == 2
-
-
-def test_floor_share_gives_the_orders_of_magnitude_above_the_floor() -> None:
-    assert floor_share(CHARGES, NS, eps=1e-5).orders_above == pytest.approx(3.0)
-
-
 class TestNumbers:
     @pytest.fixture
     def found(self):
-        splits = (split_summary(SPLIT, NS), split_summary(SPLIT, BH))
-        floors = (floor_share(CHARGES, NS, 1e-5), floor_share(CHARGES, BH, 1e-5))
-        return numbers(splits, floors, eps=1e-5, seed=7)
+        return numbers((split_summary(SPLIT, NS), split_summary(SPLIT, BH)), seed=7)
 
     def test_names_the_test_curves_per_dataset(self, found) -> None:
         assert found["prepNsTestCurves"] == "2"
-
-    def test_gives_the_floor_in_scientific_notation(self, found) -> None:
-        assert found["prepChargeFloor"] == "1.00\\times 10^{-5}"
-
-    def test_gives_the_rows_below_the_floor_in_percent(self, found) -> None:
-        assert found["prepNsFloorPercent"] == "50.0"
-
-    def test_names_the_orders_above_the_floor(self, found) -> None:
-        assert found["prepNsFloorOrders"] == "3.0"
 
     def test_names_the_seed(self, found) -> None:
         assert found["prepSeed"] == "7"
@@ -78,16 +56,14 @@ class TestNumbers:
 class TestMain:
     @pytest.fixture
     def assets(self, tmp_path: Path) -> Path:
-        split, ns, bh = tmp_path / "s.parquet", tmp_path / "ns.parquet", tmp_path / "bh.parquet"
+        split = tmp_path / "s.parquet"
         SPLIT.to_parquet(split)
-        CHARGES.to_parquet(ns)
-        CHARGES.to_parquet(bh)
         assets = tmp_path / "assets"
         (assets / "43_preprocessing").mkdir(parents=True)
         (assets / "43_preprocessing" / "old.tex").write_text("from an earlier run")
         (assets / "41_neutron_stars").mkdir()
         (assets / "41_neutron_stars" / "kept.tex").write_text("another section's asset")
-        main([str(split), str(ns), str(bh), str(assets), "--seed", "7"], config=PaperConfig())
+        main([str(split), str(assets), "--seed", "7"])
         return assets
 
     def test_writes_the_numbers_into_its_section_folder_alone(self, assets) -> None:

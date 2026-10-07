@@ -1,10 +1,10 @@
 \subsection{Preprocessing and Feature Decisions}
 \label{sec:preprocessing}
 
-Both datasets are prepared the same way: the inputs are standardized on the training folds, the charge target is $\log_{10}(\max(\Dch, \varepsilon)/M)$, the mass target is $M$ in solar masses, and whole curves are split into a frozen test set and GroupKFold folds. \Cref{tab:decisions-ns,tab:decisions-bh} list each decision with its grounds from Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}; the three choices a table row cannot carry are argued first.
+Both datasets are prepared the same way: the inputs are standardized on the training folds, the charge target is $\log_{10}(\Dch/M)$, the mass target is $M$ in solar masses, and whole curves are split into a frozen test set and GroupKFold folds. \Cref{tab:decisions-ns,tab:decisions-bh} list each decision with its grounds from Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}; the three choices a table row cannot carry are argued first.
 
-\paragraph{The charge is floored before it is divided by the mass.}
-The charge target is $\log_{10}(\max(\Dch, \varepsilon)/M)$ with $\varepsilon = \prepChargeFloor$: a charge below $\varepsilon$ is treated as zero, and the floor acts on $\Dch$ itself, since it bounds the physical charge, not its ratio to the mass. It touches $\prepNsFloorRows$ neutron-star rows ($\prepNsFloorPercent\%$) and no black-hole row, whose smallest charge is $\bhEdaDMin$. Without the floor, the logarithm would give the smallest charges as much weight as the largest, $\nsEdaDOrders$ orders of magnitude away.
+\paragraph{The charge keeps every value: no floor.}
+The charge target is $\log_{10}(\Dch/M)$. Every prepared charge is positive -- the smallest neutron-star charge is $\nsEdaDMin$, the smallest black-hole charge $\bhEdaDMin$ -- so the logarithm needs no floor. The smallest neutron-star charges are not a numerical zero: they open their curves at low central density and grow smoothly and monotonically along them, so a floor would flatten real data into a constant and put a kink into the target. On the logarithmic scale every charge carries the same relative weight across the $\nsEdaDOrders$ orders of magnitude $\Dch$ spans, which is what a relative-error metric asks for (Section~\ref{sec:hypotheses}).
 
 \paragraph{Whole curves are split: a frozen test set, then GroupKFold folds.}
 Rows of one curve are each other's nearest neighbours ($\nsEdaSameCurvePercent\%$ of the neutron-star rows, $\bhEdaSameCurvePercent\%$ of the black-hole rows), so a split of rows would put near-copies of every test row into training and overstate accuracy (Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}). Every split therefore assigns whole curves. First, $\prepNsTestPercent\%$ of the curves are frozen as the test set, chosen with the fixed seed $\prepSeed$: $\prepNsTestCurves$ of the $\prepNsCurves$ neutron-star curves and $\prepBhTestCurves$ of the $\prepBhCurves$ black-hole curves. The test set is used once, for the final evaluation. The remaining curves are shuffled with the same seed into $\prepNsFolds$ GroupKFold folds for model selection, $\prepNsFoldMin$ to $\prepNsFoldMax$ neutron-star curves and $\prepBhFoldMin$ to $\prepBhFoldMax$ black-hole curves per fold. The standardization statistics are fitted on the training folds only, so no information from a held-out curve reaches the model.
@@ -26,8 +26,8 @@ $\rhoc$ input & $\log_{10}\rhoc$, standardized &
 Positive and multiplicative; $M$ follows $\log_{10}\rhoc$ as one smooth curve per $(\beta, \lambda)$ pair; skew $\nsEdaRhocRawSkew \to \nsEdaRhocLogSkew$, supporting only (the grid is about even in $\rhoc$). \\
 $\beta, \lambda$ inputs & Linear, standardized; \emph{both retained} &
 A straight line in $\lambda$ explains $\nsEdaLambdaLinearPercentLogDM\%$ of the charge target's variance; at fixed $\lambda$, $\beta$ explains $\nsEdaBetaSharePercent\%$: they interact. \\
-Charge target & $\log_{10}(\max(\Dch, \varepsilon)/M)$ &
-$\Dch$ spans $\nsEdaDOrders$ orders of magnitude; dividing by $M$ lowers the Spearman correlation with $M$ from $\nsEdaCorrMLogD$ to $\nsEdaCorrMLogDM$ and raises the Pearson correlation with $\lambda$ from $\nsEdaCorrLambdaLogD$ to $\nsEdaCorrLambdaLogDM$; the floor touches $\prepNsFloorPercent\%$ of rows. \\
+Charge target & $\log_{10}(\Dch/M)$ &
+$\Dch$ spans $\nsEdaDOrders$ orders of magnitude, every value positive; dividing by $M$ lowers the Spearman correlation with $M$ from $\nsEdaCorrMLogD$ to $\nsEdaCorrMLogDM$ and raises the Pearson correlation with $\lambda$ from $\nsEdaCorrLambdaLogD$ to $\nsEdaCorrLambdaLogDM$. \\
 Mass target & $M$, in $\Msun$ &
 Bounded and of order one (up to $\nsEdaMassMax\,\Msun$); $\nsEdaPileUpPercent\%$ of rows lie within $\nsEdaPileUpWindow\,\Msun$ of their curve's maximum, a sampling artefact, disclosed. \\
 Input scaling & Standardization fitted on the training folds only &
@@ -57,8 +57,8 @@ $\rh$ input & $\rh$, linear, standardized &
 Uniform grid of step $\bhEdaRhStep$ over $\bhEdaRhOrders$ orders of magnitude, skew $\bhEdaRhRawSkew$; a logarithm would only add skew. \\
 $\beta$ input & Linear, standardized; retained &
 At fixed $\rh$ it moves $M$ by $\bhEdaBetaEffectPercentM\%$ and $\log_{10}\Dch$ by $\bhEdaBetaEffectPercentLD\%$ of their spread, but it sets the existence edge, $\rh^{\min}$ from $\bhEdaEdgeRhMinLow$ to $\bhEdaEdgeRhMinHigh$. \\
-Charge target & $\log_{10}(\max(\Dch, \varepsilon)/M)$, as for neutron stars &
-Dividing by $M$ brings no gain here (Spearman with $M$: $\bhEdaSpearmanMLogD$ against $\bhEdaSpearmanMLogDM$); kept for one definition across both datasets; the floor is inactive (smallest $\Dch$ $\bhEdaDMin$). \\
+Charge target & $\log_{10}(\Dch/M)$, as for neutron stars &
+Dividing by $M$ brings no gain here (Spearman with $M$: $\bhEdaSpearmanMLogD$ against $\bhEdaSpearmanMLogDM$); kept for one definition across both datasets; smallest $\Dch$ $\bhEdaDMin$. \\
 Mass target & $M$, in $\Msun$ &
 Bounded and of order one ($\bhEdaMMin$ to $\bhEdaMMax\,\Msun$); follows $\rh$ with Pearson $r = \bhEdaPearsonMRh$; $\beta$ moves it by $\bhEdaBetaEffectPercentM\%$ at fixed $\rh$. \\
 Input scaling & Standardization fitted on the training folds only &

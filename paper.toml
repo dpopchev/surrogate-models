@@ -19,9 +19,6 @@ anchor = 0                # palette index for single-color NS marks (blue)
 beta_cmap = "flare"
 anchor = 1                # palette index for single-color BH marks (orange)
 
-[data_analysis]
-charge_floor = 1e-5       # eps of the charge target log10(max(D, eps)/M)
-
 # Section 3.1 -- which NS EDA figures and tables eda_neutron_stars.py renders; the section text
 # places each one beside the paragraph that cites it, and a deselected one simply drops out.
 # Also available: "univariate" (every variable, equal bins), "curve_adjacency"

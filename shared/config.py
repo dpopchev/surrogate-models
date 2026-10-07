@@ -61,8 +61,6 @@ class DataAnalysis(BaseModel):
 
     neutron_stars: NeutronStarsSection = NeutronStarsSection()
     black_holes: BlackHolesSection = BlackHolesSection()
-    # The floor eps of the charge target log10(max(D, eps)/M) (W-019, E-002 Decision).
-    charge_floor: float = 1e-5
 
 
 # The network vocabulary of shared/surrogate.py, repeated so that loading the config never

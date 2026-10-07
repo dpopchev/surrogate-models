@@ -91,14 +91,6 @@ def test_the_shipped_paper_toml_selects_the_four_bh_figures() -> None:
     assert len(load_config().data_analysis.black_holes.figures) == 4
 
 
-def test_the_charge_floor_defaults_to_one_in_a_hundred_thousand() -> None:
-    assert PaperConfig().data_analysis.charge_floor == 1e-5
-
-
-def test_the_shipped_paper_toml_sets_the_charge_floor() -> None:
-    assert load_config().data_analysis.charge_floor == 1e-5
-
-
 def test_the_shipped_paper_toml_selects_every_ns_table() -> None:
     assert len(load_config().data_analysis.neutron_stars.tables) == 3
 
