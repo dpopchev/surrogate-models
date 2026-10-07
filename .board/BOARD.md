@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-006 > W-071 > T-144   | blocked: 0 | todo roots: 4 | done: 181 | pruned: 13
+open path: E-006 > W-064 > T-126   | blocked: 1 | todo roots: 4 | done: 183 | pruned: 13
 
 ## Tree
 
@@ -18,9 +18,9 @@ open path: E-006 > W-071 > T-144   | blocked: 0 | todo roots: 4 | done: 181 | pr
 
 #### W-043 issue [pruned] H3c -- GPR scaling wall   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the GPR scaling wall becomes the data-budget axis of the S3 screen (W-067)]
 
-#### W-064 issue [todo] Sections 3.1 and 3.2 state the reachable relative error
+#### W-064 issue [doing] Sections 3.1 and 3.2 state the reachable relative error
 
-- T-126 [todo] Write the data-ceiling functions test-first -> shared/ceilings.py
+- T-126 [doing] Write the data-ceiling functions test-first -> shared/ceilings.py   <- ACTIVE LEAF
 - T-127 [todo] Wire the ceilings into both EDA scripts -> 41_neutron_stars_num.tex and 42_black_holes_num.tex
 - T-128 [todo] Write paragraph 6 on the reachable error -> 41_neutron_stars.tex and 42_black_holes.tex
 
@@ -58,10 +58,10 @@ open path: E-006 > W-071 > T-144   | blocked: 0 | todo roots: 4 | done: 181 | pr
 - T-142 [todo] Run the budget comparison -> 60_results/65_budget/65_budget.tex
 - T-143 [todo] State the best approach per pair in the conclusion -> 80_conclusion/80_conclusion.tex
 
-#### W-071 issue [doing] Section 3.4 and Section 5 follow the search space
+#### W-071 issue [blocked] Section 3.4 and Section 5 follow the search space   [blocked since 2026-10-07, waiting on developer: complete; the fast-forward into main waits for the developer's landing approval]
 
-- T-144 [doing] Rewrite Section 3.4 as the search-space question -> 40_data_analysis/44_hypotheses/44_hypotheses.tex   <- ACTIVE LEAF
-- T-145 [todo] Rename and reorder the Section 5 folders -> 60_results/61_representation to 65_budget
+- T-144 [done] Rewrite Section 3.4 as the search-space question -> 40_data_analysis/44_hypotheses/44_hypotheses.tex
+- T-145 [done] Rename and reorder the Section 5 folders -> 60_results/61_representation to 65_budget
 
 ### E-007 [todo] Ensemble uncertainty and the final surrogate
 
@@ -428,8 +428,8 @@ flowchart TD
   E006 --> W041["W-041 issue pruned: H3a -- model pool GPR, XGBoost, MLP and ResNet"]
   E006 --> W042["W-042 issue pruned: H3b -- ripple metric of MLP against ResNet"]
   E006 --> W043["W-043 issue pruned: H3c -- GPR scaling wall"]
-  E006 --> W064["W-064 issue todo: Sections 3.1 and 3.2 state the reachable relative error"]
-  W064 --> T126["T-126 todo: Write the data-ceiling functions test-first -> shared/ceilings.py"]
+  E006 --> W064["W-064 issue doing: Sections 3.1 and 3.2 state the reachable relative error"]
+  W064 --> T126["T-126 doing: Write the data-ceiling functions test-first -> shared/ceilings.py -- ACTIVE LEAF"]
   W064 --> T127["T-127 todo: Wire the ceilings into both EDA scripts -> 41_neutron_stars_num.tex and 42_black_holes_num.tex"]
   W064 --> T128["T-128 todo: Write paragraph 6 on the reachable error -> 41_neutron_stars.tex and 42_black_holes.tex"]
   E006 --> W065["W-065 issue todo: One scorecard and a fair harness for every candidate"]
@@ -454,9 +454,9 @@ flowchart TD
   W070 --> T141["T-141 todo: Write the Pareto front test-first -> shared/scorecard.py"]
   W070 --> T142["T-142 todo: Run the budget comparison -> 60_results/65_budget/65_budget.tex"]
   W070 --> T143["T-143 todo: State the best approach per pair in the conclusion -> 80_conclusion/80_conclusion.tex"]
-  E006 --> W071["W-071 issue doing: Section 3.4 and Section 5 follow the search space"]
-  W071 --> T144["T-144 doing: Rewrite Section 3.4 as the search-space question -> 40_data_analysis/44_hypotheses/44_hypotheses.tex -- ACTIVE LEAF"]
-  W071 --> T145["T-145 todo: Rename and reorder the Section 5 folders -> 60_results/61_representation to 65_budget"]
+  E006 --> W071["W-071 issue blocked on developer: Section 3.4 and Section 5 follow the search space"]
+  W071 --> T144["T-144 done: Rewrite Section 3.4 as the search-space question -> 40_data_analysis/44_hypotheses/44_hypotheses.tex"]
+  W071 --> T145["T-145 done: Rename and reorder the Section 5 folders -> 60_results/61_representation to 65_budget"]
   E007["E-007 todo: Ensemble uncertainty and the final surrogate"]
   E007 --> W044["W-044 spike pruned: Is L-BFGS fine-tuning worth keeping"]
   E007 --> W045["W-045 issue todo: Ensemble uncertainty over curve-bootstrap resamples"]
@@ -495,8 +495,9 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,W071,T144,E009 doing
-  class W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,T145,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150 todo
+  class E006,W064,T126,E009 doing
+  class W071 blocked
+  class T144,T145,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class T127,T128,W065,T129,T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
