@@ -36,7 +36,8 @@
 
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
-- 2026-10-07 E-006: parked -- 5 decisions, 11 deviations -> ledgers/E-006.md
+- 2026-10-07 E-006: parked -- 5 decisions, 12 deviations -> ledgers/E-006.md
+- 2026-10-07 W-072: 6 one-thread workers; Optuna leveraged for search, live follow (dashboard) and pruning, one journal-file study per run; every fit still writes its W-077 ledger entry, the scored record; the cost axis is timed serially (developer, 2026-10-07) -> W-081
 
 ## Deviations
 - none recorded
