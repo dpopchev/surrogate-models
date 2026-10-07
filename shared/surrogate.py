@@ -8,7 +8,8 @@ stopping validates on whole held-out curves -- the fit passes the rows' curve id
 """
 
 import logging
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Literal, assert_never, cast
 
@@ -16,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from sklearn.dummy import DummyRegressor
-from sklearn.model_selection import GroupShuffleSplit
+from sklearn.model_selection import GroupShuffleSplit, PredefinedSplit
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -287,6 +288,42 @@ def curve_valid_split(fraction: float, seed: int) -> ValidSplit:
     return ValidSplit(cast(Any, splitter))
 
 
+def network_fitter(
+    training: Training,
+    live_plot: Path | None = None,
+    on_fit: Callable[[Pipeline], None] = lambda _: None,
+) -> Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int], Callable[..., np.ndarray]]:
+    """A harness fitter of the network: it early-stops on exactly the validation rows it is
+    handed, seeded by the harness's seed; on_fit receives each fitted pipeline."""
+
+    def fit(
+        x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
+    ) -> Callable[..., np.ndarray]:
+        fold = np.concatenate([np.full(len(x_fit), -1), np.zeros(len(x_valid), dtype=int)])
+        estimator = make_estimator(
+            replace(training, seed=seed), x_fit.shape[1], live_plot, valid_fold=fold
+        )
+        x = np.vstack([x_fit, x_valid]).astype(np.float32)
+        estimator.fit(x, np.concatenate([y_fit, y_valid]).astype(np.float32))
+        on_fit(estimator)
+        return lambda rows: estimator.predict(np.asarray(rows, dtype=np.float32))
+
+    return fit
+
+
+def sklearn_fitter(
+    make: Callable[[], Any],
+) -> Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int], Callable[..., np.ndarray]]:
+    """A harness fitter of a scikit-learn estimator, fitted on the fit rows alone."""
+
+    def fit(
+        x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
+    ) -> Callable[..., np.ndarray]:
+        return make().fit(x_fit, y_fit).predict
+
+    return fit
+
+
 def make_mean_reference() -> DummyRegressor:
     """The mean predictor: every row gets the mean target of the training rows."""
     return DummyRegressor(strategy="mean")
@@ -299,9 +336,21 @@ def make_nearest_reference() -> Pipeline:
     return Pipeline([("scale", StandardScaler()), ("nearest", KNeighborsRegressor(n_neighbors=1))])
 
 
-def make_estimator(training: Training, n_inputs: int, live_plot: Path | None = None) -> Pipeline:
+def make_estimator(
+    training: Training,
+    n_inputs: int,
+    live_plot: Path | None = None,
+    valid_fold: np.ndarray | None = None,
+) -> Pipeline:
     """Pipeline(StandardScaler, ScaledNetRegressor) with the training callbacks; with live_plot,
-    the loss curve is also redrawn there every LIVE_EVERY epochs while it trains."""
+    the loss curve is also redrawn there every LIVE_EVERY epochs while it trains. With
+    valid_fold (-1 for a fit row, 0 for a validation row) the net validates on exactly those
+    rows; without it, on a share of whole curves from the groups passed to fit."""
+    split = (
+        ValidSplit(cast(Any, PredefinedSplit(valid_fold)))
+        if valid_fold is not None
+        else curve_valid_split(training.valid_fraction, training.seed)
+    )
     live = [("live_loss_curve", LiveLossCurve(live_plot, LIVE_EVERY))] if live_plot else []
     net = ScaledNetRegressor(
         module=MLP,
@@ -314,7 +363,7 @@ def make_estimator(training: Training, n_inputs: int, live_plot: Path | None = N
         lr=training.lr,
         max_epochs=training.max_epochs,
         batch_size=training.batch_size,
-        train_split=curve_valid_split(training.valid_fraction, training.seed),
+        train_split=split,
         callbacks=[
             (
                 "valid_mare",

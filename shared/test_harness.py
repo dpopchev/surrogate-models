@@ -81,6 +81,16 @@ def test_the_extrapolation_zone_holds_the_ablation_test_curve() -> None:
     assert run.test.zones["extrapolation"].median == pytest.approx(0.1)
 
 
+def test_the_test_zone_holds_every_test_curve() -> None:
+    (run,) = harness(TOY, "mass", scaled(1.1), seeds=[0], valid_fraction=0.34)
+    assert run.test.zones["test"].mean == pytest.approx(0.1)
+
+
+def test_a_run_keeps_its_predictions_on_the_test_rows() -> None:
+    (run,) = harness(TOY, "mass", scaled(1.0), seeds=[0], valid_fraction=0.34)
+    assert run.predictions.tolist() == pytest.approx(TOY.y[TOY.test].tolist())
+
+
 def test_the_fit_is_timed_with_the_injected_clock() -> None:
     readings = iter([10.0, 12.5, 12.6, 13.0])
     (run,) = harness(

@@ -45,6 +45,10 @@ def test_spread_gives_the_median_of_the_errors() -> None:
     assert spread(np.array([0.1, 0.2, 0.3, 0.4])).median == pytest.approx(0.25)
 
 
+def test_spread_gives_the_mean_of_the_errors() -> None:
+    assert spread(np.array([0.1, 0.2, 0.3, 1.0])).mean == pytest.approx(0.4)
+
+
 def test_noise_proxy_is_zero_for_a_log_cubic_target() -> None:
     assert noise_proxy(SMOOTH, ["p"], "x", "y").max == pytest.approx(0.0, abs=1e-12)
 
@@ -124,11 +128,14 @@ class TestMeasure:
 
 TAGS = {"y": "Y", "z": "Z", "p": "P", "q": "Q"}
 KNOWN = Ceilings(
-    noise={"y": Spread(1e-8, 2e-8, 3e-8)},
-    along={"y": Spread(1e-7, 2e-6, 3e-5)},
-    across={("y", "p"): Spread(1e-6, 1e-4, 1e-3), ("y", "q"): Spread(1e-6, 1e-3, 1e-2)},
+    noise={"y": Spread(1e-8, 2e-8, 3e-8, 1e-8)},
+    along={"y": Spread(1e-7, 2e-6, 3e-5, 1e-6)},
+    across={
+        ("y", "p"): Spread(1e-6, 1e-4, 1e-3, 1e-5),
+        ("y", "q"): Spread(1e-6, 1e-3, 1e-2, 1e-4),
+    },
     profiles={},
-    decades={"p": {-3: Spread(4e-4, 1e-3, 2e-3)}, "q": {-3: Spread(2e-4, 5e-4, 1e-3)}},
+    decades={"p": {-3: Spread(4e-4, 1e-3, 2e-3, 5e-4)}, "q": {-3: Spread(2e-4, 5e-4, 1e-3, 3e-4)}},
 )
 
 

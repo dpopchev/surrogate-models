@@ -25,11 +25,12 @@ from shared.eda import booktabs, sci_tex
 
 @dataclass(frozen=True)
 class Spread:
-    """The median, 95th percentile and maximum of a set of relative errors."""
+    """The median, 95th percentile, maximum and mean of a set of relative errors."""
 
     median: float
     p95: float
     max: float
+    mean: float
 
 
 @dataclass(frozen=True)
@@ -223,8 +224,13 @@ def spread(errors: np.ndarray) -> Spread:
     """The spread of the finite errors."""
     finite = errors[np.isfinite(errors)]
     if not len(finite):
-        return Spread(np.nan, np.nan, np.nan)
-    return Spread(float(np.median(finite)), float(np.quantile(finite, 0.95)), float(finite.max()))
+        return Spread(np.nan, np.nan, np.nan, np.nan)
+    return Spread(
+        float(np.median(finite)),
+        float(np.quantile(finite, 0.95)),
+        float(finite.max()),
+        float(finite.mean()),
+    )
 
 
 def noise_proxy(table: pd.DataFrame, keys: Sequence[str], along: str, target: str) -> Spread:

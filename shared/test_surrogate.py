@@ -23,8 +23,10 @@ from shared.surrogate import (
     make_nearest_reference,
     mare,
     mare_in_d,
+    network_fitter,
     rebuild_charge,
     rmse,
+    sklearn_fitter,
     stop_window,
 )
 
@@ -95,6 +97,28 @@ def fitted(training: Training) -> Pipeline:
     keep = ~HELD_OUT
     estimator = make_estimator(training, n_inputs=2)
     return estimator.fit(INPUTS[keep], TARGET[keep], net__groups=GROUPS[keep])
+
+
+class TestNetworkFitter:
+    """The harness hands the network its fit rows and its validation rows (W-065)."""
+
+    def test_validates_on_exactly_the_rows_it_is_handed(self) -> None:
+        fit, valid = GROUPS < 4, (GROUPS == 4) | (GROUPS == 5)
+        captured: list[Pipeline] = []
+        fitter = network_fitter(replace(TOY, max_epochs=5), on_fit=captured.append)
+        predict = fitter(INPUTS[fit], TARGET[fit], INPUTS[valid], TARGET[valid], 0)
+        net = captured[0].named_steps["net"]
+        best = int(np.argmin(net.history[:, "valid_loss"]))
+        scored = mare(TARGET[valid], predict(INPUTS[valid]))
+        assert scored == pytest.approx(net.history[best, "valid_mare"], rel=1e-4)
+
+
+def test_a_scikit_learn_fitter_fits_the_fit_rows_alone() -> None:
+    fit, valid = GROUPS < 4, GROUPS >= 4
+    predict = sklearn_fitter(make_mean_reference)(
+        INPUTS[fit], TARGET[fit], INPUTS[valid], TARGET[valid], 0
+    )
+    assert predict(INPUTS[:1]).tolist() == pytest.approx([float(TARGET[fit].mean())])
 
 
 def test_valid_mare_is_scored_on_the_original_scale() -> None:

@@ -43,12 +43,13 @@ class Timing:
 @dataclass(frozen=True)
 class Run:
     """One seed's result: the scorecard on the test curves, the error spread on each frozen
-    fold, and the timing of the final fit."""
+    fold, the timing of the final fit, and its predictions on the test rows."""
 
     seed: int
     test: Scorecard
     folds: tuple[Spread, ...]
     timing: Timing
+    predictions: np.ndarray
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -122,10 +123,13 @@ def _run(
     one = tick()
     predict(np.resize(x_test, (BATCH_ROWS, x_test.shape[1])))
     batch = tick()
-    errors = relative_errors(design.y[design.test], predict(x_test), target)
+    predictions = predict(x_test)
+    errors = relative_errors(design.y[design.test], predictions, target)
     zones = {
+        "test": np.ones(int(design.test.sum()), dtype=bool),
         "interior": ~design.ablation[design.test],
         "extrapolation": design.ablation[design.test],
     }
     found = scorecard(errors, zones, None if charge is None else charge[design.test])
-    return Run(seed, found, tuple(folds), Timing(fitted - started, one - fitted, batch - one))
+    timing = Timing(fitted - started, one - fitted, batch - one)
+    return Run(seed, found, tuple(folds), timing, predictions)
