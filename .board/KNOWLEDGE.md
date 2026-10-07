@@ -31,10 +31,7 @@
 
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
-- 2026-10-07 E-006: Section 3.4 and Section 5 follow the search space; H1-H3 stay as its named sub-questions (developer)
-- 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
-- 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
+- 2026-10-07 E-006: parked -- 3 decisions, 3 deviations -> ledgers/E-006.md
 
 ## Deviations
-- 2026-10-07 E-006: spike W-075 (can M_max be predicted for given beta, lambda) and AC9 / W-076 (the ceilings as absolute uncertainties) filed during T-131 (developer)
-- 2026-10-07 E-006: standalone W-077 (the run ledger) filed during T-131 (developer): every fit's statistics kept, so Optuna can be compared later; E-006 parks for it once W-065 lands, then resumes at W-076
+- none recorded
