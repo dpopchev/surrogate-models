@@ -273,3 +273,9 @@ class TestEpochTableCells:
     def test_epoch_table_keeps_the_colour_of_a_best_cell(self) -> None:
         row = {"valid_loss": 0.0123, "valid_loss_best": True}
         assert EpochTable().format_row(row, "valid_loss", "<c>") == f"<c>1.23e-02{Ansi.ENDC.value}"
+
+
+class TestEpochTableLayout:
+    def test_the_printed_table_keeps_a_cell_as_format_row_wrote_it(self) -> None:
+        table = EpochTable(floatfmt=".4g").initialize().table({"train_loss": 0.0007835})
+        assert "7.84e-04" in table

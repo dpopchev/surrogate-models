@@ -25,6 +25,7 @@ from skorch import NeuralNetRegressor
 from skorch.callbacks import Callback, EarlyStopping, EpochScoring, LRScheduler, PrintLog
 from skorch.dataset import ValidSplit
 from skorch.utils import Ansi
+from tabulate import tabulate
 from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
@@ -210,6 +211,18 @@ class EpochTable(PrintLog):
             return cast(str, super().format_row(row, key, color))
         cell = f"{row[key]:{spec}}"
         return f"{color}{cell}{Ansi.ENDC.value}" if row.get(f"{key}_best") else cell
+
+    def table(self, row: dict[str, Any]) -> str:
+        """The one-row table skorch prints, each cell as format_row wrote it: tabulate would
+        re-parse a number-like cell and format it again (7.84e-04 as 0.000784)."""
+        headers, cells = zip(*self._yield_keys_formatted(row), strict=True)
+        return tabulate(
+            [cells],
+            headers=headers,
+            tablefmt=self.tablefmt,
+            stralign=self.stralign,
+            disable_numparse=True,
+        )
 
 
 # The epoch table's cell format per column; a column not named keeps skorch's own format.
