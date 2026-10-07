@@ -32,7 +32,7 @@
 
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
-- 2026-10-07 E-006: parked -- 3 decisions, 7 deviations -> ledgers/E-006.md
+- 2026-10-07 E-006: parked -- 4 decisions, 8 deviations -> ledgers/E-006.md
 - 2026-10-07 W-077: landing approved by the developer (2026-10-07), with W-065's; both land in one fast-forward of main to wi/W-077's tip, W-065's commits first (stacked branch, E-006 Deviation)
 
 ## Deviations

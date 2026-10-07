@@ -41,6 +41,7 @@ open path: W-077   | blocked: 1 | todo roots: 6 | done: 196 | pruned: 13
 
 - T-134 [todo] Write the family factories test-first -> shared/families.py
 - T-135 [todo] Run the family screen with successive halving -> 60_results/62_families/62_families.tex
+- T-170 [todo] Score every candidate's ripple through the harness -> shared/harness.py
 
 #### W-068 issue [todo] Tuning and precision of the surviving families
 
@@ -472,6 +473,7 @@ flowchart TD
   E006 --> W067["W-067 issue todo: Family screen -- interpolators, GPR, XGBoost and networks"]
   W067 --> T134["T-134 todo: Write the family factories test-first -> shared/families.py"]
   W067 --> T135["T-135 todo: Run the family screen with successive halving -> 60_results/62_families/62_families.tex"]
+  W067 --> T170["T-170 todo: Score every candidate's ripple through the harness -> shared/harness.py"]
   E006 --> W068["W-068 issue todo: Tuning and precision of the surviving families"]
   W068 --> T136["T-136 todo: Write the equal-budget search test-first -> shared/search.py"]
   W068 --> T137["T-137 todo: Write the precision regime test-first -> shared/surrogate.py"]
@@ -544,6 +546,6 @@ flowchart TD
   class E006,W065,E009 doing
   class W077 blocked
   class W064,T126,T127,T128,T129,T130,T131,T146,T169,W071,T144,T145,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T162,T163,T164 done
-  class W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W076,T160,T161,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150,W078,T165,T166,W079,T167,T168 todo
+  class W066,T132,T133,W067,T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W076,T160,T161,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150,W078,T165,T166,W079,T167,T168 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```
