@@ -6,7 +6,7 @@ import torch
 from threadpoolctl import threadpool_info
 
 from shared.design import Design
-from shared.harness import harness, split_valid
+from shared.harness import Run, harness, split_valid
 
 GROUPS = np.repeat(np.arange(10), 3)  # ten curves of three rows
 
@@ -69,6 +69,14 @@ def test_a_fitter_never_sees_a_test_curve() -> None:
 
 def test_one_run_per_seed() -> None:
     assert len(harness(TOY, "mass", scaled(1.0), seeds=[0, 1, 2], valid_fraction=0.34)) == 3
+
+
+def test_record_is_handed_each_seed_s_run() -> None:
+    recorded: list[Run] = []
+    runs = harness(
+        TOY, "mass", scaled(1.0), seeds=[0, 1], valid_fraction=0.34, record=recorded.append
+    )
+    assert tuple(recorded) == runs
 
 
 def test_each_frozen_fold_is_scored() -> None:

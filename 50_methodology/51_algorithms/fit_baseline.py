@@ -6,7 +6,8 @@ net is scored on each frozen fold and, trained on every non-test curve through s
 and shared/surrogate.py with early stopping on held-out training curves, once on the test
 curves. Outputs, in the section's asset folder: the baseline table, the \\baseNsMass... macros
 (test MARE, RMSE, fit seconds, epochs) and the NS mass parity figure; in
-<state dir>/51_algorithms/<run>/, one run record and its diagnostics per pair (W-035).
+<state dir>/51_algorithms/<run>/, one run record and its diagnostics per pair (W-035); in
+<state dir>/ledger/, one ledger entry per predictor, pair and seed, written as each ends (W-077).
 
 Run as `uv run python <this file> <ns.parquet> <bh.parquet> <split.parquet> <asset dir>
 <state dir>` (mk/paper.mk does).
@@ -17,9 +18,10 @@ import logging
 import subprocess
 import sys
 import time
+import uuid
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, assert_never
@@ -38,7 +40,19 @@ from shared.diagnostics import curve_overlay, error_cdf, loss_curve
 from shared.eda import booktabs, curve_ids, render_macros, sci_tex
 from shared.harness import Fitter, Predictor, Run, Timing, harness
 from shared.plots import PlotStyle, anchor_color, apply_style
-from shared.runs import RunRecord, from_json, run_name, run_stem, to_json
+from shared.runs import (
+    RunMetadata,
+    RunRecord,
+    Setting,
+    entry_from_json,
+    entry_from_run,
+    entry_name,
+    entry_to_json,
+    from_json,
+    run_name,
+    run_stem,
+    to_json,
+)
 from shared.scorecard import significant_figures
 from shared.surrogate import (
     LIVE_EVERY,
@@ -65,6 +79,8 @@ DIAGNOSTICS_DPI = 150
 # A score of predictions against the truth on the target's rows: mare, or mare_in_d for the
 # charge target, whose error is measured in D rebuilt with the true M (W-073).
 Metric = Callable[[np.ndarray, np.ndarray], float]
+# record(candidate, settings, run, (epochs, best epoch) or None): keeps one harness run.
+Recorder = Callable[[str, dict[str, Setting], Run, tuple[int, int] | None], None]
 
 
 @dataclass(frozen=True)
@@ -127,7 +143,7 @@ def final_fit(design: Design, run: Run, estimator: Pipeline, score: Metric) -> F
         {key: value for key, value in row.items() if key != "batches"}
         for row in estimator.named_steps["net"].history
     )
-    best_epoch = int(min(history, key=lambda row: row["valid_loss"])["epoch"])
+    _, best_epoch = _epochs(estimator)
     return Fit(
         y_true=y_true,
         y_pred=y_pred,
@@ -155,6 +171,23 @@ def _counted(fitter: Fitter, after_fit: Callable[[], None]) -> Fitter:
     return fit
 
 
+def _epochs(network: Pipeline) -> tuple[int, int]:
+    """The epochs a fitted network ran and the epoch of its lowest validation loss."""
+    history = network.named_steps["net"].history
+    best = min(history, key=lambda row: row["valid_loss"])
+    return len(history), int(best["epoch"])
+
+
+def _recording(
+    record: Recorder,
+    name: str,
+    settings: dict[str, Setting],
+    epochs: Callable[[], tuple[int, int] | None],
+) -> Callable[[Run], None]:
+    """The harness's record of one candidate: its run, with its name, settings and epochs."""
+    return lambda run: record(name, settings, run, epochs())
+
+
 def score_pair(
     design: Design,
     dataset: str,
@@ -163,22 +196,30 @@ def score_pair(
     live_plot: Path | None = None,
     after_fit: Callable[[], None] = lambda: None,
     clock: Callable[[], float] | None = None,
+    record: Recorder = lambda name, settings, run, epochs: None,
 ) -> tuple[PairScores, Fit]:
     """Score one dataset and target through the harness: the MLP, then the mean and the
     nearest-curve references, each on the same folds, validation curves and test curves.
-    after_fit is called after every MLP fit. Returns the scores and the MLP's final fit, for
-    the figures and the run record."""
+    after_fit is called after every MLP fit; record is handed each candidate's run as it ends.
+    Returns the scores and the MLP's final fit, for the figures and the run record."""
     networks: list[Pipeline] = []
     mlp = _counted(network_fitter(training, live_plot, networks.append), after_fit)
-    candidates = (
-        ("MLP", mlp),
-        ("mean", sklearn_fitter(make_mean_reference)),
-        ("nearest curve", sklearn_fitter(make_nearest_reference)),
+    candidates: tuple[tuple[str, Fitter, dict[str, Setting]], ...] = (
+        ("MLP", mlp, asdict(training)),
+        ("mean", sklearn_fitter(make_mean_reference), {"estimator": "mean"}),
+        ("nearest curve", sklearn_fitter(make_nearest_reference), {"estimator": "nearest curve"}),
     )
     scored, runs = [], []
-    for name, fitter in candidates:
+    for name, fitter, settings in candidates:
+        epochs = (lambda: _epochs(networks[-1])) if name == "MLP" else (lambda: None)
         (run,) = harness(
-            design, target, fitter, [training.seed], training.valid_fraction, clock=clock
+            design,
+            target,
+            fitter,
+            [training.seed],
+            training.valid_fraction,
+            clock=clock,
+            record=_recording(record, name, settings, epochs),
         )
         scored.append(Scored(name, run.test.zones["test"], run.folds, run.timing))
         runs.append(run)
@@ -406,6 +447,8 @@ def main(
         logger.info(progress_line(next(ticks), total, time.perf_counter() - first))
 
     head, tail = commit(), dirty()
+    batch, ledger = _new_id(), Path(argv[4]) / "ledger"
+    ledger.mkdir(parents=True, exist_ok=True)
     pairs, fits, run = [], {}, state
     for spec, target, data in designs:
         started = now()
@@ -418,7 +461,7 @@ def main(
         with _logging_into(run / "train.log", settings.log_level):
             pair, fit = _run_pair(
                 _Pair(spec, target, data, tables[spec.dataset]),
-                _Run(run, out, started, head, tail),
+                _Run(run, out, started, head, tail, batch, ledger),
                 training,
                 settings.threads,
                 after_fit,
@@ -452,13 +495,16 @@ class _Pair:
 
 @dataclass(frozen=True)
 class _Run:
-    """Where and from what one pair's run is recorded."""
+    """Where and from what one pair's run is recorded; batch names the make baseline run it
+    belongs to, ledger the folder its ledger entries go to."""
 
     folder: Path
     out: Path
     started: datetime
     commit: str
     dirty: bool
+    batch: str
+    ledger: Path
 
 
 def _run_pair(
@@ -481,6 +527,7 @@ def _run_pair(
         training,
         live_plot=run.folder / "loss_curve.png",
         after_fit=after_fit,
+        record=_ledger_writer(pair, run),
     )
     record = RunRecord(
         dataset=pair.spec.dataset,
@@ -506,6 +553,37 @@ def _run_pair(
     for line in end_banner(fit, training, sorted(folder.iterdir())):
         logger.info(line)
     return scores, fit
+
+
+def _ledger_writer(pair: _Pair, run: _Run) -> Recorder:
+    """The recorder writing each harness run of the pair to <ledger>/<id>.json, a new uuid7
+    id per entry; the text must read back to itself (NaN spreads compare unequal as values)."""
+
+    def record(
+        candidate: str, settings: dict[str, Setting], ran: Run, epochs: tuple[int, int] | None
+    ) -> None:
+        meta = RunMetadata(
+            id=_new_id(),
+            batch=run.batch,
+            dataset=pair.spec.dataset,
+            target=pair.target,
+            candidate=candidate,
+            settings=settings,
+            commit=run.commit,
+            dirty=run.dirty,
+            started=run.started,
+            epochs=None if epochs is None else epochs[0],
+            best_epoch=None if epochs is None else epochs[1],
+        )
+        entry = entry_from_run(ran, meta)
+        path = run.ledger / entry_name(entry)
+        text = entry_to_json(entry)
+        path.write_text(text)
+        assert entry_to_json(entry_from_json(path.read_text())) == text, (
+            f"{path} does not round-trip"
+        )
+
+    return record
 
 
 def _write_section(
@@ -582,6 +660,11 @@ def _git_dirty() -> bool:
         ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
     )
     return bool(done.stdout.strip())
+
+
+def _new_id() -> str:
+    """A new time-sortable id (uuid7), for a batch or a ledger entry."""
+    return str(uuid.uuid7())
 
 
 def _utc_now() -> datetime:

@@ -414,6 +414,9 @@ class TestMain:
             "neutron_stars-mass",
         ]
 
+    def test_leaves_a_ledger_entry_per_predictor_pair_and_seed(self, ran: Path) -> None:
+        assert len(list((ran / "state" / "ledger").glob("*.json"))) == 3 * 4 * 1
+
     def test_records_the_injected_commit(self, ran: Path) -> None:
         run = ran / "state" / SECTION / "neutron_stars-mass-20261006T105600Z"
         assert from_json((run / "run.json").read_text()).commit == "abc1234"

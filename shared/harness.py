@@ -72,9 +72,11 @@ def harness(
     valid_fraction: float,
     charge: np.ndarray | None = None,
     clock: Callable[[], float] | None = None,
+    record: Callable[[Run], None] = lambda run: None,
 ) -> tuple[Run, ...]:
     """Score a fitter on the design for each seed; charge is the true D of the design's rows,
-    for the per-decade scorecard of the charge target."""
+    for the per-decade scorecard of the charge target; record is handed each run as it ends
+    (the run ledger, W-077)."""
     tick = clock or time.perf_counter
     runs = []
     with threadpool_limits(limits=1):
@@ -82,7 +84,9 @@ def harness(
         torch.set_num_threads(1)
         try:
             for seed in seeds:
-                runs.append(_run(design, target, fitter, seed, valid_fraction, charge, tick))
+                run = _run(design, target, fitter, seed, valid_fraction, charge, tick)
+                record(run)
+                runs.append(run)
         finally:
             torch.set_num_threads(threads)
     return tuple(runs)
