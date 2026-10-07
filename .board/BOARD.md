@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-037 > T-089   | blocked: 0 | todo roots: 4 | done: 169 | pruned: 13
+open path: E-005 > W-037 > T-089   | blocked: 0 | todo roots: 5 | done: 169 | pruned: 13
 
 ## Tree
 
@@ -180,6 +180,12 @@ open path: E-005 > W-037 > T-089   | blocked: 0 | todo roots: 4 | done: 169 | pr
 ### W-061 spike [todo] (standalone) Which real references replace the placeholder citations
 
 - T-118 [todo] Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md
+
+### W-072 spike [todo] (standalone) Should fits run as parallel tracked trials, and should Optuna be the registry
+
+- T-148 [todo] Measure the throughput of k one-thread fits -> a probe in local/scratch and a Finding on W-072
+- T-149 [todo] Prototype Optuna storage as the run registry -> a probe in local/scratch and a Finding on W-072
+- T-150 [todo] Decide the parallelism and the run registry with the developer -> the W-072 spike decision
 
 ## Closed
 
@@ -513,6 +519,10 @@ flowchart TD
   W060 --> T116["T-116 done: Name paper sections by their compiled number in code and make -> mk/, paper.toml, the colocated modules"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
+  W072["W-072 spike todo, standalone: Should fits run as parallel tracked trials, and should Optuna be the registry"]
+  W072 --> T148["T-148 todo: Measure the throughput of k one-thread fits -> a probe in local/scratch and a Finding on W-072"]
+  W072 --> T149["T-149 todo: Prototype Optuna storage as the run registry -> a probe in local/scratch and a Finding on W-072"]
+  W072 --> T150["T-150 todo: Decide the parallelism and the run registry with the developer -> the W-072 spike decision"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -520,6 +530,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E005,W037,T089,E009 doing
   class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,W036,T085,T086,T087,T120,T121,T125,T088,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W063,T122,T123,T124,T147,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W062,E006,W064,T126,T127,T128,W065,T129,T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W071,T144,T145,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118 todo
+  class W062,E006,W064,T126,T127,T128,W065,T129,T130,T131,T146,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W071,T144,T145,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W072,T148,T149,T150 todo
   class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```

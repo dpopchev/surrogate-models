@@ -47,3 +47,4 @@
 
 ## Deviations
 - 2026-10-07 E-005: W-036 and W-063 landed in one fast-forward (developer): W-063's branch was stacked on W-036's and its criterion needed W-036's T-087 table, so main moved to 3a4ca35 once for both
+- 2026-10-07 E-005: standalone spike W-072 filed during T-089 (developer: later): parallel one-thread fits and Optuna storage as the run registry, decided before E-006's screens
