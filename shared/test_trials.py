@@ -73,6 +73,26 @@ def test_a_study_on_a_journal_is_joined_by_a_second_opening(tmp_path: Path) -> N
     assert len(open_study("toy", journal).trials) == 1
 
 
+def finished_elsewhere() -> tuple[optuna.Study, optuna.Trial]:
+    """A study whose running trial another writer has marked failed."""
+    study = open_study("toy", None)
+    trial = study.ask()
+    study.tell(trial.number, state=optuna.trial.TrialState.FAIL)
+    return study, trial
+
+
+def test_a_report_to_a_trial_finished_elsewhere_leaves_it_as_it_was() -> None:
+    study, trial = finished_elsewhere()
+    ReportEpochs(trial).on_epoch_end(net_at(3, 0.25))
+    assert study.trials[0].state == optuna.trial.TrialState.FAIL
+
+
+def test_telling_a_run_to_a_trial_finished_elsewhere_leaves_it_as_it_was() -> None:
+    study, trial = finished_elsewhere()
+    tell_run(study, trial, ENTRY)
+    assert study.trials[0].state == optuna.trial.TrialState.FAIL
+
+
 def test_an_offset_moves_the_reported_step_past_earlier_fits() -> None:
     study = open_study("toy", None)
     trial = study.ask()

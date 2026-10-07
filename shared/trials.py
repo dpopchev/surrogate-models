@@ -6,17 +6,21 @@ a finished fit tells the trial its mean fold significant figures -- never a test
 names its W-077 ledger entry, which stays the scored record (scorecard, predictions, timing).
 """
 
+import logging
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import optuna
+from optuna.exceptions import UpdateFinishedTrialError
 from optuna.storages import JournalStorage
 from optuna.storages.journal import JournalFileBackend
 from skorch.callbacks import Callback
 
 from shared.runs import LedgerEntry
 from shared.scorecard import significant_figures
+
+logger = logging.getLogger(__name__)
 
 
 def open_study(name: str, journal: Path | None) -> optuna.Study:
@@ -47,7 +51,14 @@ class ReportEpochs(Callback):
     ) -> None:
         """Report this epoch's valid_mare at its epoch number."""
         step = self.offset + int(net.history[-1, "epoch"])
-        self.trial.report(float(net.history[-1, "valid_mare"]), step)
+        try:
+            self.trial.report(float(net.history[-1, "valid_mare"]), step)
+        except UpdateFinishedTrialError:
+            # The trial is only a live view: one finished elsewhere (a dashboard) loses its
+            # reports, never the fit (W-085).
+            logger.warning(
+                "trial %d was finished elsewhere; epoch %d not reported", self.trial.number, step
+            )
 
 
 def tell_run(study: optuna.Study, trial: optuna.Trial, entry: LedgerEntry) -> None:
@@ -66,7 +77,13 @@ def tell_run(study: optuna.Study, trial: optuna.Trial, entry: LedgerEntry) -> No
         "test_figures": significant_figures(entry.test.zones["test"].p95),
         "fit_s": entry.timing.fit,
     }
-    for key, value in attributes.items():
-        trial.set_user_attr(key, value)
     folds = float(np.mean([significant_figures(fold.p95) for fold in entry.folds]))
-    study.tell(trial, folds)
+    try:
+        for key, value in attributes.items():
+            trial.set_user_attr(key, value)
+        study.tell(trial, folds)
+    except UpdateFinishedTrialError:
+        # Finished elsewhere (W-085): the ledger entry is the record, so the run goes on.
+        logger.warning(
+            "trial %d was finished elsewhere; ledger entry %s not told", trial.number, meta.id
+        )
