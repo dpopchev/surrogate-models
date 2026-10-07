@@ -27,6 +27,7 @@
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
 - 2026-10-04 E-002: open: Section 6 has no solver posterior -- the reference posterior must come from the dataset (dense-grid interpolation or nearest samples); which one?
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
+- 2026-10-07 W-047: open: what observational sigma do realistic mock observations of M and D carry (supervisors)? the data ceiling alone allows a surrogate about 1e-4 M_sun on the NS mass and 1.6e-3 dex on the NS charge (W-064) -- the surrogate's error target follows from it
 
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
@@ -35,4 +36,4 @@
 - 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
 
 ## Deviations
-- none recorded
+- 2026-10-07 E-006: spike W-075 (can M_max be predicted for given beta, lambda) and AC9 / W-076 (the ceilings as absolute uncertainties) filed during T-131 (developer)
