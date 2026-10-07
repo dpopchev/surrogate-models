@@ -29,24 +29,29 @@ import numpy as np
 import pandas as pd
 import torch
 from matplotlib.figure import Figure
+from sklearn.pipeline import Pipeline
 
+from shared.ceilings import Spread
 from shared.config import PaperConfig, load_config
 from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
 from shared.diagnostics import curve_overlay, error_cdf, loss_curve
 from shared.eda import booktabs, curve_ids, render_macros, sci_tex
+from shared.harness import Fitter, Predictor, Run, Timing, harness
 from shared.plots import PlotStyle, anchor_color, apply_style
 from shared.runs import RunRecord, from_json, run_name, run_stem, to_json
+from shared.scorecard import significant_figures
 from shared.surrogate import (
     LIVE_EVERY,
     Training,
     duration_text,
-    make_estimator,
     make_mean_reference,
     make_nearest_reference,
     mare,
     mare_in_d,
+    network_fitter,
     rebuild_charge,
     rmse,
+    sklearn_fitter,
 )
 
 logger = logging.getLogger(__name__)
@@ -81,13 +86,13 @@ class Fit:
 
 @dataclass(frozen=True)
 class Scored:
-    """One predictor's scores on a pair: test MARE, MARE on each frozen fold, and the final
-    fit's seconds (None for the references, which fit in no time)."""
+    """One predictor's scores on a pair through the harness: the error spread on the test
+    curves and on each frozen fold, and the timing of its final fit and calls."""
 
     predictor: str
-    test_mare: float
-    fold_mares: tuple[float, ...]
-    seconds: float | None
+    test: Spread
+    folds: tuple[Spread, ...]
+    timing: Timing
 
 
 @dataclass(frozen=True)
@@ -113,21 +118,11 @@ X_LABELS = {"neutron_stars": "$\\log_{10}\\rho_c$", "black_holes": "$r_h$"}
 # --- pure functions ---------------------------------------------------------------------------
 
 
-def fit_and_score(
-    design: Design,
-    training: Training,
-    clock: Callable[[], float],
-    live_plot: Path | None = None,
-    score: Metric = mare,
-) -> Fit:
-    """Fit on the non-test rows, score on the test rows (MARE by default); clock times the
-    fit; with live_plot, the loss curve is redrawn there while it trains."""
-    train, test = ~design.test, design.test
-    estimator = make_estimator(training, n_inputs=design.X.shape[1], live_plot=live_plot)
-    started = clock()
-    estimator.fit(design.X[train], design.y[train], net__groups=design.groups[train])
-    seconds = clock() - started
-    y_true, y_pred = design.y[test], estimator.predict(design.X[test])
+def final_fit(design: Design, run: Run, estimator: Pipeline, score: Metric) -> Fit:
+    """The MLP's final fit from its harness run and its fitted network: the test rows, the
+    run's predictions on them, the timing and the per-epoch history (batches dropped)."""
+    test = design.test
+    y_true, y_pred = design.y[test], run.predictions
     history = tuple(
         {key: value for key, value in row.items() if key != "batches"}
         for row in estimator.named_steps["net"].history
@@ -138,7 +133,7 @@ def fit_and_score(
         y_pred=y_pred,
         mare=score(y_true, y_pred),
         rmse=rmse(y_true, y_pred),
-        seconds=seconds,
+        seconds=run.timing.fit,
         epochs=len(history),
         best_epoch=best_epoch,
         history=history,
@@ -147,64 +142,48 @@ def fit_and_score(
     )
 
 
-def _fit(estimator: Any, X: np.ndarray, y: np.ndarray, groups: np.ndarray) -> Any:  # noqa: N803
-    """Fit an estimator; the network pipeline also gets the curve groups for its early stop."""
-    if "net" in getattr(estimator, "named_steps", {}):
-        return estimator.fit(X, y, net__groups=groups)
-    return estimator.fit(X, y)
+def _counted(fitter: Fitter, after_fit: Callable[[], None]) -> Fitter:
+    """The fitter, calling after_fit once each of its fits is done."""
 
-
-def fold_mares(
-    design: Design,
-    make: Callable[[], Any],
-    after_fit: Callable[[], None] = lambda: None,
-    score: Metric = mare,
-) -> tuple[float, ...]:
-    """The score (MARE by default) on each frozen fold of a model made fresh and fitted on the
-    other folds; after_fit is called once each fit is done."""
-    scores = []
-    for fold in sorted(set(design.fold[design.fold >= 0].tolist())):
-        held, train = design.fold == fold, ~design.test & (design.fold != fold)
-        model = _fit(make(), design.X[train], design.y[train], design.groups[train])
+    def fit(
+        x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
+    ) -> Predictor:
+        predict = fitter(x_fit, y_fit, x_valid, y_valid, seed)
         after_fit()
-        scores.append(score(design.y[held], model.predict(design.X[held])))
-    return tuple(scores)
+        return predict
 
-
-def _reference(design: Design, make: Callable[[], Any], name: str, score: Metric) -> Scored:
-    """A reference predictor scored on the frozen folds and, fitted on every training curve,
-    on the test curves."""
-    train, test = ~design.test, design.test
-    model = make().fit(design.X[train], design.y[train])
-    test_mare = score(design.y[test], model.predict(design.X[test]))
-    return Scored(name, test_mare, fold_mares(design, make, score=score), None)
+    return fit
 
 
 def score_pair(
     design: Design,
     dataset: str,
-    target: str,
+    target: Target,
     training: Training,
-    clock: Callable[[], float],
     live_plot: Path | None = None,
     after_fit: Callable[[], None] = lambda: None,
-    score: Metric = mare,
+    clock: Callable[[], float] | None = None,
 ) -> tuple[PairScores, Fit]:
-    """Score one dataset and target with score: the MLP on every frozen fold and, fitted on
-    every training curve, on the test curves; then the mean and nearest-curve references on
-    the same rows. after_fit is called after every MLP fit. Returns the scores and the MLP's
-    final fit, for the figures and the run record."""
-    n_inputs = design.X.shape[1]
-    make = lambda: make_estimator(training, n_inputs=n_inputs)  # noqa: E731
-    mlp_folds = fold_mares(design, make, after_fit, score=score)
-    fit = fit_and_score(design, training, clock, live_plot=live_plot, score=score)
-    after_fit()
-    scored = (
-        Scored("MLP", fit.mare, mlp_folds, fit.seconds),
-        _reference(design, make_mean_reference, "mean", score),
-        _reference(design, make_nearest_reference, "nearest curve", score),
+    """Score one dataset and target through the harness: the MLP, then the mean and the
+    nearest-curve references, each on the same folds, validation curves and test curves.
+    after_fit is called after every MLP fit. Returns the scores and the MLP's final fit, for
+    the figures and the run record."""
+    networks: list[Pipeline] = []
+    mlp = _counted(network_fitter(training, live_plot, networks.append), after_fit)
+    candidates = (
+        ("MLP", mlp),
+        ("mean", sklearn_fitter(make_mean_reference)),
+        ("nearest curve", sklearn_fitter(make_nearest_reference)),
     )
-    return PairScores(dataset, target, scored), fit
+    scored, runs = [], []
+    for name, fitter in candidates:
+        (run,) = harness(
+            design, target, fitter, [training.seed], training.valid_fraction, clock=clock
+        )
+        scored.append(Scored(name, run.test.zones["test"], run.folds, run.timing))
+        runs.append(run)
+    fit = final_fit(design, runs[0], networks[-1], metric_for(target))
+    return PairScores(dataset, target, tuple(scored)), fit
 
 
 def metric_for(target: Target) -> Metric:
@@ -219,13 +198,15 @@ def metric_for(target: Target) -> Metric:
 
 
 def _row(pair: PairScores, scored: Scored) -> str:
-    """One table row: the pair, the predictor, its test MARE, fold mean +/- std, fit seconds."""
-    folds = np.array(scored.fold_mares)
-    seconds = "--" if scored.seconds is None else f"{scored.seconds:.0f}"
+    """One table row: the pair, the predictor, its test MARE, fold mean +/- std, the
+    significant figures at the 95th percentile, the fit seconds and the one-row call seconds."""
+    folds = np.array([fold.mean for fold in scored.folds])
     return (
         f"{DATASET_TEX[pair.dataset]} & {TARGET_TEX[pair.target]} & {scored.predictor} & "
-        f"${sci_tex(scored.test_mare)}$ & "
-        f"${sci_tex(float(folds.mean()))} \\pm {sci_tex(float(folds.std()))}$ & {seconds}"
+        f"${sci_tex(scored.test.mean)}$ & "
+        f"${sci_tex(float(folds.mean()))} \\pm {sci_tex(float(folds.std()))}$ & "
+        f"{significant_figures(scored.test.p95):.1f} & {scored.timing.fit:.0f} & "
+        f"${sci_tex(scored.timing.predict_one)}$"
     )
 
 
@@ -233,12 +214,14 @@ def baseline_table(pairs: list[PairScores]) -> str:
     """The Section 4.1 table: every predictor on every dataset and target."""
     return booktabs(
         "baseline",
-        "The baseline MLP against the mean and nearest-curve references: MARE on the test "
-        "curves and on the frozen folds (mean $\\pm$ standard deviation), and the MLP's fit "
-        "time in seconds. The $\\Dch$ rows give the MARE of the charge rebuilt with the true "
-        "$M$ from the predicted $Y = \\log_{10}(\\Dch/M)$.",
-        "llllll",
-        "Data & Target & Predictor & Test MARE & Fold MARE & Fit s",
+        "The baseline MLP against the mean and nearest-curve references, every predictor "
+        "fitted on the same curves and timed on one thread: MARE on the test curves and on the "
+        "frozen folds (mean $\\pm$ standard deviation), the significant figures kept at the "
+        "95th percentile of the test error ($-\\log_{10}$), the fit time and the time of a "
+        "one-row call in seconds. The $\\Dch$ rows give the error of the charge rebuilt with "
+        "the true $M$ from the predicted $Y = \\log_{10}(\\Dch/M)$.",
+        "lllllrrr",
+        "Data & Target & Predictor & Test MARE & Fold MARE & Figures & Fit s & Call s",
         [_row(pair, scored) for pair in pairs for scored in pair.scored],
     )
 
@@ -414,8 +397,7 @@ def main(
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
     split = pd.read_parquet(split_file)
     designs: list[tuple[DesignSpec, Target, Design]] = [
-        (spec, target, design(tables[spec.dataset], split, spec, target))
-        for spec, target in PAIRS
+        (spec, target, design(tables[spec.dataset], split, spec, target)) for spec, target in PAIRS
     ]
     total = sum(len(set(data.fold[data.fold >= 0].tolist())) + 1 for _, _, data in designs)
     ticks, first = itertools.count(1), time.perf_counter()
@@ -497,10 +479,8 @@ def _run_pair(
         pair.spec.dataset,
         pair.target,
         training,
-        time.perf_counter,
         live_plot=run.folder / "loss_curve.png",
         after_fit=after_fit,
-        score=metric_for(pair.target),
     )
     record = RunRecord(
         dataset=pair.spec.dataset,

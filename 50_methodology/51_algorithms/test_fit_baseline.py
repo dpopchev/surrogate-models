@@ -25,8 +25,6 @@ from fit_baseline import (
     curve_names,
     end_banner,
     figure_tex,
-    fit_and_score,
-    fold_mares,
     main,
     metric_for,
     numbers,
@@ -36,11 +34,13 @@ from fit_baseline import (
     start_banner,
 )
 
+from shared.ceilings import Spread
 from shared.config import PaperConfig
 from shared.design import NEUTRON_STARS, Design
+from shared.harness import Timing
 from shared.plots import PlotStyle
 from shared.runs import from_json
-from shared.surrogate import Training, make_mean_reference, mare, mare_in_d
+from shared.surrogate import Training, mare, mare_in_d
 
 # Six curves keyed by p along x in [0, 1]: y = 1 + 0.1 p + x^2; curve p = 2 is the test curve.
 P = np.repeat(np.arange(6.0), 10)
@@ -73,10 +73,15 @@ def clock(*readings: float) -> Callable[[], float]:
     return lambda: next(ticks)
 
 
+# The harness reads the clock four times per predictor: before and after the final fit, after a
+# one-row and after a batch prediction; the MLP is scored first.
+READINGS = (10.0, 12.5, 12.6, 12.7, *([0.0] * 8))
+
+
 @pytest.fixture(scope="module")
 def fit() -> Fit:
-    """One short fit of the toy curves, timed by a clock reading 10.0 then 12.5."""
-    return fit_and_score(TOY, SHORT, clock(10.0, 12.5))
+    """The MLP's final fit of the toy curves, its fit timed at 2.5 s by the clock."""
+    return score_pair(TOY, "toy", "mass", SHORT, clock=clock(*READINGS))[1]
 
 
 SCORED = Fit(
@@ -93,37 +98,36 @@ SCORED = Fit(
 )
 
 
-class TestFoldMares:
-    def test_scores_each_frozen_fold_once(self) -> None:
-        assert len(fold_mares(TOY, make_mean_reference)) == 2
-
-    def test_scores_a_fold_on_a_model_fitted_without_it(self) -> None:
-        fold0, train0 = TOY.fold == 0, ~TOY.test & (TOY.fold != 0)
-        expected = mare(TOY.y[fold0], np.full(fold0.sum(), TOY.y[train0].mean()))
-        assert fold_mares(TOY, make_mean_reference)[0] == pytest.approx(expected)
-
-    def test_scores_a_fold_with_the_given_metric(self) -> None:
-        fold0, train0 = TOY.fold == 0, ~TOY.test & (TOY.fold != 0)
-        expected = mare_in_d(TOY.y[fold0], np.full(fold0.sum(), TOY.y[train0].mean()))
-        scored = fold_mares(TOY, make_mean_reference, score=mare_in_d)[0]
-        assert scored == pytest.approx(expected)
+def spread_of_mean(mean: float, p95: float = 1e-2) -> Spread:
+    """A spread whose mean and 95th percentile the table reads."""
+    return Spread(mean, p95, p95, mean)
 
 
 NS_MASS = PairScores(
     dataset="neutron_stars",
     target="mass",
     scored=(
-        Scored("MLP", test_mare=0.00662, fold_mares=(0.007, 0.009), seconds=213.4),
-        Scored("mean", test_mare=0.2, fold_mares=(0.2, 0.2), seconds=None),
-        Scored("nearest curve", test_mare=0.05, fold_mares=(0.04, 0.06), seconds=None),
+        Scored(
+            "MLP",
+            spread_of_mean(0.00662),
+            (spread_of_mean(0.007), spread_of_mean(0.009)),
+            Timing(213.4, 2e-4, 5e-4),
+        ),
+        Scored("mean", spread_of_mean(0.2), (spread_of_mean(0.2),) * 2, Timing(0.0, 1e-6, 1e-6)),
+        Scored(
+            "nearest curve",
+            spread_of_mean(0.05),
+            (spread_of_mean(0.04), spread_of_mean(0.06)),
+            Timing(0.1, 1e-4, 2e-4),
+        ),
     ),
 )
 
 
 @pytest.fixture(scope="module")
 def pair() -> tuple[PairScores, Fit]:
-    """The toy curves scored as one pair: MLP fold fits and final fit, then the references."""
-    return score_pair(TOY, "toy", "mass", SHORT, clock(1.0, 2.0, 3.0, 4.0, 5.0, 6.0))
+    """The toy curves scored as one pair through the harness: the MLP, then the references."""
+    return score_pair(TOY, "toy", "mass", SHORT)
 
 
 class TestScorePair:
@@ -133,15 +137,15 @@ class TestScorePair:
     def test_reports_after_every_mlp_fit(self) -> None:
         fits: list[int] = []
         short = replace(SHORT, max_epochs=1)
-        score_pair(TOY, "toy", "mass", short, clock(1.0, 2.0), after_fit=lambda: fits.append(1))
+        score_pair(TOY, "toy", "mass", short, after_fit=lambda: fits.append(1))
         assert len(fits) == 3  # two folds and the final fit
 
-    def test_scores_the_references_with_the_given_metric(self) -> None:
-        short = replace(SHORT, max_epochs=1)
-        scores, _ = score_pair(TOY, "toy", "charge", short, clock(1.0, 2.0), score=mare_in_d)
-        mean_prediction = np.full(TOY.test.sum(), TOY.y[~TOY.test].mean())
-        expected = mare_in_d(TOY.y[TOY.test], mean_prediction)
-        assert scores.scored[1].test_mare == pytest.approx(expected)
+    def test_times_the_references_too(self, pair: tuple[PairScores, Fit]) -> None:
+        assert isinstance(pair[0].scored[2].timing, Timing)
+
+    def test_scores_the_mlp_s_final_fit_with_the_target_s_metric(self) -> None:
+        _, fit = score_pair(TOY, "toy", "charge", replace(SHORT, max_epochs=1))
+        assert fit.mare == pytest.approx(mare_in_d(fit.y_true, fit.y_pred))
 
 
 class TestMetricFor:
@@ -153,10 +157,10 @@ class TestMetricFor:
 
 
 class TestBaselineTable:
-    def test_gives_the_mlp_its_test_mare_fold_spread_and_fit_seconds(self) -> None:
+    def test_gives_the_mlp_its_mare_fold_spread_figures_and_seconds(self) -> None:
         assert (
             "NS & $M$ & MLP & $6.62\\times 10^{-3}$ & "
-            "$8.00\\times 10^{-3} \\pm 1.00\\times 10^{-3}$ & 213"
+            "$8.00\\times 10^{-3} \\pm 1.00\\times 10^{-3}$ & 2.0 & 213 & $2.00\\times 10^{-4}$"
         ) in baseline_table([NS_MASS])
 
     def test_labels_the_charge_rows_by_d(self) -> None:
@@ -453,19 +457,17 @@ class TestMain:
         ]
 
 
-class TestFitAndScore:
+class TestFinalFit:
+    """The MLP's final fit, built from the harness run and the fitted network."""
+
     def test_is_scored_on_the_test_rows_only(self, fit: Fit) -> None:
         assert fit.y_true.tolist() == TOY.y[TOY.test].tolist()
 
     def test_times_the_fit_with_the_clock(self, fit: Fit) -> None:
-        assert fit.seconds == 2.5
+        assert fit.seconds == pytest.approx(2.5)
 
     def test_counts_the_epochs_run(self, fit: Fit) -> None:
         assert fit.epochs == SHORT.max_epochs
 
     def test_names_the_epoch_of_the_lowest_valid_loss(self, fit: Fit) -> None:
         assert fit.best_epoch == min(fit.history, key=lambda row: row["valid_loss"])["epoch"]
-
-    def test_scores_the_test_rows_with_the_given_metric(self) -> None:
-        scored = fit_and_score(TOY, SHORT, clock(10.0, 12.5), score=mare_in_d)
-        assert scored.mare == pytest.approx(mare_in_d(scored.y_true, scored.y_pred))
