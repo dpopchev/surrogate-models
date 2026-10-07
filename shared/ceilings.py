@@ -117,6 +117,28 @@ def ceiling_macros(prefix: str, found: Ceilings, tags: Mapping[str, str]) -> dic
     return macros
 
 
+def uncertainty_macros(
+    prefix: str,
+    found: Ceilings,
+    tags: Mapping[str, str],
+    at: Mapping[str, Mapping[str, float]],
+    decade_target: str,
+) -> dict[str, str]:
+    """The ceilings as absolute uncertainties (W-076): per target and typical value (keyed by a
+    macro suffix, "" for the median, "Max"), \\<prefix>Ceil<T>Sigma<S>, the worst direction's
+    p95 across-curve relative error times the value, and the value as \\<prefix>Ceil<T>At<S>;
+    for the decade target \\<prefix>Ceil<T>SigmaDex, that error in dex (epsilon / ln 10)."""
+    macros = {}
+    for target, values in at.items():
+        worst = _worst_across(found, target)
+        for suffix, value in values.items():
+            macros[f"{prefix}Ceil{tags[target]}Sigma{suffix}"] = _sci(worst * value)
+            macros[f"{prefix}Ceil{tags[target]}At{suffix}"] = f"{value:.3g}"
+        if target == decade_target:
+            macros[f"{prefix}Ceil{tags[target]}SigmaDex"] = _sci(worst / np.log(10.0))
+    return macros
+
+
 def ceiling_table(label: str, caption: str, found: Ceilings, labels: Mapping[str, str]) -> str:
     """A table of the ceilings: per target the median noise, the along-curve p95, the
     across-curve p95 per curve key and the significant figures they allow."""
@@ -205,8 +227,12 @@ def _sci(value: float) -> str:
 def reachable_figures(found: Ceilings, target: str) -> float:
     """The significant figures, -log10 of the relative error, that the worst direction across
     curves allows the target at its 95th percentile."""
-    worst = max(s.p95 for (t, _), s in found.across.items() if t == target)
-    return float(-np.log10(worst))
+    return float(-np.log10(_worst_across(found, target)))
+
+
+def _worst_across(found: Ceilings, target: str) -> float:
+    """The p95 across-curve relative error of the target in its worst direction."""
+    return max(s.p95 for (t, _), s in found.across.items() if t == target)
 
 
 def profile(position: np.ndarray, errors: np.ndarray, bins: int) -> Profile:

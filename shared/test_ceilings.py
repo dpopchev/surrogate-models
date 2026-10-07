@@ -22,6 +22,7 @@ from shared.ceilings import (
     noise_proxy,
     profile,
     spread,
+    uncertainty_macros,
 )
 
 # Three curves keyed by p along x: log y is cubic in x, so a cubic spline along a curve is exact.
@@ -152,6 +153,21 @@ class TestCeilingMacros:
 
     def test_name_the_along_curve_p95_per_target(self) -> None:
         assert ceiling_macros("ex", KNOWN, TAGS)["exCeilYAlong"] == "2.00\\times 10^{-6}"
+
+
+class TestUncertaintyMacros:
+    # p95 across: 1e-4 along p, 1e-3 along q -> the worse, 1e-3, is the relative uncertainty.
+    def test_the_sigma_is_the_worst_p95_times_the_typical_value(self) -> None:
+        macros = uncertainty_macros("ex", KNOWN, TAGS, {"y": {"": 2.0}}, decade_target="y")
+        assert macros["exCeilYSigma"] == "2.00\\times 10^{-3}"
+
+    def test_the_decade_target_s_sigma_in_dex_is_the_worst_p95_over_ln_10(self) -> None:
+        macros = uncertainty_macros("ex", KNOWN, TAGS, {"y": {"": 2.0}}, decade_target="y")
+        assert macros["exCeilYSigmaDex"] == "4.34\\times 10^{-4}"
+
+    def test_names_the_typical_value_each_uncertainty_is_taken_at(self) -> None:
+        macros = uncertainty_macros("ex", KNOWN, TAGS, {"y": {"Max": 2.19}}, decade_target="z")
+        assert macros["exCeilYAtMax"] == "2.19"
 
 
 LABELS = {"y": "$Y$", "z": "$Z$", "p": "$p$", "q": "$q$"}

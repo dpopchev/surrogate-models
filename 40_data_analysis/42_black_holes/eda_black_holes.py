@@ -21,7 +21,14 @@ from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 
-from shared.ceilings import Ceilings, ceiling_figure, ceiling_macros, ceiling_table, measure
+from shared.ceilings import (
+    Ceilings,
+    ceiling_figure,
+    ceiling_macros,
+    ceiling_table,
+    measure,
+    uncertainty_macros,
+)
 from shared.config import BhFigure, BhTable, PaperConfig, load_config
 from shared.eda import (
     Adjacency,
@@ -518,7 +525,13 @@ def main(
         (out / f"{asset(figure)}.tex").write_text(figure_tex(figure))
     found = evidence(table, folds, seed)
     bounds = measure(table, CURVE, "r_h", ("M", "D"), "D")
-    macros = numbers(found) | ceiling_macros("bhEda", bounds, CEILING_TAGS)
+    # The ceilings as uncertainties at the median mass and the median charge (W-076).
+    typical = {"M": {"": float(table["M"].median())}, "D": {"": float(table["D"].median())}}
+    macros = (
+        numbers(found)
+        | ceiling_macros("bhEda", bounds, CEILING_TAGS)
+        | uncertainty_macros("bhEda", bounds, CEILING_TAGS, typical, "D")
+    )
     (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
     for name in section.tables:
         (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name))

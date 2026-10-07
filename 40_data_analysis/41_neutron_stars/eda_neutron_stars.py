@@ -30,6 +30,7 @@ from shared.ceilings import (
     ceiling_table,
     decade_table,
     measure,
+    uncertainty_macros,
 )
 from shared.config import NsFigure, NsTable, PaperConfig, load_config
 from shared.eda import (
@@ -638,7 +639,17 @@ def main(
     bounds = measure(
         table.assign(log10_rho_c=np.log10(table["rho_c"])), CURVE, "log10_rho_c", ("M", "D"), "D"
     )
-    macros = numbers(found) | raw_numbers(raw) | ceiling_macros("nsEda", bounds, CEILING_TAGS)
+    # The ceilings as uncertainties at the median mass, at M_max and at the median charge (W-076).
+    typical = {
+        "M": {"": float(table["M"].median()), "Max": float(table["M"].max())},
+        "D": {"": float(table["D"].median())},
+    }
+    macros = (
+        numbers(found)
+        | raw_numbers(raw)
+        | ceiling_macros("nsEda", bounds, CEILING_TAGS)
+        | uncertainty_macros("nsEda", bounds, CEILING_TAGS, typical, "D")
+    )
     (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
     for name in section.tables:
         (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name))
