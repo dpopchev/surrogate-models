@@ -5,6 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import optuna
 import pytest
 from skorch.history import History
 
@@ -58,6 +59,12 @@ def test_a_reported_epoch_is_an_intermediate_value_of_the_trial() -> None:
     trial = study.ask()
     ReportEpochs(trial).on_epoch_end(net_at(3, 0.25))
     assert study.trials[0].intermediate_values == {3: 0.25}
+
+
+def test_opening_a_study_lowers_optuna_s_verbosity_to_warnings() -> None:
+    optuna.logging.set_verbosity(optuna.logging.INFO)
+    open_study("toy", None)
+    assert optuna.logging.get_verbosity() == optuna.logging.WARNING
 
 
 def test_a_study_on_a_journal_is_joined_by_a_second_opening(tmp_path: Path) -> None:

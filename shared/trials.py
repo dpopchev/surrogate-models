@@ -21,7 +21,9 @@ from shared.scorecard import significant_figures
 
 def open_study(name: str, journal: Path | None) -> optuna.Study:
     """The study of that name on the journal file (created or joined), or in memory without
-    one; it maximizes the fold significant figures and prunes nothing."""
+    one; it maximizes the fold significant figures and prunes nothing. Optuna's INFO lines
+    (a study made or joined, a trial told) are silenced in this process; its warnings show."""
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
     if journal is None:
         return optuna.create_study(study_name=name, direction="maximize")
     journal.parent.mkdir(parents=True, exist_ok=True)
