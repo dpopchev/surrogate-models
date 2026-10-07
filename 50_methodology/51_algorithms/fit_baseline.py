@@ -368,9 +368,8 @@ def main(
     training = Training(**settings.model_dump(exclude={"log_level", "threads"}))
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
     split = pd.read_parquet(split_file)
-    floor = config.data_analysis.charge_floor
     designs: list[tuple[DesignSpec, Target, Design]] = [
-        (spec, target, design(tables[spec.dataset], split, spec, target, floor))
+        (spec, target, design(tables[spec.dataset], split, spec, target))
         for spec, target in PAIRS
     ]
     total = sum(len(set(data.fold[data.fold >= 0].tolist())) + 1 for _, _, data in designs)

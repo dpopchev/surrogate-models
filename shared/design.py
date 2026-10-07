@@ -2,7 +2,7 @@
 
 A prepared table and the frozen curve split (50_methodology/51_algorithms/split_datasets.py)
 become one Design per dataset and target: the inputs of the dataset's curve space, each raw or
-in log10, the target (M in M_sun, or the charge target log10(max(D, eps)/M) of Section 3.3), one
+in log10, the target (M in M_sun, or the charge target log10(D/M) of Section 3.3, W-063), one
 integer per curve for grouped splitting, and each row's test and ablation flags.
 """
 
@@ -64,14 +64,14 @@ def _inputs(table: pd.DataFrame, space: CurveSpace) -> np.ndarray:
     return np.column_stack(columns).astype(np.float32)
 
 
-def _target(table: pd.DataFrame, target: Target, floor: float) -> np.ndarray:
-    """M in M_sun, or the charge target log10(max(D, floor)/M)."""
+def _target(table: pd.DataFrame, target: Target) -> np.ndarray:
+    """M in M_sun, or the charge target log10(D/M); every prepared D is positive."""
     mass = table["M"].to_numpy(np.float64)
     match target:
         case "mass":
             values = mass
         case "charge":
-            values = np.log10(table["D"].clip(lower=floor).to_numpy(np.float64) / mass)
+            values = np.log10(table["D"].to_numpy(np.float64) / mass)
         case _:
             assert_never(target)
     return values.astype(np.float32)
@@ -92,7 +92,7 @@ def _labels(table: pd.DataFrame, split: pd.DataFrame, spec: DesignSpec) -> pd.Da
 
 
 def design(
-    table: pd.DataFrame, split: pd.DataFrame, spec: DesignSpec, target: Target, floor: float
+    table: pd.DataFrame, split: pd.DataFrame, spec: DesignSpec, target: Target
 ) -> Design:
     """The design of one dataset and target under the frozen split.
 
@@ -101,7 +101,7 @@ def design(
     labelled = _labels(table, split, spec)
     return Design(
         X=_inputs(table, spec.space),
-        y=_target(table, target, floor),
+        y=_target(table, target),
         groups=curve_ids(table, spec.space),
         test=(labelled["label"] == "test").to_numpy(),
         fold=_folds(labelled["label"]),
