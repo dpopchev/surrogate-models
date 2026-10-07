@@ -18,7 +18,7 @@ from sklearn.model_selection import GroupShuffleSplit
 from threadpoolctl import threadpool_limits
 
 from shared.ceilings import Spread, spread
-from shared.design import Design, Target
+from shared.design import Design, TargetForm
 from shared.scorecard import Scorecard, relative_errors, scorecard
 
 # --- vocabulary and types ---------------------------------------------------------------------
@@ -66,7 +66,7 @@ def split_valid(groups: np.ndarray, fraction: float, seed: int) -> np.ndarray:
 
 def harness(
     design: Design,
-    target: Target,
+    target: TargetForm,
     fitter: Fitter,
     seeds: Sequence[int],
     valid_fraction: float,
@@ -106,7 +106,7 @@ def _fit(
 
 def _run(
     design: Design,
-    target: Target,
+    target: TargetForm,
     fitter: Fitter,
     seed: int,
     fraction: float,
