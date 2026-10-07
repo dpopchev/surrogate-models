@@ -18,6 +18,7 @@
 - 2026-10-06 W-035: T-092: fact: one seeded fit took 213-525 s (load) -> cite the fit time as an order of magnitude
 - 2026-10-06 W-036: T-086: fact: nearest curve beats the MLP test MARE on NS M, BH M, BH Y; MLP wins NS Y only -> E-005 refuted as stated
 - 2026-10-06 W-036: T-120: fact: epoch 11.4 s at torch's 7 threads, 2.6 s at 1 thread; parallel fits no faster -> serial, 1 thread
+- 2026-10-07 W-036: fact: every prepared D > 0; the 1004 NS rows below 1e-5 (8.2e-8 to 1e-5) open 110 of 1611 curves at low rho_c, monotone in log10 D -> floor dropped (W-063)
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
@@ -41,11 +42,14 @@
 - 2026-10-06 W-034: error macros (MARE, RMSE) print in scientific notation at every magnitude
 - 2026-10-06 W-053: paper cites the repo (MIT); data and weights live in local/, built or provided, never tracked; no sample
 - 2026-10-06 W-059: per-site map in 00_metadata/citations.md; 13 TODO_ placeholders cited, real sources in W-061
+- 2026-10-07 E-005: the charge target is log10(D/M) with no floor eps, reversing the E-002 / W-019 floor Decision; the D > 0 guard of the preparation stays (developer)
+- 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
 
 ## Deviations
 - 2026-10-06 E-005: AC5 and W-054 added (developer): runs started through the chat showed nothing live (captured output, no TTY, tqdm off); W-036 now waits for W-054 so its fits are observable
 - 2026-10-06 E-005: AC6 and W-055 added, W-056 amends AC5 (developer): Section 5.1 is written from the NS mass baseline before W-036 widens it (T-087 shrinks to adding the table); the epoch table's dur column shows as elapse_s
 - 2026-10-06 E-005: AC7 and W-057 added (developer): epoch k/MAX, epochs since best and a time-left range, start and end banners, make runs, make run, make examples; W-036 waits for it
+- 2026-10-06 E-005: AC9 and W-063 added (developer): the charge floor eps is dropped -- every prepared D > 0 and the 1004 NS rows below 1e-5 are a smooth tail, not a zero; the charge target becomes log10(D/M), reversing the E-002 / W-019 floor Decision; W-037 now waits for W-063
 - 2026-10-06 E-005: T-106's evidence says make check PASS, but make check failed (pyright, surrogate.py:196) -- the agent's command chain continued past the failure; fixed in 40bf205, make check PASS (310 tests)
 - 2026-10-06 E-005: parked for E-009 (developer): the revised paper structure and the dataset papers in refs.bib are adopted first; E-005 resumes at W-036 with no work item open
 - 2026-10-06 E-005: parked for W-058 (developer): the [landing] review runs as a standalone root; E-005 resumes at W-036 with no work item open
@@ -53,3 +57,4 @@
 - 2026-10-06 E-009: parked for E-005 (developer); W-052 waits for results
 - 2026-10-06 E-009: placeholders (developer): 13 TODO_ refs.bib keys cited; real sources in standalone W-061
 - 2026-10-06 E-009: re-planned from the developer's revised paper structure and the dataset papers added to refs.bib (c83b6ef): W-059 and W-060 added, W-051 re-scoped to Sections 2.1 to 2.4
+- 2026-10-07 E-005: hypothesis restated (developer): the pipeline reports each pair beside the references instead of beating them -- the MLP lost to the nearest curve on 3 of 4 pairs (W-036 T-086); which model wins moves to the E-006 search space

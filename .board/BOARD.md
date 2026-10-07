@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-005 > W-036   | blocked: 0 | todo roots: 4 | done: 160 | pruned: 5
+open path: E-005 > W-036 > T-125   | blocked: 0 | todo roots: 4 | done: 160 | pruned: 13
 
 ## Tree
 
@@ -31,6 +31,7 @@ open path: E-005 > W-036   | blocked: 0 | todo roots: 4 | done: 160 | pruned: 5
 - T-087 [todo] Add the four-pair baseline table to Section 5.1 -> 50_methodology/51_algorithms/51_algorithms.tex
 - T-120 [done] Measure fit throughput by thread count and parallel fits -> a probe in local/scratch and a Finding on W-036
 - T-121 [done] Train on one torch thread by default -> a threads setting in paper.toml and fit_baseline.py
+- T-125 [doing] Record W-063 and the re-plan of E-006 to E-008 -> .board/   <- ACTIVE LEAF
 
 #### W-037 issue [todo] Charge rebuilt with the true and the predicted mass
 
@@ -64,23 +65,68 @@ open path: E-005 > W-036   | blocked: 0 | todo roots: 4 | done: 160 | pruned: 5
 
 #### W-062 issue [todo] Section 4.1 lists the surrogate pipeline as an algorithm
 
-### E-006 [todo] Data-guided choices tested -- rho_c input, H1, H2 and H3
+#### W-063 issue [todo] The charge target keeps every charge, the floor dropped   (filed during T-086)
 
-#### W-038 issue [todo] rho_c input check -- raw against log10
+- T-122 [todo] Drop the floor from the charge target test-first -> shared/design.py
+- T-123 [todo] Restate Section 3.3, H1 and the abstract without the floor -> 40_data_analysis/43_preprocessing/43_preprocessing.tex
+- T-124 [todo] Rerun the four pairs on the unfloored charge target -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
 
-#### W-039 issue [todo] H1 -- log against linear charge target
+### E-006 [todo] Search space and the best surrogate per dataset
 
-#### W-040 issue [todo] H2 -- loss x activation at the M_max turning point
+#### W-038 issue [pruned] rho_c input check -- raw against log10   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): rho_c input form becomes part of the S2 representation screen (W-066)]
 
-#### W-041 issue [todo] H3a -- model pool GPR, XGBoost, MLP and ResNet
+#### W-039 issue [pruned] H1 -- log against linear charge target   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): log vs linear charge target becomes part of the S2 representation screen (W-066)]
 
-#### W-042 issue [todo] H3b -- ripple metric of MLP against ResNet
+#### W-040 issue [pruned] H2 -- loss x activation at the M_max turning point   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): loss x activation becomes part of S4-S5 tuning and precision (W-068)]
 
-#### W-043 issue [todo] H3c -- GPR scaling wall
+#### W-041 issue [pruned] H3a -- model pool GPR, XGBoost, MLP and ResNet   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the model pool becomes the S3 family screen with interpolators added (W-067)]
 
-### E-007 [todo] Training refinement, ensemble uncertainty and the final surrogate
+#### W-042 issue [pruned] H3b -- ripple metric of MLP against ResNet   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the ripple metric becomes a scorecard column for every model (W-065)]
 
-#### W-044 spike [todo] Is L-BFGS fine-tuning worth keeping
+#### W-043 issue [pruned] H3c -- GPR scaling wall   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the GPR scaling wall becomes the data-budget axis of the S3 screen (W-067)]
+
+#### W-064 issue [todo] Sections 3.1 and 3.2 state the reachable relative error
+
+- T-126 [todo] Write the data-ceiling functions test-first -> shared/ceilings.py
+- T-127 [todo] Wire the ceilings into both EDA scripts -> 41_neutron_stars_num.tex and 42_black_holes_num.tex
+- T-128 [todo] Write paragraph 6 on the reachable error -> 41_neutron_stars.tex and 42_black_holes.tex
+
+#### W-065 issue [todo] One scorecard and a fair harness for every candidate
+
+- T-129 [todo] Write the scorecard test-first -> shared/scorecard.py
+- T-130 [todo] Write the fair harness test-first -> shared/harness.py
+- T-131 [todo] Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
+
+#### W-066 issue [todo] Representation screen -- inputs, targets, pointwise or curve-wise
+
+- T-132 [todo] Add the curve-wise representation test-first -> shared/design.py
+- T-133 [todo] Run the representation screen -> 60_results/61_h1/61_h1.tex
+
+#### W-067 issue [todo] Family screen -- interpolators, GPR, XGBoost and networks
+
+- T-134 [todo] Write the family factories test-first -> shared/families.py
+- T-135 [todo] Run the family screen with successive halving -> 60_results/63_h3/63_h3.tex
+
+#### W-068 issue [todo] Tuning and precision of the surviving families
+
+- T-136 [todo] Write the equal-budget search test-first -> shared/search.py
+- T-137 [todo] Write the precision regime test-first -> shared/surrogate.py
+- T-138 [todo] Run tuning and precision on the survivors -> 60_results/62_h2/62_h2.tex
+
+#### W-069 issue [todo] Extrapolation error against the distance from the training hull
+
+- T-139 [todo] Write the distance from the training hull test-first -> shared/scorecard.py
+- T-140 [todo] Run the extrapolation probe on the rim and outer curves -> 60_results/63_h3/63_h3.tex
+
+#### W-070 issue [todo] Pareto front and the best approach per pair
+
+- T-141 [todo] Write the Pareto front test-first -> shared/scorecard.py
+- T-142 [todo] Run the budget comparison -> 60_results/64_speedup/64_speedup.tex
+- T-143 [todo] State the best approach per pair in the conclusion -> 80_conclusion/80_conclusion.tex
+
+### E-007 [todo] Ensemble uncertainty and the final surrogate
+
+#### W-044 spike [pruned] Is L-BFGS fine-tuning worth keeping   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): L-BFGS becomes part of the S5 precision regime (W-068)]
 
 #### W-045 issue [todo] Ensemble uncertainty over curve-bootstrap resamples
 
@@ -90,7 +136,7 @@ open path: E-005 > W-036   | blocked: 0 | todo roots: 4 | done: 160 | pruned: 5
 
 #### W-047 spike [todo] Speedup baseline and reference posterior without the solver
 
-#### W-048 issue [todo] Pareto front of error against inference time
+#### W-048 issue [pruned] Pareto front of error against inference time   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the Pareto front of error against cost becomes S7 (W-070)]
 
 #### W-049 issue [todo] Mock MCMC recovery with emcee
 
@@ -368,6 +414,7 @@ flowchart TD
   W036 --> T087["T-087 todo: Add the four-pair baseline table to Section 5.1 -> 50_methodology/51_algorithms/51_algorithms.tex"]
   W036 --> T120["T-120 done: Measure fit throughput by thread count and parallel fits -> a probe in local/scratch and a Finding on W-036"]
   W036 --> T121["T-121 done: Train on one torch thread by default -> a threads setting in paper.toml and fit_baseline.py"]
+  W036 --> T125["T-125 doing: Record W-063 and the re-plan of E-006 to E-008 -> .board/ -- ACTIVE LEAF"]
   E005 --> W037["W-037 issue todo: Charge rebuilt with the true and the predicted mass"]
   W037 --> T088["T-088 todo: Write the charge rebuild test-first -> shared/surrogate.py"]
   W037 --> T089["T-089 todo: Write the charge MARE with true and predicted mass -> 51_algorithms_num.tex and Section 5.1"]
@@ -389,20 +436,49 @@ flowchart TD
   W057 --> T105["T-105 done: Two stop-time columns, the stop criterion on top and a live loss curve -> shared/surrogate.py and fit_baseline.py"]
   W057 --> T106["T-106 done: Print the epoch table at 4 significant figures, elapsed_s to a tenth -> shared/surrogate.py"]
   E005 --> W062["W-062 issue todo: Section 4.1 lists the surrogate pipeline as an algorithm"]
-  E006["E-006 todo: Data-guided choices tested -- rho_c input, H1, H2 and H3"]
-  E006 --> W038["W-038 issue todo: rho_c input check -- raw against log10"]
-  E006 --> W039["W-039 issue todo: H1 -- log against linear charge target"]
-  E006 --> W040["W-040 issue todo: H2 -- loss x activation at the M_max turning point"]
-  E006 --> W041["W-041 issue todo: H3a -- model pool GPR, XGBoost, MLP and ResNet"]
-  E006 --> W042["W-042 issue todo: H3b -- ripple metric of MLP against ResNet"]
-  E006 --> W043["W-043 issue todo: H3c -- GPR scaling wall"]
-  E007["E-007 todo: Training refinement, ensemble uncertainty and the final surrogate"]
-  E007 --> W044["W-044 spike todo: Is L-BFGS fine-tuning worth keeping"]
+  E005 --> W063["W-063 issue todo: The charge target keeps every charge, the floor dropped"]
+  W063 --> T122["T-122 todo: Drop the floor from the charge target test-first -> shared/design.py"]
+  W063 --> T123["T-123 todo: Restate Section 3.3, H1 and the abstract without the floor -> 40_data_analysis/43_preprocessing/43_preprocessing.tex"]
+  W063 --> T124["T-124 todo: Rerun the four pairs on the unfloored charge target -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
+  E006["E-006 todo: Search space and the best surrogate per dataset"]
+  E006 --> W038["W-038 issue pruned: rho_c input check -- raw against log10"]
+  E006 --> W039["W-039 issue pruned: H1 -- log against linear charge target"]
+  E006 --> W040["W-040 issue pruned: H2 -- loss x activation at the M_max turning point"]
+  E006 --> W041["W-041 issue pruned: H3a -- model pool GPR, XGBoost, MLP and ResNet"]
+  E006 --> W042["W-042 issue pruned: H3b -- ripple metric of MLP against ResNet"]
+  E006 --> W043["W-043 issue pruned: H3c -- GPR scaling wall"]
+  E006 --> W064["W-064 issue todo: Sections 3.1 and 3.2 state the reachable relative error"]
+  W064 --> T126["T-126 todo: Write the data-ceiling functions test-first -> shared/ceilings.py"]
+  W064 --> T127["T-127 todo: Wire the ceilings into both EDA scripts -> 41_neutron_stars_num.tex and 42_black_holes_num.tex"]
+  W064 --> T128["T-128 todo: Write paragraph 6 on the reachable error -> 41_neutron_stars.tex and 42_black_holes.tex"]
+  E006 --> W065["W-065 issue todo: One scorecard and a fair harness for every candidate"]
+  W065 --> T129["T-129 todo: Write the scorecard test-first -> shared/scorecard.py"]
+  W065 --> T130["T-130 todo: Write the fair harness test-first -> shared/harness.py"]
+  W065 --> T131["T-131 todo: Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
+  E006 --> W066["W-066 issue todo: Representation screen -- inputs, targets, pointwise or curve-wise"]
+  W066 --> T132["T-132 todo: Add the curve-wise representation test-first -> shared/design.py"]
+  W066 --> T133["T-133 todo: Run the representation screen -> 60_results/61_h1/61_h1.tex"]
+  E006 --> W067["W-067 issue todo: Family screen -- interpolators, GPR, XGBoost and networks"]
+  W067 --> T134["T-134 todo: Write the family factories test-first -> shared/families.py"]
+  W067 --> T135["T-135 todo: Run the family screen with successive halving -> 60_results/63_h3/63_h3.tex"]
+  E006 --> W068["W-068 issue todo: Tuning and precision of the surviving families"]
+  W068 --> T136["T-136 todo: Write the equal-budget search test-first -> shared/search.py"]
+  W068 --> T137["T-137 todo: Write the precision regime test-first -> shared/surrogate.py"]
+  W068 --> T138["T-138 todo: Run tuning and precision on the survivors -> 60_results/62_h2/62_h2.tex"]
+  E006 --> W069["W-069 issue todo: Extrapolation error against the distance from the training hull"]
+  W069 --> T139["T-139 todo: Write the distance from the training hull test-first -> shared/scorecard.py"]
+  W069 --> T140["T-140 todo: Run the extrapolation probe on the rim and outer curves -> 60_results/63_h3/63_h3.tex"]
+  E006 --> W070["W-070 issue todo: Pareto front and the best approach per pair"]
+  W070 --> T141["T-141 todo: Write the Pareto front test-first -> shared/scorecard.py"]
+  W070 --> T142["T-142 todo: Run the budget comparison -> 60_results/64_speedup/64_speedup.tex"]
+  W070 --> T143["T-143 todo: State the best approach per pair in the conclusion -> 80_conclusion/80_conclusion.tex"]
+  E007["E-007 todo: Ensemble uncertainty and the final surrogate"]
+  E007 --> W044["W-044 spike pruned: Is L-BFGS fine-tuning worth keeping"]
   E007 --> W045["W-045 issue todo: Ensemble uncertainty over curve-bootstrap resamples"]
   E007 --> W046["W-046 issue todo: Final surrogate saved and loadable"]
   E008["E-008 todo: Speedup and the MCMC application"]
   E008 --> W047["W-047 spike todo: Speedup baseline and reference posterior without the solver"]
-  E008 --> W048["W-048 issue todo: Pareto front of error against inference time"]
+  E008 --> W048["W-048 issue pruned: Pareto front of error against inference time"]
   E008 --> W049["W-049 issue todo: Mock MCMC recovery with emcee"]
   E008 --> W050["W-050 issue todo: Surrogate posterior validated against the reference"]
   E009["E-009 doing: The paper follows the revised structure, and the release"]
@@ -430,8 +506,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E005,W036,E009 doing
+  class E005,W036,T125,E009 doing
   class W034,T076,T077,T078,T079,T080,T090,T091,W035,T081,T082,T083,T084,T092,T085,T086,T120,T121,W054,T093,T094,T095,W055,T097,T098,W056,T096,W057,T099,T100,T101,T102,T104,T105,T106,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class T087,W037,T088,T089,W062,E006,W038,W039,W040,W041,W042,W043,E007,W044,W045,W046,E008,W047,W048,W049,W050,W052,W061,T118 todo
-  class T108 pruned
+  class T087,W037,T088,T089,W062,W063,T122,T123,T124,E006,W064,T126,T127,T128,W065,T129,T130,T131,W066,T132,T133,W067,T134,T135,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118 todo
+  class W038,W039,W040,W041,W042,W043,W044,W048,T108 pruned
 ```

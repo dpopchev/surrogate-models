@@ -5,7 +5,8 @@ kanban = false            # also write KANBAN.md
 csv = false               # also write board.csv
 
 [knowledge]
-budget_chars = 7500       # KNOWLEDGE.md cap; over it board check fails (V16)
+# 8800 until the ~/.claude knowledge-distillation Epic lands (developer, 2026-10-07); then 7500 again
+budget_chars = 8800       # KNOWLEDGE.md cap; over it board check fails (V16)
 entry_max_chars = 300     # one Finding, Decision or Deviation line
 
 [landing]
