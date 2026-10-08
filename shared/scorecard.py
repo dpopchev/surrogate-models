@@ -65,15 +65,18 @@ def scorecard(
 
 
 def ripple(residual: np.ndarray, across: np.ndarray, fixed: np.ndarray) -> float:
-    """The root mean square of the second difference of the residual across the grid values
-    `across`, taken within each group of rows sharing `fixed` (the other inputs); zero for a
-    residual linear in `across`."""
+    """The root mean square of the second divided difference of the residual across the grid
+    values `across`, taken within each group of rows sharing `fixed` (the other inputs): zero
+    for a residual linear in `across` at any spacing (W-089), in residual per unit of `across`
+    squared; on an even grid of step h it is the second difference over h^2."""
     second: list[np.ndarray] = []
     for group in np.unique(fixed):
         rows = np.flatnonzero(fixed == group)
-        ordered = residual[rows[np.argsort(across[rows])]]
-        if len(ordered) >= 3:
-            second.append(np.diff(ordered, 2))
+        order = rows[np.argsort(across[rows])]
+        a, r = across[order], residual[order]
+        if len(r) >= 3:
+            slopes = np.diff(r) / np.diff(a)
+            second.append(2.0 * np.diff(slopes) / (a[2:] - a[:-2]))
     if not second:
         return float("nan")
     return float(np.sqrt(np.mean(np.concatenate(second) ** 2)))

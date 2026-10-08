@@ -56,6 +56,13 @@ def test_ripple_is_zero_for_a_residual_linear_across_the_grid() -> None:
     assert ripple(0.3 + 0.1 * ACROSS, ACROSS, FIXED) == pytest.approx(0.0)
 
 
+def test_ripple_is_zero_for_a_residual_linear_across_an_uneven_grid() -> None:
+    # The test curves are a subset of the grid, so their spacing is uneven (W-089).
+    uneven = np.tile([1.0, 2.0, 4.0], 2)
+    groups = np.repeat([0.0, 1.0], 3)
+    assert ripple(0.3 + 0.1 * uneven, uneven, groups) == pytest.approx(0.0)
+
+
 def test_ripple_measures_a_residual_alternating_across_the_grid() -> None:
     # 0, 1, 0, 1, 0 per fixed point: second differences 2, -2, 2 -> RMS 2.
     alternating = (ACROSS % 2 == 0).astype(float)
