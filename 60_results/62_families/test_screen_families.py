@@ -366,15 +366,29 @@ def test_the_parity_plot_shows_each_unit_s_best_at_the_pair_s_most_rows() -> Non
 
 
 def toy_panel(dataset: str) -> Panel:
-    """A panel of one toy series on three rows."""
-    truth = np.array([1.0, 2.0, 3.0])
-    return Panel(dataset, "toy", "$M$", (Series("k-NN", truth, 1.01 * truth),))
+    """A panel of two toy series, both off by 1%, on four rows."""
+    truth = np.array([1.0, 2.0, 3.0, 4.0])
+    errors = np.full(4, 0.01)
+    return Panel(
+        dataset,
+        "toy",
+        "$M$",
+        (Series("k-NN", truth, 1.01 * truth, errors), Series("MLP", truth, 0.99 * truth, errors)),
+    )
 
 
-def test_the_parity_figure_has_a_panel_per_pair() -> None:
-    panels = [toy_panel(dataset) for dataset in ("neutron_stars",) * 2 + ("black_holes",) * 2]
-    figure = parity_figure(panels, PlotStyle(usetex=False))
-    assert len([axes for axes in figure.axes if axes.collections]) == 4
+TOY_PANELS = [toy_panel(dataset) for dataset in ("neutron_stars",) * 2 + ("black_holes",) * 2]
+
+
+def test_the_parity_figure_has_a_parity_and_an_error_panel_per_pair() -> None:
+    figure = parity_figure(TOY_PANELS, PlotStyle(usetex=False))
+    assert len([axes for axes in figure.axes if axes.collections]) == 8
+
+
+def test_an_error_panel_draws_each_candidate_s_median_and_p95() -> None:
+    figure = parity_figure(TOY_PANELS, PlotStyle(usetex=False))
+    error_axes = figure.axes[2]  # the first pair's error panel, below its parity panel
+    assert len(error_axes.lines) == 2 * 2
 
 
 def test_a_panel_of_a_dataset_without_a_colormap_is_refused() -> None:
