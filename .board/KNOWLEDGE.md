@@ -45,7 +45,7 @@
 - 2026-10-08 E-006: make baseline is refitted right before T-133's full run, so Section 4.1 and the screen's baseline row share one code state; its assets are stale since T-189, T-192 (developer)
 - 2026-10-08 W-066: the screen: curve-wise with the k-NN and local-RBF bases only (the MLP fits one output; T-193); knobs in mk/paper.mk: k 8, RBF neighbours 100 (W-086), knots 8, seeds +0..2 (developer) supersedes: W-066#d1, W-066#d3
 - 2026-10-08 W-086: planar neighbourhoods fall back per query to the linear kernel at degree 0 (cubic needs degree 1); landing approved 2026-10-08, ff-main carrying W-066's commits (developer) supersedes: W-086#d1
-- 2026-10-08 W-087: a curve with fewer rows than coefficients gets the minimum-norm least-squares spline; knots stay 8 (developer)
+- 2026-10-08 W-087: short curves get the minimum-norm spline, knots stay 8; landing approved 2026-10-08 (developer) supersedes: W-087#d1
 
 ## Deviations
 - 2026-10-08 E-006: filed during T-133 (developer): T-193 under W-067 (multi-output MLP; curve-wise x MLP n/a until then); bugs W-086 (RBF planar neighbourhoods, landed) and W-087 (spline on short curves), each pre-empting W-066
