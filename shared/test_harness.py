@@ -1,5 +1,7 @@
 """Facts about the fair harness, on a tiny synthetic design and toy fitters."""
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 import torch
@@ -97,6 +99,34 @@ def test_the_test_zone_holds_every_test_curve() -> None:
 def test_a_run_keeps_its_predictions_on_the_test_rows() -> None:
     (run,) = harness(TOY, "mass", scaled(1.0), seeds=[0], valid_fraction=0.34)
     assert run.predictions.tolist() == pytest.approx(TOY.y[TOY.test].tolist())
+
+
+# The toy with four test curves (p = 4..7), enough for a second difference across p.
+WIDE = replace(TOY, test=P >= 4, fold=np.where(P >= 4, -1, P.astype(int) % 2))
+
+
+def test_a_candidate_predicting_the_truth_has_ripple_zero() -> None:
+    (run,) = harness(WIDE, "mass", scaled(1.0), seeds=[0], valid_fraction=0.34)
+    assert run.ripple == pytest.approx((0.0,), abs=1e-6)
+
+
+def offset(error):
+    """A fitter that predicts the true y (1 + 0.1 p + x) plus error(p)."""
+
+    def fit(x_fit, y_fit, x_valid, y_valid, seed):
+        return lambda x: 1.0 + 0.1 * x[:, 1] + x[:, 0] + error(x[:, 1])
+
+    return fit
+
+
+def test_an_error_alternating_across_curves_ripples_more_than_a_constant_one() -> None:
+    (alternating,) = harness(
+        WIDE, "mass", offset(lambda p: 0.01 * (-1.0) ** p), seeds=[0], valid_fraction=0.34
+    )
+    (constant,) = harness(
+        WIDE, "mass", offset(lambda p: np.full(len(p), 0.01)), seeds=[0], valid_fraction=0.34
+    )
+    assert alternating.ripple[0] > constant.ripple[0]
 
 
 def test_the_fit_is_timed_with_the_injected_clock() -> None:

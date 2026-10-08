@@ -1,5 +1,6 @@
 """Facts about the run record, on hand-written values."""
 
+import json
 import uuid
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -55,6 +56,7 @@ RUN = Run(
     folds=(SPREAD, SPREAD),
     timing=Timing(fit=2.0, predict_one=0.001, predict_batch=0.002),
     predictions=np.array([0.5, 1.5]),
+    ripple=(0.25,),
 )
 META = RunMetadata(
     id="0190a000-0000-7000-8000-000000000001",
@@ -80,9 +82,19 @@ def test_ledger_entries_made_in_order_sort_by_name_in_order() -> None:
     ]
 
 
+def test_a_ledger_entry_keeps_its_run_s_ripple() -> None:
+    assert entry_from_run(replace(RUN, ripple=(0.5,)), META).ripple == (0.5,)
+
+
 def test_a_ledger_entry_round_trips_through_json() -> None:
     entry = entry_from_run(RUN, META)
     assert entry_from_json(entry_to_json(entry)) == entry
+
+
+def test_a_ledger_entry_written_before_the_ripple_reads_back_without_one() -> None:
+    fields = json.loads(entry_to_json(entry_from_run(RUN, META)))
+    del fields["ripple"]
+    assert entry_from_json(json.dumps(fields)).ripple == ()
 
 
 def test_run_names_sort_by_start_time() -> None:

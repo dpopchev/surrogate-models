@@ -70,6 +70,7 @@ class LedgerEntry:
     test: Scorecard
     timing: Timing
     predictions: tuple[float, ...]
+    ripple: tuple[float, ...]
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -112,7 +113,7 @@ def entry_name(entry: LedgerEntry) -> str:
 def entry_from_run(run: Run, meta: RunMetadata) -> LedgerEntry:
     """The ledger entry of a harness run."""
     predictions = tuple(float(p) for p in run.predictions)
-    return LedgerEntry(meta, run.seed, run.folds, run.test, run.timing, predictions)
+    return LedgerEntry(meta, run.seed, run.folds, run.test, run.timing, predictions, run.ripple)
 
 
 def entry_to_json(entry: LedgerEntry) -> str:
@@ -124,7 +125,7 @@ def entry_to_json(entry: LedgerEntry) -> str:
 
 def entry_from_json(text: str) -> LedgerEntry:
     """The entry an entry_to_json text holds; JSON keys are strings, so the decades of D are
-    read back as integers."""
+    read back as integers; an entry written before the ripple (T-170) reads back without one."""
     fields = json.loads(text)
     meta = fields["meta"] | {"started": datetime.fromisoformat(fields["meta"]["started"])}
     test = fields["test"]
@@ -138,4 +139,5 @@ def entry_from_json(text: str) -> LedgerEntry:
         ),
         timing=Timing(**fields["timing"]),
         predictions=tuple(fields["predictions"]),
+        ripple=tuple(fields.get("ripple", ())),
     )

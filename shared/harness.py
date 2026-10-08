@@ -14,12 +14,13 @@ from dataclasses import dataclass
 
 import numpy as np
 import torch
+from scipy.interpolate import CubicSpline
 from sklearn.model_selection import GroupShuffleSplit
 from threadpoolctl import threadpool_limits
 
 from shared.ceilings import Spread, spread
 from shared.design import Design, TargetForm
-from shared.scorecard import Scorecard, relative_errors, scorecard
+from shared.scorecard import Scorecard, relative_errors, ripple, scorecard
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
@@ -29,6 +30,9 @@ Fitter = Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int], Predict
 
 # Rows an MCMC step asks the surrogate for at once (an emcee ensemble of walkers).
 BATCH_ROWS = 64
+
+# Points of the along-curve grid the test curves are aligned on for the ripple (T-170).
+RIPPLE_GRID = 32
 
 
 @dataclass(frozen=True)
@@ -43,13 +47,15 @@ class Timing:
 @dataclass(frozen=True)
 class Run:
     """One seed's result: the scorecard on the test curves, the error spread on each frozen
-    fold, the timing of the final fit, and its predictions on the test rows."""
+    fold, the timing of the final fit, its predictions on the test rows, and the ripple of
+    its residual on the test curves across each curve parameter (T-170)."""
 
     seed: int
     test: Scorecard
     folds: tuple[Spread, ...]
     timing: Timing
     predictions: np.ndarray
+    ripple: tuple[float, ...] = ()
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -136,4 +142,42 @@ def _run(
     }
     found = scorecard(errors, zones, None if charge is None else charge[design.test])
     timing = Timing(fitted - started, one - fitted, batch - one)
-    return Run(seed, found, tuple(folds), timing, predictions)
+    found_ripple = ripples(x_test, design.y[design.test], predict)
+    return Run(seed, found, tuple(folds), timing, predictions, found_ripple)
+
+
+def ripples(x: np.ndarray, y: np.ndarray, predict: Predictor) -> tuple[float, ...]:
+    """Per curve parameter (the columns of x after the along-curve input in column 0), the
+    ripple of the predictor's residual across that parameter on a grid shared by the curves
+    differing only in it."""
+    return tuple(_ripple_across(x, y, predict, column) for column in range(1, x.shape[1]))
+
+
+def _ripple_across(x: np.ndarray, y: np.ndarray, predict: Predictor, column: int) -> float:
+    """The ripple across one curve parameter: the curves sharing every other parameter are
+    sampled on one grid over the overlap of their along-curve inputs, the truth by a cubic
+    spline of each curve, and the residual's second differences taken across the parameter at
+    each grid point; nan when no three such curves overlap."""
+    others = np.delete(x[:, 1:], column - 1, axis=1)
+    _, family = np.unique(others, axis=0, return_inverse=True)
+    residuals, across, fixed = [], [], []
+    for group in np.unique(family):
+        rows = family == group
+        values = np.unique(x[rows, column])
+        curves = [rows & (x[:, column] == value) for value in values]
+        low = max(float(x[curve, 0].min()) for curve in curves)
+        high = min(float(x[curve, 0].max()) for curve in curves)
+        if len(curves) < 3 or low >= high:
+            continue
+        grid = np.linspace(low, high, RIPPLE_GRID)
+        for value, curve in zip(values, curves, strict=True):
+            order = np.argsort(x[curve, 0])
+            truth = CubicSpline(x[curve, 0][order], y[curve][order])(grid)
+            on_grid = np.repeat(x[curve][:1], RIPPLE_GRID, axis=0)
+            on_grid[:, 0] = grid
+            residuals.append(predict(on_grid) - truth)
+            across.append(np.full(RIPPLE_GRID, value))
+            fixed.append(group * RIPPLE_GRID + np.arange(RIPPLE_GRID))
+    if not residuals:
+        return float("nan")
+    return ripple(np.concatenate(residuals), np.concatenate(across), np.concatenate(fixed))
