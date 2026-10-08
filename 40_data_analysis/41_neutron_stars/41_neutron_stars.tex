@@ -13,7 +13,7 @@ After filtering (Section~\ref{sec:neutron-stars}), the neutron-star table holds 
 
 \paragraph{1.\ The central density enters as $\log_{10}\rhoc$, standardized.}
 The density is positive and multiplicative, and the mass follows $\log_{10}\rhoc$ as one smooth S-shaped curve per $(\beta, \lambda)$ pair (\cref{fig:ns-mass-density}); the input is standardized to zero mean and unit variance on the training folds only. All curves share one grid of $\nsEdaDensityGridValues$ densities over $\nsEdaRhocOrders$ orders of magnitude, spaced about evenly in $\rhoc$, so the marginal is a plateau that falls off as curves end at their maximum mass (\cref{fig:ns-univariate-continuous}). The skew drops from $\nsEdaRhocRawSkew$ to $\nsEdaRhocLogSkew$ under the logarithm (\cref{tab:ns-univariate}), but given that shape it is weak evidence and not the argument.
-\todo{Methodology: compare raw against $\log_{10}\rhoc$ inputs by model error.}
+The representation screen confirms the choice at equal model: on its raw scale $\rhoc$ costs every model between $0.14$ and $0.20$ significant figures on the mass (Section~\ref{sec:representation}).
 
 \InputIfFileExists{41_neutron_stars_fig_univariate_continuous}{}{}
 \InputIfFileExists{41_neutron_stars_fig_mass_density}{}{}
