@@ -24,6 +24,7 @@
 - 2026-10-07 W-073: T-152: standing: in D the nearest curve beats the MLP on the test curves of all four pairs (NS D 1.18e-1 vs 1.94e-1, BH D 3.2e-3 vs 6.2e-3); the MLP leads only on the NS folds (1.00e-1 vs 1.30e-1) -> no pair is won by the baseline
 - 2026-10-07 W-073: standing: the charge is scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1); the floor moved nothing -> the nearest curve wins every test pair (W-073#1) supersedes: W-036#2, W-037#1, W-063#1
 - 2026-10-07 W-076: fact: the NS median mass is 1.75 M_sun, not 1.4: the p95 ceiling means 1.36e-4 M_sun there, 1.70e-4 at M_max 2.19, the charge 1.56e-3 dex; BH 3.05e-7 M_sun at M 3.58, 4.40e-7 dex -> Sections 3.1, 3.2 (T-161)
+- 2026-10-08 W-066: T-133: fact: make_rbf(50) is singular on NS folds 0-2 (log10 rho_c) and 0, 2 (raw rho_c); 100 neighbours ran on all ten -> the screen uses 100, bug W-086 filed
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
@@ -42,7 +43,8 @@
 - 2026-10-07 W-076: landing approved by the developer (2026-10-07)
 - 2026-10-08 E-006: make baseline is refitted right before T-133's full run, so Section 4.1 and the screen's baseline row share one code state; its assets are stale since T-189, T-192 (developer)
 - 2026-10-08 W-066: curve-wise is screened with the k-NN and local-RBF bases only: the MLP fits one output column (ScaledNetRegressor), so curve-wise x MLP is n/a; T-193 under W-067 adds a multi-output MLP (developer)
-- 2026-10-08 W-066: the screen's knobs are arguments of make representation (mk/paper.mk): k-NN k=8, local-RBF neighbours 50, spline knots 8, MLP seeds paper.toml's seed +0, +1, +2 (developer)
+- 2026-10-08 W-066: the local RBF uses 100 neighbours, not 50: 50 is singular on 5 of 10 NS fold fits (T-133 smoke run); k=8, knots 8 and the seeds stand (developer) supersedes: W-066#d2
 
 ## Deviations
 - 2026-10-08 E-006: T-193 (a multi-output MLP, shared/surrogate.py) filed under W-067 during T-133 (developer): curve-wise x MLP is n/a in the representation screen until it lands
+- 2026-10-08 E-006: bug W-086 (the local RBF is singular when its neighbours span fewer than three curves) filed during T-133 (developer): queued, the screen runs with 100 neighbours meanwhile

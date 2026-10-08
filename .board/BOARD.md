@@ -81,6 +81,10 @@ open path: E-006 > W-066 > T-133   | blocked: 0 | todo roots: 4 | done: 234 | pr
 - T-160 [done] Write the ceiling uncertainty macros test-first -> shared/ceilings.py
 - T-161 [done] State the ceilings as uncertainties in paragraph 6 -> 41_neutron_stars.tex and 42_black_holes.tex
 
+#### W-086 bug [todo] The local RBF fails with a singular matrix when its neighbours span fewer than three curves   (filed during T-133)
+
+- T-194 [todo] Make the local RBF robust to a planar neighbourhood test-first -> shared/families.py
+
 ### E-007 [todo] Ensemble uncertainty and the final surrogate
 
 #### W-044 spike [pruned] Is L-BFGS fine-tuning worth keeping   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): L-BFGS becomes part of the S5 precision regime (W-068)]
@@ -559,6 +563,8 @@ flowchart TD
   E006 --> W076["W-076 issue done: Sections 3.1 and 3.2 state the data ceilings as absolute uncertainties"]
   W076 --> T160["T-160 done: Write the ceiling uncertainty macros test-first -> shared/ceilings.py"]
   W076 --> T161["T-161 done: State the ceilings as uncertainties in paragraph 6 -> 41_neutron_stars.tex and 42_black_holes.tex"]
+  E006 --> W086["W-086 bug todo: The local RBF fails with a singular matrix when its neighbours span fewer than three curves"]
+  W086 --> T194["T-194 todo: Make the local RBF robust to a planar neighbourhood test-first -> shared/families.py"]
   E007["E-007 todo: Ensemble uncertainty and the final surrogate"]
   E007 --> W044["W-044 spike pruned: Is L-BFGS fine-tuning worth keeping"]
   E007 --> W045["W-045 issue todo: Ensemble uncertainty over curve-bootstrap resamples"]
@@ -598,6 +604,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,W066,T133,E009 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,T189,T190,T191,T192,W071,T144,T145,W076,T160,T161,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W067,T134,T135,T170,T193,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168 todo
+  class W067,T134,T135,T170,T193,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W086,T194,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168 todo
   class W038,W039,W040,W041,W042,W043,T132,W044,W048,T108 pruned
 ```
