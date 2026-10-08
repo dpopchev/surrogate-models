@@ -45,7 +45,6 @@
 
 ## Deviations
 - 2026-10-08 E-006: T-135 halves per unit (developer); batch 01a11bda stopped after round 1
-- 2026-10-08 E-006: T-135 split (developer): it keeps the screen, the family table and the paragraph, so 5.2 reaches the PDF after round 1; T-200 (parity plots) and T-201 (scaling figure) filed under W-067
-- 2026-10-08 E-006: T-135's brief amended once doing (developer): halving over N, the candidate list, the walls and per-job progress lines (a run of hours, not about 30 min); its Action and Output name the files it touches; the Check is unchanged
-- 2026-10-08 E-006: T-170's Output amended (developer): it names its tests, shared/test_harness.py and shared/test_runs.py, which the scope gate refused; the Check is unchanged
+- 2026-10-08 E-006: T-202 (appendix) while T-135's run blocks it; bug W-090 filed during it
+- 2026-10-08 E-006: briefs amended, Checks kept (developer): T-170 names its tests; T-135 gains halving over N, walls, progress lines, then splits off T-200 (parity), T-201 (scaling)
 - 2026-10-08 E-006: bug W-089 (ripple() ignores the spacing of the curve parameter) filed during T-170 (developer): pre-empts W-067

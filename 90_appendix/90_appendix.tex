@@ -1,0 +1,72 @@
+\appendix
+
+\section{The Model Families of the Screen}
+\label{app:families}
+
+This appendix describes each candidate of the family screen of Section~\ref{sec:families}: what the model is, the settings it runs with, how its cost grows with the number of training rows $N$, and what to look for in its row of \cref{tab:families}. Every candidate reads the same design: the inputs $(\log_{10}\rhoc, \beta, \lambda)$ for neutron stars and $(\rh, \beta)$ for black holes, standardized on the rows it is fitted on, and the targets $M$ and $Y = \log_{10}(\Dch/M)$. Every candidate is fitted through the same harness, on the same curves and with one thread, so two rows of the table differ only in the model.
+
+\subsection{The Two Units of Prediction}
+
+\paragraph{Pointwise.} The model maps one row, a point on one curve, to its target. It sees every row as an independent sample and knows nothing of the curves, except that its validation rows are whole curves.
+
+\paragraph{Curve-wise.} Each training curve is first fitted once along its own normalized coordinate $s \in [0, 1]$ as a least-squares cubic B-spline on eight knots, ends included: ten coefficients. With the curve's start and end along its coordinate these make twelve numbers per curve, and the model learns them from the curve parameters alone, $(\beta, \lambda)$ or $\beta$. A row is predicted by rebuilding its curve from its parameters and evaluating the spline at the row's $s$. The data are dense along each curve and sparse across curves, so this unit puts the dense direction into the spline and leaves the model the sparse one.
+
+\paragraph{What to look for.} A curve-wise model is smooth along each curve by construction, and its error is set by the number of curves, not of rows: $1371$ neutron-star training curves against $18$ for black holes. When the curves are few, as in the neutron-star design thinned to $10^3$ rows, the predicted start and end of a curve miss, the spline is evaluated outside $[0, 1]$, and the error grows past the value itself, a negative number of figures. The screen therefore ranks each unit apart. A pointwise model gains from every row, along a curve or across curves.
+
+\subsection{Weighted $k$-Nearest Neighbours}
+
+\paragraph{What it is.} The prediction at a point is the mean target of its $k = 8$ nearest training points in the standardized inputs, each weighted by the inverse of its distance~\citep{ScikitLearn2011}. Nothing is fitted; the training points are stored in a search tree.
+
+\paragraph{Cost.} The tree is built in about $N \log N$ operations and a query costs about $\log N$; it never meets the wall.
+
+\paragraph{What to look for.} It is the simplest interpolant and the floor any other family must beat. A test curve lies between training curves, so its nearest points sit on other curves, and the prediction jumps where the set of neighbours changes: a large ripple across the curve parameters. It cannot extrapolate beyond the range of its neighbours' targets.
+
+\subsection{Local Thin-Plate Radial Basis Functions}
+
+\paragraph{What it is.} Around each query, the $100$ nearest training points are interpolated exactly by a thin-plate spline, $\phi(r) = r^2 \log r$, plus a linear polynomial. Where the neighbours lie on one plane the linear part cannot be fitted, and a constant part on the same neighbours is used instead. A global interpolant through all rows would cost the cube of the rows; the neighbourhood keeps it local.
+
+\paragraph{Cost.} Each query solves one system of about a hundred unknowns, so the cost grows with the number of queries, not with $N$, beyond the neighbour search.
+
+\paragraph{What to look for.} It passes through every training point and is smooth between them, so it is strong where the data are dense: it was the best model of Section~\ref{sec:representation}, curve-wise. It has no notion of noise, so it reproduces any noise in the data, and it can overshoot where the neighbourhood is one-sided, at the edges of the parameter range.
+
+\subsection{Gaussian Process Regression}
+
+\paragraph{What it is.} The target is modelled as a draw from a Gaussian process with a scaled squared-exponential kernel plus white noise, $k(x, x') = \sigma^2 \exp(-\lVert x - x' \rVert^2 / 2\ell^2) + \sigma_n^2 \delta_{xx'}$, on standardized inputs and target~\citep{Rasmussen2005_GP,ScikitLearn2011}. The amplitude $\sigma$, the length scale $\ell$ and the noise $\sigma_n$ are set by maximizing the marginal likelihood. The prediction is the posterior mean, and the posterior variance comes with it.
+
+\paragraph{Cost.} Fitting factorizes the $N \times N$ kernel matrix, about $N^3$ operations for each step of the optimizer and $8 N^2$ bytes. At $10^4$ rows the matrix takes $0.8$\,GB; past about $2.2 \times 10^4$ rows it passes the $4$\,GB budget, and the pointwise Gaussian process is recorded as a wall without being run. Curve-wise it is fitted on one row per curve, so it never meets the wall.
+
+\paragraph{What to look for.} It is smooth everywhere and was the strongest pointwise model on $10^3$ rows; the question is whether it keeps its lead as $N$ grows, or meets its wall first. A noise level fitted at its lower bound means the data are smoother than any noise the kernel allows: the model interpolates. Its posterior variance is a ready error bar for the sampler of Section~\ref{sec:mcmc}, which no other family gives for free.
+
+\subsection{Gradient-Boosted Trees (XGBoost)}
+
+\paragraph{What it is.} A sum of regression trees, each fitted to the residual of the trees before it~\citep{TODO_XGBoost}, with the library's default settings: one hundred trees of depth at most six. A tree splits the inputs at thresholds, so the inputs need no scaling. Curve-wise, it fits the twelve outputs of a curve together.
+
+\paragraph{Cost.} A tree is grown on histograms of the inputs, about $N$ operations per tree; it never meets the wall.
+
+\paragraph{What to look for.} The prediction is piecewise constant in the inputs: a staircase along each curve and across the curve parameters, so its precision is limited by the size of its steps, and its ripple is large. It extrapolates as a constant. It is the strongest family on many tabular problems; on smooth functions known to high precision it is not expected to lead, and it sets a reference for what a model without smoothness achieves.
+
+\subsection{The Multilayer Perceptron}
+
+\paragraph{What it is.} The baseline network of Section~\ref{sec:algorithms}: three hidden layers of $64$ units with ReLU activations, trained by AdamW~\citep{Loshchilov2017_AdamW} at a learning rate of $10^{-3}$ on a cosine schedule, batches of $1024$ rows and the mean squared error of the standardized target. It stops early when the loss on a fifth of the training curves has not improved for $20$ epochs, at most $500$, and keeps its best epoch~\citep{PyTorch2019}. Curve-wise, its output layer has one unit per output of a curve.
+
+\paragraph{Cost.} An epoch costs about $N$ operations, so its time grows linearly with $N$; it never meets the memory wall, but at $10^5$ rows a fit takes minutes.
+
+\paragraph{What to look for.} It is smooth and gains from every row, so the networks are the families most likely to rise from round to round; on $10^3$ rows they trail the interpolants. Its error is set by the optimization as much as by the data, so a fit that stops early or at its last epoch tells as much as its figures.
+
+\subsection{The Residual Network}
+
+\paragraph{What it is.} The multilayer perceptron of the same width and depth, whose hidden layers are residual blocks: each adds its output to an identity skip, $h \leftarrow h + \mathrm{ReLU}(W h + b)$~\citep{He2016_ResNet}, so a deep network starts near a shallow one. It is trained exactly as the perceptron.
+
+\paragraph{Cost.} As the perceptron.
+
+\paragraph{What to look for.} Set beside the perceptron, it tests $H_3$: whether the skips give a smoother residual across the curve parameters, a smaller ripple, at the same number of weights.
+
+\subsection{Reading the Family Table}
+
+\paragraph{Significant figures.} Each entry is $-\log_{10}$ of the relative error at its 95th percentile, of $M$ or of $\Dch$ rebuilt from $Y$: $2$ figures is an error of $1\%$ on all but the worst $5\%$ of the rows, and a negative entry is an error larger than the value itself. The data ceilings of Section~\ref{sec:data-analysis} bound what any model can reach.
+
+\paragraph{Folds and test.} The table reports the frozen folds, whole training curves held out in turn, on which the halving ranks; the test curves are scored too and stay held out from every choice. A candidate far better on the folds than on the test curves has been chosen by the folds' noise.
+
+\paragraph{Rows and walls.} The subscript is the number of training rows of the last round the candidate reached: a candidate eliminated on $10^3$ rows keeps its $10^3$ entry. A wall is a fit past $30$ minutes or $4$\,GB at that number of rows.
+
+\paragraph{Ripple.} Every run also records the ripple of its residual: the root mean square of its second divided difference across each curve parameter, at fixed points along the curves. A smooth model keeps it near zero; a model that jumps between neighbouring curves does not, even when its figures are high. It is reported with the scaling of each family.
