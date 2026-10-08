@@ -45,6 +45,6 @@
 - 2026-10-08 W-089: landings approved (developer): W-076 (2026-10-07); W-086, W-087, W-089, W-066 (2026-10-08) supersedes: W-076#d1, W-089#d2
 
 ## Deviations
-- 2026-10-08 E-006: (agent, to acknowledge): T-204 to T-206 (fitters to shared/, tuning script, run) filed in W-068 during T-136; T-137 waits on T-206 (its options are the network's; networks short-listed on NS D only); T-138 reads T-206's batch
+- 2026-10-08 E-006: (agent, to acknowledge): W-068 gets T-204 to T-207 (fitters to shared/, tuning script, run, one-thread fix); T-137 waits on T-206 (network-only; networks short-listed on NS D only); T-138 reads its batch; W-091 (shell copies) filed
 - 2026-10-08 E-006: (developer): briefs amended, Checks kept (T-170, T-135 split to T-200/T-201, T-200 twice); T-135 halves per unit; T-202 and W-090 (parked for, landed) during its run
 - 2026-10-08 E-006: bug W-089 (ripple() ignores the spacing of the curve parameter) filed during T-170 (developer): pre-empts W-067
