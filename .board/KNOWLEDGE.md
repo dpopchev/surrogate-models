@@ -39,8 +39,11 @@
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-08 W-066: Section 5.1 (developer): log10 rho_c, M and Y=log10(D/M) stay for every pair; the unit is model-dependent, so W-067 scores each family pointwise and curve-wise where it can; knobs in mk/paper.mk supersedes: W-066#d4
 - 2026-10-08 W-067: T-135 data-budget axis: 30 min, 4 GB RAM per fit, 3 workers; a fit past either is the family's wall at that N (developer)
+- 2026-10-08 W-067: T-135 halves over the data budget (developer): 12 candidates per pair (6 families, both units) at 1e3 rows, the top half at 1e4, the top 3 at 1e5, on the folds' p95 figures, one seed; the scaling figure stops at each elimination or wall
 - 2026-10-08 W-089: bugs landed 2026-10-08, landings approved (developer): RBF per-query fallback (W-086), min-norm splines (W-087), ripple by divided differences (W-089); W-066 too supersedes: W-087#d3, W-089#d1
 
 ## Deviations
+- 2026-10-08 E-006: T-135 split (developer): it keeps the screen, the family table and the paragraph, so 5.2 reaches the PDF after round 1; T-200 (parity plots) and T-201 (scaling figure) filed under W-067 -- internals had gone deep before anything ran
+- 2026-10-08 E-006: T-135's brief amended once doing (developer): halving over N, the candidate list, the walls and per-job progress lines (a run of hours, not about 30 min); its Action and Output name the files it touches; the Check is unchanged
 - 2026-10-08 E-006: T-170's Output amended (developer): it names its tests, shared/test_harness.py and shared/test_runs.py, which the scope gate refused; the Check is unchanged
 - 2026-10-08 E-006: bug W-089 (ripple() ignores the spacing of the curve parameter) filed during T-170 (developer): pre-empts W-067
