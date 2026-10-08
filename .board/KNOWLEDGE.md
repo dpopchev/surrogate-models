@@ -42,4 +42,5 @@
 - 2026-10-08 W-089: bugs landed 2026-10-08, landings approved (developer): RBF per-query fallback (W-086), min-norm splines (W-087), ripple by divided differences (W-089); W-066 too supersedes: W-087#d3, W-089#d1
 
 ## Deviations
+- 2026-10-08 E-006: T-170's Output amended (developer): it names its tests, shared/test_harness.py and shared/test_runs.py, which the scope gate refused; the Check is unchanged
 - 2026-10-08 E-006: bug W-089 (ripple() ignores the spacing of the curve parameter) filed during T-170 (developer): pre-empts W-067
