@@ -13,12 +13,14 @@ from typing import Any, Literal, assert_never, get_args
 
 import numpy as np
 import optuna
+import torch
 from optuna.distributions import (
     BaseDistribution,
     CategoricalDistribution,
     FloatDistribution,
     IntDistribution,
 )
+from threadpoolctl import threadpool_limits
 
 from shared.ceilings import spread
 from shared.design import Design, TargetForm
@@ -116,16 +118,22 @@ def fold_figures(
     design: Design, target: TargetForm, fitter: Fitter, seed: int, valid_fraction: float
 ) -> float:
     """The mean p95 significant figures of the fitter over the design's frozen folds: each
-    fold predicted by a fit on the other training curves, less their validation curves."""
+    fold predicted by a fit on the other training curves, less their validation curves. Every
+    numerical library runs on one thread, as in the harness (W-037: one thread is fastest)."""
     figures = []
-    for fold in sorted(set(design.fold[design.fold >= 0].tolist())):
-        held = design.fold == fold
-        rows = np.flatnonzero(~design.test & ~held)
-        valid = split_valid(design.groups[rows], valid_fraction, seed)
-        fit_rows, valid_rows = rows[~valid], rows[valid]
-        predict = fitter(
-            design.X[fit_rows], design.y[fit_rows], design.X[valid_rows], design.y[valid_rows], seed
-        )
-        errors = relative_errors(design.y[held], predict(design.X[held]), target)
-        figures.append(significant_figures(spread(errors).p95))
+    with threadpool_limits(limits=1):
+        threads = torch.get_num_threads()
+        torch.set_num_threads(1)
+        try:
+            for fold in sorted(set(design.fold[design.fold >= 0].tolist())):
+                held = design.fold == fold
+                rows = np.flatnonzero(~design.test & ~held)
+                valid = split_valid(design.groups[rows], valid_fraction, seed)
+                fit_rows, valid_rows = rows[~valid], rows[valid]
+                x_valid, y_valid = design.X[valid_rows], design.y[valid_rows]
+                predict = fitter(design.X[fit_rows], design.y[fit_rows], x_valid, y_valid, seed)
+                errors = relative_errors(design.y[held], predict(design.X[held]), target)
+                figures.append(significant_figures(spread(errors).p95))
+        finally:
+            torch.set_num_threads(threads)
     return float(np.mean(figures))

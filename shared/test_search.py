@@ -2,7 +2,9 @@
 
 import numpy as np
 import optuna
+import torch
 from optuna.distributions import FloatDistribution
+from threadpoolctl import threadpool_info
 
 from shared.design import Design
 from shared.search import SPACES, search, space_of
@@ -36,6 +38,21 @@ def scaled(params):
 def test_the_search_runs_exactly_its_budget_of_trials() -> None:
     found = search(scaled, SPACE, 3, TOY, "mass", seed=0, valid_fraction=0.34)
     assert found.trials == 3
+
+
+def test_every_library_runs_on_one_thread_during_a_trial() -> None:
+    threads: list[int] = []
+
+    def counting(params):
+        def fit(x_fit, y_fit, x_valid, y_valid, seed):
+            threads.append(torch.get_num_threads())
+            threads.extend(pool["num_threads"] for pool in threadpool_info())
+            return lambda x: np.ones(len(x))
+
+        return fit
+
+    search(counting, SPACE, 1, TOY, "mass", seed=0, valid_fraction=0.34)
+    assert set(threads) == {1}
 
 
 def test_every_family_of_the_screen_has_a_space() -> None:
