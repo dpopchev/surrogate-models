@@ -14,9 +14,11 @@ from optuna.trial import TrialState
 from screen_representation import (
     SECTION,
     Cell,
+    Context,
     Job,
     Knobs,
     Score,
+    Work,
     beats,
     cells,
     curve_columns,
@@ -25,6 +27,7 @@ from screen_representation import (
     representation_table,
     run_job,
     scores,
+    screen_job,
 )
 
 from shared.ceilings import Spread
@@ -208,6 +211,25 @@ def test_the_table_has_one_row_per_pair_and_representation() -> None:
 def test_a_fold_entry_that_beats_the_baseline_is_bold() -> None:
     found = [ns_mass("baseline", "MLP", 2.0, 0.1), ns_mass("log10 M", "MLP", 3.0, 0.1)]
     assert "\\mathbf{3.00 \\pm 0.10}" in table_rows(representation_table(found))[1]
+
+
+def test_a_job_logs_its_done_line_at_the_runs_level_in_a_fresh_process(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    # A worker started by forkserver keeps the root logger at WARNING, as pytest leaves it.
+    context = Context(
+        batch="0190a000-0000-7000-8000-000000000000",
+        ledger=tmp_path,
+        journal=tmp_path / "journal.log",
+        commit="abc1234",
+        dirty=False,
+        started=datetime(2026, 10, 8, 12, 0, 0, tzinfo=UTC),
+        knobs=KNOBS,
+        training=SHORT,
+        log_level="INFO",
+    )
+    screen_job(Work(toy_job("baseline", "pointwise", "k-NN"), TOY, context))
+    assert "job done" in caplog.text
 
 
 # Ten curves per dataset, eight rows each: the NS keys lie on a parabola, so no three are

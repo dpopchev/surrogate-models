@@ -346,7 +346,7 @@ def main(
     designs = {cell: design(tables[cell.dataset], split, cell.spec, cell.form) for cell in screened}
     batch, ledger = _new_id(), args.state / "ledger"
     ledger.mkdir(parents=True, exist_ok=True)
-    context = _Context(
+    context = Context(
         batch=batch,
         ledger=ledger,
         journal=args.state / "optuna" / "journal.log",
@@ -355,13 +355,13 @@ def main(
         started=now(),
         knobs=Knobs(args.k, args.neighbours, args.knots),
         training=training,
+        log_level=settings.log_level,
     )
     # The batch's study is made once here; every job joins it as its trial runs.
     open_study(batch, context.journal)
     seeds = tuple(training.seed + i for i in range(args.seeds))
     jobs = [
-        partial(_screen_job, _Work(job, designs[job.cell], context))
-        for job in plan(screened, seeds)
+        partial(screen_job, Work(job, designs[job.cell], context)) for job in plan(screened, seeds)
     ]
     out = args.assets / SECTION
     with _at_level(settings.log_level):
@@ -381,7 +381,7 @@ def main(
 
 
 @dataclass(frozen=True)
-class _Context:
+class Context:
     """What every job of one run shares: the batch, where its ledger entries and its study
     journal go, the code it ran from and when, and the settings of its models."""
 
@@ -393,18 +393,28 @@ class _Context:
     started: datetime
     knobs: Knobs
     training: Training
+    log_level: str
 
 
 @dataclass(frozen=True)
-class _Work:
+class Work:
     """One job with its cell's design, run in a worker process."""
 
     job: Job
     data: Design
-    context: _Context
+    context: Context
 
 
-def _screen_job(work: _Work) -> None:
+def screen_job(work: Work) -> None:
+    """Run one job at the run's log level: a worker started by forkserver inherits neither the
+    level nor the console handler of the process that made it."""
+    if not logging.getLogger().handlers:
+        logging.basicConfig(format="%(message)s")
+    with _at_level(work.context.log_level):
+        _run_trial(work)
+
+
+def _run_trial(work: Work) -> None:
     """Run one job as a trial of the batch's study: its ledger entry is written and told to the
     trial as the run ends; an MLP reports each epoch to the trial."""
     job, context = work.job, work.context
