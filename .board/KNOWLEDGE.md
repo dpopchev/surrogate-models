@@ -29,22 +29,8 @@
 
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
-- 2026-10-07 E-006: AC2 and W-065's criterion drop the ripple; it is scored in the family screen (T-170 under W-067), where smoothness separates networks from interpolators (developer)
-- 2026-10-07 E-006: Section 3.4 and Section 5 follow the search space; H1-H3 stay as its named sub-questions (developer)
-- 2026-10-07 E-006: W-066 re-planned (developer): T-132 split into T-189 (target forms) and T-190 (curve-wise fitter), T-191 the k-NN and local-RBF references, T-133 one factor at a time with 3 MLP seeds on workers and trials; T-134 extends T-191
-- 2026-10-07 E-006: checkpoint after today's re-plan (Optuna leveraged, ripple moved to W-067, the harness on six workers): Deviations to ledgers/E-006.md (developer)
-- 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
-- 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
-- 2026-10-07 W-076: landing approved by the developer (2026-10-07)
-- 2026-10-08 E-006: make baseline is refitted right before T-133's full run, so Section 4.1 and the screen's baseline row share one code state; its assets are stale since T-189, T-192 (developer)
+- 2026-10-08 E-006: parked -- 12 decisions, 5 deviations -> ledgers/E-006.md
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
-- 2026-10-08 W-066: Section 5.1 (developer): log10 rho_c, M and Y=log10(D/M) stay for every pair; the unit is model-dependent, so W-067 scores each family pointwise and curve-wise where it can; knobs in mk/paper.mk supersedes: W-066#d4
-- 2026-10-08 W-067: T-135 data-budget axis: 30 min, 4 GB RAM per fit, 3 workers; a fit past either is the family's wall at that N (developer)
-- 2026-10-08 W-067: T-135 halves over the data budget per unit (developer): 12 candidates per pair at 1e3 rows, the top 3 of each unit at 1e4, the top 2 of each at 1e5, on the folds' p95 figures, one seed supersedes: W-067#d2
-- 2026-10-08 W-089: bugs landed 2026-10-08, landings approved (developer): RBF per-query fallback (W-086), min-norm splines (W-087), ripple by divided differences (W-089); W-066 too supersedes: W-087#d3, W-089#d1
 
 ## Deviations
-- 2026-10-08 E-006: T-135 halves per unit (developer); batch 01a11bda stopped after round 1
-- 2026-10-08 E-006: T-202 (appendix) while T-135's run blocks it; bug W-090 filed during it
-- 2026-10-08 E-006: briefs amended, Checks kept (developer): T-170 names its tests; T-135 gains halving over N, walls, progress lines, then splits off T-200 (parity), T-201 (scaling)
-- 2026-10-08 E-006: bug W-089 (ripple() ignores the spacing of the curve parameter) filed during T-170 (developer): pre-empts W-067
+- none recorded
