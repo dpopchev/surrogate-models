@@ -137,6 +137,25 @@ dashboard: ## Follow the fits live in optuna-dashboard
 	@$(RUN) optuna-dashboard $(JOURNAL) --port $(DASHBOARD_PORT)
 	$(call log_done,stopped optuna-dashboard)
 
+# Section 5.1: the representation screen (W-066), one factor at a time from the baseline at
+# equal model -- about 60 harness jobs, hours on the workers, so like the baseline it is its own
+# target and not in PAPER_ASSETS. Its knobs are written here only (Decision on W-066): the
+# k-NN's k, the local RBF's neighbours, the curve-wise spline's knots, the MLP seeds counted
+# from paper.toml's seed. The table is read back from the run's ledger batch.
+REPRESENTATION        := 60_results/61_representation/screen_representation.py
+REPRESENTATION_ASSETS := $(ASSETS)/61_representation/61_representation_tab_representation.tex
+# 100 neighbours: 50 leave the RBF singular on NS folds whose neighbourhoods span two curves (W-086).
+REPRESENTATION_KNOBS  := --k 8 --neighbours 100 --knots 8 --seeds 3
+
+$(REPRESENTATION_ASSETS): $(REPRESENTATION) paper.toml shared/config.py shared/design.py shared/eda.py shared/surrogate.py shared/runs.py shared/harness.py shared/scorecard.py shared/ceilings.py shared/families.py shared/curvewise.py shared/trials.py shared/workers.py $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+	$(call log_info,screening the representations ($(REPRESENTATION_KNOBS)) -- follow the trials with make dashboard)
+	@$(RUN) python $(REPRESENTATION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(REPRESENTATION_KNOBS)
+	$(call log_done,representation table written to $@)
+
+.PHONY: representation
+representation: $(REPRESENTATION_ASSETS) ## Run the representation screen for Section 5.1
+	$(call log_done,representation assets current in $(dir $(REPRESENTATION_ASSETS)))
+
 .PHONY: assets
 assets: $(PAPER_ASSETS) ## Generate the section assets under build/assets/
 	$(call log_done,assets in $(ASSETS)/: $(sort $(notdir $(patsubst %/,%,$(dir $(PAPER_ASSETS))))))
