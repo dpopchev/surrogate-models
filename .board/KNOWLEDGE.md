@@ -40,6 +40,9 @@
 - 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
 - 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
 - 2026-10-07 W-076: landing approved by the developer (2026-10-07)
+- 2026-10-08 E-006: make baseline is refitted right before T-133's full run, so Section 4.1 and the screen's baseline row share one code state; its assets are stale since T-189, T-192 (developer)
+- 2026-10-08 W-066: curve-wise is screened with the k-NN and local-RBF bases only: the MLP fits one output column (ScaledNetRegressor), so curve-wise x MLP is n/a; T-193 under W-067 adds a multi-output MLP (developer)
+- 2026-10-08 W-066: the screen's knobs are arguments of make representation (mk/paper.mk): k-NN k=8, local-RBF neighbours 50, spline knots 8, MLP seeds paper.toml's seed +0, +1, +2 (developer)
 
 ## Deviations
-- none recorded
+- 2026-10-08 E-006: T-193 (a multi-output MLP, shared/surrogate.py) filed under W-067 during T-133 (developer): curve-wise x MLP is n/a in the representation screen until it lands
