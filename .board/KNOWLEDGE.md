@@ -44,7 +44,7 @@
 - 2026-10-07 W-076: landing approved by the developer (2026-10-07)
 - 2026-10-08 E-006: make baseline is refitted right before T-133's full run, so Section 4.1 and the screen's baseline row share one code state; its assets are stale since T-189, T-192 (developer)
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
-- 2026-10-08 W-066: the screen: curve-wise with the k-NN and local-RBF bases only (the MLP fits one output; T-193); knobs in mk/paper.mk: k 8, RBF neighbours 100 (W-086), knots 8, seeds +0..2 (developer) supersedes: W-066#d1, W-066#d3
+- 2026-10-08 W-066: Section 5.1 (developer): log10 rho_c, M and Y=log10(D/M) stay for every pair; the unit is model-dependent, so W-067 scores each family pointwise and curve-wise where it can; knobs in mk/paper.mk supersedes: W-066#d4
 - 2026-10-08 W-087: W-086, W-087 landed 2026-10-08 (developer): planar RBF neighbourhoods fall back to the linear kernel at degree 0; short curves get minimum-norm splines supersedes: W-086#d2, W-087#d2
 
 ## Deviations
