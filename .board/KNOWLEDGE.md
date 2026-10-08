@@ -28,6 +28,7 @@
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 - 2026-10-07 W-047: open: what observational sigma do realistic mock observations of M and D carry (supervisors)? the data ceiling alone allows a surrogate about 1e-4 M_sun on the NS mass and 1.6e-3 dex on the NS charge (W-064) -- the surrogate's error target follows from it
+- 2026-10-08 W-068: open: which precision fits RBF, GPR, XGBoost? T-137 is the network's -> decide after T-206 (developer)
 
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
@@ -37,14 +38,13 @@
 - 2026-10-07 E-006: checkpoint after today's re-plan (Optuna leveraged, ripple moved to W-067, the harness on six workers): Deviations to ledgers/E-006.md (developer)
 - 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
 - 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
-- 2026-10-07 W-076: landing approved by the developer (2026-10-07)
 - 2026-10-08 E-006: make baseline is refitted right before T-133's full run, so Section 4.1 and the screen's baseline row share one code state; its assets are stale since T-189, T-192 (developer)
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-08 W-066: Section 5.1 (developer): log10 rho_c, M and Y=log10(D/M) stay for every pair; the unit is model-dependent, so W-067 scores each family pointwise and curve-wise where it can; knobs in mk/paper.mk supersedes: W-066#d4
-- 2026-10-08 W-067: T-135 data-budget axis: 30 min, 4 GB RAM per fit, 3 workers; a fit past either is the family's wall at that N (developer)
-- 2026-10-08 W-067: T-135 halves over the data budget per unit (developer): 12 candidates per pair at 1e3 rows, the top 3 of each unit at 1e4, the top 2 of each at 1e5, on the folds' p95 figures, one seed supersedes: W-067#d2
-- 2026-10-08 W-089: bugs landed 2026-10-08, landings approved (developer): RBF per-query fallback (W-086), min-norm splines (W-087), ripple by divided differences (W-089); W-066 too supersedes: W-087#d3, W-089#d1
+- 2026-10-08 W-067: T-135 (developer): 12 candidates per pair at 1e3 rows, top 3 per unit at 1e4, top 2 at 1e5, folds' p95, one seed; 3 workers; a fit past 30 min or 4 GB is the wall supersedes: W-067#d1, W-067#d3
+- 2026-10-08 W-089: landings approved (developer): W-076 (2026-10-07); W-086, W-087, W-089, W-066 (2026-10-08) supersedes: W-076#d1, W-089#d2
 
 ## Deviations
+- 2026-10-08 E-006: (agent, to acknowledge): T-204 to T-206 (fitters to shared/, tuning script, run) filed in W-068 during T-136; T-137 waits on T-206 (its options are the network's; networks short-listed on NS D only); T-138 reads T-206's batch
 - 2026-10-08 E-006: (developer): briefs amended, Checks kept (T-170, T-135 split to T-200/T-201, T-200 twice); T-135 halves per unit; T-202 and W-090 (parked for, landed) during its run
 - 2026-10-08 E-006: bug W-089 (ripple() ignores the spacing of the curve parameter) filed during T-170 (developer): pre-empts W-067
