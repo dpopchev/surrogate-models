@@ -48,4 +48,4 @@
 - 2026-10-08 W-087: short curves get the minimum-norm spline, knots stay 8; landing approved 2026-10-08 (developer) supersedes: W-087#d1
 
 ## Deviations
-- 2026-10-08 E-006: filed during T-133 (developer): T-193 under W-067 (multi-output MLP; curve-wise x MLP n/a until then); bugs W-086 (RBF planar neighbourhoods, landed) and W-087 (spline on short curves), each pre-empting W-066
+- 2026-10-08 E-006: filed during T-133 (developer): T-193 under W-067 (multi-output MLP); bugs W-086, W-087 (RBF planar, short splines; landed); standalone W-088 (screen progress)

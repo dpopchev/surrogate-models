@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-006 > W-066 > T-133   | blocked: 0 | todo roots: 4 | done: 238 | pruned: 16
+open path: E-006 > W-066 > T-133   | blocked: 0 | todo roots: 5 | done: 238 | pruned: 16
 
 ## Tree
 
@@ -143,6 +143,11 @@ open path: E-006 > W-066 > T-133   | blocked: 0 | todo roots: 4 | done: 238 | pr
 
 - T-167 [todo] Mark every test module with its category -> the test_*.py files
 - T-168 [todo] Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py
+
+### W-088 issue [todo] (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133)
+
+- T-196 [todo] Log the screen's jobs done and time left test-first -> 60_results/61_representation/screen_representation.py
+- T-197 [todo] Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py
 
 ## Closed
 
@@ -603,6 +608,9 @@ flowchart TD
   W079["W-079 issue todo, standalone: Every test carries one category marker, registered and enforced"]
   W079 --> T167["T-167 todo: Mark every test module with its category -> the test_*.py files"]
   W079 --> T168["T-168 todo: Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py"]
+  W088["W-088 issue todo, standalone: A running representation screen is followable -- progress, time left and each entry's representation"]
+  W088 --> T196["T-196 todo: Log the screen's jobs done and time left test-first -> 60_results/61_representation/screen_representation.py"]
+  W088 --> T197["T-197 todo: Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -610,6 +618,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,W066,T133,E009 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,T189,T190,T191,T192,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W067,T134,T135,T170,T193,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168 todo
+  class W067,T134,T135,T170,T193,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168,W088,T196,T197 todo
   class W038,W039,W040,W041,W042,W043,T132,W044,W048,T108 pruned
 ```
