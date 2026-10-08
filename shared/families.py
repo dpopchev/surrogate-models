@@ -8,9 +8,12 @@ in every direction whatever the units.
 import numpy as np
 from scipy.interpolate import RBFInterpolator
 from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel, WhiteKernel
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from xgboost import XGBRegressor
 
 
 def make_knn(k: int) -> Pipeline:
@@ -58,3 +61,18 @@ class LocalRBF(RegressorMixin, BaseEstimator):
 def make_rbf(neighbours: int) -> Pipeline:
     """The local RBF on standardized inputs."""
     return Pipeline([("scale", StandardScaler()), ("rbf", LocalRBF(neighbours))])
+
+
+def make_gpr() -> Pipeline:
+    """A Gaussian process on standardized inputs and target: a scaled squared-exponential
+    kernel plus white noise, its hyperparameters fitted by maximum likelihood. Its cost is the
+    cube of the rows, so the screen hands it curve coefficients or a subsample of curves."""
+    kernel = ConstantKernel() * RBF() + WhiteKernel()
+    gpr = GaussianProcessRegressor(kernel=kernel, normalize_y=True)
+    return Pipeline([("scale", StandardScaler()), ("gpr", gpr)])
+
+
+def make_xgboost() -> XGBRegressor:
+    """Gradient-boosted trees on one thread, as the harness times every family; trees split on
+    thresholds, so the inputs need no scaling."""
+    return XGBRegressor(n_jobs=1)

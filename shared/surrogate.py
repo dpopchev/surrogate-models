@@ -137,6 +137,27 @@ class MLP(nn.Module):
         return self.layers(x)
 
 
+class ResMLP(nn.Module):
+    """A multilayer perceptron whose hidden layers are residual blocks, h + act(W h + b): each
+    block adds to an identity skip, so a deep network starts near a shallow one (H3)."""
+
+    def __init__(
+        self, n_inputs: int, width: int, depth: int, activation: Activation, n_outputs: int = 1
+    ) -> None:
+        super().__init__()
+        self.first = nn.Linear(n_inputs, width)
+        self.blocks = nn.ModuleList(nn.Linear(width, width) for _ in range(depth - 1))
+        self.act = _activation(activation)
+        self.head = nn.Linear(width, n_outputs)
+
+    def forward(self, x: torch.Tensor, **_fit_params: Any) -> torch.Tensor:
+        """The output for a batch; skorch also hands the fit params (the curve groups) here."""
+        h = self.act(self.first(x))
+        for block in self.blocks:
+            h = h + self.act(block(h))
+        return self.head(h)
+
+
 def _activation(name: Activation) -> nn.Module:
     """The torch module of an activation name."""
     match name:
@@ -384,9 +405,11 @@ def make_estimator(
     live_plot: Path | None = None,
     valid_fold: np.ndarray | None = None,
     n_outputs: int = 1,
+    skips: bool = False,
 ) -> Pipeline:
     """Pipeline(StandardScaler, ScaledNetRegressor) with the training callbacks, n_outputs
-    target columns (the curve-wise spline coefficients, W-067); with live_plot,
+    target columns (the curve-wise spline coefficients, W-067), the residual network when
+    skips is set (W-067); with live_plot,
     the loss curve is also redrawn there every LIVE_EVERY epochs while it trains. With
     valid_fold (-1 for a fit row, 0 for a validation row) the net validates on exactly those
     rows; without it, on a share of whole curves from the groups passed to fit."""
@@ -397,7 +420,7 @@ def make_estimator(
     )
     live = [("live_loss_curve", LiveLossCurve(live_plot, LIVE_EVERY))] if live_plot else []
     net = ScaledNetRegressor(
-        module=MLP,
+        module=ResMLP if skips else MLP,
         module__n_inputs=n_inputs,
         module__width=training.width,
         module__depth=training.depth,

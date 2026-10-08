@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import torch
 from sklearn.pipeline import Pipeline
 from skorch.dataset import Dataset
 from skorch.utils import Ansi
@@ -17,6 +18,7 @@ from shared.surrogate import (
     Activation,
     EpochTable,
     Loss,
+    ResMLP,
     Training,
     approx_minutes,
     curve_valid_split,
@@ -263,6 +265,20 @@ def test_a_two_column_target_is_predicted_as_two_columns() -> None:
     estimator = make_estimator(replace(TOY, max_epochs=2), n_inputs=2, n_outputs=2)
     estimator.fit(INPUTS[keep], target[keep], net__groups=GROUPS[keep])
     assert estimator.predict(INPUTS[HELD_OUT]).shape == (int(HELD_OUT.sum()), 2)
+
+
+def test_a_resnet_with_zeroed_blocks_is_its_input_layer_and_head() -> None:
+    net = ResMLP(n_inputs=2, width=4, depth=3, activation="relu")
+    for parameter in net.blocks.parameters():
+        nn.init.zeros_(parameter)
+    x = torch.tensor(INPUTS[:3])
+    expected = net.head(torch.relu(net.first(x)))
+    assert torch.allclose(net(x), expected)
+
+
+def test_an_estimator_with_skips_builds_the_resnet() -> None:
+    estimator = make_estimator(TOY, n_inputs=2, skips=True)
+    assert estimator.named_steps["net"].module is ResMLP
 
 
 def test_a_one_column_target_is_predicted_as_a_flat_array() -> None:

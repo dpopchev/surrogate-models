@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from shared.families import make_knn, make_rbf
+from shared.families import make_gpr, make_knn, make_rbf, make_xgboost
 
 # A 6 x 6 grid of rows and a target linear in both inputs.
 GRID = np.array([[a, b] for a in range(6) for b in range(6)], dtype=float)
@@ -44,6 +44,16 @@ def test_a_spanning_query_keeps_the_thin_plate_beside_a_planar_one() -> None:
     model = make_rbf(neighbours=12).fit(BLOCK_AND_LINES, linear3(BLOCK_AND_LINES))
     queries = np.array([[1.5, 1.5, 1.5], [102.5, 0.5, 0.0]])
     assert model.predict(queries)[0] == pytest.approx(linear3(queries)[0])
+
+
+def test_the_gpr_reproduces_a_target_it_was_fitted_on() -> None:
+    model = make_gpr().fit(GRID, linear(GRID))
+    assert model.predict(GRID[7:8]).tolist() == pytest.approx(linear(GRID[7:8]).tolist(), abs=1e-3)
+
+
+def test_xgboost_predicts_one_value_per_row() -> None:
+    model = make_xgboost().fit(GRID, linear(GRID))
+    assert model.predict(GRID[:3]).shape == (3,)
 
 
 def test_knn_with_one_neighbour_returns_the_target_of_the_row_it_is_given() -> None:
