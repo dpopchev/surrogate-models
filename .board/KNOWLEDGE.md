@@ -25,6 +25,7 @@
 - 2026-10-07 W-073: standing: the charge is scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1); the floor moved nothing -> the nearest curve wins every test pair (W-073#1) supersedes: W-036#2, W-037#1, W-063#1
 - 2026-10-07 W-076: fact: the NS median mass is 1.75 M_sun, not 1.4: the p95 ceiling means 1.36e-4 M_sun there, 1.70e-4 at M_max 2.19, the charge 1.56e-3 dex; BH 3.05e-7 M_sun at M 3.58, 4.40e-7 dex -> Sections 3.1, 3.2 (T-161)
 - 2026-10-08 W-086: T-194: fact: rbf(50) was singular on 5/10 NS folds; with the fallback rbf(100) runs on all 18 harness fits, 10-74 s each -> the screen runs at 100 supersedes: W-066#1
+- 2026-10-08 W-087: T-195: fact: at 8 knots the four NS curve-wise cells run through the harness on real data, about 10 s each -> T-133's curve-wise jobs run
 
 ## Open questions
 - 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
