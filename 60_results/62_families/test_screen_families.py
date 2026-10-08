@@ -291,14 +291,15 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 TOY_KNOBS = [
     *("--k", "2", "--neighbours", "1000", "--knots", "2", "--per-curve", "2"),
-    *("--budgets", "16", "32", "64", "--keeps", "6", "3"),
+    *("--budgets", "16", "32", "64", "--keeps", "3", "2"),
     *("--minutes", "30", "--memory-gb", "4", "--workers", "1"),
 ]
 
 
 def test_main_saves_the_outcomes_of_every_round(ran: Path) -> None:
     (saved,) = (ran / "state" / SECTION).glob("*.json")
-    assert len(outcomes_from_json(saved.read_text())) == 4 * (12 + 6 + 3)
+    # Per pair: 12 candidates, then 3 of each unit, then 2 of each unit.
+    assert len(outcomes_from_json(saved.read_text())) == 4 * (12 + 6 + 4)
 
 
 def test_main_writes_the_family_table(ran: Path) -> None:
@@ -341,6 +342,14 @@ def test_the_pair_s_best_at_the_most_rows_is_bold() -> None:
         [on_ns_mass(KNN, 1000, 2.0), on_ns_mass(KNN, 10_000, 2.5), on_ns_mass(RBF, 10_000, 3.0)]
     )
     assert table_rows(table)[2].split(" & ")[2] == "$\\mathbf{3.00}_{10^{4}}$"
+
+
+def test_the_next_round_keeps_the_best_of_each_unit() -> None:
+    round_ = [scored(KNN, 1.0), scored(RBF, 3.0), scored(MLP, 0.5)]
+    assert next_jobs(round_, budgets=(1000, 10_000), keeps=(1,)) == (
+        Job("toy", "mass", RBF, rows=10_000, round=1),
+        Job("toy", "mass", MLP, rows=10_000, round=1),
+    )
 
 
 def test_the_next_round_runs_each_pair_s_survivors_at_the_next_budget() -> None:

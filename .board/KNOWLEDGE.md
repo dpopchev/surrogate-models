@@ -19,6 +19,7 @@
 - 2026-10-07 W-064: fact: across-curve p95 ceilings: NS M 7.8e-5 (lambda) / 1.6e-5 (beta) = 4.1 figures, NS D 1.8e-3 / 3.6e-3 = 2.4; BH M 8.5e-8 = 7.1, D 1.0e-6 = 6.0; BH error sits at the existence edge -> the E-006 target per pair
 - 2026-10-07 W-076: fact: the NS median mass is 1.75 M_sun, not 1.4: the p95 ceiling means 1.36e-4 M_sun there, 1.70e-4 at M_max 2.19, the charge 1.56e-3 dex; BH 3.05e-7 M_sun at M 3.58, 4.40e-7 dex -> Sections 3.1, 3.2 (T-161)
 - 2026-10-08 E-006: standing: E-002's speedup and posterior questions live in W-047; the ripple is T-170's, spacing-aware (W-089); the RBF and spline bugs are fixed -> nothing of these is open supersedes: E-002#1, E-002#2, W-065#1, W-086#1, W-087#1
+- 2026-10-08 T-135: fact: NS curve-wise at 1e3 rows (about 100 curves) keeps under 0 fold figures, 3.3 at full data (5.1) -> halving ranks each unit apart
 - 2026-10-08 W-037: standing: one thread is fastest (2.6 s vs 11.4 s an epoch at 7); one fit took 53-525 s, swinging 2.5x with load -> cite fit times as orders of magnitude, time them repeatedly supersedes: W-035#2, W-036#1, W-037#2
 - 2026-10-08 W-073: standing: scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1), the nearest curve beats the MLP on the test curves of all four pairs; the MLP leads only on the NS folds -> no pair is won by the baseline supersedes: W-073#1, W-073#2
 
@@ -39,11 +40,12 @@
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-08 W-066: Section 5.1 (developer): log10 rho_c, M and Y=log10(D/M) stay for every pair; the unit is model-dependent, so W-067 scores each family pointwise and curve-wise where it can; knobs in mk/paper.mk supersedes: W-066#d4
 - 2026-10-08 W-067: T-135 data-budget axis: 30 min, 4 GB RAM per fit, 3 workers; a fit past either is the family's wall at that N (developer)
-- 2026-10-08 W-067: T-135 halves over the data budget (developer): 12 candidates per pair (6 families, both units) at 1e3 rows, the top half at 1e4, the top 3 at 1e5, on the folds' p95 figures, one seed; the scaling figure stops at each elimination or wall
+- 2026-10-08 W-067: T-135 halves over the data budget per unit (developer): 12 candidates per pair at 1e3 rows, the top 3 of each unit at 1e4, the top 2 of each at 1e5, on the folds' p95 figures, one seed supersedes: W-067#d2
 - 2026-10-08 W-089: bugs landed 2026-10-08, landings approved (developer): RBF per-query fallback (W-086), min-norm splines (W-087), ripple by divided differences (W-089); W-066 too supersedes: W-087#d3, W-089#d1
 
 ## Deviations
-- 2026-10-08 E-006: T-135 split (developer): it keeps the screen, the family table and the paragraph, so 5.2 reaches the PDF after round 1; T-200 (parity plots) and T-201 (scaling figure) filed under W-067 -- internals had gone deep before anything ran
+- 2026-10-08 E-006: T-135 halves per unit (developer); batch 01a11bda stopped after round 1
+- 2026-10-08 E-006: T-135 split (developer): it keeps the screen, the family table and the paragraph, so 5.2 reaches the PDF after round 1; T-200 (parity plots) and T-201 (scaling figure) filed under W-067
 - 2026-10-08 E-006: T-135's brief amended once doing (developer): halving over N, the candidate list, the walls and per-job progress lines (a run of hours, not about 30 min); its Action and Output name the files it touches; the Check is unchanged
 - 2026-10-08 E-006: T-170's Output amended (developer): it names its tests, shared/test_harness.py and shared/test_runs.py, which the scope gate refused; the Check is unchanged
 - 2026-10-08 E-006: bug W-089 (ripple() ignores the spacing of the curve parameter) filed during T-170 (developer): pre-empts W-067

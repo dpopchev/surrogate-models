@@ -161,15 +161,16 @@ representation: $(REPRESENTATION_ASSETS) ## Run the representation screen for Se
 	$(call log_done,representation assets current in $(dir $(REPRESENTATION_ASSETS)))
 
 # Section 5.2: the family screen (W-067), successive halving over the training rows -- every
-# family pointwise and curve-wise at the first budget, the top half per pair at the second, the
-# top 3 at the third (Decision on W-067); a fit past 30 min or 4 GB is the family's wall there
+# family pointwise and curve-wise at the first budget, the top 3 of each unit per pair at the
+# second, the top 2 of each at the third, each unit ranked apart because a thinned NS design
+# keeps few curves (Decisions on W-067); a fit past 30 min or 4 GB is the family's wall there
 # (Decision on W-067), on 3 workers. Hours, so its own target, not in PAPER_ASSETS; one line
 # per finished job in the log. Its knobs are written here only. The k-NN, RBF and spline knobs
 # are the representation screen's.
 FAMILIES        := 60_results/62_families/screen_families.py
 FAMILIES_ASSETS := $(ASSETS)/62_families/62_families_tab_families.tex
 FAMILIES_KNOBS  := --k 8 --neighbours 100 --knots 8 --per-curve 10 \
-                   --budgets 1000 10000 100000 --keeps 6 3 --minutes 30 --memory-gb 4 --workers 3
+                   --budgets 1000 10000 100000 --keeps 3 2 --minutes 30 --memory-gb 4 --workers 3
 # A saved batch (local/state/62_families/<batch>.json, written after every round) rebuilds the
 # table in seconds, also while its screen still runs; empty, the whole screen is refitted.
 FAMILIES_BATCH  ?=

@@ -197,12 +197,15 @@ def next_jobs(
     outcomes: Sequence[Outcome], budgets: Sequence[int], keeps: Sequence[int]
 ) -> tuple[Job, ...]:
     """The jobs of the round after the outcomes' round: each pair's best keeps[round]
-    candidates at the next budget of rows, pairs in the order they first appear."""
-    by_pair: dict[tuple[str, Target], list[Outcome]] = {}
+    candidates of each unit at the next budget of rows, pairs and then units in the order they
+    first appear. Each unit is ranked apart: a thinned design keeps few curves, which starves
+    only the curve-wise unit (W-067)."""
+    by_group: dict[tuple[str, Target, Unit], list[Outcome]] = {}
     for outcome in outcomes:
-        by_pair.setdefault((outcome.job.dataset, outcome.job.target), []).append(outcome)
+        job = outcome.job
+        by_group.setdefault((job.dataset, job.target, job.candidate.unit), []).append(outcome)
     jobs = []
-    for (dataset, target), mine in by_pair.items():
+    for (dataset, target, _), mine in by_group.items():
         done = mine[0].job.round
         for candidate in survivors(mine, keeps[done]):
             jobs.append(Job(dataset, target, candidate, budgets[done + 1], done + 1))
