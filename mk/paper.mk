@@ -171,9 +171,10 @@ FAMILIES        := 60_results/62_families/screen_families.py
 FAMILIES_ASSETS := $(ASSETS)/62_families/62_families_tab_families.tex
 FAMILIES_KNOBS  := --k 8 --neighbours 100 --knots 8 --per-curve 10 \
                    --budgets 1000 10000 100000 --keeps 3 2 --minutes 30 --memory-gb 4 --workers 3
-# A saved batch (local/state/62_families/<batch>.json, written after every round) rebuilds the
-# table in seconds, also while its screen still runs; empty, the whole screen is refitted.
-FAMILIES_BATCH  ?=
+# The recorded batch Section 5.2 reports (2026-10-08, clean at 037443f; 88 outcomes): its saved
+# outcomes (local/state/62_families/<batch>.json) rebuild the table and figures in seconds.
+# Empty it to refit the whole screen (hours): make families FAMILIES_BATCH=
+FAMILIES_BATCH  ?= 01a11be4-6eca-7427-a5dd-a97dd7a0194d
 
 $(FAMILIES_ASSETS): $(FAMILIES) paper.toml shared/config.py shared/design.py shared/eda.py shared/surrogate.py shared/runs.py shared/harness.py shared/scorecard.py shared/ceilings.py shared/families.py shared/curvewise.py shared/workers.py $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(FAMILIES_BATCH),rebuilding the family table from batch $(FAMILIES_BATCH),screening the families ($(FAMILIES_KNOBS)) -- one line per finished job))

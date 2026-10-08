@@ -28,7 +28,9 @@ from typing import Any, Literal, assert_never
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.pipeline import Pipeline
 
@@ -81,6 +83,7 @@ PLOT_TARGET = {"mass": "$M$", "charge": "$D$"}
 AXIS_TEX = {"mass": "$M$ ($M_\\odot$)", "charge": "$Y = \\log_{10}(D/M)$"}
 PARITY = f"{SECTION}_fig_parity"
 ERRORS = f"{SECTION}_fig_errors"
+SCALING = f"{SECTION}_fig_scaling"
 # Equal-count bins of the true target for the error panel's median and p95 lines.
 PROFILE_BINS = 20
 
@@ -173,6 +176,20 @@ class Panel:
     title: str
     target: str
     series: tuple[Series, ...]
+
+
+@dataclass(frozen=True)
+class Trajectory:
+    """One candidate's way through the rounds on one pair: the rows, folds' figures and final
+    fit seconds of each round it was scored in, and the rows of any wall it met."""
+
+    dataset: str
+    target: Target
+    candidate: Candidate
+    rows: tuple[int, ...]
+    folds: tuple[float, ...]
+    seconds: tuple[float, ...]
+    walls: tuple[int, ...]
 
 
 class FitTimeoutError(Exception):
@@ -373,6 +390,58 @@ def error_figure(panels: Sequence[Panel], style: PlotStyle) -> Figure:
     return figure
 
 
+def scaling_figure(
+    paths: Sequence[Trajectory], style: PlotStyle, wall_seconds: float = 1800.0
+) -> Figure:
+    """Per pair a row: the folds' p95 significant figures and the final fit's seconds against
+    the training rows on a log scale, a line per candidate up to the round it left, its family
+    by color and its unit by line style (curve-wise dashed), a wall a cross at its rows and at
+    wall_seconds, the time budget of a fit."""
+    pairs = list(dict.fromkeys((p.dataset, p.target) for p in paths))
+    width = float(plt.rcParams["figure.figsize"][0])
+    figure, grid = plt.subplots(
+        len(pairs),
+        2,
+        figsize=(width, 0.42 * width * len(pairs)),
+        layout="constrained",
+        squeeze=False,
+        sharex=True,
+    )
+    palette = dict(zip(FAMILIES, sns.color_palette(style.palette, len(FAMILIES)), strict=True))
+    for row, (dataset, target) in enumerate(pairs):
+        figures_axes, seconds_axes = grid[row]
+        for path in (p for p in paths if (p.dataset, p.target) == (dataset, target)):
+            line = {
+                "color": palette[path.candidate.family],
+                "linestyle": "--" if path.candidate.unit == "curve-wise" else "-",
+                "marker": "o",
+                "markersize": 3,
+            }
+            figures_axes.plot(path.rows, path.folds, **line)
+            seconds_axes.plot(path.rows, path.seconds, **line)
+            for rows in path.walls:
+                seconds_axes.plot(
+                    [rows], [wall_seconds], marker="x", markersize=7, color=line["color"]
+                )
+        title = f"{DATASET_TEX[dataset]} {PLOT_TARGET[target]}"
+        figures_axes.set_ylabel(f"{title}: folds' figures")
+        seconds_axes.set_ylabel("fit seconds")
+        seconds_axes.set_yscale("log")
+        for axes in (figures_axes, seconds_axes):
+            axes.set_xscale("log")
+    for axes in grid[-1]:
+        axes.set_xlabel("training rows")
+    handles = [
+        *(Line2D([], [], color=palette[family]) for family in FAMILIES),
+        Line2D([], [], color="black"),
+        Line2D([], [], color="black", linestyle="--"),
+        Line2D([], [], color="black", marker="x", linestyle=""),
+    ]
+    labels = [*FAMILIES, *UNITS, "wall"]
+    figure.legend(handles, labels, loc="outside lower center", ncols=5, fontsize="x-small")
+    return figure
+
+
 def _colors(panel: Panel, style: PlotStyle) -> list[Any]:
     """One color per candidate of the panel, spread to the two ends of the dataset's colormap
     so that two candidates never blend."""
@@ -409,6 +478,21 @@ def errors_tex() -> str:
     )
 
 
+def scaling_tex(minutes: float, memory_gb: float) -> str:
+    """The figure environment of the scaling figure, its budgets stated in the caption."""
+    return (
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{SCALING}}}\n"
+        "\\caption{Successive halving over the training rows, per dataset and target: the "
+        "significant figures kept on the folds (left) and the seconds of the final fit at one "
+        "thread (right) against the training rows, a line per candidate up to the round it "
+        "was eliminated in, curve-wise dashed. A cross is a wall, a fit past "
+        f"${minutes:g}$ minutes or ${memory_gb:g}$\\,GB at those rows, drawn at the time "
+        "budget.}\n"
+        "\\label{fig:families-scaling}\n\\end{figure}\n"
+    )
+
+
 def _cmap(dataset: str, style: PlotStyle) -> CoolCmap | WarmCmap:
     """The dataset's colormap of the paper style.
 
@@ -419,6 +503,42 @@ def _cmap(dataset: str, style: PlotStyle) -> CoolCmap | WarmCmap:
     if dataset == BLACK_HOLES.dataset:
         return style.black_holes.beta_cmap
     raise ValueError(f"no colormap for dataset {dataset}")
+
+
+def trajectories(outcomes: Sequence[Outcome]) -> tuple[Trajectory, ...]:
+    """Every candidate's way through the rounds, per pair in the order the pairs first
+    appear, candidates in the screen's order: the scaling figure's lines and walls."""
+    found: dict[tuple[str, Target, Candidate], list[Outcome]] = {}
+    for outcome in sorted(outcomes, key=lambda o: o.job.rows):
+        job = outcome.job
+        found.setdefault((job.dataset, job.target, job.candidate), []).append(outcome)
+    pairs: dict[tuple[str, Target], None] = dict.fromkeys(
+        (dataset, target) for dataset, target, _ in found
+    )
+    paths = []
+    for dataset, target in pairs:
+        for candidate in candidates():
+            mine = found.get((dataset, target, candidate), [])
+            scored = _ranked_by_rows(mine)
+            walls = tuple(o.job.rows for o in mine if o not in scored)
+            if mine:
+                paths.append(
+                    Trajectory(
+                        dataset,
+                        target,
+                        candidate,
+                        tuple(o.job.rows for o in scored),
+                        tuple(o.folds for o in scored),
+                        tuple(o.fit_seconds for o in scored),
+                        walls,
+                    )
+                )
+    return tuple(paths)
+
+
+def _ranked_by_rows(outcomes: Sequence[Outcome]) -> list[Scored]:
+    """The scored outcomes in the order of their rows; walls left out."""
+    return sorted(_ranked(outcomes), key=lambda o: o.job.rows)
 
 
 def _at_most_rows(outcomes: Sequence[Outcome], dataset: str, target: Target) -> list[Outcome]:
@@ -715,11 +835,16 @@ def main(
         logger.info("done: family table of batch %s, %d outcomes -> %s", batch, len(outcomes), path)
         panels = _parity_panels(parity_picks(outcomes), designs, args.state / "ledger")
         apply_style(config.plot)
-        for name, draw, tex in (
-            (PARITY, parity_figure, parity_tex()),
-            (ERRORS, error_figure, errors_tex()),
-        ):
-            figure = draw(panels, config.plot)
+        drawn = (
+            (PARITY, parity_figure(panels, config.plot), parity_tex()),
+            (ERRORS, error_figure(panels, config.plot), errors_tex()),
+            (
+                SCALING,
+                scaling_figure(trajectories(outcomes), config.plot, args.minutes * 60.0),
+                scaling_tex(args.minutes, args.memory_gb),
+            ),
+        )
+        for name, figure, tex in drawn:
             figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
             plt.close(figure)
             _write_checked(out / f"{name}.tex", tex)

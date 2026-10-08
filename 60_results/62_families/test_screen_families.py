@@ -16,6 +16,7 @@ from screen_families import (
     Panel,
     Scored,
     Series,
+    Trajectory,
     Wall,
     candidates,
     error_figure,
@@ -30,13 +31,15 @@ from screen_families import (
     parity_figure,
     parity_picks,
     run_job,
+    scaling_figure,
     survivors,
     thin,
     timed,
+    trajectories,
 )
 
 from shared.config import PaperConfig
-from shared.design import Design
+from shared.design import Design, Target
 from shared.eda import make_curve_space
 from shared.harness import harness
 from shared.plots import PlotStyle
@@ -316,6 +319,10 @@ def test_main_draws_the_error_figure(ran: Path) -> None:
     assert (ran / "assets" / SECTION / f"{SECTION}_fig_errors.png").stat().st_size > 0
 
 
+def test_main_draws_the_scaling_figure(ran: Path) -> None:
+    assert (ran / "assets" / SECTION / f"{SECTION}_fig_scaling.png").stat().st_size > 0
+
+
 def test_main_writes_the_family_table(ran: Path) -> None:
     table = ran / "assets" / SECTION / f"{SECTION}_tab_families.tex"
     assert len(table_rows(table.read_text())) == 12
@@ -403,6 +410,53 @@ def test_an_error_panel_draws_its_candidate_s_median_and_p95() -> None:
 def test_a_panel_of_a_dataset_without_a_colormap_is_refused() -> None:
     with pytest.raises(ValueError, match="no colormap for dataset toy"):
         parity_figure([toy_panel("toy")], PlotStyle(usetex=False))
+
+
+def test_a_walled_candidate_is_marked_at_its_rows() -> None:
+    wall = Wall(Job("neutron_stars", "mass", GPR, rows=10_000, round=1), "past 30 min")
+    (path,) = trajectories([on_ns_mass(GPR, 1000, 2.0), wall])
+    assert path.walls == (10_000,)
+
+
+def toy_path(dataset: str, target: Target, walls: tuple[int, ...] = ()) -> Trajectory:
+    """A toy candidate scored on 1e3 and 1e4 rows."""
+    return Trajectory(dataset, target, KNN, (1000, 10_000), (2.0, 2.5), (1.0, 9.0), walls)
+
+
+TOY_PATHS = [
+    toy_path("neutron_stars", "mass"),
+    toy_path("neutron_stars", "charge"),
+    toy_path("black_holes", "mass"),
+    toy_path("black_holes", "charge"),
+]
+
+
+def test_the_scaling_figure_has_a_figures_and_a_seconds_panel_per_pair() -> None:
+    figure = scaling_figure(TOY_PATHS, PlotStyle(usetex=False))
+    assert len([axes for axes in figure.axes if axes.lines]) == 4 * 2
+
+
+def test_a_wall_is_a_cross_at_its_rows_on_the_seconds_panel() -> None:
+    paths = [toy_path("neutron_stars", "mass", walls=(100_000,))]
+    figure = scaling_figure(paths, PlotStyle(usetex=False), wall_seconds=1800.0)
+    crosses = [line for line in figure.axes[1].lines if line.get_marker() == "x"]
+    assert [np.asarray(c.get_xydata())[0].tolist() for c in crosses] == [[100_000.0, 1800.0]]
+
+
+def test_the_scaling_legend_names_every_family_and_both_units() -> None:
+    figure = scaling_figure(TOY_PATHS, PlotStyle(usetex=False))
+    (legend,) = figure.legends
+    assert [text.get_text() for text in legend.get_texts()] == [
+        "k-NN",
+        "local RBF",
+        "GPR",
+        "XGBoost",
+        "MLP",
+        "ResNet",
+        "pointwise",
+        "curve-wise",
+        "wall",
+    ]
 
 
 def test_the_next_round_keeps_the_best_of_each_unit() -> None:
