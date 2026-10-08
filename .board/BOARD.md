@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-006 > W-067   | blocked: 0 | todo roots: 5 | done: 242 | pruned: 16
+open path: E-006 > W-067   | blocked: 0 | todo roots: 5 | done: 243 | pruned: 16
 
 ## Tree
 
@@ -44,7 +44,7 @@ open path: E-006 > W-067   | blocked: 0 | todo roots: 5 | done: 242 | pruned: 16
 
 #### W-067 issue [doing] Family screen -- interpolators, GPR, XGBoost and networks
 
-- T-134 [todo] Write the family factories test-first -> shared/families.py
+- T-134 [done] Write the family factories test-first -> shared/families.py
 - T-135 [todo] Run the family screen with successive halving -> 60_results/62_families/62_families.tex
 - T-170 [todo] Score every candidate's ripple through the harness -> shared/harness.py
 - T-193 [done] Let the MLP fit several outputs test-first -> shared/surrogate.py   (filed during T-133)
@@ -549,7 +549,7 @@ flowchart TD
   W066 --> T192["T-192 done: Let the harness take any target form -> shared/harness.py"]
   W066 --> T198["T-198 done: Point Section 3.1's rho_c todo at Section 5.1's result -> 40_data_analysis/41_neutron_stars/41_neutron_stars.tex"]
   E006 --> W067["W-067 issue doing: Family screen -- interpolators, GPR, XGBoost and networks"]
-  W067 --> T134["T-134 todo: Write the family factories test-first -> shared/families.py"]
+  W067 --> T134["T-134 done: Write the family factories test-first -> shared/families.py"]
   W067 --> T135["T-135 todo: Run the family screen with successive halving -> 60_results/62_families/62_families.tex"]
   W067 --> T170["T-170 todo: Score every candidate's ripple through the harness -> shared/harness.py"]
   W067 --> T193["T-193 done: Let the MLP fit several outputs test-first -> shared/surrogate.py"]
@@ -619,7 +619,7 @@ flowchart TD
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,W067,E009 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,T193,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class T134,T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168,W088,T196,T197 todo
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,T134,T193,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class T135,T170,W068,T136,T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168,W088,T196,T197 todo
   class W038,W039,W040,W041,W042,W043,T132,W044,W048,T108 pruned
 ```
