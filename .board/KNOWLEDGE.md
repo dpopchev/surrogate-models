@@ -49,4 +49,4 @@
 - 2026-10-08 W-087: W-086, W-087 landed 2026-10-08 (developer): planar RBF neighbourhoods fall back to the linear kernel at degree 0; short curves get minimum-norm splines supersedes: W-086#d2, W-087#d2
 
 ## Deviations
-- none recorded
+- 2026-10-08 E-006: bug W-089 (ripple() ignores the spacing of the curve parameter) filed during T-170 (developer): pre-empts W-067
