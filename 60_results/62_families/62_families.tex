@@ -5,6 +5,7 @@ Six model families are screened on the representation of Section~\ref{sec:repres
 
 \InputIfFileExists{62_families_tab_families}{}{}
 \InputIfFileExists{62_families_fig_parity}{}{}
+\InputIfFileExists{62_families_fig_errors}{}{}
 
 The local thin-plate interpolant survives on every pair and leads three of the four. On $10^5$ rows it keeps $3.31$ figures curve-wise and $3.28$ pointwise on the neutron-star mass, $1.25$ and $1.11$ on its charge, and $3.29$ pointwise on the black-hole mass, where the curve-wise Gaussian process and interpolant keep $3.14$; on the black-hole charge the curve-wise Gaussian process and interpolant tie at $2.28$. For every candidate of the last round the test curves agree with the folds within a quarter of a figure, so the ranking is not an artefact of the folds. Within one figure of each pair's best stay one family on the neutron-star mass, the interpolant in both units; three on its charge, with the residual network at $0.72$ and the curve-wise nearest neighbours at $0.32$; and three on each black-hole target, with XGBoost at $2.73$ and $1.76$ beside the interpolant and the curve-wise Gaussian process. The short list for the tuning of Section~\ref{sec:precision} therefore never holds more than three families per pair.
 

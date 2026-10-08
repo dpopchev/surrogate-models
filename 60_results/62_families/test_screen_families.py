@@ -18,6 +18,7 @@ from screen_families import (
     Series,
     Wall,
     candidates,
+    error_figure,
     family_table,
     fitter_of,
     job_line,
@@ -311,6 +312,10 @@ def test_main_draws_the_parity_figure(ran: Path) -> None:
     assert (ran / "assets" / SECTION / f"{SECTION}_fig_parity.png").stat().st_size > 0
 
 
+def test_main_draws_the_error_figure(ran: Path) -> None:
+    assert (ran / "assets" / SECTION / f"{SECTION}_fig_errors.png").stat().st_size > 0
+
+
 def test_main_writes_the_family_table(ran: Path) -> None:
     table = ran / "assets" / SECTION / f"{SECTION}_tab_families.tex"
     assert len(table_rows(table.read_text())) == 12
@@ -380,15 +385,19 @@ def toy_panel(dataset: str) -> Panel:
 TOY_PANELS = [toy_panel(dataset) for dataset in ("neutron_stars",) * 2 + ("black_holes",) * 2]
 
 
-def test_the_parity_figure_has_a_parity_and_an_error_panel_per_pair() -> None:
+def test_the_parity_figure_has_a_panel_per_pair() -> None:
     figure = parity_figure(TOY_PANELS, PlotStyle(usetex=False))
-    assert len([axes for axes in figure.axes if axes.collections]) == 8
+    assert len([axes for axes in figure.axes if axes.collections]) == 4
 
 
-def test_an_error_panel_draws_each_candidate_s_median_and_p95() -> None:
-    figure = parity_figure(TOY_PANELS, PlotStyle(usetex=False))
-    error_axes = figure.axes[2]  # the first pair's error panel, below its parity panel
-    assert len(error_axes.lines) == 2 * 2
+def test_the_error_figure_has_a_panel_per_pair_and_candidate() -> None:
+    figure = error_figure(TOY_PANELS, PlotStyle(usetex=False))
+    assert len([axes for axes in figure.axes if axes.collections]) == 4 * 2
+
+
+def test_an_error_panel_draws_its_candidate_s_median_and_p95() -> None:
+    figure = error_figure(TOY_PANELS, PlotStyle(usetex=False))
+    assert len(figure.axes[0].lines) == 2
 
 
 def test_a_panel_of_a_dataset_without_a_colormap_is_refused() -> None:

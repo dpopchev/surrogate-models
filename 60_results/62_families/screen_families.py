@@ -28,7 +28,6 @@ from typing import Any, Literal, assert_never
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.pipeline import Pipeline
@@ -81,6 +80,7 @@ TARGET_TEX = {"mass": "$M$", "charge": "$\\Dch$"}
 PLOT_TARGET = {"mass": "$M$", "charge": "$D$"}
 AXIS_TEX = {"mass": "$M$ ($M_\\odot$)", "charge": "$Y = \\log_{10}(D/M)$"}
 PARITY = f"{SECTION}_fig_parity"
+ERRORS = f"{SECTION}_fig_errors"
 # Equal-count bins of the true target for the error panel's median and p95 lines.
 PROFILE_BINS = 20
 
@@ -311,55 +311,73 @@ def parity_picks(outcomes: Sequence[Outcome]) -> tuple[Scored, ...]:
 
 
 def parity_figure(panels: Sequence[Panel], style: PlotStyle) -> Figure:
-    """Per pair, in a grid of two columns, predicted against true target on the test curves
-    with the y = x line, and below it the relative error in M or D against the true target on
-    a log scale; each candidate in one end of its dataset's colormap, so two never blend.
+    """Predicted against true target on the test curves, one panel per pair in a grid of two
+    columns, with the y = x line; each candidate in one end of its dataset's colormap.
 
     Raises ValueError for a panel of a dataset with no colormap.
     """
     width = float(plt.rcParams["figure.figsize"][0])
-    blocks = (len(panels) + 1) // 2
+    rows = (len(panels) + 1) // 2
     figure, grid = plt.subplots(
-        2 * blocks,
-        2,
-        figsize=(width, 0.8 * width * blocks),
-        layout="constrained",
-        squeeze=False,
-        height_ratios=[1.0, 0.6] * blocks,
+        rows, 2, figsize=(width, 0.5 * width * rows), layout="constrained", squeeze=False
     )
-    for index, panel in enumerate(panels):
-        block, column = divmod(index, 2)
-        shades = colormap(_cmap(panel.dataset, style))
-        colors = [shades(p) for p in np.linspace(0.15, 0.85, len(panel.series))]
-        _parity_axes(grid[2 * block, column], panel, colors)
-        _error_axes(grid[2 * block + 1, column], panel, colors)
+    for axes, panel in zip(grid.flat, panels, strict=False):
+        colors = _colors(panel, style)
+        for color, series in zip(colors, panel.series, strict=True):
+            axes.scatter(
+                series.y_true, series.y_pred, s=2, alpha=0.4, color=color, label=series.label
+            )
+        values = np.concatenate([np.r_[s.y_true, s.y_pred] for s in panel.series])
+        span = [float(values.min()), float(values.max())]
+        axes.plot(span, span, color="black", linestyle="--", linewidth=0.8)
+        axes.set_title(panel.title)
+        axes.set_xlabel(f"true {panel.target}")
+        axes.set_ylabel(f"predicted {panel.target}")
+        # The points follow the diagonal, so the lower right corner stays empty.
+        axes.legend(fontsize="x-small", markerscale=3, loc="lower right")
     return figure
 
 
-def _parity_axes(axes: Axes, panel: Panel, colors: Sequence[Any]) -> None:
-    """Predicted against true target, each candidate in its color, with the y = x line."""
-    for color, series in zip(colors, panel.series, strict=True):
-        axes.scatter(series.y_true, series.y_pred, s=2, alpha=0.4, color=color, label=series.label)
-    values = np.concatenate([np.r_[s.y_true, s.y_pred] for s in panel.series])
-    span = [float(values.min()), float(values.max())]
-    axes.plot(span, span, color="black", linestyle="--", linewidth=0.8)
-    axes.set_title(panel.title)
-    axes.set_ylabel(f"predicted {panel.target}")
-    # The points follow the diagonal, so the lower right corner stays empty.
-    axes.legend(fontsize="x-small", markerscale=3, loc="lower right")
+def error_figure(panels: Sequence[Panel], style: PlotStyle) -> Figure:
+    """The relative error in M or D against the true target on a log scale, a row per pair
+    and a column per candidate, the y axis shared along a row: each panel the candidate's
+    scatter in its color, with its median (solid) and 95th percentile (dashed) in black.
+
+    Raises ValueError for a panel of a dataset with no colormap.
+    """
+    width = float(plt.rcParams["figure.figsize"][0])
+    columns = max(len(panel.series) for panel in panels)
+    figure, grid = plt.subplots(
+        len(panels),
+        columns,
+        figsize=(width, 0.38 * width * len(panels)),
+        layout="constrained",
+        squeeze=False,
+        sharey="row",
+    )
+    for row, panel in enumerate(panels):
+        for column, (color, series) in enumerate(
+            zip(_colors(panel, style), panel.series, strict=True)
+        ):
+            axes = grid[row, column]
+            axes.scatter(
+                series.y_true, series.errors, s=1, alpha=0.15, color=color, rasterized=True
+            )
+            found = profile(series.y_true, series.errors, PROFILE_BINS)
+            axes.plot(found.centers, found.median, color="black", linewidth=1.0)
+            axes.plot(found.centers, found.p95, color="black", linewidth=1.0, linestyle="--")
+            axes.set_yscale("log")
+            axes.set_title(f"{panel.title}: {series.label}", fontsize="small")
+            axes.set_xlabel(f"true {panel.target}")
+            axes.set_ylabel("relative error")
+    return figure
 
 
-def _error_axes(axes: Axes, panel: Panel, colors: Sequence[Any]) -> None:
-    """The relative error against the true target on a log scale: per candidate a faint
-    scatter, and its median (solid) and 95th percentile (dashed) in equal-count bins."""
-    for color, series in zip(colors, panel.series, strict=True):
-        axes.scatter(series.y_true, series.errors, s=1, alpha=0.15, color=color)
-        found = profile(series.y_true, series.errors, PROFILE_BINS)
-        axes.plot(found.centers, found.median, color=color, linewidth=1.2)
-        axes.plot(found.centers, found.p95, color=color, linewidth=1.2, linestyle="--")
-    axes.set_yscale("log")
-    axes.set_xlabel(f"true {panel.target}")
-    axes.set_ylabel("relative error")
+def _colors(panel: Panel, style: PlotStyle) -> list[Any]:
+    """One color per candidate of the panel, spread to the two ends of the dataset's colormap
+    so that two candidates never blend."""
+    shades = colormap(_cmap(panel.dataset, style))
+    return [shades(p) for p in np.linspace(0.15, 0.85, len(panel.series))]
 
 
 def parity_tex() -> str:
@@ -367,14 +385,27 @@ def parity_tex() -> str:
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
         f"\\includegraphics[width=\\textwidth]{{{PARITY}}}\n"
-        "\\caption{The best candidate of each unit of prediction on the most training rows, per "
-        "dataset and target, on the test curves. Upper panel of each pair: predicted against "
-        "true target, the dashed line $y = x$; the legend gives the significant figures kept on "
-        "the folds. Lower panel: the relative error in $M$ or $\\Dch$ against the true target, "
-        "each candidate's median (solid) and 95th percentile (dashed) in equal-count bins over "
-        "its rows. The charge is shown as the target the models see, $Y = "
+        "\\caption{Predicted against true target on the test curves, per dataset and target, for "
+        "the best candidate of each unit of prediction on the most training rows; the legend "
+        "gives the significant figures kept on the folds, and the dashed line is $y = x$. At "
+        "these precisions every candidate lies on the line; \\cref{fig:families-errors} shows "
+        "where they differ. The charge is shown as the target the models see, $Y = "
         "\\log_{10}(\\Dch/M)$.}\n"
         "\\label{fig:families-parity}\n\\end{figure}\n"
+    )
+
+
+def errors_tex() -> str:
+    """The figure environment of the error figure, placed here or at the top of a page."""
+    return (
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{ERRORS}}}\n"
+        "\\caption{The relative error in $M$ or $\\Dch$ on the test curves against the true "
+        "target, for the candidates of \\cref{fig:families-parity}: a row per dataset and "
+        "target, a column per unit of prediction, the error axis shared along a row. The black "
+        "lines are each candidate's median (solid) and 95th percentile (dashed) in equal-count "
+        "bins of the true target.}\n"
+        "\\label{fig:families-errors}\n\\end{figure}\n"
     )
 
 
@@ -684,11 +715,15 @@ def main(
         logger.info("done: family table of batch %s, %d outcomes -> %s", batch, len(outcomes), path)
         panels = _parity_panels(parity_picks(outcomes), designs, args.state / "ledger")
         apply_style(config.plot)
-        figure = parity_figure(panels, config.plot)
-        figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)
-        plt.close(figure)
-        _write_checked(out / f"{PARITY}.tex", parity_tex())
-        logger.info("done: parity figure of batch %s -> %s", batch, out / f"{PARITY}.png")
+        for name, draw, tex in (
+            (PARITY, parity_figure, parity_tex()),
+            (ERRORS, error_figure, errors_tex()),
+        ):
+            figure = draw(panels, config.plot)
+            figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
+            plt.close(figure)
+            _write_checked(out / f"{name}.tex", tex)
+            logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.png")
 
 
 def _parity_panels(
