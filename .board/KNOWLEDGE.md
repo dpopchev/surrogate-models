@@ -43,9 +43,9 @@
 - 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
 - 2026-10-07 W-076: landing approved by the developer (2026-10-07)
 - 2026-10-08 E-006: make baseline is refitted right before T-133's full run, so Section 4.1 and the screen's baseline row share one code state; its assets are stale since T-189, T-192 (developer)
+- 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-08 W-066: the screen: curve-wise with the k-NN and local-RBF bases only (the MLP fits one output; T-193); knobs in mk/paper.mk: k 8, RBF neighbours 100 (W-086), knots 8, seeds +0..2 (developer) supersedes: W-066#d1, W-066#d3
-- 2026-10-08 W-086: planar neighbourhoods fall back per query to the linear kernel at degree 0 (cubic needs degree 1); landing approved 2026-10-08, ff-main carrying W-066's commits (developer) supersedes: W-086#d1
-- 2026-10-08 W-087: short curves get the minimum-norm spline, knots stay 8; landing approved 2026-10-08 (developer) supersedes: W-087#d1
+- 2026-10-08 W-087: W-086, W-087 landed 2026-10-08 (developer): planar RBF neighbourhoods fall back to the linear kernel at degree 0; short curves get minimum-norm splines supersedes: W-086#d2, W-087#d2
 
 ## Deviations
 - 2026-10-08 E-006: filed during T-133 (developer): T-193 under W-067 (multi-output MLP); bugs W-086, W-087 (RBF planar, short splines; landed); standalone W-088 (screen progress)
