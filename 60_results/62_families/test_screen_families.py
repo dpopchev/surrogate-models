@@ -13,7 +13,9 @@ from screen_families import (
     FitTimeoutError,
     Job,
     Knobs,
+    Panel,
     Scored,
+    Series,
     Wall,
     candidates,
     family_table,
@@ -24,6 +26,8 @@ from screen_families import (
     outcomes_from_json,
     outcomes_to_json,
     over_memory,
+    parity_figure,
+    parity_picks,
     run_job,
     survivors,
     thin,
@@ -34,6 +38,7 @@ from shared.config import PaperConfig
 from shared.design import Design
 from shared.eda import make_curve_space
 from shared.harness import harness
+from shared.plots import PlotStyle
 from shared.surrogate import Training
 
 # Five curves of ten rows, y = p + x: curves 0-3 train (two frozen folds), curve 4 is test.
@@ -302,6 +307,10 @@ def test_main_saves_the_outcomes_of_every_round(ran: Path) -> None:
     assert len(outcomes_from_json(saved.read_text())) == 4 * (12 + 6 + 4)
 
 
+def test_main_draws_the_parity_figure(ran: Path) -> None:
+    assert (ran / "assets" / SECTION / f"{SECTION}_fig_parity.png").stat().st_size > 0
+
+
 def test_main_writes_the_family_table(ran: Path) -> None:
     table = ran / "assets" / SECTION / f"{SECTION}_tab_families.tex"
     assert len(table_rows(table.read_text())) == 12
@@ -342,6 +351,35 @@ def test_the_pair_s_best_at_the_most_rows_is_bold() -> None:
         [on_ns_mass(KNN, 1000, 2.0), on_ns_mass(KNN, 10_000, 2.5), on_ns_mass(RBF, 10_000, 3.0)]
     )
     assert table_rows(table)[2].split(" & ")[2] == "$\\mathbf{3.00}_{10^{4}}$"
+
+
+def test_the_parity_plot_shows_each_unit_s_best_at_the_pair_s_most_rows() -> None:
+    picks = parity_picks(
+        [
+            on_ns_mass(KNN, 1000, 3.5),
+            on_ns_mass(KNN, 10_000, 2.0),
+            on_ns_mass(RBF, 10_000, 3.0),
+            on_ns_mass(MLP, 10_000, 1.0),
+        ]
+    )
+    assert [pick.job.candidate for pick in picks] == [RBF, MLP]
+
+
+def toy_panel(dataset: str) -> Panel:
+    """A panel of one toy series on three rows."""
+    truth = np.array([1.0, 2.0, 3.0])
+    return Panel(dataset, "toy", "$M$", (Series("k-NN", truth, 1.01 * truth),))
+
+
+def test_the_parity_figure_has_a_panel_per_pair() -> None:
+    panels = [toy_panel(dataset) for dataset in ("neutron_stars",) * 2 + ("black_holes",) * 2]
+    figure = parity_figure(panels, PlotStyle(usetex=False))
+    assert len([axes for axes in figure.axes if axes.collections]) == 4
+
+
+def test_a_panel_of_a_dataset_without_a_colormap_is_refused() -> None:
+    with pytest.raises(ValueError, match="no colormap for dataset toy"):
+        parity_figure([toy_panel("toy")], PlotStyle(usetex=False))
 
 
 def test_the_next_round_keeps_the_best_of_each_unit() -> None:

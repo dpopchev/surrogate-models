@@ -25,8 +25,10 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Literal, assert_never
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.figure import Figure
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.pipeline import Pipeline
 
@@ -37,7 +39,15 @@ from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target
 from shared.eda import CurveSpace, booktabs
 from shared.families import make_gpr, make_knn, make_rbf, make_xgboost
 from shared.harness import Fitter, Predictor, Run, harness
-from shared.runs import RunMetadata, Setting, entry_from_run, entry_name, entry_to_json
+from shared.plots import CoolCmap, PlotStyle, WarmCmap, apply_style, colormap
+from shared.runs import (
+    RunMetadata,
+    Setting,
+    entry_from_json,
+    entry_from_run,
+    entry_name,
+    entry_to_json,
+)
 from shared.scorecard import significant_figures
 from shared.surrogate import (
     ResMLP,
@@ -64,6 +74,11 @@ PAIRS: tuple[tuple[DesignSpec, Target], ...] = (
 
 DATASET_TEX = {"neutron_stars": "NS", "black_holes": "BH"}
 TARGET_TEX = {"mass": "$M$", "charge": "$\\Dch$"}
+# The parity figure's titles and axis labels, the target as the model sees it; matplotlib
+# knows no \Dch.
+PLOT_TARGET = {"mass": "$M$", "charge": "$D$"}
+AXIS_TEX = {"mass": "$M$ ($M_\\odot$)", "charge": "$Y = \\log_{10}(D/M)$"}
+PARITY = f"{SECTION}_fig_parity"
 
 Family = Literal["k-NN", "local RBF", "GPR", "XGBoost", "MLP", "ResNet"]
 FAMILIES: tuple[Family, ...] = ("k-NN", "local RBF", "GPR", "XGBoost", "MLP", "ResNet")
@@ -134,6 +149,26 @@ class Knobs:
     per_curve: int
 
 
+@dataclass(frozen=True)
+class Series:
+    """One candidate's predictions against the truth on the test rows, labelled for a legend."""
+
+    label: str
+    y_true: np.ndarray
+    y_pred: np.ndarray
+
+
+@dataclass(frozen=True)
+class Panel:
+    """One pair's panel of the parity figure: its dataset (for the colors), its title, the
+    target's axis label and the candidates shown."""
+
+    dataset: str
+    title: str
+    target: str
+    series: tuple[Series, ...]
+
+
 class FitTimeoutError(Exception):
     """A fit ran past its time budget."""
 
@@ -180,6 +215,11 @@ def _rows(design: Design, keep: np.ndarray) -> Design:
 def survivors(outcomes: Sequence[Outcome], keep: int) -> tuple[Candidate, ...]:
     """The best `keep` candidates of one pair's round on the folds' figures; a wall never
     survives."""
+    return tuple(outcome.job.candidate for outcome in _ranked(outcomes)[:keep])
+
+
+def _ranked(outcomes: Sequence[Outcome]) -> list[Scored]:
+    """The scored outcomes, best on the folds' figures first; walls left out."""
     ran: list[Scored] = []
     for outcome in outcomes:
         match outcome:
@@ -189,8 +229,7 @@ def survivors(outcomes: Sequence[Outcome], keep: int) -> tuple[Candidate, ...]:
                 pass
             case _:
                 assert_never(outcome)
-    ranked = sorted(ran, key=lambda outcome: -outcome.folds)
-    return tuple(outcome.job.candidate for outcome in ranked[:keep])
+    return sorted(ran, key=lambda outcome: -outcome.folds)
 
 
 def next_jobs(
@@ -248,6 +287,82 @@ def family_table(outcomes: Sequence[Outcome]) -> str:
         f"Family & Unit & {pairs}",
         rows,
     )
+
+
+def parity_picks(outcomes: Sequence[Outcome]) -> tuple[Scored, ...]:
+    """Per pair, in the order the pairs first appear, the best scored candidate of each unit
+    at the most rows the pair ran on: the candidates the parity figure shows."""
+    picks: list[Scored] = []
+    pairs: dict[tuple[str, Target], None] = dict.fromkeys(
+        (o.job.dataset, o.job.target) for o in outcomes
+    )
+    for dataset, target in pairs:
+        at_most = _at_most_rows(outcomes, dataset, target)
+        for unit in UNITS:
+            ranked = _ranked([o for o in at_most if o.job.candidate.unit == unit])
+            picks += ranked[:1]
+    return tuple(picks)
+
+
+def parity_figure(panels: Sequence[Panel], style: PlotStyle) -> Figure:
+    """Predicted against true target on the test curves, one panel per pair in a grid of two
+    columns, each candidate in a shade of its dataset's colormap, with the y = x line.
+
+    Raises ValueError for a panel of a dataset with no colormap.
+    """
+    width = float(plt.rcParams["figure.figsize"][0])
+    rows = (len(panels) + 1) // 2
+    figure, grid = plt.subplots(
+        rows, 2, figsize=(width, 0.5 * width * rows), layout="constrained", squeeze=False
+    )
+    for axes, panel in zip(grid.flat, panels, strict=False):
+        shades = colormap(_cmap(panel.dataset, style))
+        positions = np.linspace(0.3, 0.75, len(panel.series))
+        for shade, series in zip(positions, panel.series, strict=True):
+            axes.scatter(
+                series.y_true,
+                series.y_pred,
+                s=2,
+                alpha=0.4,
+                color=shades(shade),
+                label=series.label,
+            )
+        values = np.concatenate([np.r_[s.y_true, s.y_pred] for s in panel.series])
+        span = [float(values.min()), float(values.max())]
+        axes.plot(span, span, color="black", linestyle="--", linewidth=0.8)
+        axes.set_title(panel.title)
+        axes.set_xlabel(f"true {panel.target}")
+        axes.set_ylabel(f"predicted {panel.target}")
+        # The points follow the diagonal, so the lower right corner stays empty.
+        axes.legend(fontsize="x-small", markerscale=3, loc="lower right")
+    for axes in grid.flat[len(panels) :]:
+        axes.set_visible(False)
+    return figure
+
+
+def parity_tex() -> str:
+    """The figure environment of the parity figure, placed here or at the top of a page."""
+    return (
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{PARITY}}}\n"
+        "\\caption{Predicted against true target on the test curves, per dataset and target, for "
+        "the best candidate of each unit of prediction on the most training rows; the legend "
+        "gives the significant figures kept on the folds, and the dashed line is $y = x$. The "
+        "charge is shown as the target the models see, $Y = \\log_{10}(\\Dch/M)$.}\n"
+        "\\label{fig:families-parity}\n\\end{figure}\n"
+    )
+
+
+def _cmap(dataset: str, style: PlotStyle) -> CoolCmap | WarmCmap:
+    """The dataset's colormap of the paper style.
+
+    Raises ValueError for any other dataset.
+    """
+    if dataset == NEUTRON_STARS.dataset:
+        return style.neutron_stars.beta_cmap
+    if dataset == BLACK_HOLES.dataset:
+        return style.black_holes.beta_cmap
+    raise ValueError(f"no colormap for dataset {dataset}")
 
 
 def _at_most_rows(outcomes: Sequence[Outcome], dataset: str, target: Target) -> list[Outcome]:
@@ -520,9 +635,18 @@ def main(
     config = config or load_config()
     settings = config.methodology.algorithms
     training = Training(**settings.model_dump(exclude={"log_level", "threads", "workers"}))
+    tables = {
+        NEUTRON_STARS.dataset: pd.read_parquet(args.ns),
+        BLACK_HOLES.dataset: pd.read_parquet(args.bh),
+    }
+    split = pd.read_parquet(args.split)
+    designs: dict[tuple[str, Target], tuple[Design, CurveSpace]] = {
+        (spec.dataset, target): (design(tables[spec.dataset], split, spec, target), spec.space)
+        for spec, target in PAIRS
+    }
     with _at_level(settings.log_level):
         if args.batch is None:
-            batch = _run_screen(args, training, settings.log_level, commit, dirty, now)
+            batch = _run_screen(args, designs, training, settings.log_level, commit, dirty, now)
         else:
             batch = args.batch
             logger.info("rebuilding the assets from batch %s; nothing is fitted", batch)
@@ -533,10 +657,43 @@ def main(
         path = out / f"{SECTION}_tab_families.tex"
         _write_checked(path, family_table(outcomes))
         logger.info("done: family table of batch %s, %d outcomes -> %s", batch, len(outcomes), path)
+        panels = _parity_panels(parity_picks(outcomes), designs, args.state / "ledger")
+        apply_style(config.plot)
+        figure = parity_figure(panels, config.plot)
+        figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)
+        plt.close(figure)
+        _write_checked(out / f"{PARITY}.tex", parity_tex())
+        logger.info("done: parity figure of batch %s -> %s", batch, out / f"{PARITY}.png")
+
+
+def _parity_panels(
+    picks: Sequence[Scored],
+    designs: dict[tuple[str, Target], tuple[Design, CurveSpace]],
+    ledger: Path,
+) -> list[Panel]:
+    """One panel per pair of the picks: each pick's test predictions, read from its ledger
+    entry, against the true target of the pair's test rows."""
+    series: dict[tuple[str, Target], list[Series]] = {}
+    for pick in picks:
+        job = pick.job
+        truth = designs[(job.dataset, job.target)][0]
+        truth = truth.y[truth.test]
+        entry = entry_from_json((ledger / f"{pick.entry}.json").read_text())
+        predicted = np.array(entry.predictions)
+        assert len(predicted) == len(truth), (
+            f"entry {pick.entry}: {len(predicted)} predictions for {len(truth)} test rows"
+        )
+        label = f"{job.candidate.family} {job.candidate.unit}, {pick.folds:.2f}"
+        series.setdefault((job.dataset, job.target), []).append(Series(label, truth, predicted))
+    return [
+        Panel(dataset, f"{DATASET_TEX[dataset]} {PLOT_TARGET[target]}", AXIS_TEX[target], tuple(s))
+        for (dataset, target), s in series.items()
+    ]
 
 
 def _run_screen(
     args: argparse.Namespace,
+    designs: dict[tuple[str, Target], tuple[Design, CurveSpace]],
     training: Training,
     log_level: str,
     commit: Callable[[], str] | None,
@@ -546,15 +703,6 @@ def _run_screen(
     """Run every round of the screen as a new batch, saving the outcomes after each round;
     return the batch id."""
     commit, dirty, now = commit or _git_commit, dirty or _git_dirty, now or _utc_now
-    tables = {
-        NEUTRON_STARS.dataset: pd.read_parquet(args.ns),
-        BLACK_HOLES.dataset: pd.read_parquet(args.bh),
-    }
-    split = pd.read_parquet(args.split)
-    designs: dict[tuple[str, Target], tuple[Design, CurveSpace]] = {
-        (spec.dataset, target): (design(tables[spec.dataset], split, spec, target), spec.space)
-        for spec, target in PAIRS
-    }
     batch = _new_id()
     context = Context(
         batch=batch,
