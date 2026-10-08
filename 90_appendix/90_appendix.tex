@@ -23,7 +23,7 @@ This appendix describes each candidate of the family screen of Section~\ref{sec:
 
 \subsection{Local Thin-Plate Radial Basis Functions}
 
-\paragraph{What it is.} Around each query, the $100$ nearest training points are interpolated exactly by a thin-plate spline, $\phi(r) = r^2 \log r$, plus a linear polynomial. Where the neighbours lie on one plane the linear part cannot be fitted, and a constant part on the same neighbours is used instead. A global interpolant through all rows would cost the cube of the rows; the neighbourhood keeps it local.
+\paragraph{What it is.} Around each query, the $100$ nearest training points are interpolated exactly by a thin-plate spline, $\phi(r) = r^2 \log r$, plus a linear polynomial~\citep{SciPy2020}. Where the neighbours lie on one plane the linear part cannot be fitted, and a constant part on the same neighbours is used instead. A global interpolant through all rows would cost the cube of the rows; the neighbourhood keeps it local.
 
 \paragraph{Cost.} Each query solves one system of about a hundred unknowns, so the cost grows with the number of queries, not with $N$, beyond the neighbour search.
 
