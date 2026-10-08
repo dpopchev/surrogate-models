@@ -5,7 +5,8 @@ Six model families are screened on the representation of Section~\ref{sec:repres
 
 \InputIfFileExists{62_families_tab_families}{}{}
 
-\todo{The results of the screen, from its table: the survivors per pair, set beside earlier neural surrogates~\citep{Liodis2024,Kaushikk2026,Liu2026}.}
+\todo{Interim, after the first round ($10^3$ rows) only; rounds two and three are running. Rewrite from the final table: the survivors per pair, set beside earlier neural surrogates~\citep{Liodis2024,Kaushikk2026,Liu2026}.}
+On $10^3$ rows the Gaussian process fitted one row at a time leads on three of the four pairs: $2.48$ figures on the neutron-star mass, $0.54$ on its charge and $1.90$ on the black-hole charge. On the black-hole mass the curve-wise unit leads with every base between $2.56$ and $2.75$ figures, since the black-hole design keeps all eighteen of its training curves. On the neutron stars every curve-wise candidate falls below zero figures, a 95th-percentile error above $100\%$, from about a hundred curves; ranking each unit apart keeps the best curve-wise candidates for the rounds with more curves. The two networks keep $1.6$ figures on the neutron-star mass at this budget, below the local interpolant's $2.11$, and no family yet keeps one figure on the neutron-star charge.
 \begin{itemize}
   \item $H_3$: the ripple of the residual across the grid steps of the curve parameters, a residual network against a plain multilayer perceptron of matched size.
   \item \textbf{Scalability:} the error and the fit time against the number of training rows, with the $O(N^3)$ wall of Gaussian process regression.
