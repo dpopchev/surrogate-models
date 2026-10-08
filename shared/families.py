@@ -27,18 +27,32 @@ class LocalRBF(RegressorMixin, BaseEstimator):
         self.neighbours = neighbours
 
     def fit(self, x: np.ndarray, y: np.ndarray) -> LocalRBF:
-        """Keep the interpolant of the rows."""
+        """Keep the interpolant of the rows, and its fallback for a planar neighbourhood."""
+        rows, target = np.asarray(x, dtype=np.float64), np.asarray(y, dtype=np.float64)
         self.interpolant_ = RBFInterpolator(
-            np.asarray(x, dtype=np.float64),
-            np.asarray(y, dtype=np.float64),
-            neighbors=self.neighbours,
-            kernel="thin_plate_spline",
+            rows, target, neighbors=self.neighbours, kernel="thin_plate_spline"
+        )
+        # The thin-plate's linear part needs neighbours that span the inputs; a constant part,
+        # as the linear kernel at degree 0 has, never loses rank (W-086).
+        self.fallback_ = RBFInterpolator(
+            rows, target, neighbors=self.neighbours, kernel="linear", degree=0
         )
         return self
 
     def predict(self, x: np.ndarray) -> np.ndarray:
-        """The interpolant at each row."""
-        return self.interpolant_(np.asarray(x, dtype=np.float64))
+        """The interpolant at each row, the fallback where its neighbourhood is planar."""
+        return self._predict(np.asarray(x, dtype=np.float64))
+
+    def _predict(self, rows: np.ndarray) -> np.ndarray:
+        """The interpolant at the rows; a batch it refuses is halved until the rows it still
+        refuses are single ones, which the fallback predicts."""
+        try:
+            return self.interpolant_(rows)
+        except np.linalg.LinAlgError:
+            if len(rows) == 1:
+                return self.fallback_(rows)
+            half = len(rows) // 2
+            return np.concatenate([self._predict(rows[:half]), self._predict(rows[half:])])
 
 
 def make_rbf(neighbours: int) -> Pipeline:
