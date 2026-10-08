@@ -21,6 +21,7 @@
 - 2026-10-08 E-006: standing: E-002's speedup and posterior questions live in W-047; the ripple is T-170's, spacing-aware (W-089); the RBF and spline bugs are fixed -> nothing of these is open supersedes: E-002#1, E-002#2, W-065#1, W-086#1, W-087#1
 - 2026-10-08 T-135: fact: batch 01a11be4, 1e5 rows: local RBF leads NS M (3.31 cw), NS D (1.25 cw), BH M (3.29 pw); BH D GPR cw = RBF cw 2.28; at most 3 families within 1 figure per pair -> W-067 holds
 - 2026-10-08 T-135: fact: pointwise GPR walls at 1e4 on all pairs; NS curve-wise <0 figures at 10 rows per curve, 3.31 at \~70; a per-fit wall let one job run 2h20m -> walls per job next supersedes: T-135#1
+- 2026-10-08 T-200: fact: BH p95 is its worst of 3 test curves (pointwise RBF: M flat 5e-5 vs 1e-7; D 1e-3 vs 1e-5); BH curve-wise error arcs between the 8 knots -> E-007 tunes the knots
 - 2026-10-08 W-037: standing: one thread is fastest (2.6 s vs 11.4 s an epoch at 7); one fit took 53-525 s, swinging 2.5x with load -> cite fit times as orders of magnitude, time them repeatedly supersedes: W-035#2, W-036#1, W-037#2
 - 2026-10-08 W-073: standing: scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1), the nearest curve beats the MLP on the test curves of all four pairs; the MLP leads only on the NS folds -> no pair is won by the baseline supersedes: W-073#1, W-073#2
 
@@ -45,8 +46,5 @@
 - 2026-10-08 W-089: bugs landed 2026-10-08, landings approved (developer): RBF per-query fallback (W-086), min-norm splines (W-087), ripple by divided differences (W-089); W-066 too supersedes: W-087#d3, W-089#d1
 
 ## Deviations
-- 2026-10-08 E-006: T-135 halves per unit (developer); batch 01a11bda stopped after round 1
-- 2026-10-08 E-006: T-202 (appendix) while T-135's run blocks it; bug W-090 filed during it
-- 2026-10-08 E-006: briefs amended, Checks kept (developer): T-170 names its tests; T-135 gains halving over N, walls, progress lines, then splits off T-200 (parity), T-201 (scaling)
+- 2026-10-08 E-006: (developer): briefs amended, Checks kept (T-170, T-135 split to T-200/T-201, T-200 twice); T-135 halves per unit; T-202 and W-090 (parked for, landed) during its run
 - 2026-10-08 E-006: bug W-089 (ripple() ignores the spacing of the curve parameter) filed during T-170 (developer): pre-empts W-067
-- 2026-10-08 E-006: parked for W-090 (developer), fixed in a worktree off main while the screen runs here
