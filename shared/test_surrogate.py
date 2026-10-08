@@ -257,6 +257,19 @@ def test_a_non_finite_training_loss_raises() -> None:
         estimator.fit(INPUTS, poisoned, net__groups=GROUPS)
 
 
+def test_a_two_column_target_is_predicted_as_two_columns() -> None:
+    keep = ~HELD_OUT
+    target = np.column_stack([TARGET, 2.0 * TARGET])
+    estimator = make_estimator(replace(TOY, max_epochs=2), n_inputs=2, n_outputs=2)
+    estimator.fit(INPUTS[keep], target[keep], net__groups=GROUPS[keep])
+    assert estimator.predict(INPUTS[HELD_OUT]).shape == (int(HELD_OUT.sum()), 2)
+
+
+def test_a_one_column_target_is_predicted_as_a_flat_array() -> None:
+    predicted = fitted(replace(TOY, max_epochs=2)).predict(INPUTS[HELD_OUT])
+    assert predicted.shape == (int(HELD_OUT.sum()),)
+
+
 def test_the_same_seed_gives_the_same_predictions() -> None:
     short = replace(TOY, max_epochs=3)
     first, second = (fitted(short).predict(INPUTS[HELD_OUT]) for _ in range(2))

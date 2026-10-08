@@ -121,14 +121,16 @@ def approx_minutes(epochs: int, epoch_seconds: float) -> str:
 
 
 class MLP(nn.Module):
-    """A plain multilayer perceptron with one output."""
+    """A plain multilayer perceptron, one output unit per target column."""
 
-    def __init__(self, n_inputs: int, width: int, depth: int, activation: Activation) -> None:
+    def __init__(
+        self, n_inputs: int, width: int, depth: int, activation: Activation, n_outputs: int = 1
+    ) -> None:
         super().__init__()
         layers: list[nn.Module] = []
         for size in [n_inputs] + [width] * (depth - 1):
             layers += [nn.Linear(size, width), _activation(activation)]
-        self.layers = nn.Sequential(*layers, nn.Linear(width, 1))
+        self.layers = nn.Sequential(*layers, nn.Linear(width, n_outputs))
 
     def forward(self, x: torch.Tensor, **_fit_params: Any) -> torch.Tensor:
         """The output for a batch; skorch also hands the fit params (the curve groups) here."""
@@ -170,16 +172,19 @@ class ScaledNetRegressor(NeuralNetRegressor):
         self.seed = seed
 
     def fit(self, X: Any, y: Any = None, **fit_params: Any) -> ScaledNetRegressor:  # noqa: N803
-        """Standardize the target, seed torch, then fit the net on the target."""
+        """Standardize each target column, seed torch, then fit the net on the target."""
         torch.manual_seed(self.seed)
-        column = np.asarray(y, dtype=np.float32).reshape(-1, 1)
-        self.target_scaler_ = StandardScaler().fit(column)
-        scaled = np.asarray(self.target_scaler_.transform(column), dtype=np.float32)
+        target = np.asarray(y, dtype=np.float32)
+        columns = target.reshape(len(target), -1)
+        self.target_scaler_ = StandardScaler().fit(columns)
+        scaled = np.asarray(self.target_scaler_.transform(columns), dtype=np.float32)
         return super().fit(X, scaled, **fit_params)
 
     def predict(self, X: Any) -> np.ndarray:  # noqa: N803
-        """Predictions on the target's original scale."""
-        return self.target_scaler_.inverse_transform(super().predict(X)).ravel()
+        """Predictions on the target's original scale: one column per target column, a flat
+        array for a one-column target."""
+        found = self.target_scaler_.inverse_transform(super().predict(X))
+        return found.ravel() if found.shape[1] == 1 else found
 
 
 class FiniteLoss(Callback):
@@ -310,8 +315,9 @@ class LiveLossCurve(Callback):
 
 def _valid_mare(net: ScaledNetRegressor, X: Any, y: Any) -> float:  # noqa: N803
     """MARE on the validation curves, the standardized target turned back to its scale."""
-    column = np.asarray(y, dtype=np.float32).reshape(-1, 1)
-    return mare(net.target_scaler_.inverse_transform(column).ravel(), net.predict(X))
+    target = np.asarray(y, dtype=np.float32)
+    truth = net.target_scaler_.inverse_transform(target.reshape(len(target), -1))
+    return mare(truth.ravel() if truth.shape[1] == 1 else truth, net.predict(X))
 
 
 def curve_valid_split(fraction: float, seed: int) -> ValidSplit:
@@ -377,8 +383,10 @@ def make_estimator(
     n_inputs: int,
     live_plot: Path | None = None,
     valid_fold: np.ndarray | None = None,
+    n_outputs: int = 1,
 ) -> Pipeline:
-    """Pipeline(StandardScaler, ScaledNetRegressor) with the training callbacks; with live_plot,
+    """Pipeline(StandardScaler, ScaledNetRegressor) with the training callbacks, n_outputs
+    target columns (the curve-wise spline coefficients, W-067); with live_plot,
     the loss curve is also redrawn there every LIVE_EVERY epochs while it trains. With
     valid_fold (-1 for a fit row, 0 for a validation row) the net validates on exactly those
     rows; without it, on a share of whole curves from the groups passed to fit."""
@@ -394,6 +402,7 @@ def make_estimator(
         module__width=training.width,
         module__depth=training.depth,
         module__activation=training.activation,
+        module__n_outputs=n_outputs,
         criterion=_criterion(training.loss),
         optimizer=torch.optim.AdamW,
         lr=training.lr,
