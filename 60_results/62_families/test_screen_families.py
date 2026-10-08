@@ -12,7 +12,6 @@ from screen_families import (
     Candidate,
     FitTimeoutError,
     Job,
-    Knobs,
     Panel,
     Scored,
     Series,
@@ -21,7 +20,6 @@ from screen_families import (
     candidates,
     error_figure,
     family_table,
-    fitter_of,
     job_line,
     main,
     next_jobs,
@@ -40,10 +38,7 @@ from screen_families import (
 
 from shared.config import PaperConfig
 from shared.design import Design, Target
-from shared.eda import make_curve_space
-from shared.harness import harness
 from shared.plots import PlotStyle
-from shared.surrogate import Training
 
 # Five curves of ten rows, y = p + x: curves 0-3 train (two frozen folds), curve 4 is test.
 P = np.repeat(np.arange(5.0), 10)
@@ -145,24 +140,7 @@ def test_a_fit_past_its_time_budget_is_stopped() -> None:
         timed(slow, seconds=0.05)(TOY.X, TOY.y, TOY.X, TOY.y, 0)
 
 
-TRAINING = Training(
-    width=8,
-    depth=2,
-    activation="relu",
-    loss="mse",
-    lr=1e-2,
-    max_epochs=2,
-    batch_size=16,
-    patience=2,
-    valid_fraction=0.34,
-    seed=0,
-)
-KNOBS = Knobs(k=2, neighbours=4, knots=4, per_curve=2)
-SPACE = make_curve_space({"x": "raw", "p": "raw"}, ("p",))
-
-
-# Twelve curves of ten rows, y = p + x: curves 10 and 11 are test, enough training curves left
-# for a curve-wise network to validate on whole curves within a fold's fit.
+# Twelve curves of ten rows, y = p + x: curves 10 and 11 are test.
 P12 = np.repeat(np.arange(12.0), 10)
 X12 = np.tile(np.linspace(0.0, 1.0, 10), 12)
 WIDE = Design(
@@ -173,13 +151,6 @@ WIDE = Design(
     fold=np.where(P12 >= 10, -1, P12.astype(int) % 2),
     ablation=np.zeros(120, dtype=bool),
 )
-
-
-@pytest.mark.parametrize("candidate", candidates(), ids=str)
-def test_every_candidate_predicts_the_toy_s_test_curves(candidate: Candidate) -> None:
-    fitter = fitter_of(candidate, SPACE, KNOBS, TRAINING)
-    (run,) = harness(WIDE, "mass", fitter, seeds=[0], valid_fraction=0.34)
-    assert np.isfinite(run.predictions).all()
 
 
 def off_by_a_tenth(x_fit, y_fit, x_valid, y_valid, seed):

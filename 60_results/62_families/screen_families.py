@@ -23,7 +23,7 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from functools import partial
 from pathlib import Path
-from typing import Any, Literal, assert_never
+from typing import Any, assert_never
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,16 +31,19 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
-from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.pipeline import Pipeline
 
 from shared import surrogate
+from shared.candidates import (
+    FAMILIES,
+    UNITS,
+    Candidate,
+    Knobs,
+    fitter_of,
+)
 from shared.ceilings import profile
 from shared.config import NOTATION_TEX, PaperConfig, load_config
-from shared.curvewise import curvewise_fitter
 from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
 from shared.eda import CurveSpace, booktabs
-from shared.families import make_gpr, make_knn, make_rbf, make_xgboost
 from shared.harness import Fitter, Predictor, Run, harness
 from shared.plots import (
     SYMBOLS,
@@ -60,13 +63,10 @@ from shared.runs import (
     entry_to_json,
 )
 from shared.scorecard import relative_errors, significant_figures
+from shared.search import Unit
 from shared.surrogate import (
-    ResMLP,
     Training,
     duration_text,
-    make_estimator,
-    network_fitter,
-    sklearn_fitter,
 )
 from shared.workers import run_jobs
 
@@ -94,8 +94,6 @@ SCALING = f"{SECTION}_fig_scaling"
 # Equal-count bins of the true target for the error panel's median and p95 lines.
 PROFILE_BINS = 20
 
-Family = Literal["k-NN", "local RBF", "GPR", "XGBoost", "MLP", "ResNet"]
-FAMILIES: tuple[Family, ...] = ("k-NN", "local RBF", "GPR", "XGBoost", "MLP", "ResNet")
 FAMILY_TEX = {
     "k-NN": "$k$-NN",
     "local RBF": "local RBF",
@@ -104,17 +102,6 @@ FAMILY_TEX = {
     "MLP": "MLP",
     "ResNet": "ResNet",
 }
-# The unit of prediction: one row, or a whole curve along its normalized coordinate.
-Unit = Literal["pointwise", "curve-wise"]
-UNITS: tuple[Unit, ...] = ("pointwise", "curve-wise")
-
-
-@dataclass(frozen=True)
-class Candidate:
-    """One family in one unit of prediction."""
-
-    family: Family
-    unit: Unit
 
 
 @dataclass(frozen=True)
@@ -150,17 +137,6 @@ class Wall:
 
 
 Outcome = Scored | Wall
-
-
-@dataclass(frozen=True)
-class Knobs:
-    """The families' settings: the k-NN's k, the local RBF's neighbours, the curve-wise
-    spline's knots (ends included), and the fewest rows a thinned curve keeps."""
-
-    k: int
-    neighbours: int
-    knots: int
-    per_curve: int
 
 
 @dataclass(frozen=True)
@@ -626,81 +602,6 @@ def over_memory(candidate: Candidate, rows: int, memory_bytes: float) -> bool:
     """Whether the candidate's fit is known to pass the memory budget unrun: a pointwise GPR's
     kernel matrix of rows x rows doubles."""
     return candidate == Candidate("GPR", "pointwise") and rows * rows * 8 > memory_bytes
-
-
-def fitter_of(candidate: Candidate, space: CurveSpace, knobs: Knobs, training: Training) -> Fitter:
-    """The harness fitter of the candidate on a design of the curve space: the family fitted
-    row by row, or as the base that predicts each curve's spline from its curve keys."""
-    family = candidate.family
-    match candidate.unit:
-        case "pointwise":
-            if family == "MLP":
-                return network_fitter(training)
-            if family == "ResNet":
-                return network_fitter(training, before_fit=_with_skips)
-            return sklearn_fitter(_factory(family, knobs))
-        case "curve-wise":
-            keys, along = curve_columns(space)
-            if family in ("MLP", "ResNet"):
-                outputs = knobs.knots + 4  # the spline's knots + 2 coefficients, start, end
-                base = partial(CurveNet, training, len(keys), outputs, family == "ResNet")
-                return curvewise_fitter(base, keys, along, knobs.knots)
-            return curvewise_fitter(_factory(family, knobs), keys, along, knobs.knots)
-        case _:
-            assert_never(candidate.unit)
-
-
-def _factory(family: Family, knobs: Knobs) -> Callable[[], Any]:
-    """The scikit-learn estimator of a family that is not a network."""
-    match family:
-        case "k-NN":
-            return partial(make_knn, knobs.k)
-        case "local RBF":
-            return partial(make_rbf, knobs.neighbours)
-        case "GPR":
-            return make_gpr
-        case "XGBoost":
-            return make_xgboost
-        case "MLP" | "ResNet":
-            raise ValueError(f"{family} is a network, fitted by network_fitter")
-        case _:
-            assert_never(family)
-
-
-def _with_skips(pipeline: Pipeline) -> None:
-    """Turn a built network into the residual network of the same size (identity skips)."""
-    pipeline.named_steps["net"].set_params(module=ResMLP)
-
-
-def curve_columns(space: CurveSpace) -> tuple[tuple[int, ...], int]:
-    """The design columns of the curve keys and of the one input along a curve."""
-    names = [name for name, _ in space.inputs]
-    along = next(i for i, name in enumerate(names) if name not in space.curve)
-    return tuple(names.index(name) for name in space.curve), along
-
-
-class CurveNet(RegressorMixin, BaseEstimator):
-    """A network as the curve-wise base: one row per curve, so each row is its own group and
-    the network validates on whole curves."""
-
-    def __init__(self, training: Training, n_inputs: int, n_outputs: int, skips: bool) -> None:
-        self.training = training
-        self.n_inputs = n_inputs
-        self.n_outputs = n_outputs
-        self.skips = skips
-
-    def fit(self, x: np.ndarray, y: np.ndarray) -> CurveNet:
-        """Fit the network on the curves' keys and outputs."""
-        self.pipeline_ = make_estimator(
-            self.training, self.n_inputs, n_outputs=self.n_outputs, skips=self.skips
-        )
-        rows = np.asarray(x, dtype=np.float32)
-        self.pipeline_.fit(rows, np.asarray(y, dtype=np.float32), net__groups=np.arange(len(x)))
-        return self
-
-    def predict(self, x: np.ndarray) -> np.ndarray:
-        """Every output of each curve."""
-        return self.pipeline_.predict(np.asarray(x, dtype=np.float32))
 
 
 def run_job(
