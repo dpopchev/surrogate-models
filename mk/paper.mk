@@ -181,7 +181,7 @@ FAMILIES_KNOBS  := --k 8 --neighbours 100 --knots 8 --per-curve 10 \
 # Empty it to refit the whole screen (hours): make families FAMILIES_BATCH=
 FAMILIES_BATCH  ?= 01a11be4-6eca-7427-a5dd-a97dd7a0194d
 
-$(FAMILIES_ASSETS): $(FAMILIES) paper.toml shared/config.py shared/design.py shared/eda.py shared/surrogate.py shared/runs.py shared/harness.py shared/scorecard.py shared/ceilings.py shared/families.py shared/curvewise.py shared/workers.py $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+$(FAMILIES_ASSETS): $(FAMILIES) paper.toml shared/config.py shared/design.py shared/eda.py shared/surrogate.py shared/runs.py shared/harness.py shared/scorecard.py shared/ceilings.py shared/families.py shared/curvewise.py shared/workers.py shared/candidates.py shared/search.py $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(FAMILIES_BATCH),rebuilding the family table from batch $(FAMILIES_BATCH),screening the families ($(FAMILIES_KNOBS)) -- one line per finished job))
 	@$(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(FAMILIES_KNOBS) $(if $(FAMILIES_BATCH),--batch $(FAMILIES_BATCH))
 	$(call log_done,family table written to $@)
@@ -189,6 +189,28 @@ $(FAMILIES_ASSETS): $(FAMILIES) paper.toml shared/config.py shared/design.py sha
 .PHONY: families
 families: $(FAMILIES_ASSETS) ## Run the family screen for Section 5.2
 	$(call log_done,family assets current in $(dir $(FAMILIES_ASSETS)))
+
+# Section 5.3's tuning (W-068): every candidate on the family screen's short list searched with
+# the same Optuna trials over its own hyperparameters, scored on the frozen folds; a fit past the
+# wall fails its trial. Hours, so its own target, not in PAPER_ASSETS; one line per finished job
+# in the log, the trials live in optuna-dashboard on the batch's journal under
+# $(STATE)/63_precision/. Its knobs are written here only; k, neighbours and knots are the
+# screen's, each overridden by a trial that searches it. The screen's figures come from its
+# recorded batch in the ledger.
+TUNING        := 60_results/63_precision/tune_survivors.py
+TUNING_ASSETS := $(ASSETS)/63_precision/63_precision_tab_tuning.tex
+TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --workers 3
+# Empty until a batch is recorded (T-206): make tuning then runs the whole tuning (hours).
+TUNING_BATCH  ?=
+
+$(TUNING_ASSETS): $(TUNING) paper.toml shared/config.py shared/design.py shared/eda.py shared/surrogate.py shared/runs.py shared/harness.py shared/scorecard.py shared/ceilings.py shared/families.py shared/curvewise.py shared/workers.py shared/candidates.py shared/search.py shared/trials.py $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+	$(call log_info,$(if $(TUNING_BATCH),rebuilding the tuning table from batch $(TUNING_BATCH),tuning the short list ($(TUNING_KNOBS)) -- one line per finished job))
+	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) $(if $(TUNING_BATCH),--batch $(TUNING_BATCH))
+	$(call log_done,tuning table written to $@)
+
+.PHONY: tuning
+tuning: $(TUNING_ASSETS) ## Run the tuning of the short list for Section 5.3
+	$(call log_done,tuning assets current in $(dir $(TUNING_ASSETS)))
 
 .PHONY: assets
 assets: $(PAPER_ASSETS) ## Generate the section assets under build/assets/
