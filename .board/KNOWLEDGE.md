@@ -15,21 +15,14 @@
 - 2026-10-06 W-034: T-080: standing: valid loss spikes late, lr barely decays (cosine T_max 500) -> tune the schedule in E-006/E-007
 - 2026-10-06 W-034: T-090: standing: restoring the best epoch cuts NS mass test MARE 0.0165 -> 0.0066 -> the reported baseline
 - 2026-10-06 W-035: T-084: standing: worst NS mass curves: short, low-mass, beta 0.4-2.4, lambda \~4 -> E-006 error map, H2
-- 2026-10-06 W-035: T-092: standing: one seeded fit took 213-525 s (load) -> cite the fit time as an order of magnitude
-- 2026-10-06 W-036: T-120: standing: epoch 11.4 s at torch's 7 threads, 2.6 s at 1 thread; parallel fits no faster -> serial, 1 thread
 - 2026-10-07 W-036: standing: every prepared D > 0; the 1004 NS rows below 1e-5 (8.2e-8 to 1e-5) open 110 of 1611 curves at low rho_c, monotone in log10 D -> floor dropped (W-063)
-- 2026-10-07 W-037: T-089: standing: two identical baseline runs took 41 and 17 min (NS mass fit 132 s vs 53 s, same scores) -> fit seconds swing 2.5x with machine load; the cost axis needs repeated timing
 - 2026-10-07 W-064: fact: across-curve p95 ceilings: NS M 7.8e-5 (lambda) / 1.6e-5 (beta) = 4.1 figures, NS D 1.8e-3 / 3.6e-3 = 2.4; BH M 8.5e-8 = 7.1, D 1.0e-6 = 6.0; BH error sits at the existence edge -> the E-006 target per pair
-- 2026-10-07 W-065: fact: shared/scorecard.py ripple() has no caller; the harness Run, the baseline table and the ledger carry no ripple -> W-065's criterion 'beside its ripple' is unmet; landing halted for the developer
-- 2026-10-07 W-073: T-152: standing: in D the nearest curve beats the MLP on the test curves of all four pairs (NS D 1.18e-1 vs 1.94e-1, BH D 3.2e-3 vs 6.2e-3); the MLP leads only on the NS folds (1.00e-1 vs 1.30e-1) -> no pair is won by the baseline
-- 2026-10-07 W-073: standing: the charge is scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1); the floor moved nothing -> the nearest curve wins every test pair (W-073#1) supersedes: W-036#2, W-037#1, W-063#1
 - 2026-10-07 W-076: fact: the NS median mass is 1.75 M_sun, not 1.4: the p95 ceiling means 1.36e-4 M_sun there, 1.70e-4 at M_max 2.19, the charge 1.56e-3 dex; BH 3.05e-7 M_sun at M 3.58, 4.40e-7 dex -> Sections 3.1, 3.2 (T-161)
-- 2026-10-08 W-086: T-194: fact: rbf(50) was singular on 5/10 NS folds; with the fallback rbf(100) runs on all 18 harness fits, 10-74 s each -> the screen runs at 100 supersedes: W-066#1
-- 2026-10-08 W-087: T-195: fact: at 8 knots the four NS curve-wise cells run through the harness on real data, about 10 s each -> T-133's curve-wise jobs run
+- 2026-10-08 E-006: standing: E-002's speedup and posterior questions live in W-047; the ripple is T-170's, spacing-aware (W-089); the RBF and spline bugs are fixed -> nothing of these is open supersedes: E-002#1, E-002#2, W-065#1, W-086#1, W-087#1
+- 2026-10-08 W-037: standing: one thread is fastest (2.6 s vs 11.4 s an epoch at 7); one fit took 53-525 s, swinging 2.5x with load -> cite fit times as orders of magnitude, time them repeatedly supersedes: W-035#2, W-036#1, W-037#2
+- 2026-10-08 W-073: standing: scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1), the nearest curve beats the MLP on the test curves of all four pairs; the MLP leads only on the NS folds -> no pair is won by the baseline supersedes: W-073#1, W-073#2
 
 ## Open questions
-- 2026-10-04 E-002: open: Section 5.4 speedup cannot be measured without the solver -- cite the solver cost from its source or compare against a dataset interpolation baseline?
-- 2026-10-04 E-002: open: Section 6 has no solver posterior -- the reference posterior must come from the dataset (dense-grid interpolation or nearest samples); which one?
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 - 2026-10-07 W-047: open: what observational sigma do realistic mock observations of M and D carry (supervisors)? the data ceiling alone allows a surrogate about 1e-4 M_sun on the NS mass and 1.6e-3 dex on the NS charge (W-064) -- the surrogate's error target follows from it
 
