@@ -1,5 +1,6 @@
 """Facts about the representation screen behind Section 5.1, on tiny synthetic data."""
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -210,7 +211,12 @@ def test_the_table_has_one_row_per_pair_and_representation() -> None:
 
 def test_a_fold_entry_that_beats_the_baseline_is_bold() -> None:
     found = [ns_mass("baseline", "MLP", 2.0, 0.1), ns_mass("log10 M", "MLP", 3.0, 0.1)]
-    assert "\\mathbf{3.00 \\pm 0.10}" in table_rows(representation_table(found))[1]
+    assert "\\mathbf{3.00_{\\pm 0.10}}" in table_rows(representation_table(found))[1]
+
+
+def test_a_negative_test_figure_is_typeset_with_a_minus_sign() -> None:
+    found = [ns_mass("baseline", "MLP", -1.04, 0.1)]
+    assert "$-1.04$" in table_rows(representation_table(found))[0]
 
 
 def test_a_job_logs_its_done_line_at_the_runs_level_in_a_fresh_process(
@@ -292,6 +298,21 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
 def test_main_writes_a_table_row_for_every_representation_cell(ran: Path) -> None:
     table = ran / "assets" / SECTION / f"{SECTION}_tab_representation.tex"
     assert len(table_rows(table.read_text())) == 14
+
+
+def rebuild_from_batch(ran: Path, assets: Path) -> None:
+    """Run main again on the toy inputs, rebuilding the table from the fixture run's batch."""
+    entry = next((ran / "state" / "ledger").glob("*.json"))
+    batch = json.loads(entry.read_text())["meta"]["batch"]
+    paths = [str(ran / name) for name in ("ns.parquet", "bh.parquet", "split.parquet")]
+    knobs = ["--k", "2", "--neighbours", "1000", "--knots", "2", "--seeds", "1"]
+    main([*paths, str(assets), str(ran / "state"), *knobs, "--batch", batch])
+
+
+def test_rebuilding_the_table_from_a_batch_fits_nothing(ran: Path, tmp_path: Path) -> None:
+    before = len(list((ran / "state" / "ledger").glob("*.json")))
+    rebuild_from_batch(ran, tmp_path / "assets")
+    assert len(list((ran / "state" / "ledger").glob("*.json"))) == before
 
 
 def test_main_runs_every_job_as_a_completed_trial_of_one_study(ran: Path) -> None:

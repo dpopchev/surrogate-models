@@ -146,10 +146,14 @@ REPRESENTATION        := 60_results/61_representation/screen_representation.py
 REPRESENTATION_ASSETS := $(ASSETS)/61_representation/61_representation_tab_representation.tex
 # 100 neighbours: 50 leave the RBF singular on NS folds whose neighbourhoods span two curves (W-086).
 REPRESENTATION_KNOBS  := --k 8 --neighbours 100 --knots 8 --seeds 3
+# The recorded batch Section 5.1 reports (2026-10-08, clean at 700c05e): the table is rebuilt from
+# its ledger entries in seconds. Empty it to refit the whole screen (hours):
+# make representation REPRESENTATION_BATCH=
+REPRESENTATION_BATCH  ?= 01a11acc-9832-7478-8831-1adfdc78f228
 
 $(REPRESENTATION_ASSETS): $(REPRESENTATION) paper.toml shared/config.py shared/design.py shared/eda.py shared/surrogate.py shared/runs.py shared/harness.py shared/scorecard.py shared/ceilings.py shared/families.py shared/curvewise.py shared/trials.py shared/workers.py $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
-	$(call log_info,screening the representations ($(REPRESENTATION_KNOBS)) -- follow the trials with make dashboard)
-	@$(RUN) python $(REPRESENTATION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(REPRESENTATION_KNOBS)
+	$(call log_info,$(if $(REPRESENTATION_BATCH),rebuilding the representation table from batch $(REPRESENTATION_BATCH),screening the representations ($(REPRESENTATION_KNOBS)) -- follow the trials with make dashboard))
+	@$(RUN) python $(REPRESENTATION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(REPRESENTATION_KNOBS) $(if $(REPRESENTATION_BATCH),--batch $(REPRESENTATION_BATCH))
 	$(call log_done,representation table written to $@)
 
 .PHONY: representation

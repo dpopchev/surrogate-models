@@ -270,21 +270,22 @@ def representation_table(found: Sequence[Score]) -> str:
             for model in MODELS
         ]
         rows.append(
-            f"{DATASET_TEX[dataset]} & {TARGET_TEX[target]} & "
+            f"{DATASET_TEX[dataset]} {TARGET_TEX[target]} & "
             f"{REPRESENTATION_TEX[representation]} & {' & '.join(entries)}"
         )
     return booktabs(
         "representation",
         "Each representation at equal model, one factor changed from the baseline: the "
         "significant figures kept at the 95th percentile of the error ($-\\log_{10}$) on the test "
-        "curves, and on the frozen folds as mean $\\pm$ standard deviation over folds and seeds "
-        "(the MLP on three seeds, the deterministic references on one). A fold entry in bold "
-        "gains on the pair's baseline at that model by more than the larger of the two "
-        "deviations. The errors of every target form are measured in $M$ or $\\Dch$.",
-        "lllrrrrrr",
-        "Data & Target & Representation & \\multicolumn{2}{c}{$k$-NN} & "
+        "curves, and on the frozen folds as the mean with the standard deviation over folds and "
+        "seeds as its subscript (the MLP on three seeds, the deterministic references on one). A "
+        "fold entry in bold gains on the pair's baseline at that model by more than the larger "
+        "of the two deviations. The errors of every target form are measured in $M$ or $\\Dch$.",
+        # Eight columns fit the text width only with 8pt gaps and no outer padding.
+        "@{}l@{\\hspace{8pt}}l*{6}{@{\\hspace{8pt}}r}@{}",
+        "Pair & Representation & \\multicolumn{2}{c}{$k$-NN} & "
         "\\multicolumn{2}{c}{local RBF} & \\multicolumn{2}{c}{MLP} \\\\\n"
-        " & & & Test & Folds & Test & Folds & Test & Folds",
+        " & & Test & Folds & Test & Folds & Test & Folds",
         rows,
     )
 
@@ -295,10 +296,10 @@ def _entry(score: Score | None, baseline: Score | None) -> str:
     curve-wise)."""
     if score is None:
         return "-- & --"
-    folds = f"{score.folds:.2f} \\pm {score.spread:.2f}"
+    folds = f"{score.folds:.2f}_{{\\pm {score.spread:.2f}}}"
     if baseline is not None and beats(score, baseline):
         folds = f"\\mathbf{{{folds}}}"
-    return f"{score.test:.2f} & ${folds}$"
+    return f"${score.test:.2f}$ & ${folds}$"
 
 
 def _reference_fitter(
@@ -327,16 +328,43 @@ def main(
     dirty: Callable[[], bool] | None = None,
     now: Callable[[], datetime] | None = None,
 ) -> None:
-    """Run every job of the screen as a trial of one study, each leaving its ledger entry;
-    write the representation table from the batch's entries into the section's asset folder,
-    after emptying that folder of an earlier run."""
+    """Run every job of the screen as a trial of one study, each leaving its ledger entry --
+    or, given --batch, fit nothing and take that recorded batch; write the representation table
+    from the batch's entries into the section's asset folder, after emptying that folder of an
+    earlier run."""
     args = _arguments(argv)
     for path in (args.ns, args.bh, args.split):
         assert path.is_file(), f"input not found: {path}"
     config = config or load_config()
-    commit, dirty, now = commit or _git_commit, dirty or _git_dirty, now or _utc_now
     settings = config.methodology.algorithms
     training = Training(**settings.model_dump(exclude={"log_level", "threads", "workers"}))
+    seeds = tuple(training.seed + i for i in range(args.seeds))
+    jobs = len(plan(cells(), seeds))
+    ledger = args.state / "ledger"
+    with _at_level(settings.log_level):
+        if args.batch is None:
+            batch = _run_screen(args, config, training, seeds, commit, dirty, now)
+        else:
+            batch = args.batch
+            logger.info("rebuilding the table from batch %s; nothing is fitted", batch)
+        entries = [entry for entry in _read_ledger(ledger) if entry.meta.batch == batch]
+        assert len(entries) == jobs, f"batch {batch}: {len(entries)} ledger entries for {jobs} jobs"
+        path = _write_table(args.assets / SECTION, representation_table(scores(entries)))
+        logger.info("done: representation table of batch %s -> %s", batch, path)
+
+
+def _run_screen(
+    args: argparse.Namespace,
+    config: PaperConfig,
+    training: Training,
+    seeds: tuple[int, ...],
+    commit: Callable[[], str] | None,
+    dirty: Callable[[], bool] | None,
+    now: Callable[[], datetime] | None,
+) -> str:
+    """Run every job of the screen on the workers as trials of a new batch; return its id."""
+    commit, dirty, now = commit or _git_commit, dirty or _git_dirty, now or _utc_now
+    settings = config.methodology.algorithms
     tables = {
         NEUTRON_STARS.dataset: pd.read_parquet(args.ns),
         BLACK_HOLES.dataset: pd.read_parquet(args.bh),
@@ -359,25 +387,17 @@ def main(
     )
     # The batch's study is made once here; every job joins it as its trial runs.
     open_study(batch, context.journal)
-    seeds = tuple(training.seed + i for i in range(args.seeds))
     jobs = [
         partial(screen_job, Work(job, designs[job.cell], context)) for job in plan(screened, seeds)
     ]
-    out = args.assets / SECTION
-    with _at_level(settings.log_level):
-        logger.info(
-            "%d jobs on %d workers, batch %s; follow them with make dashboard",
-            len(jobs),
-            settings.workers,
-            batch,
-        )
-        run_jobs(jobs, settings.workers)
-        entries = [entry for entry in _read_ledger(ledger) if entry.meta.batch == batch]
-        assert len(entries) == len(jobs), (
-            f"batch {batch}: {len(entries)} ledger entries for {len(jobs)} jobs"
-        )
-        path = _write_table(out, representation_table(scores(entries)))
-        logger.info("done: representation table of batch %s -> %s", batch, path)
+    logger.info(
+        "%d jobs on %d workers, batch %s; follow them with make dashboard",
+        len(jobs),
+        settings.workers,
+        batch,
+    )
+    run_jobs(jobs, settings.workers)
+    return batch
 
 
 @dataclass(frozen=True)
@@ -500,6 +520,7 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--neighbours", type=int, required=True, help="the local RBF's")
     parser.add_argument("--knots", type=int, required=True, help="the curve-wise spline's")
     parser.add_argument("--seeds", type=int, required=True, help="MLP seeds from paper.toml's")
+    parser.add_argument("--batch", help="fit nothing; rebuild the table from this recorded batch")
     return parser.parse_args(argv)
 
 
