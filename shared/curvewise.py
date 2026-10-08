@@ -13,7 +13,7 @@ from collections.abc import Callable, Sequence
 from typing import Any
 
 import numpy as np
-from scipy.interpolate import BSpline, make_lsq_spline
+from scipy.interpolate import BSpline
 
 from shared.harness import Fitter
 
@@ -38,8 +38,11 @@ def curvewise_fitter(
             order = np.argsort(a)
             start, end = float(a.min()), float(a.max())
             s = (a[order] - start) / (end - start)
-            spline = make_lsq_spline(s, y[order], t, k=3)
-            outputs.append([*spline.c, start, end])
+            # Least squares on the B-spline basis; a curve with fewer rows than coefficients
+            # gets the minimum-norm solution, so every curve yields the full vector (W-087).
+            basis = BSpline.design_matrix(s, t, 3).toarray()
+            coefficients = np.linalg.lstsq(basis, y[order], rcond=None)[0]
+            outputs.append([*coefficients, start, end])
         base = make_base().fit(curve_keys, np.array(outputs))
 
         def predict(x: np.ndarray) -> np.ndarray:
