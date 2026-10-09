@@ -37,6 +37,8 @@
 - 2026-10-09 E-006: parked -- 10 decisions, 2 deviations -> ledgers/E-006.md
 - 2026-10-09 W-094: pre-empted by W-099 while it waits on W-068 (developer: pre-empt again if available): W-099 is the smallest item that lives on main (2 Tasks, Makefile and mk/paper.mk) and builds the deliverable gate the close chain cites; W-097 and W-098 wait
 - 2026-10-09 W-094: wi/W-094 stacks on wi/W-068's tip (developer): its files (shared/search.py, tune_survivors.py) are W-068's unlanded code; precedent E-006 v3 (W-077 on W-065); W-094 lands after W-068, in that order
+- 2026-10-09 W-097: T-226 pruned and the criterion amended (developer; agreed with \~/.claude's session): a LaTeX-log parser tests the typesetter, the class of proving the PDF opens; the behaviour stays in the Then, the log grep is the evidence at close
+- 2026-10-09 W-098: T-228's usetex save test dropped (developer; agreed with \~/.claude's session): it needs a LaTeX install and tests matplotlib's path; the rcParam test stays
 
 ## Deviations
 - none recorded
