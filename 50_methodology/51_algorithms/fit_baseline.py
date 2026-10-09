@@ -41,7 +41,7 @@ from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target
 from shared.diagnostics import curve_overlay, error_cdf, loss_curve
 from shared.eda import booktabs, curve_ids, render_macros, sci_tex
 from shared.harness import Fitter, Predictor, Run, Timing, harness
-from shared.plots import PlotStyle, anchor_color, apply_style
+from shared.plots import SYMBOLS, PlotStyle, anchor_color, apply_style
 from shared.runs import (
     LedgerEntry,
     RunMetadata,
@@ -133,7 +133,8 @@ PAIRS: tuple[tuple[DesignSpec, Target], ...] = (
 )
 DATASET_TEX = {"neutron_stars": "NS", "black_holes": "BH"}
 TARGET_TEX = {"mass": "$M$", "charge": "$\\Dch$"}
-X_LABELS = {"neutron_stars": "$\\log_{10}\\rho_c$", "black_holes": "$r_h$"}
+# The symbol (shared.plots.SYMBOLS) of each dataset's curve coordinate on the diagnostics.
+X_SYMBOL = {"neutron_stars": "log10_rho_c", "black_holes": "r_h"}
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -405,11 +406,9 @@ def progress_line(done: int, total: int, elapsed: float) -> str:
     )
 
 
-SYMBOLS = {"beta": "$\\beta$", "lambda": "$\\lambda$"}
-
-
 def curve_names(table: pd.DataFrame, spec: DesignSpec) -> dict[int, str]:
-    """Each curve id of the table named by its key, e.g. "$\\beta$ = 1, $\\lambda$ = 2"."""
+    """Each curve id of the table named by its key, e.g. "$\\beta$ = 1, $\\lambda$ = 2"; a key
+    without a paper symbol is named by its column."""
     keys = table[list(spec.space.curve)].assign(curve=curve_ids(table, spec.space))
     return {
         int(row["curve"]): ", ".join(
@@ -429,8 +428,8 @@ def parity(fit: Fit, style: PlotStyle) -> Figure:
         float(max(fit.y_true.max(), fit.y_pred.max())),
     ]
     axes.plot(span, span, color="black", linestyle="--", linewidth=0.8)
-    axes.set_xlabel("true $M$ ($M_\\odot$)")
-    axes.set_ylabel("predicted $M$ ($M_\\odot$)")
+    axes.set_xlabel(f"true {SYMBOLS['M']} ({SYMBOLS['Msun']})")
+    axes.set_ylabel(f"predicted {SYMBOLS['M']} ({SYMBOLS['Msun']})")
     axes.set_aspect("equal")
     return figure
 
@@ -672,7 +671,7 @@ def _score_mlp(
     folder = run.folder
     assert folder.name == run_name(summary), f"run folder {folder.name} is not {run_name(summary)}"
     names = curve_names(pair.table, pair.spec)
-    write_diagnostics(fit, summary, folder, names, X_LABELS[pair.spec.dataset])
+    write_diagnostics(fit, summary, folder, names, SYMBOLS[X_SYMBOL[pair.spec.dataset]])
     assert from_json((folder / "run.json").read_text()) == summary, (
         f"{folder}/run.json does not round-trip"
     )

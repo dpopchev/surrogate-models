@@ -55,7 +55,7 @@ from shared.eda import (
     text_width_size,
     with_charge_targets,
 )
-from shared.plots import PlotStyle, anchor_color, apply_style, colormap
+from shared.plots import SYMBOLS, PlotStyle, anchor_color, apply_style, colormap
 
 logger = logging.getLogger(__name__)
 
@@ -290,7 +290,7 @@ def numbers(found: Evidence) -> dict[str, str]:
     }
 
 
-TABLE_LABELS = {"rho_c": "$\\rho_c$", "M": "$M$", "D": "$D$", "D_over_M": "$D/M$"}
+TABLE_LABELS = SYMBOLS.of("rho_c", "M", "D", "D_over_M")
 STRATEGY_LABELS: dict[SplitStrategy, str] = {
     "random_rows": "random rows",
     "curves": "$(\\beta, \\lambda)$ curves (GroupKFold)",
@@ -431,14 +431,7 @@ def figure_tex(figure: NsFigure) -> str:
     )
 
 
-LABELS = {
-    "beta": "$\\beta$",
-    "lambda": "$\\lambda$",
-    "rho_c": "$\\rho_c$",
-    "M": "$M$",
-    "D": "$D$",
-    "D_over_M": "$D/M$",
-}
+LABELS = SYMBOLS.of("beta", "lambda", "rho_c", "M", "D", "D_over_M")
 
 
 def _univariate(table: pd.DataFrame, style: PlotStyle) -> Figure:
@@ -660,9 +653,7 @@ def main(
 
 # The data limits (W-064): macro tags and TeX labels of the targets and of the curve keys varied.
 CEILING_TAGS = {"M": "M", "D": "D", "beta": "Beta", "lambda": "Lambda"}
-CEILING_LABELS = {"M": "$M$", "D": "$\\Dch$", "beta": "$\\beta$", "lambda": "$\\lambda$"}
-# Matplotlib knows no paper macros: the figure names the charge D, as the other figures do.
-CEILING_PLOT_LABELS = CEILING_LABELS | {"D": "$D$"}
+CEILING_LABELS = SYMBOLS.of("M", "D", "beta", "lambda")
 CEILINGS_CAPTION = (
     "Neutron stars: the relative error the data allow, at the 95th percentile -- the noise "
     "along a curve (median), a cubic spline through every other row of a curve (along), and a "
@@ -697,7 +688,7 @@ def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
     (out / f"{SECTION}_tab_ceiling_decades.tex").write_text(
         decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS)
     )
-    fig = ceiling_figure(bounds, CEILING_PLOT_LABELS, "$\\log_{10}\\rho_c$", ceiling_colors(style))
+    fig = ceiling_figure(bounds, CEILING_LABELS, SYMBOLS["log10_rho_c"], ceiling_colors(style))
     fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
     plt.close(fig)
     (out / f"{SECTION}_fig_ceilings.tex").write_text(

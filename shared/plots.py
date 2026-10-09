@@ -4,6 +4,9 @@ NS figures use cool colormaps and BH figures warm ones (E-003 Decision), so a co
 tells which dataset is shown. The style is a PlotStyle, chosen in paper.toml's [plot] section.
 """
 
+import re
+from collections.abc import Iterator, Mapping
+from pathlib import Path
 from typing import Literal, assert_never
 
 import matplotlib.pyplot as plt
@@ -61,6 +64,73 @@ class PlotStyle(BaseModel):
     dpi: PositiveInt = 600
     neutron_stars: NeutronStarColors = NeutronStarColors()
     black_holes: BlackHoleColors = BlackHoleColors()
+
+
+# Every symbol a figure or a table names, by column name, in the paper's notation
+# (00_metadata/notation.tex). Tables are LaTeX and take the macros as they are (MACROS); a
+# figure reads SYMBOLS, which hands the macro to usetex and, when LaTeX is off (mathtext, the
+# tests), the macro's body from the notation apply_style received.
+MACROS: Mapping[str, str] = {
+    "rho_c": "$\\rhoc$",
+    "M": "$M$",
+    "D": "$\\Dch$",
+    "D_over_M": "$\\Dch/M$",
+    "log10_D": "$\\log_{10}\\Dch$",
+    "log10_D_over_M": "$\\log_{10}(\\Dch/M)$",
+    "log10_rho_c": "$\\log_{10}\\rhoc$",
+    "beta": "$\\beta$",
+    "lambda": "$\\lambda$",
+    "r_h": "$\\rh$",
+    "Msun": "$\\Msun$",
+    "Y": "$Y = \\log_{10}(\\Dch/M)$",
+}
+
+
+# The paper's notation macros: input by the preamble, handed to LaTeX by apply_style, read by
+# SYMBOLS when LaTeX is off.
+NOTATION_TEX = Path(__file__).resolve().parents[1] / "00_metadata" / "notation.tex"
+
+
+class Symbols(Mapping[str, str]):
+    """MACROS, or the named subset of them in that order, as a figure label reads them at the
+    time of the lookup: the macro under usetex, else its body from the notation apply_style
+    received, or from the notation file before any style was applied (mathtext knows no
+    macros)."""
+
+    def __init__(self, names: tuple[str, ...] = tuple(MACROS)) -> None:
+        assert all(name in MACROS for name in names), f"unknown symbols: {names}"
+        self._names = names
+
+    def __getitem__(self, key: str) -> str:
+        if key not in self._names:
+            raise KeyError(key)
+        macro = MACROS[key]
+        if plt.rcParams["text.usetex"]:
+            return macro
+        notation = str(plt.rcParams["text.latex.preamble"]) or NOTATION_TEX.read_text()
+        return expand(macro, notation)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._names)
+
+    def __len__(self) -> int:
+        return len(self._names)
+
+    def of(self, *names: str) -> Symbols:
+        """The symbols of these columns, in this order."""
+        return Symbols(names)
+
+
+SYMBOLS = Symbols()
+
+_NEWCOMMAND = re.compile(r"\\newcommand\{\\(\w+)\}\{(.*)\}")
+
+
+def expand(text: str, notation: str) -> str:
+    """The text with every argument-free \\newcommand of the notation replaced by its body."""
+    for name, body in _NEWCOMMAND.findall(notation):
+        text = re.sub(rf"\\{name}(?![A-Za-z])", lambda _, body=body: body, text)
+    return text
 
 
 # --- behaviour --------------------------------------------------------------------------------

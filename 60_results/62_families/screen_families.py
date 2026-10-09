@@ -42,7 +42,15 @@ from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target
 from shared.eda import CurveSpace, booktabs
 from shared.families import make_gpr, make_knn, make_rbf, make_xgboost
 from shared.harness import Fitter, Predictor, Run, harness
-from shared.plots import CoolCmap, PlotStyle, WarmCmap, apply_style, colormap, figure_size
+from shared.plots import (
+    SYMBOLS,
+    CoolCmap,
+    PlotStyle,
+    WarmCmap,
+    apply_style,
+    colormap,
+    figure_size,
+)
 from shared.runs import (
     RunMetadata,
     Setting,
@@ -77,10 +85,9 @@ PAIRS: tuple[tuple[DesignSpec, Target], ...] = (
 
 DATASET_TEX = {"neutron_stars": "NS", "black_holes": "BH"}
 TARGET_TEX = {"mass": "$M$", "charge": "$\\Dch$"}
-# The parity figure's titles and axis labels, the target as the model sees it; matplotlib
-# knows no \Dch.
-PLOT_TARGET = {"mass": "$M$", "charge": "$D$"}
-AXIS_TEX = {"mass": "$M$ ($M_\\odot$)", "charge": "$Y = \\log_{10}(D/M)$"}
+# The parity figure's titles and axis labels name the target as the model sees it, through
+# the paper's symbols (shared.plots.SYMBOLS).
+TARGET_SYMBOL = {"mass": "M", "charge": "D"}
 PARITY = f"{SECTION}_fig_parity"
 ERRORS = f"{SECTION}_fig_errors"
 SCALING = f"{SECTION}_fig_scaling"
@@ -327,6 +334,18 @@ def parity_picks(outcomes: Sequence[Outcome]) -> tuple[Scored, ...]:
     return tuple(picks)
 
 
+def axis_label(target: Target) -> str:
+    """The parity figure's axis label of the target: the mass in solar masses, the charge as
+    the model's Y."""
+    match target:
+        case "mass":
+            return f"{SYMBOLS['M']} ({SYMBOLS['Msun']})"
+        case "charge":
+            return SYMBOLS["Y"]
+        case _:
+            assert_never(target)
+
+
 def parity_figure(panels: Sequence[Panel], style: PlotStyle) -> Figure:
     """Predicted against true target on the test curves, one panel per pair in a grid of two
     columns, with the y = x line; each candidate in one end of its dataset's colormap.
@@ -420,7 +439,7 @@ def scaling_figure(
                 seconds_axes.plot(
                     [rows], [wall_seconds], marker="x", markersize=7, color=line["color"]
                 )
-        title = f"{DATASET_TEX[dataset]} {PLOT_TARGET[target]}"
+        title = f"{DATASET_TEX[dataset]} {SYMBOLS[TARGET_SYMBOL[target]]}"
         figures_axes.set_ylabel(f"{title}: folds' figures")
         seconds_axes.set_ylabel("fit seconds")
         seconds_axes.set_yscale("log")
@@ -870,7 +889,12 @@ def _parity_panels(
         found = Series(label, truth, predicted, errors)
         series.setdefault((job.dataset, job.target), []).append(found)
     return [
-        Panel(dataset, f"{DATASET_TEX[dataset]} {PLOT_TARGET[target]}", AXIS_TEX[target], tuple(s))
+        Panel(
+            dataset,
+            f"{DATASET_TEX[dataset]} {SYMBOLS[TARGET_SYMBOL[target]]}",
+            axis_label(target),
+            tuple(s),
+        )
         for (dataset, target), s in series.items()
     ]
 

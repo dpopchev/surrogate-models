@@ -50,7 +50,7 @@ from shared.eda import (
     text_width_size,
     with_charge_targets,
 )
-from shared.plots import PlotStyle, anchor_color, apply_style, colormap
+from shared.plots import SYMBOLS, PlotStyle, anchor_color, apply_style, colormap
 
 logger = logging.getLogger(__name__)
 
@@ -262,13 +262,8 @@ def _split_error(score: SplitScore) -> str:
     return number_tex(score.mae)
 
 
-LABELS = {"r_h": "$r_h$", "beta": "$\\beta$", "M": "$M$", "D": "$D$", "D_over_M": "$D/M$"}
-TARGET_LABELS = {
-    "D": "$D$",
-    "log10_D": "$\\log_{10} D$",
-    "D_over_M": "$D/M$",
-    "log10_D_over_M": "$\\log_{10}(D/M)$",
-}
+LABELS = SYMBOLS.of("r_h", "beta", "M", "D", "D_over_M")
+TARGET_LABELS = SYMBOLS.of("D", "log10_D", "D_over_M", "log10_D_over_M")
 STRATEGY_LABELS: dict[BhSplitStrategy, str] = {
     "random_rows": "random rows",
     "curves": "$\\beta$ curves (GroupKFold)",
@@ -543,9 +538,7 @@ def main(
 
 # The data limits (W-064): macro tags and TeX labels of the targets and of the curve key varied.
 CEILING_TAGS = {"M": "M", "D": "D", "beta": "Beta"}
-CEILING_LABELS = {"M": "$M$", "D": "$\\Dch$", "beta": "$\\beta$"}
-# Matplotlib knows no paper macros: the figure names the charge D, as the other figures do.
-CEILING_PLOT_LABELS = CEILING_LABELS | {"D": "$D$"}
+CEILING_LABELS = SYMBOLS.of("M", "D", "beta")
 CEILINGS_CAPTION = (
     "Black holes: the relative error the data allow, at the 95th percentile -- the noise "
     "along a curve (median), a cubic spline through every other row of a curve (along), and a "
@@ -565,7 +558,7 @@ def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
         ceiling_table("bh-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS)
     )
     fig = ceiling_figure(
-        bounds, CEILING_PLOT_LABELS, "$r_h$", {"beta": anchor_color(style, "black_holes")}
+        bounds, CEILING_LABELS, SYMBOLS["r_h"], {"beta": anchor_color(style, "black_holes")}
     )
     fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
     plt.close(fig)

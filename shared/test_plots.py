@@ -11,6 +11,7 @@ from matplotlib.colors import to_hex
 from pydantic import ValidationError
 
 from shared.plots import (
+    SYMBOLS,
     BlackHoleColors,
     PlotStyle,
     anchor_color,
@@ -32,6 +33,17 @@ def _restore_rcparams():
 def test_style_hands_the_notation_to_latex() -> None:
     apply_style(STYLE, notation="\\newcommand{\\Dch}{D}")
     assert plt.rcParams["text.latex.preamble"] == "\\newcommand{\\Dch}{D}"
+
+
+def test_a_symbol_is_the_paper_s_macro_under_usetex() -> None:
+    apply_style(PlotStyle(usetex=True), notation="\\newcommand{\\Dch}{D}")
+    assert SYMBOLS["D"] == "$\\Dch$"
+
+
+def test_a_symbol_expands_to_its_notation_when_latex_is_off() -> None:
+    # Mathtext knows no macros: the notation's \newcommand bodies replace them.
+    apply_style(STYLE, notation="\\newcommand{\\Dch}{D}\n\\newcommand{\\rhoc}{\\rho_c}")
+    assert (SYMBOLS["D"], SYMBOLS["rho_c"]) == ("$D$", "$\\rho_c$")
 
 
 def test_style_sets_usetex() -> None:
