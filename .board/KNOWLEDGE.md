@@ -35,6 +35,7 @@
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-09 E-006: parked -- 10 decisions, 2 deviations -> ledgers/E-006.md
+- 2026-10-09 W-094: pre-empted by W-099 while it waits on W-068 (developer: pre-empt again if available): W-099 is the smallest item that lives on main (2 Tasks, Makefile and mk/paper.mk) and builds the deliverable gate the close chain cites; W-097 and W-098 wait
 - 2026-10-09 W-094: wi/W-094 stacks on wi/W-068's tip (developer): its files (shared/search.py, tune_survivors.py) are W-068's unlanded code; precedent E-006 v3 (W-077 on W-065); W-094 lands after W-068, in that order
 
 ## Deviations
