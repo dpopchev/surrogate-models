@@ -98,3 +98,50 @@ def test_the_best_trial_is_the_one_nearest_the_truth_on_the_folds() -> None:
     found = search(scaled, SPACE, 8, TOY, "mass", seed=0, valid_fraction=0.34, study=study)
     scales = [trial.params["scale"] for trial in study.trials]
     assert found.params["scale"] == min(scales)
+
+
+def raising_second(raised: list[dict]):
+    """A toy family whose second trial's fitter raises FloatingPointError, as FiniteLoss does on
+    a non-finite loss; the raising trial's params are appended to `raised`."""
+    calls: list[int] = []
+
+    def family(params):
+        calls.append(1)
+        if len(calls) == 2:
+            raised.append(params)
+
+        def fit(x_fit, y_fit, x_valid, y_valid, seed):
+            if len(calls) == 2:
+                raise FloatingPointError("loss is nan")
+            return lambda x: (1.0 + params["scale"]) * (1.0 + 0.1 * x[:, 1] + x[:, 0])
+
+        return fit
+
+    return family, calls
+
+
+def test_a_raising_trial_does_not_end_the_search() -> None:
+    family, calls = raising_second([])
+    search(family, SPACE, 4, TOY, "mass", seed=0, valid_fraction=0.34)
+    assert len(calls) == 4
+
+
+def test_a_raising_trial_is_told_fail_in_the_study() -> None:
+    family, _ = raising_second([])
+    study = optuna.create_study(direction="maximize")
+    search(family, SPACE, 4, TOY, "mass", seed=0, valid_fraction=0.34, study=study)
+    states = [trial.state for trial in study.trials]
+    assert states.count(optuna.trial.TrialState.FAIL) == 1
+
+
+def test_the_best_params_come_from_the_trials_that_did_not_raise() -> None:
+    raised: list[dict] = []
+    family, _ = raising_second(raised)
+    found = search(family, SPACE, 4, TOY, "mass", seed=0, valid_fraction=0.34)
+    assert found.params != raised[0]
+
+
+def test_a_search_counts_its_failed_trials() -> None:
+    family, _ = raising_second([])
+    found = search(family, SPACE, 4, TOY, "mass", seed=0, valid_fraction=0.34)
+    assert found.failed == 1

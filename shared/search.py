@@ -7,6 +7,7 @@ search cannot tune on them. A space is data: Optuna distributions by parameter n
 is a callable that turns one trial's parameters into a harness fitter.
 """
 
+import logging
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, Literal, assert_never, get_args
@@ -20,6 +21,7 @@ from optuna.distributions import (
     FloatDistribution,
     IntDistribution,
 )
+from optuna.trial import TrialState
 from threadpoolctl import threadpool_limits
 
 from shared.ceilings import spread
@@ -27,6 +29,8 @@ from shared.design import Design, TargetForm
 from shared.harness import Fitter, split_valid
 from shared.scorecard import relative_errors, significant_figures
 from shared.surrogate import Activation, Loss
+
+logger = logging.getLogger(__name__)
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
@@ -70,12 +74,13 @@ KNOTS = IntDistribution(6, 24)
 
 @dataclass(frozen=True)
 class Searched:
-    """A finished search: the best trial's parameters, its mean fold figures, and the number
-    of trials run."""
+    """A finished search: the best trial's parameters, its mean fold figures, the number of
+    trials run and how many of them failed (a raising fit, or a nan score)."""
 
     params: dict[str, Any]
     figures: float
     trials: int
+    failed: int
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -104,14 +109,27 @@ def search(
     study: optuna.Study | None = None,
 ) -> Searched:
     """Run `budget` trials of the family over its space on the design's frozen folds, in the
-    given study (a journal one, for the dashboard) or an in-memory one sampled from the seed."""
-    sampler = optuna.samplers.TPESampler(seed=seed)
-    study = study or optuna.create_study(direction="maximize", sampler=sampler)
+    given study (a journal one, for the dashboard) or an in-memory one sampled from the seed.
+    The ask / tell loop is the trial's boundary: a fit that raises fails only its trial (told
+    FAIL, logged), as a nan score does; the search runs its whole budget."""
+    if study is None:
+        sampler = optuna.samplers.TPESampler(seed=seed)
+        study = optuna.create_study(direction="maximize", sampler=sampler)
+    numbers: list[int] = []
     for _ in range(budget):
         trial = study.ask(dict(space))
-        fitter = family(trial.params)
-        study.tell(trial, fold_figures(design, target, fitter, seed, valid_fraction))
-    return Searched(params=study.best_params, figures=study.best_value, trials=budget)
+        numbers.append(trial.number)
+        try:
+            fitter = family(trial.params)
+            study.tell(trial, fold_figures(design, target, fitter, seed, valid_fraction))
+        except Exception as error:
+            study.tell(trial, state=TrialState.FAIL)
+            logger.warning("trial %d failed: %s", trial.number, error)
+    states = {trial.number: trial.state for trial in study.get_trials(deepcopy=False)}
+    failed = sum(states[number] == TrialState.FAIL for number in numbers)
+    return Searched(
+        params=study.best_params, figures=study.best_value, trials=budget, failed=failed
+    )
 
 
 def fold_figures(
