@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-094   | blocked: 3 | todo roots: 11 | done: 264 | pruned: 19
+open path: W-094   | blocked: 2 | todo roots: 11 | done: 265 | pruned: 19
 
 ## Tree
 
@@ -52,7 +52,7 @@ open path: W-094   | blocked: 3 | todo roots: 11 | done: 264 | pruned: 19
 - T-201 [done] Draw the family screen's scaling figure test-first -> build/assets/62_families/62_families_fig_scaling.png   (filed during T-135)
 - T-202 [done] Write the appendix on the model families -> 90_appendix/90_appendix.tex   (filed during T-135)
 
-#### W-068 issue [blocked] Tuning and precision of the surviving families   [blocked since 2026-10-09, waiting on W-099: pre-empted by W-099 while T-206 waits on the make tuning run (developer, 2026-10-09); W-094 waits on its landing]
+#### W-068 issue [doing] Tuning and precision of the surviving families
 
 - T-136 [done] Write the equal-budget search test-first -> shared/search.py
 - T-137 [pruned] Write the precision regime test-first -> shared/surrogate.py   [pruned: re-planned (developer, 2026-10-09): the precision regime moves to W-093 so W-068 lands on the tuning table within the one-day branch]
@@ -213,11 +213,6 @@ open path: W-094   | blocked: 3 | todo roots: 11 | done: 264 | pruned: 19
 - T-227 [todo] Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it
 - T-228 [todo] Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py
 - T-229 [todo] Replace the hand-spelled symbol dicts with the macros -> the four figure modules
-
-### W-099 issue [doing] (standalone) make deliverable builds the paper PDF and proves it opens   (filed during T-206)
-
-- T-230 [done] Adopt the template's deliverable target -> Makefile
-- T-231 [done] Add deliverable-paper -> mk/paper.mk
 
 ### W-102 issue [todo] (standalone) Every section's figures are selected in paper.toml   (filed during T-206)
 
@@ -605,6 +600,13 @@ closed 2026-10-09 -- outcome: Given a tuning batch writing its journal under $(S
 
 - T-208 [done] Point make dashboard at the newest study journal -> mk/paper.mk   (filed during T-206)
 
+### W-099 issue [done] (standalone) make deliverable builds the paper PDF and proves it opens
+
+closed 2026-10-09 -- outcome: Given the Makefile with DELIVERABLES, When the developer runs make deliverable, Then it prints "deliverables open: deliverable-paper" after compiling the paper. -- ledger: ledgers/W-099.md
+
+- T-230 [done] Adopt the template's deliverable target -> Makefile
+- T-231 [done] Add deliverable-paper -> mk/paper.mk
+
 ## Diagram
 ```mermaid
 flowchart TD
@@ -641,7 +643,7 @@ flowchart TD
   W067 --> T200["T-200 done: Draw the family screen's parity plots test-first -> build/assets/62_families/62_families_fig_parity.png"]
   W067 --> T201["T-201 done: Draw the family screen's scaling figure test-first -> build/assets/62_families/62_families_fig_scaling.png"]
   W067 --> T202["T-202 done: Write the appendix on the model families -> 90_appendix/90_appendix.tex"]
-  E006 --> W068["W-068 issue blocked on W-099: Tuning and precision of the surviving families"]
+  E006 --> W068["W-068 issue doing: Tuning and precision of the surviving families"]
   W068 --> T136["T-136 done: Write the equal-budget search test-first -> shared/search.py"]
   W068 --> T137["T-137 pruned: Write the precision regime test-first -> shared/surrogate.py"]
   W068 --> T138["T-138 pruned: Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex"]
@@ -742,9 +744,6 @@ flowchart TD
   W098 --> T227["T-227 todo: Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it"]
   W098 --> T228["T-228 todo: Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py"]
   W098 --> T229["T-229 todo: Replace the hand-spelled symbol dicts with the macros -> the four figure modules"]
-  W099["W-099 issue doing, standalone: make deliverable builds the paper PDF and proves it opens"]
-  W099 --> T230["T-230 done: Adopt the template's deliverable target -> Makefile"]
-  W099 --> T231["T-231 done: Add deliverable-paper -> mk/paper.mk"]
   W102["W-102 issue todo, standalone: Every section's figures are selected in paper.toml"]
   W102 --> T237["T-237 todo: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
@@ -752,9 +751,9 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W099 doing
-  class W068,T206,W094 blocked
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218,T230,T231 done
+  class E006,W068,E009 doing
+  class T206,W094 blocked
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W097,T223,T224,T225,W098,T227,T228,T229,W102,T237 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T226 pruned
 ```
