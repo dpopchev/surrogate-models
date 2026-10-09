@@ -125,15 +125,17 @@ ledger: ## List the run ledger -- B=<batch> for one batch
 	@$(RUN) python $(LIST_LEDGER) $(STATE) $(if $(B),--batch $(B))
 	$(call log_done,ledger listed from $(LEDGER)/ -- $(words $(wildcard $(LEDGER)/*.json)) entries$(if $(B), in all$(comma) batch $(B) shown))
 
-# The fits as live trials (W-081): optuna-dashboard on the study journal every make baseline
-# writes, one study per run. It ends with Ctrl-C, so its log_done never prints.
-JOURNAL        := $(STATE)/optuna/journal.log
+# The fits as live trials (W-081): optuna-dashboard on a study journal -- make baseline's, or a
+# screen's or tuning's batch journal under $(STATE)/<section>/ (W-092). By default the one
+# written last, so a running batch is the one shown; JOURNAL=<path> opens another. It ends with
+# Ctrl-C, so its log_done never prints.
+JOURNAL        ?= $(firstword $(shell ls -t $(STATE)/optuna/journal.log $(STATE)/*/*.journal 2>/dev/null))
 DASHBOARD_PORT ?= 8080
 
 .PHONY: dashboard
-dashboard: ## Follow the fits live in optuna-dashboard
-	@test -f $(JOURNAL) || { echo "no study journal yet: make baseline writes $(JOURNAL)" >&2; exit 1; }
-	$(call log_info,optuna-dashboard on http://127.0.0.1:$(DASHBOARD_PORT) -- Ctrl-C ends it)
+dashboard: ## Follow the fits live in optuna-dashboard -- the newest study journal, or JOURNAL=<path>
+	@test -f "$(JOURNAL)" || { echo "no study journal yet under $(STATE): make baseline, a screen or make tuning writes one" >&2; exit 1; }
+	$(call log_info,optuna-dashboard on http://127.0.0.1:$(DASHBOARD_PORT) for $(JOURNAL) -- Ctrl-C ends it)
 	@$(RUN) optuna-dashboard $(JOURNAL) --port $(DASHBOARD_PORT)
 	$(call log_done,stopped optuna-dashboard)
 
