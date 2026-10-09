@@ -6,6 +6,9 @@
 ### Paper
 # ------------------------------------------------------------------------------
 
+# The paper PDF is a deliverable: make deliverable compiles it and proves it opens.
+DELIVERABLES += deliverable-paper
+
 # A flavour is an entry file 00_metadata/<flavour>.tex (documentclass + inputs);
 # it becomes main.tex of the upload folder $(BUILD)/paper/overleaf/. Add a
 # flavour by adding its entry file and its name here.
@@ -208,6 +211,18 @@ compile: assets ## Build the flat paper and its PDF under build/paper/
 	@rm -f $(PAPER_ZIP)
 	@zip -q -j -X $(PAPER_ZIP) $(PAPER_DIR)/*
 	$(call log_done,compiled $(PAPER_PDF) -- upload folder $(PAPER_DIR)/$(comma) spare $(PAPER_ZIP))
+
+# Opens the PDF as a reader does (rules/makefile.md, Deliverables): mutool where MuPDF is
+# installed, else pypdf reading every page strictly; a file that does not open is named.
+PDF_OPENS = { if command -v mutool >/dev/null 2>&1; then mutool info $(1) >/dev/null; \
+  else $(UV) run --no-project --with pypdf python -c \
+    "import sys, pypdf; r = pypdf.PdfReader(sys.argv[1], strict=True); [p.extract_text() for p in r.pages]" $(1); \
+  fi; } || { echo "$(1) does not open" >&2; exit 1; }
+
+.PHONY: deliverable-paper
+deliverable-paper: compile ## Compile the paper and prove its PDF opens
+	@$(call PDF_OPENS,$(PAPER_PDF))
+	$(call log_done,$(PAPER_PDF) opens)
 
 # Clean room: the upload folder alone must compile, as Overleaf will see it.
 PAPER_VERIFY := $(WORK)/verify
