@@ -7,6 +7,7 @@ palette = "colorblind"    # colorblind | deep | muted
 font_size = 11.0
 usetex = true             # LaTeX text in Latin Modern, matching the article
 text_width_pt = 360.0     # 11pt a4paper \textwidth
+text_height_pt = 595.8    # 11pt a4paper \textheight (595.80026pt by \showthe\textheight, W-097)
 aspect = 0.62             # figure height / width
 dpi = 450                 # figures are written as PNG at this resolution
 

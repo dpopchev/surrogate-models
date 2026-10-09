@@ -19,8 +19,10 @@ Dataset = Literal["neutron_stars", "black_holes"]
 CoolCmap = Literal["crest", "mako", "Blues", "GnBu", "PuBu"]
 WarmCmap = Literal["flare", "rocket", "Oranges", "YlOrRd", "OrRd"]
 
-# 11pt a4paper article text width, measured with \showthe\textwidth (W-014 Finding).
+# 11pt a4paper article text width and height, measured with \showthe\textwidth (W-014
+# Finding) and \showthe\textheight (W-097).
 ARTICLE_TEXT_WIDTH_PT = 360.0
+ARTICLE_TEXT_HEIGHT_PT = 595.80026
 POINTS_PER_INCH = 72.27
 
 
@@ -53,6 +55,7 @@ class PlotStyle(BaseModel):
     font_size: float = 11.0
     usetex: bool = True
     text_width_pt: float = ARTICLE_TEXT_WIDTH_PT
+    text_height_pt: float = ARTICLE_TEXT_HEIGHT_PT
     aspect: float = 0.62
     # Figures are written as PNG at this resolution (W-029).
     dpi: PositiveInt = 600
@@ -75,6 +78,16 @@ def apply_style(style: PlotStyle) -> None:
             "figure.figsize": (width, width * style.aspect),
         }
     )
+
+
+def figure_size(
+    style: PlotStyle, rows: int, per_row: float, max_share: float = 0.85
+) -> tuple[float, float]:
+    """The size in inches of a figure of `rows` rows, each `per_row` of the text width tall,
+    capped at `max_share` of the text height so it fits a page."""
+    width = style.text_width_pt / POINTS_PER_INCH
+    height = style.text_height_pt / POINTS_PER_INCH
+    return width, min(per_row * width * rows, max_share * height)
 
 
 def colormap(name: CoolCmap | WarmCmap) -> Colormap:

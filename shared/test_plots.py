@@ -10,9 +10,17 @@ import seaborn as sns
 from matplotlib.colors import to_hex
 from pydantic import ValidationError
 
-from shared.plots import BlackHoleColors, PlotStyle, anchor_color, apply_style, colormap
+from shared.plots import (
+    BlackHoleColors,
+    PlotStyle,
+    anchor_color,
+    apply_style,
+    colormap,
+    figure_size,
+)
 
-STYLE = PlotStyle(usetex=False, font_size=9.0, text_width_pt=144.54)
+# A 2 in wide, 3 in tall text block.
+STYLE = PlotStyle(usetex=False, font_size=9.0, text_width_pt=144.54, text_height_pt=216.81)
 
 
 @pytest.fixture(autouse=True)
@@ -44,6 +52,11 @@ def test_figure_width_is_the_text_width_in_inches() -> None:
 def test_figure_height_follows_the_aspect() -> None:
     apply_style(STYLE)
     assert plt.rcParams["figure.figsize"][1] == pytest.approx(2.0 * 0.62)
+
+
+def test_a_multi_row_figure_is_capped_at_a_share_of_the_text_height() -> None:
+    # Four rows at 0.42 of the width each would be 3.36 in; the cap is 0.85 of 3 in.
+    assert figure_size(STYLE, rows=4, per_row=0.42)[1] == pytest.approx(0.85 * 3.0)
 
 
 def test_color_cycle_is_the_seaborn_palette() -> None:

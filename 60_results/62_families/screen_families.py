@@ -42,7 +42,7 @@ from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target
 from shared.eda import CurveSpace, booktabs
 from shared.families import make_gpr, make_knn, make_rbf, make_xgboost
 from shared.harness import Fitter, Predictor, Run, harness
-from shared.plots import CoolCmap, PlotStyle, WarmCmap, apply_style, colormap
+from shared.plots import CoolCmap, PlotStyle, WarmCmap, apply_style, colormap, figure_size
 from shared.runs import (
     RunMetadata,
     Setting,
@@ -333,10 +333,9 @@ def parity_figure(panels: Sequence[Panel], style: PlotStyle) -> Figure:
 
     Raises ValueError for a panel of a dataset with no colormap.
     """
-    width = float(plt.rcParams["figure.figsize"][0])
     rows = (len(panels) + 1) // 2
     figure, grid = plt.subplots(
-        rows, 2, figsize=(width, 0.5 * width * rows), layout="constrained", squeeze=False
+        rows, 2, figsize=figure_size(style, rows, 0.5), layout="constrained", squeeze=False
     )
     for axes, panel in zip(grid.flat, panels, strict=False):
         colors = _colors(panel, style)
@@ -362,12 +361,11 @@ def error_figure(panels: Sequence[Panel], style: PlotStyle) -> Figure:
 
     Raises ValueError for a panel of a dataset with no colormap.
     """
-    width = float(plt.rcParams["figure.figsize"][0])
     columns = max(len(panel.series) for panel in panels)
     figure, grid = plt.subplots(
         len(panels),
         columns,
-        figsize=(width, 0.38 * width * len(panels)),
+        figsize=figure_size(style, len(panels), 0.38),
         layout="constrained",
         squeeze=False,
         sharey="row",
@@ -398,11 +396,10 @@ def scaling_figure(
     by color and its unit by line style (curve-wise dashed), a wall a cross at its rows and at
     wall_seconds, the time budget of a fit."""
     pairs = list(dict.fromkeys((p.dataset, p.target) for p in paths))
-    width = float(plt.rcParams["figure.figsize"][0])
     figure, grid = plt.subplots(
         len(pairs),
         2,
-        figsize=(width, 0.42 * width * len(pairs)),
+        figsize=figure_size(style, len(pairs), 0.42),
         layout="constrained",
         squeeze=False,
         sharex=True,
