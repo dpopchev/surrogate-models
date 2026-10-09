@@ -32,18 +32,8 @@
 
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
-- 2026-10-07 E-006: AC2 and W-065's criterion drop the ripple; it is scored in the family screen (T-170 under W-067), where smoothness separates networks from interpolators (developer)
-- 2026-10-07 E-006: Section 3.4 and Section 5 follow the search space; H1-H3 stay as its named sub-questions (developer)
-- 2026-10-07 E-006: W-066 re-planned (developer): T-132 split into T-189 (target forms) and T-190 (curve-wise fitter), T-191 the k-NN and local-RBF references, T-133 one factor at a time with 3 MLP seeds on workers and trials; T-134 extends T-191
-- 2026-10-07 E-006: checkpoint after today's re-plan (Optuna leveraged, ripple moved to W-067, the harness on six workers): Deviations to ledgers/E-006.md (developer)
-- 2026-10-07 E-006: re-planned as one search space S0-S7 (developer): the data ceilings first, then the scorecard, representation, family, tuning and precision, extrapolation and cost; W-038 to W-044 and W-048 pruned as absorbed
-- 2026-10-07 E-006: the superseded AC0 criteria of E-006 and E-008 are dropped; their pruned work items keep the record (developer)
-- 2026-10-08 E-006: make baseline is refitted right before T-133's full run, so Section 4.1 and the screen's baseline row share one code state; its assets are stale since T-189, T-192 (developer)
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
-- 2026-10-08 W-066: Section 5.1 (developer): log10 rho_c, M and Y=log10(D/M) stay for every pair; the unit is model-dependent, so W-067 scores each family pointwise and curve-wise where it can; knobs in mk/paper.mk supersedes: W-066#d4
-- 2026-10-08 W-067: T-135 (developer): 12 candidates per pair at 1e3 rows, top 3 per unit at 1e4, top 2 at 1e5, folds' p95, one seed; 3 workers; a fit past 30 min or 4 GB is the wall supersedes: W-067#d1, W-067#d3
-- 2026-10-08 W-089: landings approved (developer): W-076 (2026-10-07); W-086, W-087, W-089, W-066 (2026-10-08) supersedes: W-076#d1, W-089#d2
-- 2026-10-09 E-006: W-068 split (developer): its criterion lands on T-206's tuning table; T-137, T-138 pruned to W-093 (the precision regime, amends AC5); W-101 and W-102 deferred, the eda.py split dropped; a code worktree beside this checkout while a run holds it (board.toml worktree)
+- 2026-10-09 E-006: parked -- 10 decisions, 2 deviations -> ledgers/E-006.md
 
 ## Deviations
-- 2026-10-09 E-006: (developer): the review's plan filed during T-206: W-093 (precision; successor of T-137, T-138) and W-101 (deferred) amend AC5; standalone W-094..W-099 and W-102; spike W-100 under E-009 before W-052; W-091 gets T-213..T-215, W-079 T-232; worktree set in board.toml
+- none recorded
