@@ -212,17 +212,11 @@ compile: assets ## Build the flat paper and its PDF under build/paper/
 	@zip -q -j -X $(PAPER_ZIP) $(PAPER_DIR)/*
 	$(call log_done,compiled $(PAPER_PDF) -- upload folder $(PAPER_DIR)/$(comma) spare $(PAPER_ZIP))
 
-# Opens the PDF as a reader does (rules/makefile.md, Deliverables): mutool where MuPDF is
-# installed, else pypdf reading every page strictly; a file that does not open is named.
-PDF_OPENS = { if command -v mutool >/dev/null 2>&1; then mutool info $(1) >/dev/null; \
-  else $(UV) run --no-project --with pypdf python -c \
-    "import sys, pypdf; r = pypdf.PdfReader(sys.argv[1], strict=True); [p.extract_text() for p in r.pages]" $(1); \
-  fi; } || { echo "$(1) does not open" >&2; exit 1; }
-
+# The deliverable is the compiled PDF; compile's own exit status is the proof (developer,
+# W-099: opening it would test the PDF tools, not the paper).
 .PHONY: deliverable-paper
-deliverable-paper: compile ## Compile the paper and prove its PDF opens
-	@$(call PDF_OPENS,$(PAPER_PDF))
-	$(call log_done,$(PAPER_PDF) opens)
+deliverable-paper: compile ## Compile the paper -- the deliverable is $(PAPER_PDF)
+	$(call log_done,deliverable built: $(PAPER_PDF))
 
 # Clean room: the upload folder alone must compile, as Overleaf will see it.
 PAPER_VERIFY := $(WORK)/verify
