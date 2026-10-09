@@ -163,14 +163,18 @@ class TestMetricFor:
 
 class TestBaselineTable:
     def test_gives_the_mlp_its_mare_fold_spread_figures_and_seconds(self) -> None:
+        # The pair in one cell and every error in e-notation, so the table fits the text width.
         assert (
-            "NS & $M$ & MLP & $6.62\\times 10^{-3}$ & "
-            "$8.00\\times 10^{-3} \\pm 1.00\\times 10^{-3}$ & 2.0 & 213 & $2.00\\times 10^{-4}$"
+            "NS $M$ & MLP & 6.6e-3 & 8.0e-3 $\\pm$ 1.0e-3 & 2.0 & 213 & 2.0e-4"
         ) in baseline_table([NS_MASS])
+
+    def test_has_seven_columns(self) -> None:
+        header = baseline_table([NS_MASS]).split("\\toprule\n")[1].split(" \\\\")[0]
+        assert header.count("&") == 6
 
     def test_labels_the_charge_rows_by_d(self) -> None:
         ns_charge = replace(NS_MASS, target="charge")
-        assert "NS & $\\Dch$ & MLP &" in baseline_table([ns_charge])
+        assert "NS $\\Dch$ & MLP &" in baseline_table([ns_charge])
 
     def test_says_the_charge_rows_are_scored_in_d(self) -> None:
         assert "rebuilt with the true" in baseline_table([NS_MASS])

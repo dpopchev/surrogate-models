@@ -273,16 +273,23 @@ def metric_for(target: Target) -> Metric:
             assert_never(target)
 
 
+def _enote(value: float) -> str:
+    """A number in short e-notation, two significant digits: 7.6e-3 (W-097: the table's
+    errors in \\times 10^{} notation ran 114 pt past the text width)."""
+    mantissa, exponent = f"{value:.1e}".split("e")
+    return f"{mantissa}e{int(exponent)}"
+
+
 def _row(pair: PairScores, scored: Scored) -> str:
     """One table row: the pair, the predictor, its test MARE, fold mean +/- std, the
     significant figures at the 95th percentile, the fit seconds and the one-row call seconds."""
     folds = np.array([fold.mean for fold in scored.folds])
     return (
-        f"{DATASET_TEX[pair.dataset]} & {TARGET_TEX[pair.target]} & {scored.predictor} & "
-        f"${sci_tex(scored.test.mean)}$ & "
-        f"${sci_tex(float(folds.mean()))} \\pm {sci_tex(float(folds.std()))}$ & "
+        f"{DATASET_TEX[pair.dataset]} {TARGET_TEX[pair.target]} & {scored.predictor} & "
+        f"{_enote(scored.test.mean)} & "
+        f"{_enote(float(folds.mean()))} $\\pm$ {_enote(float(folds.std()))} & "
         f"{significant_figures(scored.test.p95):.1f} & {scored.timing.fit:.0f} & "
-        f"${sci_tex(scored.timing.predict_one)}$"
+        f"{_enote(scored.timing.predict_one)}"
     )
 
 
@@ -296,8 +303,8 @@ def baseline_table(pairs: list[PairScores]) -> str:
         "95th percentile of the test error ($-\\log_{10}$), the fit time and the time of a "
         "one-row call in seconds. The $\\Dch$ rows give the error of the charge rebuilt with "
         "the true $M$ from the predicted $Y = \\log_{10}(\\Dch/M)$.",
-        "lllllrrr",
-        "Data & Target & Predictor & Test MARE & Fold MARE & Figures & Fit s & Call s",
+        "llrrrrr",
+        "Pair & Predictor & Test & Folds & Figures & Fit s & Call s",
         [_row(pair, scored) for pair in pairs for scored in pair.scored],
     )
 
