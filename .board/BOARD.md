@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-094   | blocked: 3 | todo roots: 11 | done: 267 | pruned: 19
+open path: W-094   | blocked: 3 | todo roots: 11 | done: 268 | pruned: 19
 
 ## Tree
 
@@ -207,6 +207,7 @@ open path: W-094   | blocked: 3 | todo roots: 11 | done: 267 | pruned: 19
 - T-224 [done] Fit the baseline table to the text width -> 50_methodology/51_algorithms/fit_baseline.py
 - T-225 [doing] Draw the NS ceilings in the NS colour family test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py   <- ACTIVE LEAF
 - T-226 [pruned] Fail paper-verify on a float or overfull warning from a generated asset -> 00_metadata/latex_warnings.py and mk/paper.mk   [pruned: excessive (developer, agreed with \~/.claude's session): a pdfTeX log parser with its own suite tests the typesetter's output, the class of proving the PDF opens; W-097's criterion keeps the behaviour, the grep of the log is the evidence at its close]
+- T-239 [done] Adapt the charge-row macro test to the seven-column table -> 50_methodology/51_algorithms/test_fit_baseline.py   (filed during T-225)
 
 ### W-098 issue [todo] (standalone) Figures and captions share the paper's notation   (filed during T-206)
 
@@ -744,6 +745,7 @@ flowchart TD
   W097 --> T224["T-224 done: Fit the baseline table to the text width -> 50_methodology/51_algorithms/fit_baseline.py"]
   W097 --> T225["T-225 doing: Draw the NS ceilings in the NS colour family test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py -- ACTIVE LEAF"]
   W097 --> T226["T-226 pruned: Fail paper-verify on a float or overfull warning from a generated asset -> 00_metadata/latex_warnings.py and mk/paper.mk"]
+  W097 --> T239["T-239 done: Adapt the charge-row macro test to the seven-column table -> 50_methodology/51_algorithms/test_fit_baseline.py"]
   W098["W-098 issue todo, standalone: Figures and captions share the paper's notation"]
   W098 --> T227["T-227 todo: Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it"]
   W098 --> T228["T-228 todo: Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py"]
@@ -759,7 +761,7 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,E009,W097,T225 doing
   class W068,T206,W094 blocked
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218,T223,T224 done
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218,T223,T224,T239 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W098,T227,T228,T229,W102,T237,W103,T238 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T226 pruned
 ```
