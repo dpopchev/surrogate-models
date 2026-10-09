@@ -24,6 +24,7 @@
 - 2026-10-08 T-200: fact: BH p95 is its worst of 3 test curves (pointwise RBF: M flat 5e-5 vs 1e-7; D 1e-3 vs 1e-5); BH curve-wise error arcs between the 8 knots -> E-007 tunes the knots
 - 2026-10-08 W-037: standing: one thread is fastest (2.6 s vs 11.4 s an epoch at 7); one fit took 53-525 s, swinging 2.5x with load -> cite fit times as orders of magnitude, time them repeatedly supersedes: W-035#2, W-036#1, W-037#2
 - 2026-10-08 W-073: standing: scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1), the nearest curve beats the MLP on the test curves of all four pairs; the MLP leads only on the NS folds -> no pair is won by the baseline supersedes: W-073#1, W-073#2
+- 2026-10-09 W-094: fact: the scope gate reads the Refs commits from the --root checkout's HEAD and the briefs from its .board, so a Task built in the worktree is gated with its closed Task files copied there for the gate and restored right after -> the worktree's .board is never the record
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)

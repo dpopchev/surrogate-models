@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-094 > T-218   | blocked: 2 | todo roots: 12 | done: 261 | pruned: 18
+open path: W-094   | blocked: 2 | todo roots: 12 | done: 262 | pruned: 18
 
 ## Tree
 
@@ -52,7 +52,7 @@ open path: W-094 > T-218   | blocked: 2 | todo roots: 12 | done: 261 | pruned: 1
 - T-201 [done] Draw the family screen's scaling figure test-first -> build/assets/62_families/62_families_fig_scaling.png   (filed during T-135)
 - T-202 [done] Write the appendix on the model families -> 90_appendix/90_appendix.tex   (filed during T-135)
 
-#### W-068 issue [blocked] Tuning and precision of the surviving families   [blocked since 2026-10-09, waiting on W-094: pre-empted by W-094 while T-206 waits on the make tuning run (developer, 2026-10-09)]
+#### W-068 issue [doing] Tuning and precision of the surviving families
 
 - T-136 [done] Write the equal-budget search test-first -> shared/search.py
 - T-137 [pruned] Write the precision regime test-first -> shared/surrogate.py   [pruned: re-planned (developer, 2026-10-09): the precision regime moves to W-093 so W-068 lands on the tuning table within the one-day branch]
@@ -185,11 +185,11 @@ open path: W-094 > T-218   | blocked: 2 | todo roots: 12 | done: 261 | pruned: 1
 - T-214 [todo] Point the four runnables at shared/batches.py -> no private copy of the run shell left
 - T-215 [todo] Write the toy tables once -> shared/toy_tables.py used by the four test modules
 
-### W-094 bug [doing] (standalone) A trial that raises ends the tuning after every other job and leaves no outcomes file   (filed during T-206)
+### W-094 bug [blocked] (standalone) A trial that raises ends the tuning after every other job and leaves no outcomes file   [blocked since 2026-10-09, waiting on W-068: its Tasks are done (d6ef614 on wi/W-094-raising-trial); the branch stacks on wi/W-068 and main is not its ancestor, so the fast-forward waits for W-068's landing]   (filed during T-206)
 
 - T-216 [done] Tell a raising trial FAIL test-first -> shared/search.py
 - T-217 [done] Save the outcomes after each job test-first -> 60_results/63_precision/tune_survivors.py
-- T-218 [doing] Rebuild a batch's outcomes from its ledger and journal test-first -> tune_survivors.py --recover   <- ACTIVE LEAF
+- T-218 [done] Rebuild a batch's outcomes from its ledger and journal test-first -> tune_survivors.py --recover
 
 ### W-095 bug [todo] (standalone) The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206)
 
@@ -641,7 +641,7 @@ flowchart TD
   W067 --> T200["T-200 done: Draw the family screen's parity plots test-first -> build/assets/62_families/62_families_fig_parity.png"]
   W067 --> T201["T-201 done: Draw the family screen's scaling figure test-first -> build/assets/62_families/62_families_fig_scaling.png"]
   W067 --> T202["T-202 done: Write the appendix on the model families -> 90_appendix/90_appendix.tex"]
-  E006 --> W068["W-068 issue blocked on W-094: Tuning and precision of the surviving families"]
+  E006 --> W068["W-068 issue doing: Tuning and precision of the surviving families"]
   W068 --> T136["T-136 done: Write the equal-budget search test-first -> shared/search.py"]
   W068 --> T137["T-137 pruned: Write the precision regime test-first -> shared/surrogate.py"]
   W068 --> T138["T-138 pruned: Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex"]
@@ -723,10 +723,10 @@ flowchart TD
   W091 --> T213["T-213 todo: Write the run shell module test-first -> shared/batches.py"]
   W091 --> T214["T-214 todo: Point the four runnables at shared/batches.py -> no private copy of the run shell left"]
   W091 --> T215["T-215 todo: Write the toy tables once -> shared/toy_tables.py used by the four test modules"]
-  W094["W-094 bug doing, standalone: A trial that raises ends the tuning after every other job and leaves no outcomes file"]
+  W094["W-094 bug blocked on W-068, standalone: A trial that raises ends the tuning after every other job and leaves no outcomes file"]
   W094 --> T216["T-216 done: Tell a raising trial FAIL test-first -> shared/search.py"]
   W094 --> T217["T-217 done: Save the outcomes after each job test-first -> 60_results/63_precision/tune_survivors.py"]
-  W094 --> T218["T-218 doing: Rebuild a batch's outcomes from its ledger and journal test-first -> tune_survivors.py --recover -- ACTIVE LEAF"]
+  W094 --> T218["T-218 done: Rebuild a batch's outcomes from its ledger and journal test-first -> tune_survivors.py --recover"]
   W095["W-095 bug todo, standalone: The wall counts wall-clock time, so a sleeping laptop walls a healthy fit"]
   W095 --> T219["T-219 todo: Arm the wall on the process's CPU time test-first -> shared/batches.py"]
   W096["W-096 issue todo, standalone: One Pair and one FitRows value through the fit path"]
@@ -752,9 +752,9 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W094,T218 doing
-  class W068,T206 blocked
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217 done
+  class E006,W068,E009 doing
+  class T206,W094 blocked
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W097,T223,T224,T225,T226,W098,T227,T228,T229,W099,T230,T231,W102,T237 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
