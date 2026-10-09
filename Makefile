@@ -105,11 +105,13 @@ clean-state: ## Remove local/state/ -- the interim results
 	@rm -rf $(STATE)
 	$(call log_done,removed $(STATE)/)
 
-# Layers (mk/python.mk, ...) add their targets and append to CHECKS and CLEANS.
-# Included here, before `check` and `clean`, because make expands prerequisites
-# when it reads a rule.
+# Layers (mk/python.mk, ...) add their targets and append to CHECKS, CLEANS and
+# DELIVERABLES. Included here, before `check`, `clean` and `deliverable`, because
+# make expands prerequisites when it reads a rule.
 CHECKS :=
 CLEANS := clean-build clean-state
+# Each entry builds one artifact and opens it the way its user does (makefile.md, Deliverables).
+DELIVERABLES :=
 include $(wildcard mk/*.mk)
 
 .PHONY: clean
@@ -123,6 +125,14 @@ clean: $(CLEANS) ## Run every clean -- inputs, keys, settings, scratch, .board/ 
 .PHONY: check
 check: board-check $(CHECKS) ## Run every check -- the board and each layer
 	$(call log_done,all checks passed)
+
+.PHONY: deliverable
+deliverable: $(DELIVERABLES) ## Build every deliverable and open it as its user does -- every Task close runs it
+ifeq ($(strip $(DELIVERABLES)),)
+	$(call log_warn,no deliverable declared -- append a build-and-open target to DELIVERABLES)
+else
+	$(call log_done,deliverables open: $(DELIVERABLES))
+endif
 
 # ------------------------------------------------------------------------------
 ### Board
