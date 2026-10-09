@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-094 > T-217   | blocked: 2 | todo roots: 12 | done: 260 | pruned: 18
+open path: W-094 > T-218   | blocked: 2 | todo roots: 12 | done: 261 | pruned: 18
 
 ## Tree
 
@@ -188,8 +188,8 @@ open path: W-094 > T-217   | blocked: 2 | todo roots: 12 | done: 260 | pruned: 1
 ### W-094 bug [doing] (standalone) A trial that raises ends the tuning after every other job and leaves no outcomes file   (filed during T-206)
 
 - T-216 [done] Tell a raising trial FAIL test-first -> shared/search.py
-- T-217 [doing] Save the outcomes after each job test-first -> 60_results/63_precision/tune_survivors.py   <- ACTIVE LEAF
-- T-218 [todo] Rebuild a batch's outcomes from its ledger and journal test-first -> tune_survivors.py --recover
+- T-217 [done] Save the outcomes after each job test-first -> 60_results/63_precision/tune_survivors.py
+- T-218 [doing] Rebuild a batch's outcomes from its ledger and journal test-first -> tune_survivors.py --recover   <- ACTIVE LEAF
 
 ### W-095 bug [todo] (standalone) The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206)
 
@@ -725,8 +725,8 @@ flowchart TD
   W091 --> T215["T-215 todo: Write the toy tables once -> shared/toy_tables.py used by the four test modules"]
   W094["W-094 bug doing, standalone: A trial that raises ends the tuning after every other job and leaves no outcomes file"]
   W094 --> T216["T-216 done: Tell a raising trial FAIL test-first -> shared/search.py"]
-  W094 --> T217["T-217 doing: Save the outcomes after each job test-first -> 60_results/63_precision/tune_survivors.py -- ACTIVE LEAF"]
-  W094 --> T218["T-218 todo: Rebuild a batch's outcomes from its ledger and journal test-first -> tune_survivors.py --recover"]
+  W094 --> T217["T-217 done: Save the outcomes after each job test-first -> 60_results/63_precision/tune_survivors.py"]
+  W094 --> T218["T-218 doing: Rebuild a batch's outcomes from its ledger and journal test-first -> tune_survivors.py --recover -- ACTIVE LEAF"]
   W095["W-095 bug todo, standalone: The wall counts wall-clock time, so a sleeping laptop walls a healthy fit"]
   W095 --> T219["T-219 todo: Arm the wall on the process's CPU time test-first -> shared/batches.py"]
   W096["W-096 issue todo, standalone: One Pair and one FitRows value through the fit path"]
@@ -752,9 +752,9 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W094,T217 doing
+  class E006,E009,W094,T218 doing
   class W068,T206 blocked
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,T218,W095,T219,W096,T220,T221,T222,W097,T223,T224,T225,T226,W098,T227,T228,T229,W099,T230,T231,W102,T237 todo
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217 done
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W097,T223,T224,T225,T226,W098,T227,T228,T229,W099,T230,T231,W102,T237 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
