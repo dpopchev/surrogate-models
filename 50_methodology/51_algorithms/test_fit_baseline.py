@@ -426,9 +426,11 @@ class TestMain:
             folder / "51_algorithms_num.tex",
             folder / "51_algorithms_tab_baseline.tex",
         )
-        macro = first_group(r"\\baseBhChargeMareTrueM\}\{(.*)\}\n", numbers_tex)
-        row = first_group(r"BH & \$\\Dch\$ & MLP & \$([^$]*)\$", table_tex)
-        assert row == macro
+        mantissa = first_group(r"\\baseBhChargeMareTrueM\}\{(.*)\\times 10", numbers_tex)
+        exponent = first_group(r"\\baseBhChargeMareTrueM\}\{.*10\^\{(.*)\}\}\n", numbers_tex)
+        # The row prints two significant digits (7.6e-3), the macro three.
+        row = first_group(r"BH \$\\Dch\$ & MLP & ([^ ]*) &", table_tex)
+        assert float(row) == pytest.approx(float(mantissa) * 10 ** int(exponent), rel=0.05)
 
     def test_writes_one_mlp_row_per_dataset_and_target(self, ran: Path) -> None:
         table = (ran / "assets" / SECTION / "51_algorithms_tab_baseline.tex").read_text()
