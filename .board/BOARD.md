@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-092   | blocked: 1 | todo roots: 6 | done: 258 | pruned: 16
+open path: E-006 > W-068 > T-206   | blocked: 0 | todo roots: 6 | done: 259 | pruned: 16
 
 ## Tree
 
@@ -52,14 +52,14 @@ open path: W-092   | blocked: 1 | todo roots: 6 | done: 258 | pruned: 16
 - T-201 [done] Draw the family screen's scaling figure test-first -> build/assets/62_families/62_families_fig_scaling.png   (filed during T-135)
 - T-202 [done] Write the appendix on the model families -> 90_appendix/90_appendix.tex   (filed during T-135)
 
-#### W-068 issue [blocked] Tuning and precision of the surviving families   [blocked since 2026-10-09, waiting on W-092: pre-empted by W-092 (developer) while T-206's tuning runs (batch 01a11d49)]
+#### W-068 issue [doing] Tuning and precision of the surviving families
 
 - T-136 [done] Write the equal-budget search test-first -> shared/search.py
 - T-137 [todo] Write the precision regime test-first -> shared/surrogate.py
 - T-138 [todo] Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex
 - T-204 [done] Move the screen's candidate fitters to shared/ test-first -> shared/candidates.py   (filed during T-136)
 - T-205 [done] Write the tuning run of the short list test-first -> 60_results/63_precision/tune_survivors.py   (filed during T-136)
-- T-206 [doing] Run the tuning of the short list -> build/assets/63_precision/63_precision_tab_tuning.tex   (filed during T-136)
+- T-206 [doing] Run the tuning of the short list -> build/assets/63_precision/63_precision_tab_tuning.tex   (filed during T-136)   <- ACTIVE LEAF
 - T-207 [done] Pin every search trial to one thread test-first -> shared/search.py   (filed during T-205)
 
 #### W-069 issue [todo] Extrapolation error against the distance from the training hull
@@ -162,10 +162,6 @@ open path: W-092   | blocked: 1 | todo roots: 6 | done: 258 | pruned: 16
 - T-197 [todo] Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py
 
 ### W-091 issue [todo] (standalone) The screens' shared shell and test inputs live once -- one helper module, one toy fixture   (filed during T-205)
-
-### W-092 bug [doing] (standalone) make dashboard opens the baseline journal, never the journal of a running screen or tuning batch   (filed during T-206)
-
-- T-208 [done] Point make dashboard at the newest study journal -> mk/paper.mk   (filed during T-206)
 
 ## Closed
 
@@ -543,6 +539,12 @@ closed 2026-10-08 -- outcome: Given a section that cites SciPy2020, When make co
 
 - T-203 [done] Write SciPy2020's accent in text mode -> 00_metadata/refs.bib
 
+### W-092 bug [done] (standalone) make dashboard opens the baseline journal, never the journal of a running screen or tuning batch
+
+closed 2026-10-09 -- outcome: Given a tuning batch writing its journal under $(STATE)/63_precision/, When the developer runs make dashboard, Then optuna-dashboard opens that batch's journal. -- ledger: ledgers/W-092.md
+
+- T-208 [done] Point make dashboard at the newest study journal -> mk/paper.mk   (filed during T-206)
+
 ## Diagram
 ```mermaid
 flowchart TD
@@ -579,13 +581,13 @@ flowchart TD
   W067 --> T200["T-200 done: Draw the family screen's parity plots test-first -> build/assets/62_families/62_families_fig_parity.png"]
   W067 --> T201["T-201 done: Draw the family screen's scaling figure test-first -> build/assets/62_families/62_families_fig_scaling.png"]
   W067 --> T202["T-202 done: Write the appendix on the model families -> 90_appendix/90_appendix.tex"]
-  E006 --> W068["W-068 issue blocked on W-092: Tuning and precision of the surviving families"]
+  E006 --> W068["W-068 issue doing: Tuning and precision of the surviving families"]
   W068 --> T136["T-136 done: Write the equal-budget search test-first -> shared/search.py"]
   W068 --> T137["T-137 todo: Write the precision regime test-first -> shared/surrogate.py"]
   W068 --> T138["T-138 todo: Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex"]
   W068 --> T204["T-204 done: Move the screen's candidate fitters to shared/ test-first -> shared/candidates.py"]
   W068 --> T205["T-205 done: Write the tuning run of the short list test-first -> 60_results/63_precision/tune_survivors.py"]
-  W068 --> T206["T-206 doing: Run the tuning of the short list -> build/assets/63_precision/63_precision_tab_tuning.tex"]
+  W068 --> T206["T-206 doing: Run the tuning of the short list -> build/assets/63_precision/63_precision_tab_tuning.tex -- ACTIVE LEAF"]
   W068 --> T207["T-207 done: Pin every search trial to one thread test-first -> shared/search.py"]
   E006 --> W069["W-069 issue todo: Extrapolation error against the distance from the training hull"]
   W069 --> T139["T-139 todo: Write the distance from the training hull test-first -> shared/scorecard.py"]
@@ -646,16 +648,13 @@ flowchart TD
   W088 --> T196["T-196 todo: Log the screen's jobs done and time left test-first -> 60_results/61_representation/screen_representation.py"]
   W088 --> T197["T-197 todo: Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py"]
   W091["W-091 issue todo, standalone: The screens' shared shell and test inputs live once -- one helper module, one toy fixture"]
-  W092["W-092 bug doing, standalone: make dashboard opens the baseline journal, never the journal of a running screen or tuning batch"]
-  W092 --> T208["T-208 done: Point make dashboard at the newest study journal -> mk/paper.mk"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,T206,E009,W092 doing
-  class W068 blocked
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T208 done
+  class E006,W068,T206,E009 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
   class T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168,W088,T196,T197,W091 todo
   class W038,W039,W040,W041,W042,W043,T132,W044,W048,T108 pruned
 ```
