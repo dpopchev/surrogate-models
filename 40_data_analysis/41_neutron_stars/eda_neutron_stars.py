@@ -18,7 +18,6 @@ from typing import Any, Literal, assert_never, get_args
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
@@ -681,6 +680,15 @@ CEILINGS_FIGURE = (
 )
 
 
+def ceiling_colors(style: PlotStyle) -> dict[str, Any]:
+    """The colour of each curve key's line on the ceilings figure, from the NS colormaps (W-097:
+    the palette's index 1 is the BH anchor colour)."""
+    return {
+        "beta": colormap(style.neutron_stars.beta_cmap)(0.6),
+        "lambda": colormap(style.neutron_stars.lambda_cmap)(0.6),
+    }
+
+
 def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
     """Write the ceilings table, the per-decade table and the figure of the data limits."""
     (out / f"{SECTION}_tab_ceilings.tex").write_text(
@@ -689,9 +697,7 @@ def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
     (out / f"{SECTION}_tab_ceiling_decades.tex").write_text(
         decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS)
     )
-    palette = sns.color_palette(style.palette)
-    colors: dict[str, Any] = {"beta": palette[0], "lambda": palette[1]}
-    fig = ceiling_figure(bounds, CEILING_PLOT_LABELS, "$\\log_{10}\\rho_c$", colors)
+    fig = ceiling_figure(bounds, CEILING_PLOT_LABELS, "$\\log_{10}\\rho_c$", ceiling_colors(style))
     fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
     plt.close(fig)
     (out / f"{SECTION}_fig_ceilings.tex").write_text(

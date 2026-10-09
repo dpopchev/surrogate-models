@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 from eda_neutron_stars import (
     beta_share_at_fixed_lambda,
+    ceiling_colors,
     charge_targets,
     draw,
     evidence,
@@ -26,7 +27,7 @@ from eda_neutron_stars import (
 
 from shared.config import PaperConfig
 from shared.eda import with_charge_targets
-from shared.plots import PlotStyle
+from shared.plots import PlotStyle, anchor_color
 
 
 def curves(target: dict[tuple[float, float], list[float]]) -> pd.DataFrame:
@@ -189,6 +190,12 @@ def test_univariate_table_has_a_row_for_the_central_density() -> None:
 
 
 STYLE = PlotStyle(usetex=False)
+
+
+def test_the_ceilings_colors_are_the_ns_family_not_the_bh_anchor() -> None:
+    # The palette's index 1, the old lambda colour, is the BH anchor in paper.toml.
+    bh_anchor = anchor_color(STYLE, "black_holes")
+    assert all(tuple(color[:3]) != bh_anchor for color in ceiling_colors(STYLE).values())
 
 
 class TestFigures:
