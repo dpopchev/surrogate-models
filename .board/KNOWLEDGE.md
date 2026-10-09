@@ -43,8 +43,7 @@
 - 2026-10-08 W-066: Section 5.1 (developer): log10 rho_c, M and Y=log10(D/M) stay for every pair; the unit is model-dependent, so W-067 scores each family pointwise and curve-wise where it can; knobs in mk/paper.mk supersedes: W-066#d4
 - 2026-10-08 W-067: T-135 (developer): 12 candidates per pair at 1e3 rows, top 3 per unit at 1e4, top 2 at 1e5, folds' p95, one seed; 3 workers; a fit past 30 min or 4 GB is the wall supersedes: W-067#d1, W-067#d3
 - 2026-10-08 W-089: landings approved (developer): W-076 (2026-10-07); W-086, W-087, W-089, W-066 (2026-10-08) supersedes: W-076#d1, W-089#d2
+- 2026-10-09 E-006: W-068 split (developer): its criterion lands on T-206's tuning table; T-137, T-138 pruned to W-093 (the precision regime, amends AC5); W-101 and W-102 deferred, the eda.py split dropped; a code worktree beside this checkout while a run holds it (board.toml worktree)
 
 ## Deviations
-- 2026-10-08 E-006: (agent, to acknowledge): W-068 gets T-204..T-207 (shared fitters, tuning, run, one thread); T-137 waits on T-206; T-138 reads its batch; filed W-091 (shell copies), W-092 (dashboard journal; parked for it, developer)
-- 2026-10-08 E-006: (developer): briefs amended, Checks kept (T-170, T-135 split to T-200/T-201, T-200 twice); T-135 halves per unit; T-202 and W-090 (parked for, landed) during its run
-- 2026-10-08 E-006: bug W-089 (ripple() ignores the spacing of the curve parameter) filed during T-170 (developer): pre-empts W-067
+- 2026-10-09 E-006: (developer): the review's plan filed during T-206: W-093 (precision; successor of T-137, T-138) and W-101 (deferred) amend AC5; standalone W-094..W-099 and W-102; spike W-100 under E-009 before W-052; W-091 gets T-213..T-215, W-079 T-232; worktree set in board.toml

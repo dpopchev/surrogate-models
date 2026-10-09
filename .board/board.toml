@@ -14,8 +14,12 @@ approver = "developer"    # developer | agent
 branch_id = "local"       # local | remote
 tag = "epic-close"        # epic-close | root-close | none
 ci = "none"               # pipeline | none -- everything runs locally: make check before each fast-forward
-# worktree unset (developer, 2026-10-06, W-058): work item branches switch in this checkout;
-# real-data targets need local/state, which lives only here -- no branch switch during a long run.
+# worktree (developer, 2026-10-09, revising W-058's "unset"): a long run pins this checkout on its
+# branch, so work item branches are checked out under the sibling folder; make check there with
+# LOCAL=../surrogate-models/local reads the inputs and may rebuild the state parquets, equal to the
+# run's (W-092 Finding). Never a run target (baseline, representation, families, tuning) from a
+# worktree while a batch runs here, and the board is written from this checkout only.
+worktree = "../surrogate-models-wt"
 
 [show]
 detail = "brief"          # board show default: title | brief | full

@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-006 > W-068 > T-206   | blocked: 0 | todo roots: 6 | done: 259 | pruned: 16
+open path: E-006 > W-068 > T-206   | blocked: 0 | todo roots: 13 | done: 259 | pruned: 18
 
 ## Tree
 
@@ -55,8 +55,8 @@ open path: E-006 > W-068 > T-206   | blocked: 0 | todo roots: 6 | done: 259 | pr
 #### W-068 issue [doing] Tuning and precision of the surviving families
 
 - T-136 [done] Write the equal-budget search test-first -> shared/search.py
-- T-137 [todo] Write the precision regime test-first -> shared/surrogate.py
-- T-138 [todo] Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex
+- T-137 [pruned] Write the precision regime test-first -> shared/surrogate.py   [pruned: re-planned (developer, 2026-10-09): the precision regime moves to W-093 so W-068 lands on the tuning table within the one-day branch]
+- T-138 [pruned] Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex   [pruned: re-planned (developer, 2026-10-09): the precision run moves to W-093 (T-211, T-212); W-068 closes on T-206's table]
 - T-204 [done] Move the screen's candidate fitters to shared/ test-first -> shared/candidates.py   (filed during T-136)
 - T-205 [done] Write the tuning run of the short list test-first -> 60_results/63_precision/tune_survivors.py   (filed during T-136)
 - T-206 [doing] Run the tuning of the short list -> build/assets/63_precision/63_precision_tab_tuning.tex   (filed during T-136)   <- ACTIVE LEAF
@@ -100,6 +100,18 @@ open path: E-006 > W-068 > T-206   | blocked: 0 | todo roots: 6 | done: 259 | pr
 #### W-089 bug [done] ripple() scores a linear residual as rough on unevenly spaced curves   (filed during T-170)
 
 - T-199 [done] Score the ripple by second divided differences test-first -> shared/scorecard.py
+
+#### W-093 issue [todo] Precision regime on the tuned short list   (filed during T-206)
+
+- T-209 [todo] Fit one candidate on one pair -> make fit P= C= U= prints its scorecard
+- T-210 [todo] Write the precision options test-first -> shared/surrogate.py and shared/candidates.py
+- T-211 [todo] Write the precision run test-first -> 60_results/63_precision/precision_survivors.py
+- T-212 [todo] Run the precision regime on the short list -> build/assets/63_precision/63_precision_tab_precision.tex
+
+#### W-101 issue [todo] The tuning prunes bad trials at fold boundaries and starts from the screen's settings   (filed during T-206)
+
+- T-235 [todo] Report the running fold mean and prune test-first -> shared/search.py and shared/trials.py
+- T-236 [todo] Enqueue the screen's settings as trial 0 and a grid for the GPR space test-first -> shared/search.py and tune_survivors.py
 
 ### E-007 [todo] Ensemble uncertainty and the final surrogate
 
@@ -147,6 +159,11 @@ open path: E-006 > W-068 > T-206   | blocked: 0 | todo roots: 6 | done: 259 | pr
 - T-115 [done] Align the remaining outline bullets to the revised structure -> the todo bullets of 10, 20, 41, 44, 51-53, 61-64, 70, 80
 - T-116 [done] Name paper sections by their compiled number in code and make -> mk/, paper.toml, the colocated modules
 
+#### W-100 spike [todo] What the paper claims once the search names its winners   (filed during T-206)
+
+- T-233 [todo] List every claim of the title block, abstract, introduction, Section 3.4 and Section 7 against Section 5 -> Findings on W-100
+- T-234 [todo] Decide the thesis with the developer and the supervisors -> the W-100 spike decision
+
 ### W-061 spike [todo] (standalone) Which real references replace the placeholder citations
 
 - T-118 [todo] Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md
@@ -155,6 +172,7 @@ open path: E-006 > W-068 > T-206   | blocked: 0 | todo roots: 6 | done: 259 | pr
 
 - T-167 [todo] Mark every test module with its category -> the test_*.py files
 - T-168 [todo] Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py
+- T-232 [todo] Refresh mk/python.mk from add-python -> M= selection, test-integration, test-stats
 
 ### W-088 issue [todo] (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133)
 
@@ -162,6 +180,48 @@ open path: E-006 > W-068 > T-206   | blocked: 0 | todo roots: 6 | done: 259 | pr
 - T-197 [todo] Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py
 
 ### W-091 issue [todo] (standalone) The screens' shared shell and test inputs live once -- one helper module, one toy fixture   (filed during T-205)
+
+- T-213 [todo] Write the run shell module test-first -> shared/batches.py
+- T-214 [todo] Point the four runnables at shared/batches.py -> no private copy of the run shell left
+- T-215 [todo] Write the toy tables once -> shared/toy_tables.py used by the four test modules
+
+### W-094 bug [todo] (standalone) A trial that raises ends the tuning after every other job and leaves no outcomes file   (filed during T-206)
+
+- T-216 [todo] Tell a raising trial FAIL test-first -> shared/search.py
+- T-217 [todo] Save the outcomes after each job test-first -> 60_results/63_precision/tune_survivors.py
+- T-218 [todo] Rebuild a batch's outcomes from its ledger and journal test-first -> tune_survivors.py --recover
+
+### W-095 bug [todo] (standalone) The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206)
+
+- T-219 [todo] Arm the wall on the process's CPU time test-first -> shared/batches.py
+
+### W-096 issue [todo] (standalone) One Pair and one FitRows value through the fit path   (filed during T-206)
+
+- T-220 [todo] Replace PAIRS and designs with a frozen Pair test-first -> shared/design.py and the four runnables
+- T-221 [todo] Replace the five-array Fitter with FitRows test-first -> shared/harness.py and its wrappers
+- T-222 [todo] Build Training through make_training and type the scorecard's maps as Mapping -> shared/surrogate.py, shared/scorecard.py
+
+### W-097 bug [todo] (standalone) Three generated assets overflow the page in the compiled paper   (filed during T-206)
+
+- T-223 [todo] Cap a multi-row figure at a share of the text height test-first -> shared/plots.py and screen_families.py
+- T-224 [todo] Fit the baseline table to the text width -> 50_methodology/51_algorithms/fit_baseline.py
+- T-225 [todo] Draw the NS ceilings in the NS colour family test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py
+- T-226 [todo] Fail paper-verify on a float or overfull warning from a generated asset -> 00_metadata/latex_warnings.py and mk/paper.mk
+
+### W-098 issue [todo] (standalone) Figures and captions share the paper's notation   (filed during T-206)
+
+- T-227 [todo] Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it
+- T-228 [todo] Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py
+- T-229 [todo] Replace the hand-spelled symbol dicts with the macros -> the four figure modules
+
+### W-099 issue [todo] (standalone) make deliverable builds the paper PDF and proves it opens   (filed during T-206)
+
+- T-230 [todo] Adopt the template's deliverable target -> Makefile
+- T-231 [todo] Add deliverable-paper -> mk/paper.mk
+
+### W-102 issue [todo] (standalone) Every section's figures are selected in paper.toml   (filed during T-206)
+
+- T-237 [todo] Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py
 
 ## Closed
 
@@ -583,8 +643,8 @@ flowchart TD
   W067 --> T202["T-202 done: Write the appendix on the model families -> 90_appendix/90_appendix.tex"]
   E006 --> W068["W-068 issue doing: Tuning and precision of the surviving families"]
   W068 --> T136["T-136 done: Write the equal-budget search test-first -> shared/search.py"]
-  W068 --> T137["T-137 todo: Write the precision regime test-first -> shared/surrogate.py"]
-  W068 --> T138["T-138 todo: Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex"]
+  W068 --> T137["T-137 pruned: Write the precision regime test-first -> shared/surrogate.py"]
+  W068 --> T138["T-138 pruned: Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex"]
   W068 --> T204["T-204 done: Move the screen's candidate fitters to shared/ test-first -> shared/candidates.py"]
   W068 --> T205["T-205 done: Write the tuning run of the short list test-first -> 60_results/63_precision/tune_survivors.py"]
   W068 --> T206["T-206 doing: Run the tuning of the short list -> build/assets/63_precision/63_precision_tab_tuning.tex -- ACTIVE LEAF"]
@@ -612,6 +672,14 @@ flowchart TD
   W087 --> T195["T-195 done: Fit a short curve's spline by minimum-norm least squares test-first -> shared/curvewise.py"]
   E006 --> W089["W-089 bug done: ripple() scores a linear residual as rough on unevenly spaced curves"]
   W089 --> T199["T-199 done: Score the ripple by second divided differences test-first -> shared/scorecard.py"]
+  E006 --> W093["W-093 issue todo: Precision regime on the tuned short list"]
+  W093 --> T209["T-209 todo: Fit one candidate on one pair -> make fit P= C= U= prints its scorecard"]
+  W093 --> T210["T-210 todo: Write the precision options test-first -> shared/surrogate.py and shared/candidates.py"]
+  W093 --> T211["T-211 todo: Write the precision run test-first -> 60_results/63_precision/precision_survivors.py"]
+  W093 --> T212["T-212 todo: Run the precision regime on the short list -> build/assets/63_precision/63_precision_tab_precision.tex"]
+  E006 --> W101["W-101 issue todo: The tuning prunes bad trials at fold boundaries and starts from the screen's settings"]
+  W101 --> T235["T-235 todo: Report the running fold mean and prune test-first -> shared/search.py and shared/trials.py"]
+  W101 --> T236["T-236 todo: Enqueue the screen's settings as trial 0 and a grid for the GPR space test-first -> shared/search.py and tune_survivors.py"]
   E007["E-007 todo: Ensemble uncertainty and the final surrogate"]
   E007 --> W044["W-044 spike pruned: Is L-BFGS fine-tuning worth keeping"]
   E007 --> W045["W-045 issue todo: Ensemble uncertainty over curve-bootstrap resamples"]
@@ -639,15 +707,46 @@ flowchart TD
   W060 --> T114["T-114 done: Set the revised title -> 00_metadata/metadata.tex"]
   W060 --> T115["T-115 done: Align the remaining outline bullets to the revised structure -> the todo bullets of 10, 20, 41, 44, 51-53, 61-64, 70, 80"]
   W060 --> T116["T-116 done: Name paper sections by their compiled number in code and make -> mk/, paper.toml, the colocated modules"]
+  E009 --> W100["W-100 spike todo: What the paper claims once the search names its winners"]
+  W100 --> T233["T-233 todo: List every claim of the title block, abstract, introduction, Section 3.4 and Section 7 against Section 5 -> Findings on W-100"]
+  W100 --> T234["T-234 todo: Decide the thesis with the developer and the supervisors -> the W-100 spike decision"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W079["W-079 issue todo, standalone: Every test carries one category marker, registered and enforced"]
   W079 --> T167["T-167 todo: Mark every test module with its category -> the test_*.py files"]
   W079 --> T168["T-168 todo: Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py"]
+  W079 --> T232["T-232 todo: Refresh mk/python.mk from add-python -> M= selection, test-integration, test-stats"]
   W088["W-088 issue todo, standalone: A running representation screen is followable -- progress, time left and each entry's representation"]
   W088 --> T196["T-196 todo: Log the screen's jobs done and time left test-first -> 60_results/61_representation/screen_representation.py"]
   W088 --> T197["T-197 todo: Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py"]
   W091["W-091 issue todo, standalone: The screens' shared shell and test inputs live once -- one helper module, one toy fixture"]
+  W091 --> T213["T-213 todo: Write the run shell module test-first -> shared/batches.py"]
+  W091 --> T214["T-214 todo: Point the four runnables at shared/batches.py -> no private copy of the run shell left"]
+  W091 --> T215["T-215 todo: Write the toy tables once -> shared/toy_tables.py used by the four test modules"]
+  W094["W-094 bug todo, standalone: A trial that raises ends the tuning after every other job and leaves no outcomes file"]
+  W094 --> T216["T-216 todo: Tell a raising trial FAIL test-first -> shared/search.py"]
+  W094 --> T217["T-217 todo: Save the outcomes after each job test-first -> 60_results/63_precision/tune_survivors.py"]
+  W094 --> T218["T-218 todo: Rebuild a batch's outcomes from its ledger and journal test-first -> tune_survivors.py --recover"]
+  W095["W-095 bug todo, standalone: The wall counts wall-clock time, so a sleeping laptop walls a healthy fit"]
+  W095 --> T219["T-219 todo: Arm the wall on the process's CPU time test-first -> shared/batches.py"]
+  W096["W-096 issue todo, standalone: One Pair and one FitRows value through the fit path"]
+  W096 --> T220["T-220 todo: Replace PAIRS and designs with a frozen Pair test-first -> shared/design.py and the four runnables"]
+  W096 --> T221["T-221 todo: Replace the five-array Fitter with FitRows test-first -> shared/harness.py and its wrappers"]
+  W096 --> T222["T-222 todo: Build Training through make_training and type the scorecard's maps as Mapping -> shared/surrogate.py, shared/scorecard.py"]
+  W097["W-097 bug todo, standalone: Three generated assets overflow the page in the compiled paper"]
+  W097 --> T223["T-223 todo: Cap a multi-row figure at a share of the text height test-first -> shared/plots.py and screen_families.py"]
+  W097 --> T224["T-224 todo: Fit the baseline table to the text width -> 50_methodology/51_algorithms/fit_baseline.py"]
+  W097 --> T225["T-225 todo: Draw the NS ceilings in the NS colour family test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py"]
+  W097 --> T226["T-226 todo: Fail paper-verify on a float or overfull warning from a generated asset -> 00_metadata/latex_warnings.py and mk/paper.mk"]
+  W098["W-098 issue todo, standalone: Figures and captions share the paper's notation"]
+  W098 --> T227["T-227 todo: Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it"]
+  W098 --> T228["T-228 todo: Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py"]
+  W098 --> T229["T-229 todo: Replace the hand-spelled symbol dicts with the macros -> the four figure modules"]
+  W099["W-099 issue todo, standalone: make deliverable builds the paper PDF and proves it opens"]
+  W099 --> T230["T-230 todo: Adopt the template's deliverable target -> Makefile"]
+  W099 --> T231["T-231 todo: Add deliverable-paper -> mk/paper.mk"]
+  W102["W-102 issue todo, standalone: Every section's figures are selected in paper.toml"]
+  W102 --> T237["T-237 todo: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -655,6 +754,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,W068,T206,E009 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class T137,T138,W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,E007,W045,W046,E008,W047,W049,W050,W052,W061,T118,W079,T167,T168,W088,T196,T197,W091 todo
-  class W038,W039,W040,W041,W042,W043,T132,W044,W048,T108 pruned
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W094,T216,T217,T218,W095,T219,W096,T220,T221,T222,W097,T223,T224,T225,T226,W098,T227,T228,T229,W099,T230,T231,W102,T237 todo
+  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
