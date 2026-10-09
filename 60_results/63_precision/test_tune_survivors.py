@@ -1,5 +1,6 @@
 """Facts about the tuning behind Section 5.3, on tiny synthetic data."""
 
+import shutil
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -25,8 +26,10 @@ from tune_survivors import (
     outcomes_from_json,
     outcomes_to_json,
     ranges_figure,
+    recovered,
     run_job,
     screen_figures,
+    study_name,
     trial_points,
     tuning_table,
     walled,
@@ -259,6 +262,26 @@ def test_a_dying_tuning_leaves_the_outcomes_of_its_finished_jobs(
         main([*toy_paths(tmp_path), *TOY_KNOBS], TOY_CONFIG, commit=lambda: "abc1234")
     (saved,) = (tmp_path / "state" / SECTION).glob("*.json")
     assert outcomes_from_json(saved.read_text()) == (Walled(calls[0], "toy"),)
+
+
+def test_recover_rebuilds_a_batch_s_outcomes_from_its_journal_and_ledger(
+    ran: Path, tmp_path: Path
+) -> None:
+    (saved,) = (ran / "state" / SECTION).glob("*.json")
+    shutil.copytree(ran / "state", tmp_path / "state")
+    (tmp_path / "state" / SECTION / saved.name).unlink()
+    inputs = toy_paths(ran)[:3]
+    paths = [*inputs, str(tmp_path / "assets"), str(tmp_path / "state")]
+    main([*paths, *TOY_KNOBS, "--recover", saved.stem], TOY_CONFIG)
+    rebuilt = (tmp_path / "state" / SECTION / saved.name).read_text()
+    assert outcomes_from_json(rebuilt) == outcomes_from_json(saved.read_text())
+
+
+def test_a_study_without_a_complete_trial_is_recovered_as_a_wall() -> None:
+    study = optuna.create_study(direction="maximize")
+    study.tell(study.ask(), state=optuna.trial.TrialState.FAIL)
+    found = recovered("b", {study_name("b", NS_MASS_RBF): study}, [], minutes=30.0)
+    assert found == (Walled(NS_MASS_RBF, "all 1 trials past 30 min"),)
 
 
 def test_a_fit_past_the_wall_predicts_nan() -> None:

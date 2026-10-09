@@ -265,6 +265,55 @@ def screen_figures(entries: Sequence[LedgerEntry], batch: str) -> Mapping[Job, f
     return {job: figures for job, (_, figures) in last.items()}
 
 
+def study_name(batch: str, job: Job) -> str:
+    """The name of the job's study on the batch's journal."""
+    candidate = job.candidate
+    return f"{batch} {job.dataset} {job.target} {candidate.family} {candidate.unit}"
+
+
+def recovered(
+    batch: str,
+    studies: Mapping[str, optuna.Study],
+    entries: Sequence[LedgerEntry],
+    minutes: float,
+) -> tuple[Outcome, ...]:
+    """The batch's outcomes rebuilt from the records that survive a dying parent: per job,
+    its study on the journal (by study_name) and its refit's ledger entry. A study with no
+    COMPLETE trial is a wall over its finished trials; one with a best trial but no entry
+    did not finish its refit and is left out with a warning; a job without a study did not
+    start."""
+    found: list[Outcome] = []
+    for job in jobs():
+        name = study_name(batch, job)
+        if name not in studies:
+            continue
+        trials = studies[name].trials
+        finished = [t for t in trials if t.state in (TrialState.COMPLETE, TrialState.FAIL)]
+        walls = sum(t.state == TrialState.FAIL for t in finished)
+        if walls == len(finished):
+            found.append(Walled(job, f"all {len(finished)} trials past {minutes:g} min"))
+            continue
+        best = studies[name].best_trial
+        refits = [
+            entry
+            for entry in entries
+            if entry.meta.batch == batch
+            and entry.meta.dataset == job.dataset
+            and entry.meta.target == job.target
+            and entry.meta.candidate == job.candidate.family
+            and entry.meta.settings["unit"] == job.candidate.unit
+        ]
+        if not refits:
+            logger.warning("%s: a best trial but no refit in the ledger; left out", name)
+            continue
+        entry = refits[-1]
+        test = significant_figures(entry.test.zones["test"].p95)
+        found.append(
+            Tuned(job, dict(best.params), best.values[0], test, len(finished), walls, entry.meta.id)
+        )
+    return tuple(found)
+
+
 def outcomes_to_json(outcomes: Sequence[Outcome]) -> str:
     """The outcomes as indented JSON, each tagged tuned or walled."""
     tagged = []
@@ -333,12 +382,6 @@ def tuning_table(outcomes: Sequence[Outcome], screen: Mapping[Job, float]) -> st
         "Pair & Family & Unit & Screen & Tuned & Test & Ceiling",
         rows,
     )
-
-
-def study_name(batch: str, job: Job) -> str:
-    """The name of the job's study on the batch's journal."""
-    candidate = job.candidate
-    return f"{batch} {job.dataset} {job.target} {candidate.family} {candidate.unit}"
 
 
 def trial_points(study: optuna.Study, job: Job) -> tuple[TrialPoint, ...]:
@@ -622,7 +665,10 @@ def main(
         for spec, target in PAIRS
     }
     with _at_level(settings.log_level):
-        if args.batch is None:
+        if args.recover is not None:
+            batch = args.recover
+            _recover(args, batch)
+        elif args.batch is None:
             batch = _run_tuning(args, designs, training, settings.log_level, commit, dirty, now)
         else:
             batch = args.batch
@@ -630,9 +676,7 @@ def main(
         outcomes = outcomes_from_json(_outcomes_path(args.state, batch).read_text())
         screen: Mapping[Job, float] = {}
         if args.screen_batch is not None:
-            ledger = sorted((args.state / "ledger").glob("*.json"))
-            entries = [entry_from_json(path.read_text()) for path in ledger]
-            screen = screen_figures(entries, args.screen_batch)
+            screen = screen_figures(_ledger_entries(args.state), args.screen_batch)
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
         path = out / f"{SECTION}_tab_tuning.tex"
@@ -773,6 +817,28 @@ def _journal_points(journal: Path, batch: str) -> tuple[TrialPoint, ...]:
     )
 
 
+def _recover(args: argparse.Namespace, batch: str) -> None:
+    """Rebuild the batch's outcomes file from its journal and the ledger; nothing is fitted."""
+    saved = _outcomes_path(args.state, batch)
+    journal = saved.with_suffix(".journal")
+    assert journal.is_file(), f"no journal of batch {batch}: {journal}"
+    storage = JournalStorage(JournalFileBackend(str(journal)))
+    studies = {
+        name: optuna.load_study(study_name=name, storage=storage)
+        for name in optuna.get_all_study_names(storage)
+        if name.startswith(f"{batch} ")
+    }
+    outcomes = recovered(batch, studies, _ledger_entries(args.state), args.minutes)
+    _write_checked(saved, outcomes_to_json(outcomes))
+    logger.info("recovered %d outcomes of batch %s -> %s", len(outcomes), batch, saved)
+
+
+def _ledger_entries(state: Path) -> list[LedgerEntry]:
+    """Every entry of the run ledger under the state folder, oldest first."""
+    ledger = sorted((state / "ledger").glob("*.json"))
+    return [entry_from_json(path.read_text()) for path in ledger]
+
+
 def _outcomes_path(state: Path, batch: str) -> Path:
     """Where a batch's outcomes are saved."""
     return state / SECTION / f"{batch}.json"
@@ -797,6 +863,11 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--minutes", type=float, required=True, help="the wall of one fit")
     parser.add_argument("--workers", type=int, required=True, help="jobs at once")
     parser.add_argument("--batch", help="fit nothing; rebuild the table from this saved batch")
+    parser.add_argument(
+        "--recover",
+        help="fit nothing; rebuild this batch's outcomes from its journal and the ledger, "
+        "then the table",
+    )
     parser.add_argument("--screen-batch", help="the family screen's batch, for its figures")
     return parser.parse_args(argv)
 
