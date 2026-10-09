@@ -29,7 +29,7 @@ from shared.ceilings import (
     measure,
     uncertainty_macros,
 )
-from shared.config import BhFigure, BhTable, PaperConfig, load_config
+from shared.config import NOTATION_TEX, BhFigure, BhTable, PaperConfig, load_config
 from shared.eda import (
     Adjacency,
     ColumnSummary,
@@ -512,7 +512,7 @@ def main(
     source, out = Path(argv[0]), Path(argv[1]) / SECTION
     assert source.is_file(), f"prepared BH table not found: {source}"
     config = config or load_config()
-    apply_style(config.plot)
+    apply_style(config.plot, NOTATION_TEX.read_text())
     table = with_charge_targets(pd.read_parquet(source))
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():

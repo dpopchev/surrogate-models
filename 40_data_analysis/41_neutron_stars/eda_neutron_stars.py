@@ -31,7 +31,7 @@ from shared.ceilings import (
     measure,
     uncertainty_macros,
 )
-from shared.config import NsFigure, NsTable, PaperConfig, load_config
+from shared.config import NOTATION_TEX, NsFigure, NsTable, PaperConfig, load_config
 from shared.eda import (
     Adjacency,
     ColumnSummary,
@@ -618,7 +618,7 @@ def main(
     source, out = Path(argv[0]), Path(argv[1]) / SECTION
     assert source.is_file(), f"prepared NS table not found: {source}"
     config = config or load_config()
-    apply_style(config.plot)
+    apply_style(config.plot, NOTATION_TEX.read_text())
     prepared = pd.read_parquet(source)
     raw = {str(key): int(value) for key, value in prepared.attrs.items()}
     assert {"runs", "empty_runs", "rows"} <= raw.keys(), (

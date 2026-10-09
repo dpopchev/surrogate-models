@@ -36,7 +36,7 @@ from sklearn.pipeline import Pipeline
 
 from shared import surrogate
 from shared.ceilings import profile
-from shared.config import PaperConfig, load_config
+from shared.config import NOTATION_TEX, PaperConfig, load_config
 from shared.curvewise import curvewise_fitter
 from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
 from shared.eda import CurveSpace, booktabs
@@ -831,7 +831,7 @@ def main(
         _write_checked(path, family_table(outcomes))
         logger.info("done: family table of batch %s, %d outcomes -> %s", batch, len(outcomes), path)
         panels = _parity_panels(parity_picks(outcomes), designs, args.state / "ledger")
-        apply_style(config.plot)
+        apply_style(config.plot, NOTATION_TEX.read_text())
         drawn = (
             (PARITY, parity_figure(panels, config.plot), parity_tex()),
             (ERRORS, error_figure(panels, config.plot), errors_tex()),

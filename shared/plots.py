@@ -66,13 +66,16 @@ class PlotStyle(BaseModel):
 # --- behaviour --------------------------------------------------------------------------------
 
 
-def apply_style(style: PlotStyle) -> None:
-    """Set the seaborn theme, then the matplotlib rcParams the style fixes."""
+def apply_style(style: PlotStyle, notation: str = "") -> None:
+    """Set the seaborn theme, then the matplotlib rcParams the style fixes; `notation` is the
+    paper's macro file (00_metadata/notation.tex), handed to LaTeX as the preamble so a label
+    may use the macros the captions use (W-098)."""
     width = style.text_width_pt / POINTS_PER_INCH
     sns.set_theme(context=style.context, style="ticks", palette=style.palette)
     plt.rcParams.update(
         {
             "text.usetex": style.usetex,
+            "text.latex.preamble": notation,
             "font.family": "serif",
             "font.size": style.font_size,
             "figure.figsize": (width, width * style.aspect),

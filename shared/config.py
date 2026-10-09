@@ -17,6 +17,8 @@ from shared.plots import PlotStyle
 
 ROOT = Path(__file__).resolve().parents[1]
 PAPER_TOML = ROOT / "paper.toml"
+# The paper's notation macros, input by the preamble and handed to matplotlib (W-098).
+NOTATION_TEX = ROOT / "00_metadata" / "notation.tex"
 
 # --- vocabulary and types ---------------------------------------------------------------------
 

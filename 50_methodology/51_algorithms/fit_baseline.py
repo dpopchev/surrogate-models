@@ -36,7 +36,7 @@ from matplotlib.figure import Figure
 from sklearn.pipeline import Pipeline
 
 from shared.ceilings import Spread
-from shared.config import AlgorithmsSection, PaperConfig, load_config
+from shared.config import NOTATION_TEX, AlgorithmsSection, PaperConfig, load_config
 from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
 from shared.diagnostics import curve_overlay, error_cdf, loss_curve
 from shared.eda import booktabs, curve_ids, render_macros, sci_tex
@@ -474,7 +474,7 @@ def main(
     config = config or load_config()
     commit, dirty, now = commit or _git_commit, dirty or _git_dirty, now or _utc_now
     settings = config.methodology.algorithms
-    apply_style(config.plot)
+    apply_style(config.plot, NOTATION_TEX.read_text())
     torch.set_num_threads(settings.threads)
     training = Training(**settings.model_dump(exclude={"log_level", "threads", "workers"}))
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}

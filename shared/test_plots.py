@@ -29,6 +29,11 @@ def _restore_rcparams():
         yield
 
 
+def test_style_hands_the_notation_to_latex() -> None:
+    apply_style(STYLE, notation="\\newcommand{\\Dch}{D}")
+    assert plt.rcParams["text.latex.preamble"] == "\\newcommand{\\Dch}{D}"
+
+
 def test_style_sets_usetex() -> None:
     apply_style(STYLE)
     assert plt.rcParams["text.usetex"] is False
