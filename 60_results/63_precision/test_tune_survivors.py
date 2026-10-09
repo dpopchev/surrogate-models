@@ -9,6 +9,7 @@ import numpy as np
 import optuna
 import pandas as pd
 import pytest
+import tune_survivors
 from optuna.distributions import BaseDistribution, CategoricalDistribution, IntDistribution
 from optuna.trial import TrialState
 from tune_survivors import (
@@ -17,6 +18,7 @@ from tune_survivors import (
     TrialPoint,
     Tuned,
     Walled,
+    Work,
     history_figure,
     jobs,
     main,
@@ -238,6 +240,25 @@ def test_main_draws_the_ranges_figure(ran: Path) -> None:
 
 def test_one_job_per_pair_and_short_listed_candidate() -> None:
     assert len(set(jobs())) == 14
+
+
+def test_a_dying_tuning_leaves_the_outcomes_of_its_finished_jobs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[Job] = []
+
+    def toy_job(work: Work) -> Walled:
+        calls.append(work.job)
+        if len(calls) == 2:
+            raise RuntimeError("the second job dies")
+        return Walled(work.job, "toy")
+
+    monkeypatch.setattr(tune_survivors, "jobs", lambda: (NS_MASS_RBF, NS_MASS_RBF_CW))
+    monkeypatch.setattr(tune_survivors, "tune_job", toy_job)
+    with pytest.raises(RuntimeError):
+        main([*toy_paths(tmp_path), *TOY_KNOBS], TOY_CONFIG, commit=lambda: "abc1234")
+    (saved,) = (tmp_path / "state" / SECTION).glob("*.json")
+    assert outcomes_from_json(saved.read_text()) == (Walled(calls[0], "toy"),)
 
 
 def test_a_fit_past_the_wall_predicts_nan() -> None:

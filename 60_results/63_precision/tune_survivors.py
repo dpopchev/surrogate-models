@@ -694,12 +694,13 @@ def _run_tuning(
         partial(tune_job, Work(job, *designs[(job.dataset, job.target)], context)) for job in found
     ]
     started = time.monotonic()
-    done = 0
+    finished: dict[int, Outcome] = {}
 
     def report(index: int, outcome: Outcome) -> None:
-        nonlocal done
-        done += 1
-        logger.info(job_line(outcome, done, len(works), time.monotonic() - started))
+        # Saved after every job, in job order, so a parent that dies leaves the finished ones.
+        finished[index] = outcome
+        logger.info(job_line(outcome, len(finished), len(works), time.monotonic() - started))
+        _write_checked(saved, outcomes_to_json([finished[i] for i in sorted(finished)]))
 
     outcomes = run_jobs(works, args.workers, on_done=report)
     _write_checked(saved, outcomes_to_json(outcomes))

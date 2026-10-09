@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+import screen_families
 from screen_families import (
     SECTION,
     Candidate,
@@ -17,6 +18,7 @@ from screen_families import (
     Series,
     Trajectory,
     Wall,
+    Work,
     candidates,
     error_figure,
     family_table,
@@ -280,6 +282,28 @@ def test_main_saves_the_outcomes_of_every_round(ran: Path) -> None:
     (saved,) = (ran / "state" / SECTION).glob("*.json")
     # Per pair: 12 candidates, then 3 of each unit, then 2 of each unit.
     assert len(outcomes_from_json(saved.read_text())) == 4 * (12 + 6 + 4)
+
+
+def test_a_dying_round_leaves_the_outcomes_of_its_finished_jobs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[Job] = []
+
+    def toy_job(work: Work) -> Wall:
+        calls.append(work.job)
+        if len(calls) == 2:
+            raise RuntimeError("the second job dies")
+        return Wall(work.job, "toy")
+
+    monkeypatch.setattr(screen_families, "candidates", lambda: (KNN,))
+    monkeypatch.setattr(screen_families, "screen_job", toy_job)
+    ns, bh, split_file = toy_inputs(tmp_path)
+    paths = [str(ns), str(bh), str(split_file), str(tmp_path / "assets"), str(tmp_path / "state")]
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
+    with pytest.raises(RuntimeError):
+        main([*paths, *TOY_KNOBS], config, commit=lambda: "abc1234")
+    (saved,) = (tmp_path / "state" / SECTION).glob("*.json")
+    assert outcomes_from_json(saved.read_text()) == (Wall(calls[0], "toy"),)
 
 
 def test_main_draws_the_parity_figure(ran: Path) -> None:

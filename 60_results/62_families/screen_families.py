@@ -844,7 +844,7 @@ def _run_screen(
             args.workers,
             batch,
         )
-        found = _run_round(jobs, designs, context, args.workers)
+        found = _run_round(jobs, designs, context, args.workers, saved, outcomes)
         outcomes += found
         _write_checked(saved, outcomes_to_json(outcomes))
         if round_ + 1 < len(args.budgets):
@@ -857,18 +857,23 @@ def _run_round(
     designs: dict[tuple[str, Target], tuple[Design, CurveSpace]],
     context: Context,
     workers: int,
+    saved: Path,
+    before: Sequence[Outcome],
 ) -> list[Outcome]:
-    """One round's jobs on the workers, a line logged as each ends; outcomes in job order."""
+    """One round's jobs on the workers, a line logged as each ends; outcomes in job order. The
+    earlier rounds' outcomes (`before`) and the round's finished jobs are saved after every
+    job, so a parent that dies leaves them."""
     works = [
         partial(screen_job, Work(job, *designs[(job.dataset, job.target)], context)) for job in jobs
     ]
     started = time.monotonic()
-    done = 0
+    finished: dict[int, Outcome] = {}
 
     def report(index: int, outcome: Outcome) -> None:
-        nonlocal done
-        done += 1
-        logger.info(job_line(outcome, done, len(works), time.monotonic() - started))
+        finished[index] = outcome
+        logger.info(job_line(outcome, len(finished), len(works), time.monotonic() - started))
+        kept = [*before, *(finished[i] for i in sorted(finished))]
+        _write_checked(saved, outcomes_to_json(kept))
 
     return run_jobs(works, workers, on_done=report)
 
