@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-094   | blocked: 3 | todo roots: 10 | done: 270 | pruned: 19
+open path: W-094   | blocked: 3 | todo roots: 10 | done: 271 | pruned: 19
 
 ## Tree
 
@@ -203,8 +203,8 @@ open path: W-094   | blocked: 3 | todo roots: 10 | done: 270 | pruned: 19
 
 ### W-098 issue [doing] (standalone) Figures and captions share the paper's notation   (filed during T-206)
 
-- T-227 [doing] Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it   <- ACTIVE LEAF
-- T-228 [todo] Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py
+- T-227 [done] Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it
+- T-228 [doing] Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py   <- ACTIVE LEAF
 - T-229 [todo] Replace the hand-spelled symbol dicts with the macros -> the four figure modules
 
 ### W-102 issue [todo] (standalone) Every section's figures are selected in paper.toml   (filed during T-206)
@@ -743,8 +743,8 @@ flowchart TD
   W096 --> T221["T-221 todo: Replace the five-array Fitter with FitRows test-first -> shared/harness.py and its wrappers"]
   W096 --> T222["T-222 todo: Build Training through make_training and type the scorecard's maps as Mapping -> shared/surrogate.py, shared/scorecard.py"]
   W098["W-098 issue doing, standalone: Figures and captions share the paper's notation"]
-  W098 --> T227["T-227 doing: Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it -- ACTIVE LEAF"]
-  W098 --> T228["T-228 todo: Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py"]
+  W098 --> T227["T-227 done: Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it"]
+  W098 --> T228["T-228 doing: Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py -- ACTIVE LEAF"]
   W098 --> T229["T-229 todo: Replace the hand-spelled symbol dicts with the macros -> the four figure modules"]
   W102["W-102 issue todo, standalone: Every section's figures are selected in paper.toml"]
   W102 --> T237["T-237 todo: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
@@ -755,9 +755,9 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W098,T227 doing
+  class E006,E009,W098,T228 doing
   class W068,T206,W094 blocked
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,T228,T229,W102,T237,W103,T238 todo
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218,T227 done
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,T229,W102,T237,W103,T238 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
