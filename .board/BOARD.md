@@ -16,7 +16,7 @@ E-006         [doing]    Search space and the best surrogate per dataset
   W-065  issue  [done]     One scorecard and a fair harness for every candidate -- T-129 [done], T-130 [done], T-131 [done], T-146 [done], T-169 [done]
   W-066  issue  [done]     Representation screen -- inputs, targets, pointwise or curve-wise -- T-132 [pruned]   [pruned: split (developer, 2026-10-07): the target options into T-189, the curve-wise representation into T-190 as a harness fitter rather than a design], T-133 [done], T-189 [done], T-190 [done], T-191 [done], T-192 [done]   (filed during T-189), T-198 [done]   (filed during T-133)
   W-067  issue  [done]     Family screen -- interpolators, GPR, XGBoost and networks -- T-134 [done], T-135 [done], T-170 [done], T-193 [done]   (filed during T-133), T-200 [done]   (filed during T-135), T-201 [done]   (filed during T-135), T-202 [done]   (filed during T-135)
-  W-068  issue  [doing]    Tuning and precision of the surviving families -- T-136 [done], T-137 [pruned]   [pruned: re-planned (developer, 2026-10-09): the precision regime moves to W-093 so W-068 lands on the tuning table within the one-day branch], T-138 [pruned]   [pruned: re-planned (developer, 2026-10-09): the precision run moves to W-093 (T-211, T-212); W-068 closes on T-206's table], T-204 [done]   (filed during T-136), T-205 [done]   (filed during T-136), T-206 [done]   (filed during T-136), T-207 [done]   (filed during T-205)
+  W-068  issue  [doing]    Tuning and precision of the surviving families -- T-136 [done], T-137 [pruned]   [pruned: re-planned (developer, 2026-10-09): the precision regime moves to W-093 so W-068 lands on the tuning table within the one-day branch], T-138 [pruned]   [pruned: re-planned (developer, 2026-10-09): the precision run moves to W-093 (T-211, T-212); W-068 closes on T-206's table], T-204 [done]   (filed during T-136), T-205 [done]   (filed during T-136), T-206 [done]   (filed during T-136), T-207 [done]   (filed during T-205), T-240 [doing]   (filed during T-206)   <- ACTIVE LEAF
   W-069  issue  [todo]     Extrapolation error against the distance from the training hull -- T-139 [todo], T-140 [todo]
   W-070  issue  [todo]     Pareto front and the best approach per pair -- T-141 [todo], T-142 [todo], T-143 [todo]
   W-071  issue  [done]     Section 3.4 and Section 5 follow the search space -- T-144 [done], T-145 [done]
@@ -510,6 +510,7 @@ flowchart TD
   W068 --> T205["T-205 done: Write the tuning run of the short list test-first -> 60_results/63_precision/tune_survivors.py"]
   W068 --> T206["T-206 done: Run the tuning of the short list -> build/assets/63_precision/63_precision_tab_tuning.tex"]
   W068 --> T207["T-207 done: Pin every search trial to one thread test-first -> shared/search.py"]
+  W068 --> T240["T-240 doing: Draw the tuning's search histories and searched ranges test-first -> 60_results/63_precision/tune_survivors.py -- ACTIVE LEAF"]
   E006 --> W069["W-069 issue todo: Extrapolation error against the distance from the training hull"]
   W069 --> T139["T-139 todo: Write the distance from the training hull test-first -> shared/scorecard.py"]
   W069 --> T140["T-140 todo: Run the extrapolation probe on the rim and outer curves -> 60_results/64_extrapolation/64_extrapolation.tex"]
@@ -601,7 +602,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,W068,E009 doing
+  class E006,W068,T240,E009 doing
   class W094 blocked
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T206,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W102,T237 todo
