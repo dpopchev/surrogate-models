@@ -57,8 +57,10 @@ typecheck: ## Pyright over the configured paths
 	$(call log_done,pyright clean)
 
 .PHONY: test
-test: ## Pytest with doctests
-	@$(RUN) pytest
+M ?=
+
+test: ## Pytest with doctests (M=<marker> selects one category)
+	@$(RUN) pytest $(if $(M),-m "$(M)")
 	$(call log_done,tests passed)
 
 .PHONY: test-quick

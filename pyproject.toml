@@ -61,7 +61,18 @@ dev = [
 testpaths = ["."]
 pythonpath = ["."]
 norecursedirs = [".*", "build", "local", "node_modules"]
-addopts = "-ra --doctest-modules"
+addopts = "-ra --doctest-modules --strict-markers"
+# Every test carries exactly one category marker (conftest.py, rules/python.md Tests).
+markers = [
+  "edge: primitives to domain types and back; an adapter against a local resource",
+  "model: an aggregate's rules and moves; a value object's constructor",
+  "command: load-change-save with injected load, save and find",
+  "view: a query or projection over primitives",
+  "functional: the work item's criterion",
+  "integration: the real external system; never in make test or make check",
+]
+# Every run appends its test durations here; `make test-stats` reports them.
+stats_file = "local/test-stats.jsonl"
 # Tool residuals live in local/; tools without a pyproject key are pointed
 # there by mk/python.mk's exports.
 cache_dir = "local/.pytest_cache"
