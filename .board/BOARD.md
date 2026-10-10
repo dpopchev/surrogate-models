@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-094   | blocked: 1 | todo roots: 10 | done: 278 | pruned: 19
+open path: W-094   | blocked: 1 | todo roots: 11 | done: 278 | pruned: 19
 
 ## Tree
 
@@ -52,6 +52,7 @@ W-095  bug    [todo]     (standalone) The wall counts wall-clock time, so a slee
 W-096  issue  [todo]     (standalone) One Pair and one FitRows value through the fit path   (filed during T-206) -- T-220 [todo], T-221 [todo], T-222 [todo]
 W-102  issue  [todo]     (standalone) Every section's figures are selected in paper.toml   (filed during T-206) -- T-237 [todo]
 W-104  bug    [todo]     (standalone) Section 5.2's error and scaling figures float past Section 5.3's text   (filed during T-240) -- T-241 [todo]   (filed during T-240)
+W-105  bug    [todo]     (standalone) make tuning with --recover on a partial batch fails at the figures after writing the table   (filed during T-240) -- T-242 [todo]   (filed during T-240)
 ```
 
 ## Closed
@@ -600,6 +601,8 @@ flowchart TD
   W102 --> T237["T-237 todo: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
   W104["W-104 bug todo, standalone: Section 5.2's error and scaling figures float past Section 5.3's text"]
   W104 --> T241["T-241 todo: Keep Section 5.2's figures beside its text -> 60_results/62_families/62_families.tex"]
+  W105["W-105 bug todo, standalone: make tuning with --recover on a partial batch fails at the figures after writing the table"]
+  W105 --> T242["T-242 todo: Read only the studies a batch's journal holds into the figures test-first -> 60_results/63_precision/tune_survivors.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -608,6 +611,6 @@ flowchart TD
   class E006,W068,E009 doing
   class W094 blocked
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W102,T237,W104,T241 todo
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W102,T237,W104,T241,W105,T242 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
