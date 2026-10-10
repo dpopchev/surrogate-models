@@ -5,6 +5,8 @@ from datetime import date
 import pytest
 from build_stamp import WorkTree, make_build_stamp, render_tex, stamp_text
 
+pytestmark = pytest.mark.model
+
 DAY = date(2026, 1, 2)
 
 

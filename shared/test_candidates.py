@@ -28,6 +28,8 @@ from shared.harness import harness
 from shared.search import Space, space_of
 from shared.surrogate import Training
 
+pytestmark = pytest.mark.model
+
 TRAINING = Training(
     width=8,
     depth=2,

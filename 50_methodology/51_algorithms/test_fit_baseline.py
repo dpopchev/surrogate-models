@@ -136,6 +136,8 @@ def pair() -> tuple[PairScores, Fit]:
 
 
 class TestScorePair:
+    pytestmark = pytest.mark.model
+
     def test_scores_the_mlp_and_both_references(self, pair: tuple[PairScores, Fit]) -> None:
         assert [s.predictor for s in pair[0].scored] == ["MLP", "mean", "nearest curve"]
 
@@ -154,6 +156,8 @@ class TestScorePair:
 
 
 class TestMetricFor:
+    pytestmark = pytest.mark.model
+
     def test_scores_the_charge_in_d(self) -> None:
         assert metric_for("charge") is mare_in_d
 
@@ -162,6 +166,8 @@ class TestMetricFor:
 
 
 class TestBaselineTable:
+    pytestmark = pytest.mark.view
+
     def test_gives_the_mlp_its_mare_fold_spread_figures_and_seconds(self) -> None:
         # The pair in one cell and every error in e-notation, so the table fits the text width.
         assert (
@@ -181,6 +187,8 @@ class TestBaselineTable:
 
 
 class TestNumbers:
+    pytestmark = pytest.mark.view
+
     def test_the_test_mare_is_scientific(self) -> None:
         assert numbers(SCORED)["baseNsMassMare"] == "1.23\\times 10^{-2}"
 
@@ -199,6 +207,8 @@ class TestNumbers:
 class TestChargeMares:
     """D = M 10^Y on two test rows: the charge model is exact, the mass model misses row 0."""
 
+    pytestmark = pytest.mark.model
+
     @pytest.fixture
     def mares(self) -> tuple[float, float]:
         mass = replace(SCORED, y_true=np.array([2.0, 4.0]), y_pred=np.array([2.2, 4.0]))
@@ -213,6 +223,8 @@ class TestChargeMares:
 
 
 class TestChargeNumbers:
+    pytestmark = pytest.mark.view
+
     def test_names_the_true_mass_mare_per_dataset(self) -> None:
         found = charge_numbers({"black_holes": (0.0123, 0.0456)})
         assert found["baseBhChargeMareTrueM"] == "1.23\\times 10^{-2}"
@@ -226,6 +238,8 @@ BOUNDED = replace(SHORT, max_epochs=500, patience=20)
 
 
 class TestStartBanner:
+    pytestmark = pytest.mark.view
+
     @pytest.fixture
     def lines(self) -> list[str]:
         return start_banner(
@@ -272,6 +286,8 @@ FILES = [Path("assets/51_algorithms/51_algorithms_num.tex"), Path("state/run-1/r
 
 
 class TestEndBanner:
+    pytestmark = pytest.mark.view
+
     def test_says_an_early_stop_and_after_which_epoch(self) -> None:
         assert (
             "stopped: early -- no better validation loss for 20 epochs after epoch 123"
@@ -299,6 +315,8 @@ class TestEndBanner:
 
 
 class TestProgressLine:
+    pytestmark = pytest.mark.view
+
     def test_estimates_the_time_left_from_the_mean_fit(self) -> None:
         assert progress_line(3, 24, 252.0) == "fit 3/24 done, elapsed 4m 12s, about 29m 24s left"
 
@@ -306,10 +324,12 @@ class TestProgressLine:
         assert progress_line(1, 1, 12.0) == "fit 1/1 done, elapsed 12s, about 0s left"
 
 
+@pytest.mark.view
 def test_the_parity_figure_draws_the_identity_line() -> None:
     assert len(parity(SCORED, PlotStyle(usetex=False)).axes[0].lines) == 1
 
 
+@pytest.mark.view
 def test_the_figure_wrapper_includes_the_parity_image() -> None:
     assert "{51_algorithms_fig_parity}" in figure_tex()
 
@@ -348,6 +368,7 @@ def toy_inputs(folder: Path) -> tuple[Path, Path, Path]:
     return ns, bh, split_file
 
 
+@pytest.mark.view
 def test_each_curve_is_named_by_its_key(tmp_path: Path) -> None:
     ns, _, _ = toy_inputs(tmp_path)
     names = curve_names(pd.read_parquet(ns), NEUTRON_STARS)
@@ -386,6 +407,7 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return folder
 
 
+@pytest.mark.functional
 def test_the_run_names_make_dashboard_as_it_starts(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -399,6 +421,7 @@ def test_the_run_names_make_dashboard_as_it_starts(
     assert "make dashboard" in caplog.text
 
 
+@pytest.mark.command
 def test_a_trial_names_its_candidate_while_it_runs() -> None:
     study = optuna.create_study(direction="maximize")
     ask_trial(study, "toy", "mass", "MLP")
@@ -406,6 +429,8 @@ def test_a_trial_names_its_candidate_while_it_runs() -> None:
 
 
 class TestMain:
+    pytestmark = pytest.mark.functional
+
     def test_writes_the_numbers_and_the_parity_figure_into_its_section(self, ran: Path) -> None:
         assert sorted(p.name for p in (ran / "assets" / SECTION).iterdir()) == [
             "51_algorithms_fig_parity.png",
@@ -500,6 +525,8 @@ class TestMain:
 
 class TestFinalFit:
     """The MLP's final fit, built from the harness run and the fitted network."""
+
+    pytestmark = pytest.mark.model
 
     def test_is_scored_on_the_test_rows_only(self, fit: Fit) -> None:
         assert fit.y_true.tolist() == TOY.y[TOY.test].tolist()

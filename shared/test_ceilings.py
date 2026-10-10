@@ -42,40 +42,48 @@ def family(log_in_p) -> pd.DataFrame:
     return pd.DataFrame({"p": p, "x": np.tile(X, 7), "y": np.exp(np.tile(X, 7) + log_in_p(p))})
 
 
+@pytest.mark.model
 def test_spread_gives_the_median_of_the_errors() -> None:
     assert spread(np.array([0.1, 0.2, 0.3, 0.4])).median == pytest.approx(0.25)
 
 
+@pytest.mark.model
 def test_spread_gives_the_mean_of_the_errors() -> None:
     assert spread(np.array([0.1, 0.2, 0.3, 1.0])).mean == pytest.approx(0.4)
 
 
+@pytest.mark.model
 def test_noise_proxy_is_zero_for_a_log_cubic_target() -> None:
     assert noise_proxy(SMOOTH, ["p"], "x", "y").max == pytest.approx(0.0, abs=1e-12)
 
 
+@pytest.mark.model
 def test_noise_proxy_finds_relative_noise_of_its_own_order() -> None:
     jitter = np.random.default_rng(0).normal(0.0, 1e-3, len(SMOOTH))
     noisy = SMOOTH.assign(y=SMOOTH["y"] * (1.0 + jitter))
     assert 3e-4 < noise_proxy(noisy, ["p"], "x", "y").median < 3e-3
 
 
+@pytest.mark.model
 def test_a_cubic_spline_along_a_log_cubic_curve_is_exact() -> None:
     assert along_curve_errors(SMOOTH, ["p"], "x", "y").max() == pytest.approx(0.0, abs=1e-12)
 
 
+@pytest.mark.model
 def test_cubic_interpolation_across_curves_cubic_in_p_is_exact() -> None:
     cubic = family(lambda p: 0.1 * p - 0.02 * p**2 + 0.003 * p**3)
     scored = across_curve_errors(cubic, [], "p", "x", "y", neighbours=2)
     assert scored.errors.max() == pytest.approx(0.0, abs=1e-9)
 
 
+@pytest.mark.model
 def test_linear_interpolation_across_misses_the_curvature_in_p() -> None:
     # log y = 0.1 p^2: the mean of the neighbours at p - 1 and p + 1 is 0.1 too high.
     scored = across_curve_errors(family(lambda p: 0.1 * p**2), [], "p", "x", "y", neighbours=1)
     assert scored.errors.min() == pytest.approx(np.expm1(0.1), rel=1e-6)
 
 
+@pytest.mark.model
 def test_curves_are_held_out_within_each_group_of_fixed_keys() -> None:
     # Two groups q = 1, 2 of three curves each: one interior curve per group, 12 rows each.
     three = family(lambda p: 0.1 * p)
@@ -85,6 +93,7 @@ def test_curves_are_held_out_within_each_group_of_fixed_keys() -> None:
     assert len(scored.errors) == 2 * len(X)
 
 
+@pytest.mark.model
 def test_across_curve_errors_return_the_true_target_of_the_scored_rows() -> None:
     linear = family(lambda p: 0.1 * p)
     scored = across_curve_errors(linear[linear["p"] <= 3.0], [], "p", "x", "y", neighbours=1)
@@ -92,12 +101,14 @@ def test_across_curve_errors_return_the_true_target_of_the_scored_rows() -> None
     assert scored.truth.tolist() == pytest.approx(expected.tolist())
 
 
+@pytest.mark.model
 def test_across_curve_errors_return_the_position_of_the_scored_rows() -> None:
     linear = family(lambda p: 0.1 * p)
     scored = across_curve_errors(linear[linear["p"] <= 3.0], [], "p", "x", "y", neighbours=1)
     assert scored.position.tolist() == pytest.approx(X.tolist())
 
 
+@pytest.mark.model
 def test_a_profile_bins_the_errors_by_position_into_equal_counts() -> None:
     position, errors = np.arange(8.0), np.array([1.0, 3.0, 5.0, 7.0, 2.0, 2.0, 4.0, 4.0])
     assert profile(position, errors, bins=4).median == (2.0, 6.0, 2.0, 4.0)
@@ -120,6 +131,8 @@ def found() -> Ceilings:
 
 
 class TestMeasure:
+    pytestmark = pytest.mark.model
+
     def test_varies_each_curve_key_across_curves_for_each_target(self, found) -> None:
         assert sorted(found.across) == [("y", "p"), ("y", "q"), ("z", "p"), ("z", "q")]
 
@@ -141,6 +154,8 @@ KNOWN = Ceilings(
 
 
 class TestCeilingMacros:
+    pytestmark = pytest.mark.view
+
     def test_name_the_across_curve_p95_per_target_and_key(self) -> None:
         assert ceiling_macros("ex", KNOWN, TAGS)["exCeilYAcrossQ"] == "1.00\\times 10^{-3}"
 
@@ -156,6 +171,8 @@ class TestCeilingMacros:
 
 
 class TestUncertaintyMacros:
+    pytestmark = pytest.mark.view
+
     # p95 across: 1e-4 along p, 1e-3 along q -> the worse, 1e-3, is the relative uncertainty.
     def test_the_sigma_is_the_worst_p95_times_the_typical_value(self) -> None:
         macros = uncertainty_macros("ex", KNOWN, TAGS, {"y": {"": 2.0}}, decade_target="y")
@@ -173,6 +190,7 @@ class TestUncertaintyMacros:
 LABELS = {"y": "$Y$", "z": "$Z$", "p": "$p$", "q": "$q$"}
 
 
+@pytest.mark.view
 def test_the_ceiling_table_gives_one_row_per_target() -> None:
     row = (
         "$Y$ & $1.00\\times 10^{-8}$ & $2.00\\times 10^{-6}$ & $1.00\\times 10^{-4}$ & "
@@ -181,6 +199,7 @@ def test_the_ceiling_table_gives_one_row_per_target() -> None:
     assert row in ceiling_table("ex-ceilings", "Ceilings.", KNOWN, LABELS)
 
 
+@pytest.mark.view
 def test_the_decade_table_gives_the_median_per_direction_and_the_figures_of_the_worse() -> None:
     # Medians 4e-4 (across p) and 2e-4 (across q): the worse keeps -log10(4e-4) = 3.4 figures.
     row = "$10^{-3}$ & $4.00\\times 10^{-4}$ & $2.00\\times 10^{-4}$ & 3.4"
@@ -188,6 +207,8 @@ def test_the_decade_table_gives_the_median_per_direction_and_the_figures_of_the_
 
 
 class TestCeilingFigure:
+    pytestmark = pytest.mark.view
+
     @pytest.fixture(scope="class")
     @staticmethod
     def figure(found):
@@ -206,15 +227,18 @@ TOO_FEW = family(lambda p: 0.1 * p).query("p <= 2.0 and x <= 0.3")  # 2 curves o
 
 
 class TestTooFewCurves:
+    @pytest.mark.model
     def test_measure_leaves_the_bounds_undefined(self) -> None:
         found = measure(TOO_FEW, ["p"], "x", ["y"], decade_target="y")
         assert np.isnan(found.across["y", "p"].p95)
 
+    @pytest.mark.view
     def test_the_macros_show_an_undefined_bound_as_a_dash(self) -> None:
         found = measure(TOO_FEW, ["p"], "x", ["y"], decade_target="y")
         assert ceiling_macros("ex", found, TAGS)["exCeilYAcrossP"] == "--"
 
 
+@pytest.mark.model
 def test_measure_keys_the_decade_ceilings_by_floor_log10_of_the_target(found) -> None:
     # y = exp(x + 0.1 p + 0.05 q) lies in [1.2, 7.8] on the held-out rows: decade 0 alone.
     assert sorted(found.decades["p"]) == [0]

@@ -42,18 +42,22 @@ def curves(start_step: float = 0.5) -> pd.DataFrame:
 TABLE = with_charge_targets(curves())
 
 
+@pytest.mark.model
 def test_existence_edge_lists_where_each_curve_starts() -> None:
     assert [r for _, r in existence_edge(TABLE).starts] == [1.0, 1.5, 2.0]
 
 
+@pytest.mark.model
 def test_a_target_free_of_beta_has_no_beta_effect() -> None:
     assert beta_effect(TABLE.assign(y=TABLE["r_h"]), "y").spread_ratio == pytest.approx(0.0)
 
 
+@pytest.mark.model
 def test_a_target_driven_by_beta_has_a_beta_effect() -> None:
     assert beta_effect(TABLE.assign(y=TABLE["beta"]), "y").spread_ratio > 0.5
 
 
+@pytest.mark.model
 def test_charge_targets_are_compared_in_order() -> None:
     assert [c.target for c in charge_targets(TABLE)] == [
         "D",
@@ -63,6 +67,7 @@ def test_charge_targets_are_compared_in_order() -> None:
     ]
 
 
+@pytest.mark.model
 def test_d_falls_as_r_h_grows_here() -> None:
     assert charge_targets(TABLE)[0].pearson_rh < 0
 
@@ -71,6 +76,8 @@ SCORES = evidence(TABLE, folds=3, seed=0).splits
 
 
 class TestNumbers:
+    pytestmark = pytest.mark.view
+
     @pytest.fixture
     def found(self):
         return numbers(evidence(TABLE, folds=3, seed=0))
@@ -104,6 +111,7 @@ class TestNumbers:
         assert [name for name in found if "Correction" in name or name.endswith("MC")] == []
 
 
+@pytest.mark.model
 def test_the_split_scores_raw_m_and_log10_d_only() -> None:
     assert {s.target for s in SCORES} == {"M", "log10_D"}
 
@@ -112,6 +120,8 @@ STYLE = PlotStyle(usetex=False)
 
 
 class TestFigures:
+    pytestmark = pytest.mark.view
+
     @pytest.fixture(autouse=True)
     def _close(self):
         yield
@@ -148,27 +158,34 @@ class TestFigures:
 FOUND = evidence(TABLE, folds=3, seed=0)
 
 
+@pytest.mark.view
 def test_figure_tex_labels_its_figure() -> None:
     assert "\\label{fig:bh-existence-edge}" in figure_tex("existence_edge")
 
 
+@pytest.mark.view
 def test_table_tex_labels_its_table() -> None:
     assert "\\label{tab:bh-split-strategies}" in table_tex(FOUND, "split_strategies")
 
 
+@pytest.mark.view
 def test_univariate_table_has_a_row_for_the_horizon_radius() -> None:
     assert "$r_h$ &" in table_tex(FOUND, "univariate")
 
 
+@pytest.mark.view
 def test_charge_table_has_a_row_per_candidate_target() -> None:
     assert table_tex(FOUND, "charge_correlation").count("\\\\\n") == 5
 
 
+@pytest.mark.view
 def test_figure_tex_includes_the_image_of_its_own_stem() -> None:
     assert "{42_black_holes_fig_existence_edge}" in figure_tex("existence_edge")
 
 
 class TestMain:
+    pytestmark = pytest.mark.functional
+
     @pytest.fixture
     def assets(self, tmp_path: Path) -> Path:
         table, assets = tmp_path / "bh.parquet", tmp_path / "assets"
@@ -203,6 +220,7 @@ class TestMain:
         assert (assets / "41_neutron_stars" / "kept.tex").is_file()
 
 
+@pytest.mark.model
 def test_split_strategies_score_every_strategy_in_order() -> None:
     scores = split_strategies(TABLE, "M", folds=3, seed=0)
     assert [s.strategy for s in scores] == ["random_rows", "curves", "outer_curves"]

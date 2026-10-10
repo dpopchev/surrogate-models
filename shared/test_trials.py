@@ -54,6 +54,7 @@ def net_at(epoch: int, valid_mare: float) -> SimpleNamespace:
     return SimpleNamespace(history=history)
 
 
+@pytest.mark.command
 def test_a_reported_epoch_is_an_intermediate_value_of_the_trial() -> None:
     study = open_study("toy", None)
     trial = study.ask()
@@ -61,12 +62,14 @@ def test_a_reported_epoch_is_an_intermediate_value_of_the_trial() -> None:
     assert study.trials[0].intermediate_values == {3: 0.25}
 
 
+@pytest.mark.edge
 def test_opening_a_study_lowers_optuna_s_verbosity_to_warnings() -> None:
     optuna.logging.set_verbosity(optuna.logging.INFO)
     open_study("toy", None)
     assert optuna.logging.get_verbosity() == optuna.logging.WARNING
 
 
+@pytest.mark.edge
 def test_a_study_on_a_journal_is_joined_by_a_second_opening(tmp_path: Path) -> None:
     journal = tmp_path / "optuna" / "journal.log"
     open_study("toy", journal).ask()
@@ -81,18 +84,21 @@ def finished_elsewhere() -> tuple[optuna.Study, optuna.Trial]:
     return study, trial
 
 
+@pytest.mark.command
 def test_a_report_to_a_trial_finished_elsewhere_leaves_it_as_it_was() -> None:
     study, trial = finished_elsewhere()
     ReportEpochs(trial).on_epoch_end(net_at(3, 0.25))
     assert study.trials[0].state == optuna.trial.TrialState.FAIL
 
 
+@pytest.mark.command
 def test_telling_a_run_to_a_trial_finished_elsewhere_leaves_it_as_it_was() -> None:
     study, trial = finished_elsewhere()
     tell_run(study, trial, ENTRY)
     assert study.trials[0].state == optuna.trial.TrialState.FAIL
 
 
+@pytest.mark.command
 def test_an_offset_moves_the_reported_step_past_earlier_fits() -> None:
     study = open_study("toy", None)
     trial = study.ask()
@@ -100,12 +106,14 @@ def test_an_offset_moves_the_reported_step_past_earlier_fits() -> None:
     assert study.trials[0].intermediate_values == {23: 0.25}
 
 
+@pytest.mark.command
 def test_a_told_run_completes_the_trial_with_its_mean_fold_figures() -> None:
     study = open_study("toy", None)
     tell_run(study, study.ask(), ENTRY)
     assert study.trials[0].value == pytest.approx(2.5)
 
 
+@pytest.mark.command
 def test_a_told_trial_carries_its_ledger_entry_s_identity() -> None:
     study = open_study("toy", None)
     tell_run(study, study.ask(), ENTRY)

@@ -2,12 +2,15 @@
 
 import numpy as np
 import optuna
+import pytest
 import torch
 from optuna.distributions import FloatDistribution
 from threadpoolctl import threadpool_info
 
 from shared.design import Design
 from shared.search import SPACES, search, space_of
+
+pytestmark = pytest.mark.model
 
 # Eight curves of five rows, y = 1 + 0.1 p + x: curves 6 and 7 are test; the six training
 # curves fall into two frozen folds.

@@ -109,18 +109,22 @@ def toy_job(representation: Any, unit: Any, model: Any) -> Job:
     return Job(Cell("toy", "mass", representation, TOY_SPEC, "mass", unit), model, 0)
 
 
+@pytest.mark.model
 def test_the_screen_plans_fourteen_representation_cells() -> None:
     assert len(cells()) == 14
 
 
+@pytest.mark.model
 def test_the_references_run_one_seed_and_the_pointwise_mlp_every_seed() -> None:
     assert len(plan(cells(), (1, 2, 3))) == 14 * 2 + 10 * 3
 
 
+@pytest.mark.model
 def test_a_curve_is_keyed_by_its_curve_columns_and_runs_along_the_other_input() -> None:
     assert curve_columns(NEUTRON_STARS.space) == ((1, 2), 0)
 
 
+@pytest.mark.command
 def test_a_job_records_its_representation_with_its_run() -> None:
     recorded: list[dict[str, Any]] = []
 
@@ -131,11 +135,13 @@ def test_a_job_records_its_representation_with_its_run() -> None:
     assert recorded[0]["representation"] == "log10 M"
 
 
+@pytest.mark.model
 def test_a_curve_wise_job_rebuilds_a_curve_sampled_between_the_grid_points() -> None:
     run = run_job(toy_job("curve-wise", "curve-wise", "k-NN"), TOY, KNOBS, SHORT, lambda *_: None)
     assert run.test.zones["test"].p95 < 1e-5
 
 
+@pytest.mark.command
 def test_a_local_rbf_job_records_its_neighbours() -> None:
     recorded: list[dict[str, Any]] = []
 
@@ -146,6 +152,7 @@ def test_a_local_rbf_job_records_its_neighbours() -> None:
     assert recorded[0]["neighbours"] == KNOBS.neighbours
 
 
+@pytest.mark.command
 def test_an_mlp_job_hands_each_network_to_before_fit_on_every_fold_and_the_final_fit() -> None:
     built: list[Any] = []
     job = toy_job("baseline", "pointwise", "MLP")
@@ -153,17 +160,20 @@ def test_an_mlp_job_hands_each_network_to_before_fit_on_every_fold_and_the_final
     assert len(built) == 3
 
 
+@pytest.mark.model
 def test_an_mlp_job_on_a_curve_wise_cell_is_refused() -> None:
     job = toy_job("curve-wise", "curve-wise", "MLP")
     with pytest.raises(ValueError, match="curve-wise"):
         run_job(job, TOY, KNOBS, SHORT, lambda *_: None)
 
 
+@pytest.mark.model
 def test_the_seeds_of_one_model_on_one_representation_make_one_score() -> None:
     entries = [ledger_entry("baseline", "MLP", seed, 1e-2, (1e-2,)) for seed in (1, 2)]
     assert len(scores(entries)) == 1
 
 
+@pytest.mark.model
 def test_the_fold_figures_are_the_mean_over_every_fold_of_every_seed() -> None:
     entries = [
         ledger_entry("baseline", "MLP", 1, 1e-2, (1e-2, 1e-2)),
@@ -172,6 +182,7 @@ def test_the_fold_figures_are_the_mean_over_every_fold_of_every_seed() -> None:
     assert scores(entries)[0].folds == pytest.approx(3.0)
 
 
+@pytest.mark.model
 def test_the_spread_is_the_standard_deviation_over_every_fold_of_every_seed() -> None:
     entries = [
         ledger_entry("baseline", "MLP", 1, 1e-2, (1e-2, 1e-2)),
@@ -185,10 +196,12 @@ def score_at(folds: float, spread: float) -> Score:
     return Score("toy", "mass", "log10 M", "MLP", test=folds, folds=folds, spread=spread)
 
 
+@pytest.mark.model
 def test_a_gain_beyond_both_spreads_beats_the_baseline() -> None:
     assert beats(score_at(3.0, 0.5), score_at(2.0, 0.5))
 
 
+@pytest.mark.model
 def test_a_gain_within_the_larger_spread_does_not_beat_the_baseline() -> None:
     assert not beats(score_at(3.0, 0.5), score_at(2.0, 1.5))
 
@@ -204,21 +217,25 @@ def table_rows(table: str) -> list[str]:
     return [row for row in body.split("\\\\\n") if row.strip()]
 
 
+@pytest.mark.view
 def test_the_table_has_one_row_per_pair_and_representation() -> None:
     found = [ns_mass("baseline", "k-NN", 2.0, 0.1), ns_mass("baseline", "MLP", 2.5, 0.1)]
     assert len(table_rows(representation_table(found))) == 1
 
 
+@pytest.mark.view
 def test_a_fold_entry_that_beats_the_baseline_is_bold() -> None:
     found = [ns_mass("baseline", "MLP", 2.0, 0.1), ns_mass("log10 M", "MLP", 3.0, 0.1)]
     assert "\\mathbf{3.00_{\\pm 0.10}}" in table_rows(representation_table(found))[1]
 
 
+@pytest.mark.view
 def test_a_negative_test_figure_is_typeset_with_a_minus_sign() -> None:
     found = [ns_mass("baseline", "MLP", -1.04, 0.1)]
     assert "$-1.04$" in table_rows(representation_table(found))[0]
 
 
+@pytest.mark.command
 def test_a_job_logs_its_done_line_at_the_runs_level_in_a_fresh_process(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -295,6 +312,7 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return folder
 
 
+@pytest.mark.functional
 def test_main_writes_a_table_row_for_every_representation_cell(ran: Path) -> None:
     table = ran / "assets" / SECTION / f"{SECTION}_tab_representation.tex"
     assert len(table_rows(table.read_text())) == 14
@@ -309,12 +327,14 @@ def rebuild_from_batch(ran: Path, assets: Path) -> None:
     main([*paths, str(assets), str(ran / "state"), *knobs, "--batch", batch])
 
 
+@pytest.mark.functional
 def test_rebuilding_the_table_from_a_batch_fits_nothing(ran: Path, tmp_path: Path) -> None:
     before = len(list((ran / "state" / "ledger").glob("*.json")))
     rebuild_from_batch(ran, tmp_path / "assets")
     assert len(list((ran / "state" / "ledger").glob("*.json"))) == before
 
 
+@pytest.mark.functional
 def test_main_runs_every_job_as_a_completed_trial_of_one_study(ran: Path) -> None:
     storage = JournalStorage(JournalFileBackend(str(ran / "state" / "optuna" / "journal.log")))
     (summary,) = optuna.get_all_study_summaries(storage)

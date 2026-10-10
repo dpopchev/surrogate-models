@@ -19,11 +19,14 @@ ARTICLE = (
 )
 
 
+@pytest.mark.view
 def test_sections_are_the_inputs_of_the_document_body() -> None:
     assert sections(ARTICLE) == ("10_a", "20_b")
 
 
 class TestSectionEntry:
+    pytestmark = pytest.mark.view
+
     @pytest.fixture
     def entry(self) -> str:
         return section_entry(ARTICLE, "20_b", cites=False)
@@ -50,21 +53,26 @@ class TestSectionEntry:
         assert "\\bibliography{refs}" not in entry
 
 
+@pytest.mark.view
 def test_loads_xr_hyper_after_the_documentclass_below_leading_comments() -> None:
     entry = section_entry(f"% a comment\n{ARTICLE}", "20_b", cites=False)
     assert entry.index("\\documentclass") < entry.index("\\usepackage{xr-hyper}")
 
 
+@pytest.mark.view
 def test_keeps_the_bibliography_when_the_section_cites() -> None:
     assert "\\bibliography{refs}" in section_entry(ARTICLE, "20_b", cites=True)
 
 
+@pytest.mark.view
 def test_an_unknown_section_names_the_valid_ones() -> None:
     with pytest.raises(ValueError, match="10_a, 20_b"):
         section_entry(ARTICLE, "99_z", cites=False)
 
 
 class TestMain:
+    pytestmark = pytest.mark.functional
+
     @pytest.fixture
     def written(self, tmp_path: Path) -> Path:
         article, folder = tmp_path / "article.tex", tmp_path / "20_b"

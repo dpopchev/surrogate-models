@@ -10,6 +10,8 @@ PREVIOUS = ("a.tex", "old.png")
 
 
 class TestDiffUpload:
+    pytestmark = pytest.mark.view
+
     @pytest.fixture
     def diff(self) -> UploadDiff:
         return diff_upload(CURRENT, PREVIOUS)
@@ -24,11 +26,14 @@ class TestDiffUpload:
         assert diff.unchanged == ("a.tex",)
 
 
+@pytest.mark.view
 def test_without_a_previous_upload_every_file_is_added() -> None:
     assert diff_upload(CURRENT, ()).added == CURRENT
 
 
 class TestReport:
+    pytestmark = pytest.mark.view
+
     @pytest.fixture
     def lines(self) -> list[str]:
         return report(diff_upload(CURRENT, PREVIOUS)).splitlines()
@@ -43,11 +48,14 @@ class TestReport:
         assert lines[-1] == "2 added, 1 removed, 1 unchanged"
 
 
+@pytest.mark.view
 def test_report_says_none_when_nothing_was_removed() -> None:
     assert "(delete these on Overleaf): none" in report(diff_upload(CURRENT, CURRENT))
 
 
 class TestMain:
+    pytestmark = pytest.mark.functional
+
     @pytest.fixture
     def folder(self, tmp_path: Path) -> Path:
         folder = tmp_path / "overleaf"

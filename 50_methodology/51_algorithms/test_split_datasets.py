@@ -37,38 +37,46 @@ def keys(count: int) -> pd.DataFrame:
     return pd.DataFrame({"beta": [float(b) for b in range(count)]})
 
 
+@pytest.mark.model
 def test_curves_of_gives_one_row_per_curve() -> None:
     assert len(curves_of(ns_table(), NEUTRON_STARS)) == 9
 
 
+@pytest.mark.model
 def test_the_test_set_takes_the_rounded_fraction_of_curves() -> None:
     assert int((labels(keys(20), seed=0, test_fraction=0.15, folds=5) == "test").sum()) == 3
 
 
+@pytest.mark.model
 def test_the_test_set_holds_at_least_one_curve() -> None:
     assert int((labels(keys(3), seed=0, test_fraction=0.15, folds=2) == "test").sum()) == 1
 
 
+@pytest.mark.model
 def test_the_other_curves_fill_every_fold() -> None:
     found = set(labels(keys(20), seed=0, test_fraction=0.15, folds=5))
     assert found == {"test", "fold0", "fold1", "fold2", "fold3", "fold4"}
 
 
+@pytest.mark.model
 def test_the_same_seed_gives_the_same_labels() -> None:
     first = labels(keys(20), seed=7, test_fraction=0.15, folds=5)
     assert first.equals(labels(keys(20), seed=7, test_fraction=0.15, folds=5))
 
 
+@pytest.mark.model
 def test_only_the_centre_of_a_full_ns_grid_is_off_the_rim() -> None:
     flags = ablation_flags(curves_of(ns_table(), NEUTRON_STARS), NEUTRON_STARS)
     assert int((~flags).sum()) == 1
 
 
+@pytest.mark.model
 def test_the_bh_ablation_flags_the_outer_curves() -> None:
     flags = ablation_flags(curves_of(bh_table(), BLACK_HOLES), BLACK_HOLES)
     assert flags.tolist() == [True, False, True]
 
 
+@pytest.mark.functional
 def test_main_writes_both_datasets_to_one_file(tmp_path: Path) -> None:
     ns, bh, out = tmp_path / "ns.parquet", tmp_path / "bh.parquet", tmp_path / "split.parquet"
     ns_table().to_parquet(ns)
@@ -78,6 +86,8 @@ def test_main_writes_both_datasets_to_one_file(tmp_path: Path) -> None:
 
 
 class TestSplit:
+    pytestmark = pytest.mark.model
+
     @pytest.fixture
     def result(self):
         return split(ns_table(), NEUTRON_STARS, seed=0, test_fraction=0.15, folds=2)

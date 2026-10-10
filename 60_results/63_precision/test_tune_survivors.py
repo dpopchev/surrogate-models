@@ -86,10 +86,12 @@ def tuned_toy(first_slow: bool, then_slow: bool):
     return run_job(JOB, TOY, slow_or_not, SLOW_OR_NOT, 2, 0, 0.34, 0.05, study, lambda run: "entry")
 
 
+@pytest.mark.model
 def test_a_trial_past_the_wall_fails_and_the_job_goes_on() -> None:
     assert cast(Tuned, tuned_toy(first_slow=True, then_slow=False)).walls == 1
 
 
+@pytest.mark.model
 def test_a_job_every_trial_of_which_meets_the_wall_is_walled() -> None:
     assert isinstance(tuned_toy(first_slow=True, then_slow=True), Walled)
 
@@ -126,6 +128,7 @@ def screened(rows: int, p95: float, batch: str = "screen"):
     )
 
 
+@pytest.mark.model
 def test_a_screen_figure_is_the_one_on_the_most_rows_the_candidate_ran() -> None:
     figures = screen_figures([screened(100, 1e-2), screened(1000, 1e-3)], "screen")
     assert figures[JOB] == pytest.approx(3.0)
@@ -135,6 +138,7 @@ NS_MASS_RBF = Job("neutron_stars", "mass", Candidate("local RBF", "pointwise"))
 NS_MASS_RBF_CW = Job("neutron_stars", "mass", Candidate("local RBF", "curve-wise"))
 
 
+@pytest.mark.view
 def test_the_tuning_table_holds_one_row_per_job() -> None:
     outcomes = [
         Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 2, 0, "entry"),
@@ -145,6 +149,7 @@ def test_the_tuning_table_holds_one_row_per_job() -> None:
     assert body.count("\\\\\n") == 2
 
 
+@pytest.mark.edge
 def test_a_saved_batch_reads_back_as_its_outcomes() -> None:
     outcomes = (
         Tuned(NS_MASS_RBF, {"neighbours": 80, "weights": "uniform"}, 3.4, 3.3, 2, 1, "entry"),
@@ -221,30 +226,36 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return folder
 
 
+@pytest.mark.functional
 def test_a_saved_batch_rebuilds_the_table(ran: Path) -> None:
     (saved,) = (ran / "state" / SECTION).glob("*.json")
     main([*toy_paths(ran, "rebuilt"), *TOY_KNOBS, "--batch", saved.stem], TOY_CONFIG)
     assert (ran / "rebuilt" / SECTION / f"{SECTION}_tab_tuning.tex").stat().st_size > 0
 
 
+@pytest.mark.functional
 def test_main_writes_a_table_row_per_job(ran: Path) -> None:
     table = (ran / "assets" / SECTION / f"{SECTION}_tab_tuning.tex").read_text()
     body = table.split("\\midrule\n")[1].split("\\bottomrule")[0]
     assert body.count("\\\\\n") == 14
 
 
+@pytest.mark.functional
 def test_main_draws_the_history_figure(ran: Path) -> None:
     assert (ran / "assets" / SECTION / f"{SECTION}_fig_history.png").stat().st_size > 0
 
 
+@pytest.mark.functional
 def test_main_draws_the_ranges_figure(ran: Path) -> None:
     assert (ran / "assets" / SECTION / f"{SECTION}_fig_ranges.png").stat().st_size > 0
 
 
+@pytest.mark.model
 def test_one_job_per_pair_and_short_listed_candidate() -> None:
     assert len(set(jobs())) == 14
 
 
+@pytest.mark.functional
 def test_a_dying_tuning_leaves_the_outcomes_of_its_finished_jobs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -264,6 +275,7 @@ def test_a_dying_tuning_leaves_the_outcomes_of_its_finished_jobs(
     assert outcomes_from_json(saved.read_text()) == (Walled(calls[0], "toy"),)
 
 
+@pytest.mark.functional
 def test_recover_rebuilds_a_batch_s_outcomes_from_its_journal_and_ledger(
     ran: Path, tmp_path: Path
 ) -> None:
@@ -277,6 +289,7 @@ def test_recover_rebuilds_a_batch_s_outcomes_from_its_journal_and_ledger(
     assert outcomes_from_json(rebuilt) == outcomes_from_json(saved.read_text())
 
 
+@pytest.mark.model
 def test_a_study_without_a_complete_trial_is_recovered_as_a_wall() -> None:
     study = optuna.create_study(direction="maximize")
     study.tell(study.ask(), state=optuna.trial.TrialState.FAIL)
@@ -284,11 +297,13 @@ def test_a_study_without_a_complete_trial_is_recovered_as_a_wall() -> None:
     assert found == (Walled(NS_MASS_RBF, "all 1 trials past 30 min"),)
 
 
+@pytest.mark.model
 def test_a_fit_past_the_wall_predicts_nan() -> None:
     predict = walled(slow, seconds=0.05)(TOY.X, TOY.y, TOY.X, TOY.y, 0)
     assert np.isnan(predict(TOY.X)).all()
 
 
+@pytest.mark.model
 def test_a_fitter_past_its_wall_skips_its_later_fits() -> None:
     fit = walled(slow, seconds=0.05)
     fit(TOY.X, TOY.y, TOY.X, TOY.y, 0)
@@ -313,17 +328,20 @@ TOY_POINTS = (
 )
 
 
+@pytest.mark.view
 def test_the_history_figure_has_a_panel_per_pair() -> None:
     figure = history_figure(TOY_POINTS, PlotStyle(usetex=False))
     assert len([axes for axes in figure.axes if axes.lines]) == 3
 
 
+@pytest.mark.view
 def test_a_walled_trial_is_a_cross_at_its_number_on_the_history_figure() -> None:
     figure = history_figure(TOY_POINTS, PlotStyle(usetex=False))
     crosses = [line for line in figure.axes[2].lines if line.get_marker() == "x"]
     assert [np.asarray(c.get_xdata()).tolist() for c in crosses] == [[1.0]]
 
 
+@pytest.mark.view
 def test_the_history_figure_legend_names_its_families_both_units_and_the_wall() -> None:
     figure = history_figure(TOY_POINTS, PlotStyle(usetex=False))
     (legend,) = figure.legends
@@ -336,6 +354,7 @@ def test_the_history_figure_legend_names_its_families_both_units_and_the_wall() 
     ]
 
 
+@pytest.mark.view
 def test_a_failed_trial_reads_back_as_a_point_without_figures() -> None:
     study = optuna.create_study(direction="maximize")
     space: dict[str, BaseDistribution] = {"neighbours": IntDistribution(50, 400)}
@@ -347,17 +366,20 @@ def test_a_failed_trial_reads_back_as_a_point_without_figures() -> None:
     assert trial_points(study, BH_RBF) == (TrialPoint(BH_RBF, 0, None, {"neighbours": 60}),)
 
 
+@pytest.mark.view
 def test_the_ranges_figure_has_a_knots_a_neighbours_and_a_network_panel() -> None:
     figure = ranges_figure(TOY_POINTS, PlotStyle(usetex=False))
     assert [axes.get_xlabel() for axes in figure.axes[:3]] == ["knots", "neighbours", "width"]
 
 
+@pytest.mark.view
 def test_the_ranges_figure_dashes_the_ends_of_the_knots_range() -> None:
     figure = ranges_figure(TOY_POINTS, PlotStyle(usetex=False))
     dashed = [line for line in figure.axes[0].lines if line.get_linestyle() == "--"]
     assert [np.asarray(line.get_xdata())[0] for line in dashed] == [6, 24]
 
 
+@pytest.mark.view
 def test_a_walled_network_trial_is_a_cross_at_its_width_and_rate_on_the_ranges_figure() -> None:
     figure = ranges_figure(TOY_POINTS, PlotStyle(usetex=False))
     (crosses,) = [line for line in figure.axes[2].lines if line.get_marker() == "x"]

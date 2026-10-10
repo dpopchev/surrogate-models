@@ -5,6 +5,8 @@ import pytest
 
 from shared.families import make_gpr, make_knn, make_rbf, make_xgboost
 
+pytestmark = pytest.mark.model
+
 # A 6 x 6 grid of rows and a target linear in both inputs.
 GRID = np.array([[a, b] for a in range(6) for b in range(6)], dtype=float)
 

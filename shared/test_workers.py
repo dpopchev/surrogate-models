@@ -7,6 +7,8 @@ import pytest
 
 from shared.workers import run_jobs
 
+pytestmark = pytest.mark.edge
+
 
 def square(x: int) -> int:
     """A toy job."""

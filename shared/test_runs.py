@@ -6,6 +6,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 
 import numpy as np
+import pytest
 
 from shared.ceilings import Spread
 from shared.harness import Run, Timing
@@ -73,6 +74,7 @@ META = RunMetadata(
 )
 
 
+@pytest.mark.model
 def test_ledger_entries_made_in_order_sort_by_name_in_order() -> None:
     first = entry_from_run(RUN, replace(META, id=str(uuid.uuid7())))
     second = entry_from_run(RUN, replace(META, id=str(uuid.uuid7())))
@@ -82,37 +84,45 @@ def test_ledger_entries_made_in_order_sort_by_name_in_order() -> None:
     ]
 
 
+@pytest.mark.model
 def test_a_ledger_entry_keeps_its_run_s_ripple() -> None:
     assert entry_from_run(replace(RUN, ripple=(0.5,)), META).ripple == (0.5,)
 
 
+@pytest.mark.edge
 def test_a_ledger_entry_round_trips_through_json() -> None:
     entry = entry_from_run(RUN, META)
     assert entry_from_json(entry_to_json(entry)) == entry
 
 
+@pytest.mark.edge
 def test_a_ledger_entry_written_before_the_ripple_reads_back_without_one() -> None:
     fields = json.loads(entry_to_json(entry_from_run(RUN, META)))
     del fields["ripple"]
     assert entry_from_json(json.dumps(fields)).ripple == ()
 
 
+@pytest.mark.model
 def test_run_names_sort_by_start_time() -> None:
     later = replace(RECORD, started=datetime(2026, 10, 12, 9, 0, 0, tzinfo=UTC))
     assert sorted([run_name(later), run_name(RECORD)]) == [run_name(RECORD), run_name(later)]
 
 
+@pytest.mark.edge
 def test_the_record_keeps_whether_the_code_was_uncommitted() -> None:
     assert from_json(to_json(RECORD)).dirty is True
 
 
+@pytest.mark.edge
 def test_the_record_round_trips_through_json() -> None:
     assert from_json(to_json(RECORD)) == RECORD
 
 
+@pytest.mark.model
 def test_the_run_folder_is_known_before_the_fit_from_its_start() -> None:
     assert run_stem("toy", "mass", RECORD.started) == run_name(RECORD)
 
 
+@pytest.mark.model
 def test_the_run_name_is_dataset_target_and_utc_stamp() -> None:
     assert run_name(RECORD) == "toy-mass-20261006T105600Z"

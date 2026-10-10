@@ -39,6 +39,7 @@ EARLY = Finished("toy-mass-20261006T100000Z", RECORD)
 LATE = Finished("toy-mass-20261006T120000Z", replace(RECORD, commit="def5678"))
 
 
+@pytest.mark.view
 def test_a_finished_run_shows_its_scores_epochs_time_and_commit() -> None:
     assert runs_table([EARLY]) == [
         "toy-mass-20261006T100000Z  MARE 6.62e-03  RMSE 1.30e-02  epochs 37 (best 17)  "
@@ -46,11 +47,13 @@ def test_a_finished_run_shows_its_scores_epochs_time_and_commit() -> None:
     ]
 
 
+@pytest.mark.view
 def test_a_run_from_uncommitted_code_is_flagged() -> None:
     dirty = Finished(EARLY.name, replace(RECORD, dirty=True))
     assert runs_table([dirty])[0].endswith("abc1234 (uncommitted changes)")
 
 
+@pytest.mark.view
 def test_a_run_without_scores_is_listed_with_why() -> None:
     running = Unscored("toy-mass-20261006T130000Z", "no run.json yet -- running or failed")
     assert runs_table([running]) == [
@@ -59,6 +62,8 @@ def test_a_run_without_scores_is_listed_with_why() -> None:
 
 
 class TestReadRuns:
+    pytestmark = pytest.mark.edge
+
     @pytest.fixture
     def runs(self, tmp_path: Path) -> dict[str, Listed]:
         """A finished run, a run without run.json, one with an older run.json, and latest.log."""
@@ -83,6 +88,7 @@ class TestReadRuns:
         assert sorted(runs) == ["a-finished", "b-running", "c-older"]
 
 
+@pytest.mark.edge
 def test_a_run_s_files_are_listed_with_their_sizes(tmp_path: Path) -> None:
     (tmp_path / "run.json").write_text("abc")
     (tmp_path / "loss_curve.png").write_bytes(bytes(2048))
@@ -90,6 +96,8 @@ def test_a_run_s_files_are_listed_with_their_sizes(tmp_path: Path) -> None:
 
 
 class TestMain:
+    pytestmark = pytest.mark.functional
+
     @pytest.fixture
     def state(self, tmp_path: Path) -> Path:
         """A state dir holding one finished run."""
@@ -119,5 +127,6 @@ class TestMain:
         assert "no baseline runs yet -- make baseline starts one" in capsys.readouterr().out
 
 
+@pytest.mark.view
 def test_the_newest_run_comes_first() -> None:
     assert runs_table([EARLY, LATE])[0].startswith(LATE.name)

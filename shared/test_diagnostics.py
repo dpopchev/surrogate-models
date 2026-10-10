@@ -2,10 +2,13 @@
 
 import matplotlib
 import numpy as np
+import pytest
 
 matplotlib.use("Agg")
 
 from shared.diagnostics import chosen_curves, curve_overlay, error_cdf, loss_curve
+
+pytestmark = pytest.mark.view
 
 # Three epochs; the valid loss is lowest at epoch 2.
 HISTORY = [

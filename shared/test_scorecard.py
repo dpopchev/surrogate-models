@@ -5,6 +5,8 @@ import pytest
 
 from shared.scorecard import relative_errors, ripple, scorecard, significant_figures
 
+pytestmark = pytest.mark.model
+
 
 def test_the_mass_error_is_relative_to_the_true_mass() -> None:
     errors = relative_errors(np.array([2.0, 4.0]), np.array([2.2, 3.6]), "mass")

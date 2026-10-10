@@ -7,6 +7,8 @@ from sklearn.neighbors import KNeighborsRegressor
 
 from shared.curvewise import curvewise_fitter
 
+pytestmark = pytest.mark.model
+
 
 def curves(keys: list[float], rows: int = 20) -> tuple[np.ndarray, np.ndarray]:
     """Rows of one curve per key p: the coordinate a runs from p to p + 2 (s from 0 to 1) and

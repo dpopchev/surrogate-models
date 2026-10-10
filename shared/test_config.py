@@ -32,32 +32,38 @@ def write(tmp_path: Path, text: str) -> Path:
     return path
 
 
+@pytest.mark.edge
 def test_a_choice_loads_as_its_typed_value(tmp_path: Path) -> None:
     toml = write(tmp_path, '[data_analysis.neutron_stars]\nfigures = ["grid_fill"]\n')
     assert load_config(toml).data_analysis.neutron_stars.figures == ("grid_fill",)
 
 
+@pytest.mark.edge
 def test_an_empty_file_gives_every_default_figure(tmp_path: Path) -> None:
     assert len(load_config(write(tmp_path, "")).data_analysis.neutron_stars.figures) == 7
 
 
+@pytest.mark.edge
 def test_an_unknown_key_is_rejected(tmp_path: Path) -> None:
     toml = write(tmp_path, '[data_analysis.neutron_stars]\ncolour = "red"\n')
     with pytest.raises(ValidationError, match="colour"):
         load_config(toml)
 
 
+@pytest.mark.edge
 def test_an_unknown_section_is_rejected(tmp_path: Path) -> None:
     with pytest.raises(ValidationError, match="results"):
         load_config(write(tmp_path, "[results]\nx = 1\n"))
 
 
+@pytest.mark.edge
 def test_a_value_outside_its_literal_is_rejected(tmp_path: Path) -> None:
     toml = write(tmp_path, '[data_analysis.neutron_stars]\nfigures = ["pie"]\n')
     with pytest.raises(ValidationError, match="figures"):
         load_config(toml)
 
 
+@pytest.mark.edge
 def test_an_environment_variable_overrides_the_file(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -78,67 +84,81 @@ class _Paper(BaseModel):
     chapter: _Chapter = _Chapter()
 
 
+@pytest.mark.edge
 def test_a_section_without_its_folder_is_reported(tmp_path: Path) -> None:
     (tmp_path / "10_chapter" / "11_kept").mkdir(parents=True)
     assert missing_section_folders(_Paper, tmp_path) == ("chapter.lost",)
 
 
+@pytest.mark.edge
 def test_the_shipped_paper_toml_selects_the_four_ns_figures_the_text_cites() -> None:
     assert len(load_config().data_analysis.neutron_stars.figures) == 4
 
 
+@pytest.mark.edge
 def test_the_shipped_paper_toml_selects_the_four_bh_figures() -> None:
     assert len(load_config().data_analysis.black_holes.figures) == 4
 
 
+@pytest.mark.edge
 def test_the_shipped_paper_toml_selects_every_ns_table() -> None:
     assert len(load_config().data_analysis.neutron_stars.tables) == 3
 
 
+@pytest.mark.edge
 def test_the_baseline_network_defaults_to_relu(tmp_path: Path) -> None:
     assert load_config(write(tmp_path, "")).methodology.algorithms.activation == "relu"
 
 
+@pytest.mark.edge
 def test_the_baseline_trains_on_one_thread_by_default(tmp_path: Path) -> None:
     assert load_config(write(tmp_path, "")).methodology.algorithms.threads == 1
 
 
+@pytest.mark.edge
 def test_the_baseline_runs_on_six_workers_by_default(tmp_path: Path) -> None:
     assert load_config(write(tmp_path, "")).methodology.algorithms.workers == 6
 
 
+@pytest.mark.edge
 def test_zero_threads_are_rejected(tmp_path: Path) -> None:
     toml = write(tmp_path, "[methodology.algorithms]\nthreads = 0\n")
     with pytest.raises(ValidationError, match="threads"):
         load_config(toml)
 
 
+@pytest.mark.edge
 def test_an_activation_the_network_cannot_build_is_rejected(tmp_path: Path) -> None:
     toml = write(tmp_path, '[methodology.algorithms]\nactivation = "swish"\n')
     with pytest.raises(ValidationError, match="activation"):
         load_config(toml)
 
 
+@pytest.mark.edge
 def test_a_loss_the_network_cannot_use_is_rejected(tmp_path: Path) -> None:
     toml = write(tmp_path, '[methodology.algorithms]\nloss = "l1"\n')
     with pytest.raises(ValidationError, match="loss"):
         load_config(toml)
 
 
+@pytest.mark.model
 def test_the_activation_vocabulary_matches_the_network() -> None:
     assert get_args(NetActivation) == get_args(Activation)
 
 
+@pytest.mark.model
 def test_the_loss_vocabulary_matches_the_network() -> None:
     assert get_args(NetLoss) == get_args(Loss)
 
 
+@pytest.mark.edge
 def test_a_log_level_other_than_info_or_debug_is_rejected(tmp_path: Path) -> None:
     toml = write(tmp_path, '[methodology.algorithms]\nlog_level = "LOUD"\n')
     with pytest.raises(ValidationError, match="log_level"):
         load_config(toml)
 
 
+@pytest.mark.edge
 def test_the_environment_shortens_the_baseline_run(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -147,10 +167,12 @@ def test_the_environment_shortens_the_baseline_run(
     assert load_config(toml).methodology.algorithms.max_epochs == 2
 
 
+@pytest.mark.edge
 def test_the_shipped_paper_toml_sets_the_baseline_network() -> None:
     with PAPER_TOML.open("rb") as handle:
         assert "algorithms" in tomllib.load(handle).get("methodology", {})
 
 
+@pytest.mark.edge
 def test_every_paper_section_has_its_folder() -> None:
     assert missing_section_folders(PaperConfig, ROOT) == ()

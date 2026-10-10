@@ -9,6 +9,8 @@ import pytest
 from shared.design import DesignSpec, UnlabelledCurveError, design
 from shared.eda import make_curve_space
 
+pytestmark = pytest.mark.model
+
 # Two curves keyed by p, sampled along x; the split also carries another dataset's curve p = 1.
 SPEC = DesignSpec("toy", make_curve_space({"x": "log10", "p": "raw"}, ("p",)))
 

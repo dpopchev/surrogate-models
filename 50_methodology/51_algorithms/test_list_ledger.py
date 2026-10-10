@@ -49,11 +49,13 @@ def later(entry: LedgerEntry, id: str, batch: str) -> LedgerEntry:
     return replace(entry, meta=replace(entry.meta, id=id, batch=batch))
 
 
+@pytest.mark.edge
 def test_the_ledger_folder_is_read_back_entry_by_entry(tmp_path: Path) -> None:
     (tmp_path / entry_name(ENTRY)).write_text(entry_to_json(ENTRY))
     assert read_ledger(tmp_path) == [ENTRY]
 
 
+@pytest.mark.functional
 def test_main_prints_the_ledger_of_the_state_dir(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -63,6 +65,7 @@ def test_main_prints_the_ledger_of_the_state_dir(
     assert capsys.readouterr().out.startswith("0190a000-0000  toy mass  MLP")
 
 
+@pytest.mark.functional
 def test_main_says_when_the_ledger_has_no_entries_yet(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -70,6 +73,7 @@ def test_main_says_when_the_ledger_has_no_entries_yet(
     assert "no ledger entries yet -- make baseline writes them" in capsys.readouterr().out
 
 
+@pytest.mark.functional
 def test_main_says_when_no_entry_is_of_the_batch(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -79,16 +83,19 @@ def test_main_says_when_no_entry_is_of_the_batch(
     assert "no ledger entries of batch ffff" in capsys.readouterr().out
 
 
+@pytest.mark.view
 def test_the_ledger_lists_the_newest_entry_first() -> None:
     newer = later(ENTRY, "0190b000-0000-7000-8000-000000000001", "0190b000-0000-7000-8000-0000")
     assert ledger_table([ENTRY, newer], batch=None)[0].startswith("0190b000-0000")
 
 
+@pytest.mark.view
 def test_the_ledger_keeps_only_the_batch_its_prefix_names() -> None:
     other = later(ENTRY, "0190b000-0000-7000-8000-000000000001", "0190b000-0000-7000-8000-0000")
     assert len(ledger_table([ENTRY, other], batch="0190b")) == 1
 
 
+@pytest.mark.view
 def test_a_ledger_line_gives_the_pair_candidate_seed_figures_and_seconds() -> None:
     assert ledger_table([ENTRY], batch=None) == [
         "0190a000-0000  toy mass  MLP  seed 1  figures folds 2.5 test 2.0  fit 2s  call 1.00e-03 s"

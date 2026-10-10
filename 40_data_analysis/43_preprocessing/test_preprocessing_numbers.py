@@ -18,6 +18,8 @@ SPLIT = pd.DataFrame(
 
 
 class TestSplitSummary:
+    pytestmark = pytest.mark.view
+
     @pytest.fixture
     def summary(self):
         return split_summary(SPLIT, NS)
@@ -42,6 +44,8 @@ class TestSplitSummary:
 
 
 class TestNumbers:
+    pytestmark = pytest.mark.view
+
     @pytest.fixture
     def found(self):
         return numbers((split_summary(SPLIT, NS), split_summary(SPLIT, BH)), seed=7)
@@ -54,6 +58,8 @@ class TestNumbers:
 
 
 class TestMain:
+    pytestmark = pytest.mark.functional
+
     @pytest.fixture
     def assets(self, tmp_path: Path) -> Path:
         split = tmp_path / "s.parquet"

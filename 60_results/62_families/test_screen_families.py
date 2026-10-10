@@ -55,20 +55,24 @@ TOY = Design(
 )
 
 
+@pytest.mark.model
 def test_every_family_is_a_candidate_in_both_units() -> None:
     assert len(set(candidates())) == 12
 
 
+@pytest.mark.model
 def test_thinning_keeps_every_test_row() -> None:
     assert int(thin(TOY, rows=20, per_curve=2, seed=0).test.sum()) == 10
 
 
+@pytest.mark.model
 def test_thinning_keeps_every_training_curve_when_each_can_keep_its_share() -> None:
     thinned = thin(TOY, rows=20, per_curve=2, seed=0)
     kept = thinned.groups[~thinned.test]
     assert np.bincount(kept).tolist() == [5, 5, 5, 5]
 
 
+@pytest.mark.model
 def test_thinning_below_the_share_of_every_curve_keeps_fewer_curves() -> None:
     thinned = thin(TOY, rows=6, per_curve=2, seed=0)
     kept = thinned.groups[~thinned.test]
@@ -92,29 +96,35 @@ def walled(candidate: Candidate) -> Wall:
     return Wall(Job("toy", "mass", candidate, rows=1000, round=0), "past 30 min")
 
 
+@pytest.mark.model
 def test_the_best_candidates_on_the_folds_survive() -> None:
     round_ = [scored(KNN, 1.0), scored(RBF, 3.0), scored(MLP, 2.0)]
     assert survivors(round_, keep=2) == (RBF, MLP)
 
 
+@pytest.mark.model
 def test_a_wall_never_survives() -> None:
     assert survivors([scored(KNN, 1.0), walled(GPR)], keep=2) == (KNN,)
 
 
+@pytest.mark.model
 def test_a_pointwise_gpr_whose_kernel_matrix_passes_the_budget_is_over_memory() -> None:
     # 100 rows: a kernel matrix of 100 x 100 doubles, 80 000 bytes.
     assert over_memory(GPR, rows=100, memory_bytes=50_000)
 
 
+@pytest.mark.model
 def test_a_pointwise_gpr_within_the_budget_is_not_over_memory() -> None:
     assert not over_memory(GPR, rows=100, memory_bytes=100_000)
 
 
+@pytest.mark.model
 def test_a_curve_wise_gpr_is_not_over_memory_by_its_rows() -> None:
     # Curve-wise, the GPR is fitted on one row per curve, not on the rows.
     assert not over_memory(Candidate("GPR", "curve-wise"), rows=100, memory_bytes=50_000)
 
 
+@pytest.mark.view
 def test_a_job_line_tells_the_scores_how_far_and_the_time_left() -> None:
     line = job_line(scored(KNN, 2.5), done=2, total=6, elapsed=60.0)
     assert line == (
@@ -123,6 +133,7 @@ def test_a_job_line_tells_the_scores_how_far_and_the_time_left() -> None:
     )
 
 
+@pytest.mark.view
 def test_a_wall_s_job_line_names_its_wall() -> None:
     line = job_line(walled(GPR), done=1, total=1, elapsed=5.0)
     assert line == (
@@ -137,6 +148,7 @@ def slow(x_fit, y_fit, x_valid, y_valid, seed):
     return lambda x: np.zeros(len(x))
 
 
+@pytest.mark.model
 def test_a_fit_past_its_time_budget_is_stopped() -> None:
     with pytest.raises(FitTimeoutError):
         timed(slow, seconds=0.05)(TOY.X, TOY.y, TOY.X, TOY.y, 0)
@@ -180,6 +192,7 @@ def run_toy(job: Job, fitter, seconds: float = 60.0, memory_bytes: float = 1e9):
     )
 
 
+@pytest.mark.model
 def test_a_scored_job_keeps_the_mean_of_its_folds_figures() -> None:
     match run_toy(job_of(KNN), off_by_a_tenth):
         case Scored(folds=folds):
@@ -188,11 +201,13 @@ def test_a_scored_job_keeps_the_mean_of_its_folds_figures() -> None:
             pytest.fail(f"not scored: {outcome}")
 
 
+@pytest.mark.model
 def test_a_gpr_over_the_memory_budget_is_a_wall_unrun() -> None:
     outcome = run_toy(job_of(GPR), slow, memory_bytes=1_000)
     assert outcome == Wall(job_of(GPR), "kernel matrix over 1e-06 GB")
 
 
+@pytest.mark.model
 def test_a_fit_past_the_time_budget_makes_the_job_a_wall() -> None:
     outcome = run_toy(job_of(KNN), slow, seconds=0.05)
     assert outcome == Wall(job_of(KNN), "past 0.000833333 min")
@@ -203,10 +218,12 @@ def hungry(x_fit, y_fit, x_valid, y_valid, seed):
     raise MemoryError
 
 
+@pytest.mark.model
 def test_a_fit_out_of_memory_makes_the_job_a_wall() -> None:
     assert run_toy(job_of(KNN), hungry) == Wall(job_of(KNN), "out of memory")
 
 
+@pytest.mark.edge
 def test_the_outcomes_round_trip_through_json() -> None:
     outcomes = (
         Scored(job_of(MLP), 2.0, 1.5, (0.25, 0.5), 3.0, "e"),
@@ -278,12 +295,14 @@ TOY_KNOBS = [
 ]
 
 
+@pytest.mark.functional
 def test_main_saves_the_outcomes_of_every_round(ran: Path) -> None:
     (saved,) = (ran / "state" / SECTION).glob("*.json")
     # Per pair: 12 candidates, then 3 of each unit, then 2 of each unit.
     assert len(outcomes_from_json(saved.read_text())) == 4 * (12 + 6 + 4)
 
 
+@pytest.mark.functional
 def test_a_dying_round_leaves_the_outcomes_of_its_finished_jobs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -306,18 +325,22 @@ def test_a_dying_round_leaves_the_outcomes_of_its_finished_jobs(
     assert outcomes_from_json(saved.read_text()) == (Wall(calls[0], "toy"),)
 
 
+@pytest.mark.functional
 def test_main_draws_the_parity_figure(ran: Path) -> None:
     assert (ran / "assets" / SECTION / f"{SECTION}_fig_parity.png").stat().st_size > 0
 
 
+@pytest.mark.functional
 def test_main_draws_the_error_figure(ran: Path) -> None:
     assert (ran / "assets" / SECTION / f"{SECTION}_fig_errors.png").stat().st_size > 0
 
 
+@pytest.mark.functional
 def test_main_draws_the_scaling_figure(ran: Path) -> None:
     assert (ran / "assets" / SECTION / f"{SECTION}_fig_scaling.png").stat().st_size > 0
 
 
+@pytest.mark.functional
 def test_main_writes_the_family_table(ran: Path) -> None:
     table = ran / "assets" / SECTION / f"{SECTION}_tab_families.tex"
     assert len(table_rows(table.read_text())) == 12
@@ -335,11 +358,13 @@ def table_rows(table: str) -> list[str]:
     return [row for row in body.split(" \\\\\n") if row]
 
 
+@pytest.mark.view
 def test_the_family_table_has_a_row_per_candidate() -> None:
     table = family_table([on_ns_mass(KNN, 1000, 2.0)])
     assert len(table_rows(table)) == 12
 
 
+@pytest.mark.view
 def test_a_cell_shows_the_folds_figures_at_the_most_rows_with_those_rows() -> None:
     table = family_table(
         [on_ns_mass(KNN, 1000, 2.0), on_ns_mass(KNN, 10_000, 2.5), on_ns_mass(RBF, 10_000, 3.0)]
@@ -347,12 +372,14 @@ def test_a_cell_shows_the_folds_figures_at_the_most_rows_with_those_rows() -> No
     assert table_rows(table)[0].split(" & ")[2] == "$2.50_{10^{4}}$"
 
 
+@pytest.mark.view
 def test_a_wall_s_cell_names_the_rows_it_stood_at() -> None:
     wall = Wall(Job("neutron_stars", "mass", GPR, rows=100_000, round=2), "past 30 min")
     table = family_table([on_ns_mass(KNN, 100_000, 2.0), wall])
     assert table_rows(table)[4].split(" & ")[2] == "wall$_{10^{5}}$"
 
 
+@pytest.mark.view
 def test_the_pair_s_best_at_the_most_rows_is_bold() -> None:
     table = family_table(
         [on_ns_mass(KNN, 1000, 2.0), on_ns_mass(KNN, 10_000, 2.5), on_ns_mass(RBF, 10_000, 3.0)]
@@ -360,6 +387,7 @@ def test_the_pair_s_best_at_the_most_rows_is_bold() -> None:
     assert table_rows(table)[2].split(" & ")[2] == "$\\mathbf{3.00}_{10^{4}}$"
 
 
+@pytest.mark.model
 def test_the_parity_plot_shows_each_unit_s_best_at_the_pair_s_most_rows() -> None:
     picks = parity_picks(
         [
@@ -387,26 +415,31 @@ def toy_panel(dataset: str) -> Panel:
 TOY_PANELS = [toy_panel(dataset) for dataset in ("neutron_stars",) * 2 + ("black_holes",) * 2]
 
 
+@pytest.mark.view
 def test_the_parity_figure_has_a_panel_per_pair() -> None:
     figure = parity_figure(TOY_PANELS, PlotStyle(usetex=False))
     assert len([axes for axes in figure.axes if axes.collections]) == 4
 
 
+@pytest.mark.view
 def test_the_error_figure_has_a_panel_per_pair_and_candidate() -> None:
     figure = error_figure(TOY_PANELS, PlotStyle(usetex=False))
     assert len([axes for axes in figure.axes if axes.collections]) == 4 * 2
 
 
+@pytest.mark.view
 def test_an_error_panel_draws_its_candidate_s_median_and_p95() -> None:
     figure = error_figure(TOY_PANELS, PlotStyle(usetex=False))
     assert len(figure.axes[0].lines) == 2
 
 
+@pytest.mark.view
 def test_a_panel_of_a_dataset_without_a_colormap_is_refused() -> None:
     with pytest.raises(ValueError, match="no colormap for dataset toy"):
         parity_figure([toy_panel("toy")], PlotStyle(usetex=False))
 
 
+@pytest.mark.model
 def test_a_walled_candidate_is_marked_at_its_rows() -> None:
     wall = Wall(Job("neutron_stars", "mass", GPR, rows=10_000, round=1), "past 30 min")
     (path,) = trajectories([on_ns_mass(GPR, 1000, 2.0), wall])
@@ -426,11 +459,13 @@ TOY_PATHS = [
 ]
 
 
+@pytest.mark.view
 def test_the_scaling_figure_has_a_figures_and_a_seconds_panel_per_pair() -> None:
     figure = scaling_figure(TOY_PATHS, PlotStyle(usetex=False))
     assert len([axes for axes in figure.axes if axes.lines]) == 4 * 2
 
 
+@pytest.mark.view
 def test_a_wall_is_a_cross_at_its_rows_on_the_seconds_panel() -> None:
     paths = [toy_path("neutron_stars", "mass", walls=(100_000,))]
     figure = scaling_figure(paths, PlotStyle(usetex=False), wall_seconds=1800.0)
@@ -438,6 +473,7 @@ def test_a_wall_is_a_cross_at_its_rows_on_the_seconds_panel() -> None:
     assert [np.asarray(c.get_xydata())[0].tolist() for c in crosses] == [[100_000.0, 1800.0]]
 
 
+@pytest.mark.view
 def test_the_scaling_legend_names_every_family_and_both_units() -> None:
     figure = scaling_figure(TOY_PATHS, PlotStyle(usetex=False))
     (legend,) = figure.legends
@@ -454,6 +490,7 @@ def test_the_scaling_legend_names_every_family_and_both_units() -> None:
     ]
 
 
+@pytest.mark.model
 def test_the_next_round_keeps_the_best_of_each_unit() -> None:
     round_ = [scored(KNN, 1.0), scored(RBF, 3.0), scored(MLP, 0.5)]
     assert next_jobs(round_, budgets=(1000, 10_000), keeps=(1,)) == (
@@ -462,6 +499,7 @@ def test_the_next_round_keeps_the_best_of_each_unit() -> None:
     )
 
 
+@pytest.mark.model
 def test_the_next_round_runs_each_pair_s_survivors_at_the_next_budget() -> None:
     other = Job("other", "charge", KNN, rows=1000, round=0)
     round_ = [scored(KNN, 1.0), scored(RBF, 3.0), Scored(other, 2.0, 2.0, (), 1.0, "e")]

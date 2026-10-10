@@ -10,6 +10,8 @@ from threadpoolctl import threadpool_info
 from shared.design import Design
 from shared.harness import Run, harness, split_valid
 
+pytestmark = pytest.mark.model
+
 GROUPS = np.repeat(np.arange(10), 3)  # ten curves of three rows
 
 # Eight curves of five rows, y = 1 + 0.1 p + x: curves 6 and 7 are test (7 is extrapolation);
