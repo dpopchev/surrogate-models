@@ -24,7 +24,6 @@
 - 2026-10-08 T-200: fact: BH p95 is its worst of 3 test curves (pointwise RBF: M flat 5e-5 vs 1e-7; D 1e-3 vs 1e-5); BH curve-wise error arcs between the 8 knots -> E-007 tunes the knots
 - 2026-10-08 W-037: standing: one thread is fastest (2.6 s vs 11.4 s an epoch at 7); one fit took 53-525 s, swinging 2.5x with load -> cite fit times as orders of magnitude, time them repeatedly supersedes: W-035#2, W-036#1, W-037#2
 - 2026-10-08 W-073: standing: scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1), the nearest curve beats the MLP on the test curves of all four pairs; the MLP leads only on the NS folds -> no pair is won by the baseline supersedes: W-073#1, W-073#2
-- 2026-10-09 W-094: fact: the scope gate reads the Refs commits from the --root checkout's HEAD and the briefs from its .board, so a Task built in the worktree is gated with its closed Task files copied there for the gate and restored right after -> the worktree's .board is never the record
 - 2026-10-10 W-068: T-206: fact: batch 01a11d49, folds/test vs ceiling: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure
 
 ## Open questions
@@ -35,10 +34,6 @@
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
-- 2026-10-09 W-094: pre-empted by W-097 after W-099 landed (developer: next pre-empt): standalone, no dependency, three fixes on main; W-098 depends on it
-- 2026-10-09 W-094: pre-empted by W-098 after W-097 landed (developer: pre-empt W-098 and keep pre-empting as long as the run holds T-206); W-098's dependency on W-091 (todo) is bent knowingly -- the notation work touches shared/plots.py and the four figure modules, none of W-091's run-shell copies
-- 2026-10-09 W-094: pre-empted by W-099 while it waits on W-068 (developer: pre-empt again if available): W-099 is the smallest item that lives on main (2 Tasks, Makefile and mk/paper.mk) and builds the deliverable gate the close chain cites; W-097 and W-098 wait
-- 2026-10-09 W-094: wi/W-094 stacks on wi/W-068's tip (developer): its files (shared/search.py, tune_survivors.py) are W-068's unlanded code; precedent E-006 v3 (W-077 on W-065); W-094 lands after W-068, in that order
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
 
 ## Deviations
