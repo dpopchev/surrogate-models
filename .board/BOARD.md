@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-094   | blocked: 3 | todo roots: 10 | done: 273 | pruned: 19
+open path: W-094   | blocked: 4 | todo roots: 9 | done: 274 | pruned: 19
 
 ## Tree
 
@@ -50,9 +50,9 @@ W-091  issue  [todo]     (standalone) The screens' shared shell and test inputs 
 W-094  bug    [blocked]  (standalone) A trial that raises ends the tuning after every other job and leaves no outcomes file   [blocked since 2026-10-09, waiting on W-068: its Tasks are done (d6ef614 on wi/W-094-raising-trial); the branch stacks on wi/W-068 and main is not its ancestor, so the fast-forward waits for W-068's landing]   (filed during T-206) -- T-216 [done], T-217 [done], T-218 [done]
 W-095  bug    [todo]     (standalone) The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206) -- T-219 [todo]
 W-096  issue  [todo]     (standalone) One Pair and one FitRows value through the fit path   (filed during T-206) -- T-220 [todo], T-221 [todo], T-222 [todo]
-W-098  issue  [doing]    (standalone) Figures and captions share the paper's notation   (filed during T-206) -- T-227 [done], T-228 [done], T-229 [done]
+W-098  issue  [blocked]  (standalone) Figures and captions share the paper's notation   [blocked since 2026-10-10, waiting on W-103: its Tasks are done (f603520 on wi/W-098-notation, ff-able onto main); its landing waits for the developer's land; pre-empted by W-103 while the run holds T-206 (developer, 2026-10-10)]   (filed during T-206) -- T-227 [done], T-228 [done], T-229 [done]
 W-102  issue  [todo]     (standalone) Every section's figures are selected in paper.toml   (filed during T-206) -- T-237 [todo]
-W-103  issue  [todo]     (standalone) The base deliverable target follows the template -- deliverables are built, not opened   (filed during T-223) -- T-238 [todo]
+W-103  issue  [doing]    (standalone) The base deliverable target follows the template -- deliverables are built, not opened   (filed during T-223) -- T-238 [done]
 ```
 
 ## Closed
@@ -582,22 +582,22 @@ flowchart TD
   W096 --> T220["T-220 todo: Replace PAIRS and designs with a frozen Pair test-first -> shared/design.py and the four runnables"]
   W096 --> T221["T-221 todo: Replace the five-array Fitter with FitRows test-first -> shared/harness.py and its wrappers"]
   W096 --> T222["T-222 todo: Build Training through make_training and type the scorecard's maps as Mapping -> shared/surrogate.py, shared/scorecard.py"]
-  W098["W-098 issue doing, standalone: Figures and captions share the paper's notation"]
+  W098["W-098 issue blocked on W-103, standalone: Figures and captions share the paper's notation"]
   W098 --> T227["T-227 done: Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it"]
   W098 --> T228["T-228 done: Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py"]
   W098 --> T229["T-229 done: Replace the hand-spelled symbol dicts with the macros -> the four figure modules"]
   W102["W-102 issue todo, standalone: Every section's figures are selected in paper.toml"]
   W102 --> T237["T-237 todo: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
-  W103["W-103 issue todo, standalone: The base deliverable target follows the template -- deliverables are built, not opened"]
-  W103 --> T238["T-238 todo: Re-copy the base deliverable block from the template -> Makefile"]
+  W103["W-103 issue doing, standalone: The base deliverable target follows the template -- deliverables are built, not opened"]
+  W103 --> T238["T-238 done: Re-copy the base deliverable block from the template -> Makefile"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W098 doing
-  class W068,T206,W094 blocked
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218,T227,T228,T229 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W102,T237,W103,T238 todo
+  class E006,E009,W103 doing
+  class W068,T206,W094,W098 blocked
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218,T227,T228,T229,T238 done
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W102,T237 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
