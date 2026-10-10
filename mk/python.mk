@@ -56,17 +56,39 @@ typecheck: ## Pyright over the configured paths
 	@$(RUN) pyright
 	$(call log_done,pyright clean)
 
-.PHONY: test
-M ?=
+# pytest exits 5 when it collects nothing -- a fresh layer before its first test:
+# warned in log_warn's format, never failed; every other non-zero exit breaks.
+define _pytest
+	@rc=0; $(RUN) pytest $(1) || rc=$$?; \
+	if [ $$rc -eq 5 ]; then \
+	  printf "$(BOLD)$(YELLOW)%s$(RESET) %s\n" "[WARN]" "pytest collected no tests -- write the first test_<name>.py beside its module" >&2; \
+	elif [ $$rc -ne 0 ]; then exit $$rc; fi
+endef
 
-test: ## Pytest with doctests (M=<marker> selects one category)
-	@$(RUN) pytest $(if $(M),-m "$(M)")
+# M=<category> selects one category marker (rules/python.md, Tests); unset, every category
+# but integration runs -- integration runs only by name or through test-integration.
+# K=<expression> is pytest's -k, the selector a Task's Check names (skills/board, plan step 3).
+M ?=
+K ?=
+.PHONY: test
+test: ## Pytest with doctests (M=<marker> one category, K=<expression> matching tests)
+	$(call _pytest,-m "$(if $(M),$(M),not integration)" $(if $(K),-k "$(K)"))
 	$(call log_done,tests passed)
 
 .PHONY: test-quick
-test-quick: ## Pytest stopping at the first failure
-	@$(RUN) pytest -x -q
+test-quick: ## Pytest stopping at the first failure (M= and K= as for test)
+	$(call _pytest,-x -q -m "$(if $(M),$(M),not integration)" $(if $(K),-k "$(K)"))
 	$(call log_done,quick tests passed)
+
+.PHONY: test-integration
+test-integration: ## Pytest of the integration tests against the real systems
+	$(call _pytest,-m integration)
+	$(call log_done,integration tests passed)
+
+.PHONY: test-stats
+test-stats: ## Show the recorded test durations
+	@$(RUN) pytest --suite-stats
+	$(call log_done,suite stats from the stats_file in pyproject.toml)
 
 .PHONY: clean-python
 clean-python: ## Remove the python tool caches in local/
