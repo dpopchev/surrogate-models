@@ -200,8 +200,9 @@ families: $(FAMILIES_ASSETS) ## Run the family screen for Section 5.2
 TUNING        := 60_results/63_precision/tune_survivors.py
 TUNING_ASSETS := $(ASSETS)/63_precision/63_precision_tab_tuning.tex
 TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --workers 3
-# Empty until a batch is recorded (T-206): make tuning then runs the whole tuning (hours).
-TUNING_BATCH  ?=
+# The recorded batch (T-206, 2026-10-10): make tuning rebuilds the table from its outcomes in
+# seconds; TUNING_BATCH= (empty) runs the whole tuning again (about 33 hours).
+TUNING_BATCH  ?= 01a11d49-1647-735a-af05-a58e497428f2
 
 $(TUNING_ASSETS): $(TUNING) paper.toml shared/config.py shared/design.py shared/eda.py shared/surrogate.py shared/runs.py shared/harness.py shared/scorecard.py shared/ceilings.py shared/families.py shared/curvewise.py shared/workers.py shared/candidates.py shared/search.py shared/trials.py $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(TUNING_BATCH),rebuilding the tuning table from batch $(TUNING_BATCH),tuning the short list ($(TUNING_KNOBS)) -- one line per finished job))
