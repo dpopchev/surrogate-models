@@ -9,18 +9,23 @@ import numpy as np
 import optuna
 import pandas as pd
 import pytest
-from optuna.distributions import CategoricalDistribution
+from optuna.distributions import BaseDistribution, CategoricalDistribution, IntDistribution
+from optuna.trial import TrialState
 from tune_survivors import (
     SECTION,
     Job,
+    TrialPoint,
     Tuned,
     Walled,
+    history_figure,
     jobs,
     main,
     outcomes_from_json,
     outcomes_to_json,
+    ranges_figure,
     run_job,
     screen_figures,
+    trial_points,
     tuning_table,
     walled,
 )
@@ -30,6 +35,7 @@ from shared.ceilings import Spread
 from shared.config import PaperConfig
 from shared.design import Design
 from shared.harness import Run, Timing
+from shared.plots import PlotStyle
 from shared.runs import RunMetadata, entry_from_run
 from shared.scorecard import Scorecard
 
@@ -222,6 +228,14 @@ def test_main_writes_a_table_row_per_job(ran: Path) -> None:
     assert body.count("\\\\\n") == 14
 
 
+def test_main_draws_the_history_figure(ran: Path) -> None:
+    assert (ran / "assets" / SECTION / f"{SECTION}_fig_history.png").stat().st_size > 0
+
+
+def test_main_draws_the_ranges_figure(ran: Path) -> None:
+    assert (ran / "assets" / SECTION / f"{SECTION}_fig_ranges.png").stat().st_size > 0
+
+
 def test_one_job_per_pair_and_short_listed_candidate() -> None:
     assert len(set(jobs())) == 14
 
@@ -237,3 +251,70 @@ def test_a_fitter_past_its_wall_skips_its_later_fits() -> None:
     started = time.monotonic()
     fit(TOY.X, TOY.y, TOY.X, TOY.y, 0)
     assert time.monotonic() - started < 0.05
+
+
+NS_RBF = Job("neutron_stars", "mass", Candidate("local RBF", "curve-wise"))
+BH_RBF = Job("black_holes", "mass", Candidate("local RBF", "pointwise"))
+RESNET = Job("neutron_stars", "charge", Candidate("ResNet", "pointwise"))
+NET = {"width": 64, "depth": 3, "activation": "relu", "loss": "mse", "lr": 1e-3}
+# A curve-wise and a pointwise interpolant on two pairs, and a network with one walled trial.
+TOY_POINTS = (
+    TrialPoint(NS_RBF, 0, 2.0, {"neighbours": 60, "knots": 8}),
+    TrialPoint(NS_RBF, 1, 3.0, {"neighbours": 90, "knots": 16}),
+    TrialPoint(NS_RBF, 2, 2.5, {"neighbours": 70, "knots": 12}),
+    TrialPoint(BH_RBF, 0, 3.0, {"neighbours": 50}),
+    TrialPoint(BH_RBF, 1, 3.2, {"neighbours": 80}),
+    TrialPoint(RESNET, 0, 0.5, NET),
+    TrialPoint(RESNET, 1, None, {**NET, "width": 400}),
+)
+
+
+def test_the_history_figure_has_a_panel_per_pair() -> None:
+    figure = history_figure(TOY_POINTS, PlotStyle(usetex=False))
+    assert len([axes for axes in figure.axes if axes.lines]) == 3
+
+
+def test_a_walled_trial_is_a_cross_at_its_number_on_the_history_figure() -> None:
+    figure = history_figure(TOY_POINTS, PlotStyle(usetex=False))
+    crosses = [line for line in figure.axes[2].lines if line.get_marker() == "x"]
+    assert [np.asarray(c.get_xdata()).tolist() for c in crosses] == [[1.0]]
+
+
+def test_the_history_figure_legend_names_its_families_both_units_and_the_wall() -> None:
+    figure = history_figure(TOY_POINTS, PlotStyle(usetex=False))
+    (legend,) = figure.legends
+    assert [text.get_text() for text in legend.get_texts()] == [
+        "local RBF",
+        "ResNet",
+        "pointwise",
+        "curve-wise",
+        "wall",
+    ]
+
+
+def test_a_failed_trial_reads_back_as_a_point_without_figures() -> None:
+    study = optuna.create_study(direction="maximize")
+    space: dict[str, BaseDistribution] = {"neighbours": IntDistribution(50, 400)}
+    study.add_trial(
+        optuna.trial.create_trial(
+            state=TrialState.FAIL, params={"neighbours": 60}, distributions=space
+        )
+    )
+    assert trial_points(study, BH_RBF) == (TrialPoint(BH_RBF, 0, None, {"neighbours": 60}),)
+
+
+def test_the_ranges_figure_has_a_knots_a_neighbours_and_a_network_panel() -> None:
+    figure = ranges_figure(TOY_POINTS, PlotStyle(usetex=False))
+    assert [axes.get_xlabel() for axes in figure.axes[:3]] == ["knots", "neighbours", "width"]
+
+
+def test_the_ranges_figure_dashes_the_ends_of_the_knots_range() -> None:
+    figure = ranges_figure(TOY_POINTS, PlotStyle(usetex=False))
+    dashed = [line for line in figure.axes[0].lines if line.get_linestyle() == "--"]
+    assert [np.asarray(line.get_xdata())[0] for line in dashed] == [6, 24]
+
+
+def test_a_walled_network_trial_is_a_cross_at_its_width_and_rate_on_the_ranges_figure() -> None:
+    figure = ranges_figure(TOY_POINTS, PlotStyle(usetex=False))
+    (crosses,) = [line for line in figure.axes[2].lines if line.get_marker() == "x"]
+    assert np.asarray(crosses.get_xydata()).tolist() == [[400.0, 1e-3]]

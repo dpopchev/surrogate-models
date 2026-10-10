@@ -23,17 +23,26 @@ from functools import partial
 from pathlib import Path
 from typing import Any, assert_never
 
+import matplotlib.pyplot as plt
 import numpy as np
 import optuna
 import pandas as pd
+import seaborn as sns
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
+from matplotlib.ticker import FixedLocator, NullFormatter, ScalarFormatter
+from optuna.distributions import IntDistribution
+from optuna.storages import JournalStorage
+from optuna.storages.journal import JournalFileBackend
 from optuna.trial import TrialState
 
 from shared import surrogate
 from shared.candidates import FAMILIES, UNITS, Candidate, Knobs, tuned_fitter
-from shared.config import PaperConfig, load_config
+from shared.config import NOTATION_TEX, PaperConfig, load_config
 from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
 from shared.eda import CurveSpace, booktabs
 from shared.harness import Fitter, Predictor, Run, harness
+from shared.plots import SYMBOLS, PlotStyle, apply_style, colormap, figure_size
 from shared.runs import (
     LedgerEntry,
     RunMetadata,
@@ -44,7 +53,7 @@ from shared.runs import (
     entry_to_json,
 )
 from shared.scorecard import significant_figures
-from shared.search import Family, Space, search, space_of
+from shared.search import KNOTS, SPACES, Family, Space, search, space_of
 from shared.surrogate import Training, duration_text
 from shared.trials import open_study
 from shared.workers import run_jobs
@@ -54,9 +63,13 @@ logger = logging.getLogger(__name__)
 # --- vocabulary and types ---------------------------------------------------------------------
 
 SECTION = "63_precision"
+HISTORY = f"{SECTION}_fig_history"
+RANGES = f"{SECTION}_fig_ranges"
 TARGETS: tuple[Target, ...] = ("mass", "charge")
 DATASET_TEX = {"neutron_stars": "NS", "black_holes": "BH"}
 TARGET_TEX = {"mass": "$M$", "charge": "$\\Dch$"}
+# A target's symbol in shared/plots.py's SYMBOLS, for the figures.
+TARGET_SYMBOL = {"mass": "M", "charge": "D"}
 # The data ceilings of Sections 4.1 and 4.2 (W-064) in significant figures, as their macros.
 CEILING_TEX: Mapping[tuple[str, Target], str] = {
     ("neutron_stars", "mass"): "\\nsEdaCeilMFigures",
@@ -122,6 +135,17 @@ class Walled:
 
 
 Outcome = Tuned | Walled
+
+
+@dataclass(frozen=True)
+class TrialPoint:
+    """One trial of a job's search: its number, its fold figures (None for a walled or failed
+    trial) and its params."""
+
+    job: Job
+    number: int
+    figures: float | None
+    params: Mapping[str, Any]
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -311,6 +335,214 @@ def tuning_table(outcomes: Sequence[Outcome], screen: Mapping[Job, float]) -> st
     )
 
 
+def study_name(batch: str, job: Job) -> str:
+    """The name of the job's study on the batch's journal."""
+    candidate = job.candidate
+    return f"{batch} {job.dataset} {job.target} {candidate.family} {candidate.unit}"
+
+
+def trial_points(study: optuna.Study, job: Job) -> tuple[TrialPoint, ...]:
+    """The finished trials of a job's study as points, a failed one without figures."""
+    finished = (TrialState.COMPLETE, TrialState.FAIL)
+    return tuple(
+        TrialPoint(
+            job,
+            trial.number,
+            trial.value if trial.state == TrialState.COMPLETE else None,
+            trial.params,
+        )
+        for trial in study.get_trials(deepcopy=False, states=finished)
+    )
+
+
+def history_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
+    """Per pair a panel: each candidate's trial figures against the trial number as dots and
+    its best so far as a line, family by color and unit by line style (curve-wise dashed)."""
+    pairs = list(dict.fromkeys((p.job.dataset, p.job.target) for p in points))
+    columns = min(2, len(pairs))
+    rows = -(-len(pairs) // columns)
+    figure, grid = plt.subplots(
+        rows,
+        columns,
+        figsize=figure_size(style, rows, 0.36),
+        layout="constrained",
+        squeeze=False,
+    )
+    palette: Mapping[str, Any] = dict(
+        zip(FAMILIES, sns.color_palette(style.palette, len(FAMILIES)), strict=True)
+    )
+    for axes, (dataset, target) in zip(grid.flat, pairs, strict=False):
+        for job in dict.fromkeys(
+            p.job for p in points if (p.job.dataset, p.job.target) == (dataset, target)
+        ):
+            trials = sorted((p for p in points if p.job == job), key=lambda p: p.number)
+            color = palette[job.candidate.family]
+            numbers = [p.number for p in trials if p.figures is not None]
+            figures = [p.figures for p in trials if p.figures is not None]
+            axes.plot(
+                numbers, figures, linestyle="", marker="o", markersize=2.5, color=color, alpha=0.5
+            )
+            axes.plot(
+                numbers,
+                np.maximum.accumulate(figures),
+                color=color,
+                linestyle="--" if job.candidate.unit == "curve-wise" else "-",
+            )
+            walls = [p.number for p in trials if p.figures is None]
+            if walls:
+                # at the panel's bottom whatever its figures' range: the x in data, the y in axes
+                axes.plot(
+                    walls,
+                    [0.03] * len(walls),
+                    linestyle="",
+                    marker="x",
+                    markersize=5,
+                    color=color,
+                    transform=axes.get_xaxis_transform(),
+                )
+        axes.set_title(f"{DATASET_TEX[dataset]} {SYMBOLS[TARGET_SYMBOL[target]]}", fontsize="small")
+        axes.set_ylabel("folds' figures")
+    for axes in grid.flat[len(pairs) :]:
+        axes.set_visible(False)
+    for axes in grid[-1]:
+        axes.set_xlabel("trial")
+    shown = [family for family in FAMILIES if any(p.job.candidate.family == family for p in points)]
+    handles = [
+        *(Line2D([], [], color=palette[family]) for family in shown),
+        Line2D([], [], color="black"),
+        Line2D([], [], color="black", linestyle="--"),
+        Line2D([], [], color="black", marker="x", linestyle=""),
+    ]
+    labels = [*shown, *UNITS, "wall"]
+    figure.legend(handles, labels, loc="outside lower center", ncols=4, fontsize="x-small")
+    return figure
+
+
+def ranges_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
+    """The trials against the ranges they searched, the ends of each range dashed: the folds'
+    figures against the knots of every curve-wise trial and against the neighbours of every
+    local RBF trial (a color per pair, pointwise dots and curve-wise squares), and the
+    network's trials in width and learning rate colored by their figures, walled ones crosses."""
+    figure, (knots_axes, neighbours_axes, network_axes) = plt.subplots(
+        1, 3, figsize=figure_size(style, 1, 0.45), layout="constrained"
+    )
+    pairs = [(spec.dataset, target) for spec, target in PAIRS]
+    # the paper's dataset colors, cool for neutron stars and warm for black holes, the mass
+    # the darker shade
+    shades = {
+        "neutron_stars": colormap(style.neutron_stars.beta_cmap),
+        "black_holes": colormap(style.black_holes.beta_cmap),
+    }
+    tone = {"mass": 0.25, "charge": 0.7}
+    colors = {(dataset, target): shades[dataset](tone[target]) for dataset, target in pairs}
+    marker = {"pointwise": "o", "curve-wise": "s"}
+    scored = [p for p in points if p.figures is not None]
+    for axes, name, chosen in (
+        (knots_axes, "knots", [p for p in scored if p.job.candidate.unit == "curve-wise"]),
+        (
+            neighbours_axes,
+            "neighbours",
+            [p for p in scored if p.job.candidate.family == "local RBF"],
+        ),
+    ):
+        for p in chosen:
+            axes.plot(
+                [p.params[name]],
+                [p.figures],
+                linestyle="",
+                marker=marker[p.job.candidate.unit],
+                markersize=2.5,
+                alpha=0.6,
+                color=colors[(p.job.dataset, p.job.target)],
+            )
+        axes.set_xlabel(name)
+        axes.set_ylabel("folds' figures")
+    neighbours_axes.set_xscale("log")
+    _plain_log_ticks(neighbours_axes.xaxis, (50, 100, 200, 400))
+    for axes, distribution in (
+        (knots_axes, KNOTS),
+        (neighbours_axes, SPACES["local RBF"]["neighbours"]),
+        (network_axes, SPACES["ResNet"]["width"]),
+    ):
+        assert isinstance(distribution, IntDistribution), f"{distribution} is no integer range"
+        for end in (distribution.low, distribution.high):
+            axes.axvline(end, color="grey", linestyle="--", linewidth=0.8)
+    network = [p for p in points if p.job.candidate.family == "ResNet"]
+    ran = [p for p in network if p.figures is not None]
+    shown = network_axes.scatter(
+        [p.params["width"] for p in ran],
+        [p.params["lr"] for p in ran],
+        c=[p.figures for p in ran],
+        cmap="viridis",
+        s=10,
+    )
+    walls = [p for p in network if p.figures is None]
+    network_axes.plot(
+        [p.params["width"] for p in walls],
+        [p.params["lr"] for p in walls],
+        linestyle="",
+        marker="x",
+        markersize=4,
+        color="black",
+    )
+    network_axes.set_xscale("log")
+    _plain_log_ticks(network_axes.xaxis, (32, 128, 512))
+    network_axes.set_yscale("log")
+    network_axes.set_xlabel("width")
+    network_axes.set_ylabel("learning rate")
+    figure.colorbar(shown, ax=network_axes, label="folds' figures")
+    handles = [
+        *(Line2D([], [], color=colors[pair], marker="o", linestyle="") for pair in pairs),
+        Line2D([], [], color="black", marker="o", linestyle=""),
+        Line2D([], [], color="black", marker="s", linestyle=""),
+        Line2D([], [], color="black", marker="x", linestyle=""),
+    ]
+    labels = [
+        *(f"{DATASET_TEX[dataset]} {SYMBOLS[TARGET_SYMBOL[target]]}" for dataset, target in pairs),
+        *UNITS,
+        "wall",
+    ]
+    figure.legend(handles, labels, loc="outside lower center", ncols=4, fontsize="x-small")
+    return figure
+
+
+def _plain_log_ticks(axis: Any, ticks: Sequence[float]) -> None:
+    """Label a log axis at the given ticks only, as plain numbers."""
+    axis.set_major_locator(FixedLocator(ticks))
+    axis.set_major_formatter(ScalarFormatter())
+    axis.set_minor_formatter(NullFormatter())
+
+
+def history_tex(minutes: float) -> str:
+    """The figure environment of the history figure, its wall stated in the caption."""
+    return (
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{HISTORY}}}\n"
+        "\\caption{The searches of \\cref{tab:tuning}, per dataset and target: each "
+        "short-listed candidate's trials scored on the frozen folds (dots) and its best so far "
+        "(line, curve-wise dashed) against the trial number. The first ten trials are drawn at "
+        "random, the rest by the tree-structured Parzen estimator. A cross at the bottom is a "
+        f"trial past the wall of ${minutes:g}$ minutes a fit.}}\n"
+        "\\label{fig:tuning-history}\n\\end{figure}\n"
+    )
+
+
+def ranges_tex() -> str:
+    """The figure environment of the ranges figure, placed here or at the top of a page."""
+    return (
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{RANGES}}}\n"
+        "\\caption{The trials of \\cref{tab:tuning} against the ranges they searched, the ends "
+        "of each range dashed: the significant figures on the folds against the knots of every "
+        "curve-wise trial (left) and against the neighbours of every trial of the local "
+        "interpolant (middle), a color per dataset and target, pointwise dots and curve-wise "
+        "squares; and the residual network's trials on the neutron-star charge in width and "
+        "learning rate (right), colored by their figures, a cross a trial past the wall. A best "
+        "trial on the end of its range marks the range to widen.}\n"
+        "\\label{fig:tuning-ranges}\n\\end{figure}\n"
+    )
+
+
 def job_line(outcome: Outcome, done: int, total: int, elapsed: float) -> str:
     """One finished job: its pair and candidate, its tuned figures or its wall, then how many
     jobs are done, the elapsed time and the time left."""
@@ -406,6 +638,17 @@ def main(
         path = out / f"{SECTION}_tab_tuning.tex"
         _write_checked(path, tuning_table(outcomes, screen))
         logger.info("done: tuning table of batch %s, %d jobs -> %s", batch, len(outcomes), path)
+        points = _journal_points(_outcomes_path(args.state, batch).with_suffix(".journal"), batch)
+        apply_style(config.plot, NOTATION_TEX.read_text())
+        drawn = (
+            (HISTORY, history_figure(points, config.plot), history_tex(args.minutes)),
+            (RANGES, ranges_figure(points, config.plot), ranges_tex()),
+        )
+        for name, figure, tex in drawn:
+            figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
+            plt.close(figure)
+            _write_checked(out / f"{name}.tex", tex)
+            logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.png")
 
 
 def _run_tuning(
@@ -471,8 +714,7 @@ def tune_job(work: Work) -> Outcome:
     logging.getLogger(surrogate.__name__).setLevel(logging.WARNING)
     job, context = work.job, work.context
     candidate = job.candidate
-    name = f"{job.dataset} {job.target} {candidate.family} {candidate.unit}"
-    study = open_study(f"{context.batch} {name}", context.journal)
+    study = open_study(study_name(context.batch, job), context.journal)
     study.sampler = optuna.samplers.TPESampler(seed=context.training.seed)
 
     def record(run: Run) -> str:
@@ -516,6 +758,18 @@ def tune_job(work: Work) -> Outcome:
             study,
             record,
         )
+
+
+def _journal_points(journal: Path, batch: str) -> tuple[TrialPoint, ...]:
+    """Every job's trials, read from the batch's study journal (nothing is created there)."""
+    storage = JournalStorage(JournalFileBackend(str(journal)))
+    return tuple(
+        point
+        for job in jobs()
+        for point in trial_points(
+            optuna.load_study(study_name=study_name(batch, job), storage=storage), job
+        )
+    )
 
 
 def _outcomes_path(state: Path, batch: str) -> Path:
