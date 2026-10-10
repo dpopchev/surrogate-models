@@ -39,8 +39,6 @@
 - 2026-10-09 W-094: pre-empted by W-098 after W-097 landed (developer: pre-empt W-098 and keep pre-empting as long as the run holds T-206); W-098's dependency on W-091 (todo) is bent knowingly -- the notation work touches shared/plots.py and the four figure modules, none of W-091's run-shell copies
 - 2026-10-09 W-094: pre-empted by W-099 while it waits on W-068 (developer: pre-empt again if available): W-099 is the smallest item that lives on main (2 Tasks, Makefile and mk/paper.mk) and builds the deliverable gate the close chain cites; W-097 and W-098 wait
 - 2026-10-09 W-094: wi/W-094 stacks on wi/W-068's tip (developer): its files (shared/search.py, tune_survivors.py) are W-068's unlanded code; precedent E-006 v3 (W-077 on W-065); W-094 lands after W-068, in that order
-- 2026-10-09 W-098: T-228's usetex save test dropped (developer; agreed with \~/.claude's session): it needs a LaTeX install and tests matplotlib's path; the rcParam test stays
-- 2026-10-10 W-098: pre-empted by W-103 after W-098 completed unlanded (developer: go with the last pre-empt); wi/W-103 stacks on wi/W-098's tip so both fast-forward in that order; W-103 touches only the Makefile
 
 ## Deviations
 - none recorded

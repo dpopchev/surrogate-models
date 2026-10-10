@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-094   | blocked: 4 | todo roots: 9 | done: 274 | pruned: 19
+open path: W-094   | blocked: 2 | todo roots: 9 | done: 276 | pruned: 19
 
 ## Tree
 
@@ -16,7 +16,7 @@ E-006         [doing]    Search space and the best surrogate per dataset
   W-065  issue  [done]     One scorecard and a fair harness for every candidate -- T-129 [done], T-130 [done], T-131 [done], T-146 [done], T-169 [done]
   W-066  issue  [done]     Representation screen -- inputs, targets, pointwise or curve-wise -- T-132 [pruned]   [pruned: split (developer, 2026-10-07): the target options into T-189, the curve-wise representation into T-190 as a harness fitter rather than a design], T-133 [done], T-189 [done], T-190 [done], T-191 [done], T-192 [done]   (filed during T-189), T-198 [done]   (filed during T-133)
   W-067  issue  [done]     Family screen -- interpolators, GPR, XGBoost and networks -- T-134 [done], T-135 [done], T-170 [done], T-193 [done]   (filed during T-133), T-200 [done]   (filed during T-135), T-201 [done]   (filed during T-135), T-202 [done]   (filed during T-135)
-  W-068  issue  [blocked]  Tuning and precision of the surviving families   [blocked since 2026-10-09, waiting on W-098: pre-empted by W-098 while T-206 waits on the make tuning run (developer, 2026-10-09); W-094 waits on its landing] -- T-136 [done], T-137 [pruned]   [pruned: re-planned (developer, 2026-10-09): the precision regime moves to W-093 so W-068 lands on the tuning table within the one-day branch], T-138 [pruned]   [pruned: re-planned (developer, 2026-10-09): the precision run moves to W-093 (T-211, T-212); W-068 closes on T-206's table], T-204 [done]   (filed during T-136), T-205 [done]   (filed during T-136), T-206 [blocked]   [blocked since 2026-10-09, waiting on the make tuning run: make tuning runs in the background (job 14 of 14 since about 17h01m elapsed); its check runs when it ends]   (filed during T-136), T-207 [done]   (filed during T-205)
+  W-068  issue  [doing]    Tuning and precision of the surviving families -- T-136 [done], T-137 [pruned]   [pruned: re-planned (developer, 2026-10-09): the precision regime moves to W-093 so W-068 lands on the tuning table within the one-day branch], T-138 [pruned]   [pruned: re-planned (developer, 2026-10-09): the precision run moves to W-093 (T-211, T-212); W-068 closes on T-206's table], T-204 [done]   (filed during T-136), T-205 [done]   (filed during T-136), T-206 [blocked]   [blocked since 2026-10-09, waiting on the make tuning run: make tuning runs in the background (job 14 of 14 since about 17h01m elapsed); its check runs when it ends]   (filed during T-136), T-207 [done]   (filed during T-205)
   W-069  issue  [todo]     Extrapolation error against the distance from the training hull -- T-139 [todo], T-140 [todo]
   W-070  issue  [todo]     Pareto front and the best approach per pair -- T-141 [todo], T-142 [todo], T-143 [todo]
   W-071  issue  [done]     Section 3.4 and Section 5 follow the search space -- T-144 [done], T-145 [done]
@@ -50,9 +50,7 @@ W-091  issue  [todo]     (standalone) The screens' shared shell and test inputs 
 W-094  bug    [blocked]  (standalone) A trial that raises ends the tuning after every other job and leaves no outcomes file   [blocked since 2026-10-09, waiting on W-068: its Tasks are done (d6ef614 on wi/W-094-raising-trial); the branch stacks on wi/W-068 and main is not its ancestor, so the fast-forward waits for W-068's landing]   (filed during T-206) -- T-216 [done], T-217 [done], T-218 [done]
 W-095  bug    [todo]     (standalone) The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206) -- T-219 [todo]
 W-096  issue  [todo]     (standalone) One Pair and one FitRows value through the fit path   (filed during T-206) -- T-220 [todo], T-221 [todo], T-222 [todo]
-W-098  issue  [blocked]  (standalone) Figures and captions share the paper's notation   [blocked since 2026-10-10, waiting on W-103: its Tasks are done (f603520 on wi/W-098-notation, ff-able onto main); its landing waits for the developer's land; pre-empted by W-103 while the run holds T-206 (developer, 2026-10-10)]   (filed during T-206) -- T-227 [done], T-228 [done], T-229 [done]
 W-102  issue  [todo]     (standalone) Every section's figures are selected in paper.toml   (filed during T-206) -- T-237 [todo]
-W-103  issue  [doing]    (standalone) The base deliverable target follows the template -- deliverables are built, not opened   (filed during T-223) -- T-238 [done]
 ```
 
 ## Closed
@@ -447,12 +445,26 @@ closed 2026-10-09 -- outcome: Given the generated assets, When make compile runs
 - T-226 [pruned] Fail paper-verify on a float or overfull warning from a generated asset -> 00_metadata/latex_warnings.py and mk/paper.mk   [pruned: excessive (developer, agreed with \~/.claude's session): a pdfTeX log parser with its own suite tests the typesetter's output, the class of proving the PDF opens; W-097's criterion keeps the behaviour, the grep of the log is the evidence at its close]
 - T-239 [done] Adapt the charge-row macro test to the seven-column table -> 50_methodology/51_algorithms/test_fit_baseline.py   (filed during T-225)
 
+### W-098 issue [done] (standalone) Figures and captions share the paper's notation
+
+closed 2026-10-10 -- outcome: Given the notation macros in 00_metadata/notation.tex, When make assets runs, Then every figure label is typeset through text.latex.preamble from that file and no figure module defines a dict of hand-spelled symbols. -- ledger: ledgers/W-098.md
+
+- T-227 [done] Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it
+- T-228 [done] Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py
+- T-229 [done] Replace the hand-spelled symbol dicts with the macros -> the four figure modules
+
 ### W-099 issue [done] (standalone) make deliverable builds the paper PDF and proves it opens
 
 closed 2026-10-09 -- outcome: Given the Makefile with DELIVERABLES, When the developer runs make deliverable, Then it prints "deliverables open: deliverable-paper" after compiling the paper. -- ledger: ledgers/W-099.md
 
 - T-230 [done] Adopt the template's deliverable target -> Makefile
 - T-231 [done] Add deliverable-paper -> mk/paper.mk
+
+### W-103 issue [done] (standalone) The base deliverable target follows the template -- deliverables are built, not opened
+
+closed 2026-10-10 -- outcome: Given the template of \~/.claude v1.35.0, When the developer runs make deliverable, Then it prints "deliverables built: deliverable-paper" after compiling the paper. -- ledger: ledgers/W-103.md
+
+- T-238 [done] Re-copy the base deliverable block from the template -> Makefile
 
 ## Diagram
 ```mermaid
@@ -490,7 +502,7 @@ flowchart TD
   W067 --> T200["T-200 done: Draw the family screen's parity plots test-first -> build/assets/62_families/62_families_fig_parity.png"]
   W067 --> T201["T-201 done: Draw the family screen's scaling figure test-first -> build/assets/62_families/62_families_fig_scaling.png"]
   W067 --> T202["T-202 done: Write the appendix on the model families -> 90_appendix/90_appendix.tex"]
-  E006 --> W068["W-068 issue blocked on W-098: Tuning and precision of the surviving families"]
+  E006 --> W068["W-068 issue doing: Tuning and precision of the surviving families"]
   W068 --> T136["T-136 done: Write the equal-budget search test-first -> shared/search.py"]
   W068 --> T137["T-137 pruned: Write the precision regime test-first -> shared/surrogate.py"]
   W068 --> T138["T-138 pruned: Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex"]
@@ -582,22 +594,16 @@ flowchart TD
   W096 --> T220["T-220 todo: Replace PAIRS and designs with a frozen Pair test-first -> shared/design.py and the four runnables"]
   W096 --> T221["T-221 todo: Replace the five-array Fitter with FitRows test-first -> shared/harness.py and its wrappers"]
   W096 --> T222["T-222 todo: Build Training through make_training and type the scorecard's maps as Mapping -> shared/surrogate.py, shared/scorecard.py"]
-  W098["W-098 issue blocked on W-103, standalone: Figures and captions share the paper's notation"]
-  W098 --> T227["T-227 done: Move the notation macros to 00_metadata/notation.tex -> preamble.tex inputs it"]
-  W098 --> T228["T-228 done: Hand the notation to matplotlib through text.latex.preamble test-first -> shared/plots.py"]
-  W098 --> T229["T-229 done: Replace the hand-spelled symbol dicts with the macros -> the four figure modules"]
   W102["W-102 issue todo, standalone: Every section's figures are selected in paper.toml"]
   W102 --> T237["T-237 todo: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
-  W103["W-103 issue doing, standalone: The base deliverable target follows the template -- deliverables are built, not opened"]
-  W103 --> T238["T-238 done: Re-copy the base deliverable block from the template -> Makefile"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W103 doing
-  class W068,T206,W094,W098 blocked
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218,T227,T228,T229,T238 done
+  class E006,W068,E009 doing
+  class T206,W094 blocked
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,T136,T204,T205,T207,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T216,T217,T218 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W102,T237 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
