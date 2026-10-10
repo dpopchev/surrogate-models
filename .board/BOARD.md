@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 11 | done: 280 | pruned: 19
+open path: none   | blocked: 0 | todo roots: 6 | done: 280 | pruned: 19
 
 ## Tree
 
@@ -43,15 +43,28 @@ E-009         [doing]    The paper follows the revised structure, and the releas
   W-059  spike  [done]     Which refs.bib keys the revised structure's citations name -- T-107 [done], T-108 [pruned]   [pruned: superseded: the real references move to the standalone spike W-061 (T-118); W-059 closes on placeholder keys (T-117)], T-117 [done]
   W-060  issue  [done]     Title and outline bullets aligned to the revised structure -- T-114 [done], T-115 [done], T-116 [done]
   W-100  spike  [todo]     What the paper claims once the search names its winners   (filed during T-206) -- T-233 [todo], T-234 [todo]
+E-010         [todo]     Every module meets the Python gates
+  W-079  issue  [todo]     Every test carries one category marker, registered and enforced   (filed during T-164) -- T-167 [todo], T-168 [todo], T-232 [todo]
+  W-091  issue  [todo]     The screens' shared shell and test inputs live once -- one helper module, one toy fixture   (filed during T-205) -- T-213 [todo], T-214 [todo], T-215 [todo]
+  W-095  bug    [todo]     The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206) -- T-219 [todo]
+  W-096  issue  [todo]     One Pair and one FitRows value through the fit path   (filed during T-206) -- T-220 [todo], T-221 [todo], T-222 [todo]
+  W-105  bug    [todo]     make tuning with --recover on a partial batch fails at the figures after writing the table   (filed during T-240) -- T-242 [todo]   (filed during T-240)
+  W-106  issue  [todo]     One vocabulary for pairs, units, families and labels -- T-243 [todo], T-244 [todo], T-245 [todo], T-246 [todo]
+  W-107  issue  [todo]     Asserts out of the domain, I/O out of the data modules -- T-247 [todo], T-248 [todo], T-249 [todo]
+  W-108  issue  [todo]     Every knob has one home -- T-250 [todo], T-251 [todo], T-252 [todo], T-253 [todo]
+  W-109  issue  [todo]     Records, not tuples and dict blobs -- T-254 [todo], T-255 [todo], T-256 [todo]
+  W-110  issue  [todo]     Module order, notation literals and the surrogate module -- T-257 [todo], T-258 [todo], T-259 [todo]
+E-011         [todo]     Figures and tables picked from rendered variants, numbers from macros
+  W-102  issue  [todo]     Every section's figures are selected in paper.toml   (filed during T-206) -- T-237 [todo]
+  W-104  bug    [todo]     Section 5.2's error and scaling figures float past Section 5.3's text   (filed during T-240) -- T-241 [todo]   (filed during T-240)
+  W-111  issue  [todo]     The variant mechanism on one figure -- T-260 [todo], T-261 [todo], T-262 [todo], T-263 [todo]
+  W-112  issue  [todo]     Section 3 figure variants -- T-264 [todo], T-265 [todo], T-266 [todo], T-267 [todo]
+  W-113  issue  [todo]     Section 4.1 and 5 figure variants -- T-268 [todo], T-269 [todo], T-270 [todo], T-271 [todo]
+  W-114  issue  [todo]     Table layouts rendered to page images -- T-272 [todo], T-273 [todo], T-274 [todo], T-275 [todo]
+  W-115  issue  [todo]     Two or three style presets on three figures -- T-276 [todo], T-277 [todo]
+  W-116  issue  [todo]     Every number the text cites is a macro -- T-278 [todo], T-279 [todo], T-280 [todo], T-281 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
-W-079  issue  [todo]     (standalone) Every test carries one category marker, registered and enforced   (filed during T-164) -- T-167 [todo], T-168 [todo], T-232 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
-W-091  issue  [todo]     (standalone) The screens' shared shell and test inputs live once -- one helper module, one toy fixture   (filed during T-205) -- T-213 [todo], T-214 [todo], T-215 [todo]
-W-095  bug    [todo]     (standalone) The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206) -- T-219 [todo]
-W-096  issue  [todo]     (standalone) One Pair and one FitRows value through the fit path   (filed during T-206) -- T-220 [todo], T-221 [todo], T-222 [todo]
-W-102  issue  [todo]     (standalone) Every section's figures are selected in paper.toml   (filed during T-206) -- T-237 [todo]
-W-104  bug    [todo]     (standalone) Section 5.2's error and scaling figures float past Section 5.3's text   (filed during T-240) -- T-241 [todo]   (filed during T-240)
-W-105  bug    [todo]     (standalone) make tuning with --recover on a partial batch fails at the figures after writing the table   (filed during T-240) -- T-242 [todo]   (filed during T-240)
 ```
 
 ## Closed
@@ -581,31 +594,83 @@ flowchart TD
   E009 --> W100["W-100 spike todo: What the paper claims once the search names its winners"]
   W100 --> T233["T-233 todo: List every claim of the title block, abstract, introduction, Section 3.4 and Section 7 against Section 5 -> Findings on W-100"]
   W100 --> T234["T-234 todo: Decide the thesis with the developer and the supervisors -> the W-100 spike decision"]
-  W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
-  W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
-  W079["W-079 issue todo, standalone: Every test carries one category marker, registered and enforced"]
+  E010["E-010 todo: Every module meets the Python gates"]
+  E010 --> W079["W-079 issue todo: Every test carries one category marker, registered and enforced"]
   W079 --> T167["T-167 todo: Mark every test module with its category -> the test_*.py files"]
   W079 --> T168["T-168 todo: Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py"]
   W079 --> T232["T-232 todo: Refresh mk/python.mk from add-python -> M= selection, test-integration, test-stats"]
-  W088["W-088 issue todo, standalone: A running representation screen is followable -- progress, time left and each entry's representation"]
-  W088 --> T196["T-196 todo: Log the screen's jobs done and time left test-first -> 60_results/61_representation/screen_representation.py"]
-  W088 --> T197["T-197 todo: Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py"]
-  W091["W-091 issue todo, standalone: The screens' shared shell and test inputs live once -- one helper module, one toy fixture"]
+  E010 --> W091["W-091 issue todo: The screens' shared shell and test inputs live once -- one helper module, one toy fixture"]
   W091 --> T213["T-213 todo: Write the run shell module test-first -> shared/batches.py"]
   W091 --> T214["T-214 todo: Point the four runnables at shared/batches.py -> no private copy of the run shell left"]
   W091 --> T215["T-215 todo: Write the toy tables once -> shared/toy_tables.py used by the four test modules"]
-  W095["W-095 bug todo, standalone: The wall counts wall-clock time, so a sleeping laptop walls a healthy fit"]
+  E010 --> W095["W-095 bug todo: The wall counts wall-clock time, so a sleeping laptop walls a healthy fit"]
   W095 --> T219["T-219 todo: Arm the wall on the process's CPU time test-first -> shared/batches.py"]
-  W096["W-096 issue todo, standalone: One Pair and one FitRows value through the fit path"]
+  E010 --> W096["W-096 issue todo: One Pair and one FitRows value through the fit path"]
   W096 --> T220["T-220 todo: Replace PAIRS and designs with a frozen Pair test-first -> shared/design.py and the four runnables"]
   W096 --> T221["T-221 todo: Replace the five-array Fitter with FitRows test-first -> shared/harness.py and its wrappers"]
   W096 --> T222["T-222 todo: Build Training through make_training and type the scorecard's maps as Mapping -> shared/surrogate.py, shared/scorecard.py"]
-  W102["W-102 issue todo, standalone: Every section's figures are selected in paper.toml"]
-  W102 --> T237["T-237 todo: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
-  W104["W-104 bug todo, standalone: Section 5.2's error and scaling figures float past Section 5.3's text"]
-  W104 --> T241["T-241 todo: Keep Section 5.2's figures beside its text -> 60_results/62_families/62_families.tex"]
-  W105["W-105 bug todo, standalone: make tuning with --recover on a partial batch fails at the figures after writing the table"]
+  E010 --> W105["W-105 bug todo: make tuning with --recover on a partial batch fails at the figures after writing the table"]
   W105 --> T242["T-242 todo: Read only the studies a batch's journal holds into the figures test-first -> 60_results/63_precision/tune_survivors.py"]
+  E010 --> W106["W-106 issue todo: One vocabulary for pairs, units, families and labels"]
+  W106 --> T243["T-243 todo: Define Unit, Family, curve_columns and PROFILE_BINS once -> shared/candidates.py, shared/search.py, shared/ceilings.py"]
+  W106 --> T244["T-244 todo: Name the TeX form of a pair in one function test-first -> shared/design.py"]
+  W106 --> T245["T-245 todo: Pin one thread in one context manager test-first -> shared/harness.py"]
+  W106 --> T246["T-246 todo: Configure worker logging once in the pool initializer test-first -> shared/workers.py"]
+  E010 --> W107["W-107 issue todo: Asserts out of the domain, I/O out of the data modules"]
+  W107 --> T247["T-247 todo: Build Symbols through make_symbols and read no file test-first -> shared/plots.py"]
+  W107 --> T248["T-248 todo: Return NoCompletedTrial from search() test-first -> shared/search.py, 60_results/63_precision/tune_survivors.py"]
+  W107 --> T249["T-249 todo: Narrow by match, not assert -> 60_results/63_precision/tune_survivors.py, 50_methodology/51_algorithms/fit_baseline.py"]
+  E010 --> W108["W-108 issue todo: Every knob has one home"]
+  W108 --> T250["T-250 todo: Pass the probe and split knobs from make -> eda_neutron_stars.py, eda_black_holes.py, split_datasets.py, mk/data.mk, mk/paper.mk"]
+  W108 --> T251["T-251 todo: Derive the short list from the screen batch test-first -> 60_results/63_precision/tune_survivors.py, mk/paper.mk"]
+  W108 --> T252["T-252 todo: List the shared prerequisites by wildcard -> mk/paper.mk"]
+  W108 --> T253["T-253 todo: Move the grid and dpi constants into PlotStyle test-first -> shared/plots.py, paper.toml, shared/eda.py, eda_neutron_stars.py, eda_black_holes.py, fit_baseline.py, shared/surrogate.py"]
+  E010 --> W109["W-109 issue todo: Records, not tuples and dict blobs"]
+  W109 --> T254["T-254 todo: Type the EDA records test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py"]
+  W109 --> T255["T-255 todo: Type the fit path records test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/runs.py"]
+  W109 --> T256["T-256 todo: Type the maps as Mapping -> shared/ceilings.py, shared/runs.py, shared/search.py, 60_results/63_precision/tune_survivors.py"]
+  E010 --> W110["W-110 issue todo: Module order, notation literals and the surrogate module"]
+  W110 --> T257["T-257 todo: Reorder so main() is the last definition -> eda_neutron_stars.py, eda_black_holes.py, fit_baseline.py, screen_representation.py"]
+  W110 --> T258["T-258 todo: Move duration text and the reference predictors -> shared/progress.py, shared/families.py"]
+  W110 --> T259["T-259 todo: Label through SYMBOLS test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py, shared/plots.py"]
+  E011["E-011 todo: Figures and tables picked from rendered variants, numbers from macros"]
+  E011 --> W102["W-102 issue todo: Every section's figures are selected in paper.toml"]
+  W102 --> T237["T-237 todo: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
+  E011 --> W104["W-104 bug todo: Section 5.2's error and scaling figures float past Section 5.3's text"]
+  W104 --> T241["T-241 todo: Keep Section 5.2's figures beside its text -> 60_results/62_families/62_families.tex"]
+  E011 --> W111["W-111 issue todo: The variant mechanism on one figure"]
+  W111 --> T260["T-260 todo: Add the mass_radius variant choice test-first -> shared/config.py, paper.toml"]
+  W111 --> T261["T-261 todo: Draw the departure and two-panel variants test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py"]
+  W111 --> T262["T-262 todo: Write the contact sheet and make variants test-first -> shared/plots.py, 40_data_analysis/42_black_holes/eda_black_holes.py, mk/paper.mk"]
+  W111 --> T263["T-263 todo: Compile with the pick -> paper.toml, build/assets/42_black_holes/42_black_holes_fig_mass_radius.tex"]
+  E011 --> W112["W-112 issue todo: Section 3 figure variants"]
+  W112 --> T264["T-264 todo: Draw the NS charge_target and mass_density variants test-first -> eda_neutron_stars.py, shared/config.py, paper.toml, mk/paper.mk"]
+  W112 --> T265["T-265 todo: Draw the univariate and mass_max variants test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py, shared/config.py, paper.toml"]
+  W112 --> T266["T-266 todo: Draw the BH charge_target and existence_edge variants test-first -> eda_black_holes.py, shared/config.py, paper.toml"]
+  W112 --> T267["T-267 todo: Draw the ceilings figure variants test-first -> shared/ceilings.py, eda_neutron_stars.py, eda_black_holes.py, shared/config.py, paper.toml"]
+  E011 --> W113["W-113 issue todo: Section 4.1 and 5 figure variants"]
+  W113 --> T268["T-268 todo: Draw the 4.1 parity variants test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/config.py, paper.toml, mk/paper.mk"]
+  W113 --> T269["T-269 todo: Draw the 5.2 errors and parity variants test-first -> 60_results/62_families/screen_families.py, shared/config.py, paper.toml, mk/paper.mk"]
+  W113 --> T270["T-270 todo: Draw the 5.2 scaling variants test-first -> 60_results/62_families/screen_families.py, shared/config.py, paper.toml"]
+  W113 --> T271["T-271 todo: Draw the 5.3 history and ranges variants test-first -> 60_results/63_precision/tune_survivors.py, shared/config.py, paper.toml, mk/paper.mk"]
+  E011 --> W114["W-114 issue todo: Table layouts rendered to page images"]
+  W114 --> T272["T-272 todo: Add the table layout choices and the aligned columns test-first -> shared/config.py, shared/eda.py, paper.toml, 00_metadata/preamble.tex"]
+  W114 --> T273["T-273 todo: Rasterize each table layout through gs test-first -> 00_metadata/tables_entry.py, mk/paper.mk"]
+  W114 --> T274["T-274 todo: Write the split and transposed results tables test-first -> screen_representation.py, screen_families.py, tune_survivors.py, fit_baseline.py"]
+  W114 --> T275["T-275 todo: Select the decisions tables layout by macro test-first -> 40_data_analysis/43_preprocessing/43_preprocessing.tex, preprocessing_numbers.py, paper.toml"]
+  E011 --> W115["W-115 issue todo: Two or three style presets on three figures"]
+  W115 --> T276["T-276 todo: Read the marks from PlotStyle presets test-first -> shared/plots.py, paper.toml, the figure modules"]
+  W115 --> T277["T-277 todo: Render three figures under each preset -> mk/paper.mk, build/variants/presets/presets_variants.png"]
+  E011 --> W116["W-116 issue todo: Every number the text cites is a macro"]
+  W116 --> T278["T-278 todo: Write the knobs macro file from paper.toml and the make knobs test-first -> 00_metadata/paper_knobs.py, mk/paper.mk, 00_metadata/article.tex"]
+  W116 --> T279["T-279 todo: Emit the representation and family result macros test-first -> 60_results/61_representation/screen_representation.py, 60_results/62_families/screen_families.py, 00_metadata/article.tex"]
+  W116 --> T280["T-280 todo: Emit the tuning result macros test-first -> 60_results/63_precision/tune_survivors.py, 00_metadata/article.tex"]
+  W116 --> T281["T-281 todo: Replace the literals in the text -> 51_algorithms.tex, 61_representation.tex, 62_families.tex, 63_precision.tex, 90_appendix.tex, preprocessing_numbers.py"]
+  W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
+  W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
+  W088["W-088 issue todo, standalone: A running representation screen is followable -- progress, time left and each entry's representation"]
+  W088 --> T196["T-196 todo: Log the screen's jobs done and time left test-first -> 60_results/61_representation/screen_representation.py"]
+  W088 --> T197["T-197 todo: Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -613,6 +678,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,E009 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W079,T167,T168,T232,W088,T196,T197,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W102,T237,W104,T241,W105,T242 todo
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,E010,W079,T167,T168,T232,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W105,T242,W106,T243,T244,T245,T246,W107,T247,T248,T249,W108,T250,T251,T252,T253,W109,T254,T255,T256,W110,T257,T258,T259,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```

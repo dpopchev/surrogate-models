@@ -24,17 +24,22 @@
 - 2026-10-08 T-200: fact: BH p95 is its worst of 3 test curves (pointwise RBF: M flat 5e-5 vs 1e-7; D 1e-3 vs 1e-5); BH curve-wise error arcs between the 8 knots -> E-007 tunes the knots
 - 2026-10-08 W-037: standing: one thread is fastest (2.6 s vs 11.4 s an epoch at 7); one fit took 53-525 s, swinging 2.5x with load -> cite fit times as orders of magnitude, time them repeatedly supersedes: W-035#2, W-036#1, W-037#2
 - 2026-10-08 W-073: standing: scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1), the nearest curve beats the MLP on the test curves of all four pairs; the MLP leads only on the NS folds -> no pair is won by the baseline supersedes: W-073#1, W-073#2
+- 2026-10-10 E-010: fact: the asset baseline of main c4dc642 is local/assets-baseline.sha (50 files, digest 4eea8ad354c8), two back-to-back rebuilds identical -> every work item closes on diff -q against it
 - 2026-10-10 W-068: T-206: fact: batch 01a11d49, folds/test vs ceiling: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 - 2026-10-07 W-047: open: what observational sigma do realistic mock observations of M and D carry (supervisors)? the data ceiling alone allows a surrogate about 1e-4 M_sun on the NS mass and 1.6e-3 dex on the NS charge (W-064) -- the surrogate's error target follows from it
+- 2026-10-10 E-010: open: conformance only -- the run times (quarter-hour pointwise RBF trials, 33-hour tuning) are out of scope -> a performance root if wanted (developer go, 2026-10-10)
+- 2026-10-10 E-011: open: the paper review is a consistency review (text against figures, tables and code) -> a prose pass is a new root if wanted (developer go, 2026-10-10)
 - 2026-10-10 W-068: T-206: open: best trials on range edges: BH cw knots 24 of 24, RBF pw neighbours NS 399/377 of 400, BH 51/50 of 50 -> widen KNOTS and neighbours before W-093's precision regime, or run W-093 on these? supersedes: W-068#2
 
 ## Decisions
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
+- 2026-10-10 E-010: E-010 before E-011, W-110 (module order) and W-115 (style presets) kept, the standalone W-079, W-091, W-096, W-095, W-105 adopted (developer, 2026-10-10)
+- 2026-10-10 E-011: the picks live in paper.toml per figure and table (E-003 d1), W-102 and W-104 adopted (developer, 2026-10-10)
 
 ## Deviations
 - none recorded
