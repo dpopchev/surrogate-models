@@ -1,6 +1,6 @@
-# Board -- W-104-families-float-barrier
+# Board -- surrogate-models
 record: local
-open path: E-011 > W-104   | blocked: 0 | todo roots: 8 | done: 329 | pruned: 34
+open path: E-011   | blocked: 0 | todo roots: 8 | done: 330 | pruned: 34
 
 ## Tree
 
@@ -45,7 +45,7 @@ E-009         [doing]    The paper follows the revised structure, and the releas
   W-100  spike  [todo]     What the paper claims once the search names its winners   (filed during T-206) -- T-233 [todo], T-234 [todo]
 E-011         [doing]    Figures and tables picked from rendered variants, numbers from macros
   W-102  issue  [done]     Every section's figures are selected in paper.toml   (filed during T-206) -- T-237 [done]
-  W-104  bug    [doing]    Section 5.2's error and scaling figures float past Section 5.3's text   (filed during T-240) -- T-241 [done]   (filed during T-240)
+  W-104  bug    [done]     Section 5.2's error and scaling figures float past Section 5.3's text   (filed during T-240) -- T-241 [done]   (filed during T-240)
   W-111  issue  [todo]     The variant mechanism on one figure -- T-260 [todo], T-261 [todo], T-262 [todo], T-263 [todo]
   W-112  issue  [todo]     Section 3 figure variants -- T-264 [todo], T-265 [todo], T-266 [todo], T-267 [todo]
   W-113  issue  [todo]     Section 4.1 and 5 figure variants -- T-268 [todo], T-269 [todo], T-270 [todo], T-271 [todo]
@@ -674,7 +674,7 @@ flowchart TD
   E011["E-011 doing: Figures and tables picked from rendered variants, numbers from macros"]
   E011 --> W102["W-102 issue done: Every section's figures are selected in paper.toml"]
   W102 --> T237["T-237 done: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
-  E011 --> W104["W-104 bug doing: Section 5.2's error and scaling figures float past Section 5.3's text"]
+  E011 --> W104["W-104 bug done: Section 5.2's error and scaling figures float past Section 5.3's text"]
   W104 --> T241["T-241 done: Keep Section 5.2's figures beside its text -> 60_results/62_families/62_families.tex"]
   E011 --> W111["W-111 issue todo: The variant mechanism on one figure"]
   W111 --> T260["T-260 todo: Add the mass_radius variant choice test-first -> shared/config.py, paper.toml"]
@@ -727,8 +727,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E011,W104 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,T241,W122,T306 done
+  class E006,E009,E011 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,W122,T306 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W118,T287,W119,T295,W120,T296,W121,T303,T304,T305 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T307 pruned
 ```
