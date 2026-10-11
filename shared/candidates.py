@@ -23,11 +23,12 @@ from shared.curvewise import curvewise_fitter
 from shared.eda import CurveSpace
 from shared.families import make_gpr, make_knn, make_rbf, make_xgboost
 from shared.harness import Fitter
-from shared.search import Unit
 from shared.surrogate import ResMLP, Training, make_estimator, network_fitter, sklearn_fitter
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
+# The unit of prediction: one row, or a whole curve along its normalized coordinate.
+Unit = Literal["pointwise", "curve-wise"]
 Family = Literal["k-NN", "local RBF", "GPR", "XGBoost", "MLP", "ResNet"]
 FAMILIES: tuple[Family, ...] = ("k-NN", "local RBF", "GPR", "XGBoost", "MLP", "ResNet")
 UNITS: tuple[Unit, ...] = ("pointwise", "curve-wise")

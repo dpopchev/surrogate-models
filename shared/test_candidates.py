@@ -16,13 +16,14 @@ from shared.candidates import (
     UNITS,
     Candidate,
     Knobs,
+    curve_columns,
     estimator_of,
     fitter_of,
     tuned_fitter,
     tuned_knobs,
     tuned_training,
 )
-from shared.design import Design
+from shared.design import NEUTRON_STARS, Design
 from shared.eda import make_curve_space
 from shared.harness import harness
 from shared.search import Space, space_of
@@ -43,6 +44,12 @@ TRAINING = Training(
     seed=0,
 )
 KNOBS = Knobs(k=2, neighbours=4, knots=4, per_curve=2)
+
+
+def test_a_curve_is_keyed_by_its_curve_columns_and_runs_along_the_other_input() -> None:
+    assert curve_columns(NEUTRON_STARS.space) == ((1, 2), 0)
+
+
 SPACE = make_curve_space({"x": "raw", "p": "raw"}, ("p",))
 
 # Twelve curves of ten rows, y = p + x: curves 10 and 11 are test, enough training curves left

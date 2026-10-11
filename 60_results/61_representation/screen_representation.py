@@ -35,6 +35,7 @@ from shared.batches import (
     write_checked,
     write_entry,
 )
+from shared.candidates import Unit, curve_columns
 from shared.config import PaperConfig, load_config
 from shared.curvewise import curvewise_fitter
 from shared.design import (
@@ -49,7 +50,7 @@ from shared.design import (
     design,
     pair_tex,
 )
-from shared.eda import CurveSpace, booktabs, make_curve_space
+from shared.eda import booktabs, make_curve_space
 from shared.families import make_knn, make_rbf
 from shared.harness import Fitter, Run, harness
 from shared.runs import LedgerEntry, RunMetadata, Setting
@@ -78,8 +79,6 @@ NS_RAW_RHO = DesignSpec(
 )
 
 Representation = Literal["baseline", "raw rho_c", "log10 M", "linear D", "curve-wise"]
-# The unit of prediction: one row, or a whole curve along its normalized coordinate.
-Unit = Literal["pointwise", "curve-wise"]
 
 
 @dataclass(frozen=True)
@@ -149,13 +148,6 @@ def cells() -> tuple[Cell, ...]:
         found.append(Cell(spec.dataset, target, changed[0], spec, changed[1], "pointwise"))
         found.append(Cell(spec.dataset, target, "curve-wise", spec, base, "curve-wise"))
     return tuple(found)
-
-
-def curve_columns(space: CurveSpace) -> tuple[tuple[int, ...], int]:
-    """The design columns of the curve keys and of the one input along a curve."""
-    names = [name for name, _ in space.inputs]
-    along = next(i for i, name in enumerate(names) if name not in space.curve)
-    return tuple(names.index(name) for name in space.curve), along
 
 
 def plan(screened: Sequence[Cell], seeds: Sequence[int]) -> tuple[Job, ...]:

@@ -22,7 +22,6 @@ from screen_representation import (
     Work,
     beats,
     cells,
-    curve_columns,
     main,
     plan,
     representation_table,
@@ -34,7 +33,7 @@ from screen_representation import (
 from shared.batches import Batch
 from shared.ceilings import Spread
 from shared.config import PaperConfig
-from shared.design import NEUTRON_STARS, Design, DesignSpec
+from shared.design import Design, DesignSpec
 from shared.eda import make_curve_space
 from shared.harness import Run, Timing
 from shared.runs import LedgerEntry, RunMetadata, entry_from_run
@@ -121,11 +120,6 @@ def test_the_screen_plans_fourteen_representation_cells() -> None:
 @pytest.mark.model
 def test_the_references_run_one_seed_and_the_pointwise_mlp_every_seed() -> None:
     assert len(plan(cells(), (1, 2, 3))) == 14 * 2 + 10 * 3
-
-
-@pytest.mark.model
-def test_a_curve_is_keyed_by_its_curve_columns_and_runs_along_the_other_input() -> None:
-    assert curve_columns(NEUTRON_STARS.space) == ((1, 2), 0)
 
 
 @pytest.mark.command

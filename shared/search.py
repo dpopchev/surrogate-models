@@ -10,7 +10,7 @@ is a callable that turns one trial's parameters into a harness fitter.
 import logging
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, assert_never, get_args
+from typing import Any, assert_never, get_args
 
 import numpy as np
 import optuna
@@ -24,6 +24,7 @@ from optuna.distributions import (
 from optuna.trial import TrialState
 from threadpoolctl import threadpool_limits
 
+from shared.candidates import Unit
 from shared.ceilings import spread
 from shared.design import Design, TargetForm
 from shared.harness import Fitter, fit_on
@@ -35,10 +36,8 @@ logger = logging.getLogger(__name__)
 # --- vocabulary and types ---------------------------------------------------------------------
 
 Space = Mapping[str, BaseDistribution]
-# The unit of prediction: one row, or a whole curve along its normalized coordinate.
-Unit = Literal["pointwise", "curve-wise"]
-# family(params) -> the harness fitter of one trial's parameters
-Family = Callable[[dict[str, Any]], Fitter]
+# trial_fitter(params) -> the harness fitter of one trial's parameters
+TrialFitter = Callable[[dict[str, Any]], Fitter]
 
 
 _NETWORK: Space = {
@@ -99,7 +98,7 @@ def space_of(family: str, unit: Unit) -> Space:
 
 
 def search(
-    family: Family,
+    family: TrialFitter,
     space: Space,
     budget: int,
     design: Design,

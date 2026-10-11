@@ -50,9 +50,10 @@ from shared.candidates import (
     UNITS,
     Candidate,
     Knobs,
+    Unit,
     fitter_of,
 )
-from shared.ceilings import profile
+from shared.ceilings import PROFILE_BINS, profile
 from shared.config import NOTATION_TEX, PaperConfig, load_config
 from shared.design import (
     BLACK_HOLES,
@@ -79,7 +80,6 @@ from shared.plots import (
 )
 from shared.runs import RunMetadata, Setting, entry_from_json
 from shared.scorecard import relative_errors, significant_figures
-from shared.search import Unit
 from shared.surrogate import Training, make_training
 from shared.workers import run_jobs
 
@@ -95,8 +95,6 @@ TARGET_SYMBOL = {"mass": "M", "charge": "D"}
 PARITY = f"{SECTION}_fig_parity"
 ERRORS = f"{SECTION}_fig_errors"
 SCALING = f"{SECTION}_fig_scaling"
-# Equal-count bins of the true target for the error panel's median and p95 lines.
-PROFILE_BINS = 20
 
 FAMILY_TEX = {
     "k-NN": "$k$-NN",
