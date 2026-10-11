@@ -81,6 +81,8 @@ class PlotStyle(BaseModel):
 MACROS: Mapping[str, str] = {
     "rho_c": "$\\rhoc$",
     "M": "$M$",
+    "M_max": "$\\Mmax$",
+    "M_max_minus_M": "$\\Mmax - M$",
     "D": "$\\Dch$",
     "D_over_M": "$\\Dch/M$",
     "log10_D": "$\\log_{10}\\Dch$",

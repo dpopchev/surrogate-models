@@ -58,6 +58,12 @@ def test_a_symbol_is_the_paper_s_macro_under_usetex() -> None:
 
 
 @pytest.mark.view
+def test_symbols_name_the_maximum_mass() -> None:
+    apply_style(PlotStyle(usetex=True), notation="\\newcommand{\\Mmax}{M_{\\max}}")
+    assert SYMBOLS["M_max"] == "$\\Mmax$"
+
+
+@pytest.mark.view
 def test_a_symbol_expands_to_its_notation_when_latex_is_off() -> None:
     # Mathtext knows no macros: the notation's \newcommand bodies replace them.
     apply_style(STYLE, notation="\\newcommand{\\Dch}{D}\n\\newcommand{\\rhoc}{\\rho_c}")

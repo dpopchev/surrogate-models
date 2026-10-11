@@ -495,7 +495,7 @@ def _mass_max(table: pd.DataFrame, style: PlotStyle, window: float) -> Figure:
     peak = table.groupby(list(CURVE))["M"].transform("max")
     left.hist(peak - table["M"], bins=40, color=anchor_color(style, "neutron_stars"))
     left.axvline(window, color="black", linestyle="--", linewidth=0.8)
-    left.set_xlabel("$M_{\\max} - M$")
+    left.set_xlabel(SYMBOLS["M_max_minus_M"])
     left.set_ylabel("rows")
     maxima = table.groupby(list(CURVE))["M"].max().unstack("beta")
     mesh = right.pcolormesh(
@@ -507,7 +507,7 @@ def _mass_max(table: pd.DataFrame, style: PlotStyle, window: float) -> Figure:
     )
     right.set_xlabel(LABELS["beta"])
     right.set_ylabel(LABELS["lambda"])
-    fig.colorbar(mesh, ax=right, label="$M_{\\max}$")
+    fig.colorbar(mesh, ax=right, label=SYMBOLS["M_max"])
     return fig
 
 
@@ -541,7 +541,7 @@ def _charge_target(table: pd.DataFrame, style: PlotStyle) -> Figure:
     _charge_row(fig, axes[0, :], table, "lambda", colormap(style.neutron_stars.lambda_cmap))
     _charge_row(fig, axes[1, :], table, "beta", colormap(style.neutron_stars.beta_cmap))
     for ax in axes[1, :]:
-        ax.set_xlabel("$M$")
+        ax.set_xlabel(LABELS["M"])
     return fig
 
 
@@ -561,8 +561,8 @@ def _mass_density(table: pd.DataFrame, style: PlotStyle) -> Figure:
     ends = pd.DataFrame([g.iloc[-1] for g in groups])
     ax.scatter(np.log10(ends["rho_c"]), ends["M"], c=ends["lambda"], cmap=cmap, s=1.5, zorder=3)
     ax.autoscale()
-    ax.set_xlabel("$\\log_{10}\\rho_c$")
-    ax.set_ylabel("$M$")
+    ax.set_xlabel(SYMBOLS["log10_rho_c"])
+    ax.set_ylabel(LABELS["M"])
     fig.colorbar(lines, ax=ax, label=LABELS["lambda"])
     return fig
 
