@@ -37,21 +37,14 @@ from optuna.storages.journal import JournalFileBackend
 from optuna.trial import TrialState
 
 from shared import surrogate
+from shared.batches import read_ledger, write_entry
 from shared.candidates import FAMILIES, UNITS, Candidate, Knobs, tuned_fitter
 from shared.config import NOTATION_TEX, PaperConfig, load_config
 from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
 from shared.eda import CurveSpace, booktabs
 from shared.harness import Fitter, Predictor, Run, harness
 from shared.plots import SYMBOLS, PlotStyle, apply_style, colormap, figure_size
-from shared.runs import (
-    LedgerEntry,
-    RunMetadata,
-    Setting,
-    entry_from_json,
-    entry_from_run,
-    entry_name,
-    entry_to_json,
-)
+from shared.runs import LedgerEntry, RunMetadata, Setting
 from shared.scorecard import significant_figures
 from shared.search import KNOTS, SPACES, Family, Space, search, space_of
 from shared.surrogate import Training, duration_text
@@ -676,7 +669,7 @@ def main(
         outcomes = outcomes_from_json(_outcomes_path(args.state, batch).read_text())
         screen: Mapping[Job, float] = {}
         if args.screen_batch is not None:
-            screen = screen_figures(_ledger_entries(args.state), args.screen_batch)
+            screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
         path = out / f"{SECTION}_tab_tuning.tex"
@@ -763,7 +756,7 @@ def tune_job(work: Work) -> Outcome:
     study.sampler = optuna.samplers.TPESampler(seed=context.training.seed)
 
     def record(run: Run) -> str:
-        """Write the best params' run as a ledger entry, check it reads back, and name it."""
+        """Write the best params' run as a ledger entry and name it."""
         best = study.best_params
         settings: dict[str, Setting] = {
             "unit": candidate.unit,
@@ -784,9 +777,7 @@ def tune_job(work: Work) -> Outcome:
             epochs=None,
             best_epoch=None,
         )
-        entry = entry_from_run(run, meta)
-        _write_checked(context.ledger / entry_name(entry), entry_to_json(entry))
-        return meta.id
+        return write_entry(context.ledger, run, meta).meta.id
 
     with _at_level(context.log_level):
         return run_job(
@@ -828,15 +819,9 @@ def _recover(args: argparse.Namespace, batch: str) -> None:
         for name in optuna.get_all_study_names(storage)
         if name.startswith(f"{batch} ")
     }
-    outcomes = recovered(batch, studies, _ledger_entries(args.state), args.minutes)
+    outcomes = recovered(batch, studies, read_ledger(args.state / "ledger"), args.minutes)
     _write_checked(saved, outcomes_to_json(outcomes))
     logger.info("recovered %d outcomes of batch %s -> %s", len(outcomes), batch, saved)
-
-
-def _ledger_entries(state: Path) -> list[LedgerEntry]:
-    """Every entry of the run ledger under the state folder, oldest first."""
-    ledger = sorted((state / "ledger").glob("*.json"))
-    return [entry_from_json(path.read_text()) for path in ledger]
 
 
 def _outcomes_path(state: Path, batch: str) -> Path:

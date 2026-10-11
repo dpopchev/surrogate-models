@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from list_ledger import ledger_table, main, read_ledger
+from list_ledger import ledger_table, main
 
 from shared.ceilings import Spread
 from shared.harness import Run, Timing
@@ -47,12 +47,6 @@ ENTRY = entry_from_run(
 def later(entry: LedgerEntry, id: str, batch: str) -> LedgerEntry:
     """The entry under another id and batch."""
     return replace(entry, meta=replace(entry.meta, id=id, batch=batch))
-
-
-@pytest.mark.edge
-def test_the_ledger_folder_is_read_back_entry_by_entry(tmp_path: Path) -> None:
-    (tmp_path / entry_name(ENTRY)).write_text(entry_to_json(ENTRY))
-    assert read_ledger(tmp_path) == [ENTRY]
 
 
 @pytest.mark.functional

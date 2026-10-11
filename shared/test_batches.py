@@ -3,6 +3,7 @@
 import logging
 import subprocess
 import time
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -20,11 +21,17 @@ from shared.batches import (
     new_id,
     outcomes_path,
     progress_tail,
+    read_ledger,
     utc_now,
     wall,
     walled,
     write_checked,
+    write_entry,
 )
+from shared.ceilings import Spread
+from shared.harness import Run, Timing
+from shared.runs import RunMetadata
+from shared.scorecard import Scorecard
 
 ROWS = np.zeros((3, 2))
 
@@ -174,3 +181,39 @@ def test_a_committed_tree_is_not_dirty(tmp_path: Path) -> None:
 def test_an_uncommitted_file_makes_the_tree_dirty(tmp_path: Path) -> None:
     (repository(tmp_path) / "b.txt").write_text("b\n")
     assert git_dirty(tmp_path) is True
+
+
+SPREAD = Spread(median=0.01, p95=0.02, max=0.03, mean=0.015)
+RUN = Run(
+    seed=1,
+    test=Scorecard(zones={"test": SPREAD}, decades={}),
+    folds=(SPREAD,),
+    timing=Timing(fit=2.0, predict_one=1e-3, predict_batch=2e-3),
+    predictions=np.array([0.5]),
+)
+META = RunMetadata(
+    id="0190b000-0000-7000-8000-000000000001",
+    batch="0190a000-0000-7000-8000-000000000000",
+    dataset="toy",
+    target="mass",
+    candidate="k-NN",
+    settings={"k": 2},
+    commit="abc1234",
+    dirty=False,
+    started=datetime(2026, 10, 11, 9, 0, 0, tzinfo=UTC),
+    epochs=None,
+    best_epoch=None,
+)
+
+
+@pytest.mark.edge
+def test_a_written_ledger_entry_reads_back(tmp_path: Path) -> None:
+    entry = write_entry(tmp_path, RUN, META)
+    assert read_ledger(tmp_path) == (entry,)
+
+
+@pytest.mark.edge
+def test_the_ledger_is_read_in_entry_order(tmp_path: Path) -> None:
+    later = write_entry(tmp_path, RUN, META)
+    earlier = write_entry(tmp_path, RUN, replace(META, id="0190a000-0000-7000-8000-000000000001"))
+    assert read_ledger(tmp_path) == (earlier, later)

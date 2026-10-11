@@ -35,6 +35,7 @@ import torch
 from matplotlib.figure import Figure
 from sklearn.pipeline import Pipeline
 
+from shared.batches import write_entry
 from shared.ceilings import Spread
 from shared.config import NOTATION_TEX, AlgorithmsSection, PaperConfig, load_config
 from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
@@ -47,10 +48,6 @@ from shared.runs import (
     RunMetadata,
     RunRecord,
     Setting,
-    entry_from_json,
-    entry_from_run,
-    entry_name,
-    entry_to_json,
     from_json,
     run_name,
     run_stem,
@@ -685,8 +682,7 @@ def _ledger_writer(
     pair: _Pair, run: _Run, on_entry: Callable[[LedgerEntry], None] = lambda _: None
 ) -> Recorder:
     """The recorder writing each harness run of the pair to <ledger>/<id>.json, a new uuid7
-    id per entry, then handing the entry to on_entry (the trial is told it); the text must
-    read back to itself (NaN spreads compare unequal as values)."""
+    id per entry, then handing the entry to on_entry (the trial is told it)."""
 
     def record(
         candidate: str, settings: dict[str, Setting], ran: Run, epochs: tuple[int, int] | None
@@ -704,14 +700,7 @@ def _ledger_writer(
             epochs=None if epochs is None else epochs[0],
             best_epoch=None if epochs is None else epochs[1],
         )
-        entry = entry_from_run(ran, meta)
-        path = run.ledger / entry_name(entry)
-        text = entry_to_json(entry)
-        path.write_text(text)
-        assert entry_to_json(entry_from_json(path.read_text())) == text, (
-            f"{path} does not round-trip"
-        )
-        on_entry(entry)
+        on_entry(write_entry(run.ledger, ran, meta))
 
     return record
 

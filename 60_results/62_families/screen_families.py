@@ -33,6 +33,7 @@ from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
 from shared import surrogate
+from shared.batches import write_entry
 from shared.candidates import (
     FAMILIES,
     UNITS,
@@ -54,14 +55,7 @@ from shared.plots import (
     colormap,
     figure_size,
 )
-from shared.runs import (
-    RunMetadata,
-    Setting,
-    entry_from_json,
-    entry_from_run,
-    entry_name,
-    entry_to_json,
-)
+from shared.runs import RunMetadata, Setting, entry_from_json
 from shared.scorecard import relative_errors, significant_figures
 from shared.search import Unit
 from shared.surrogate import (
@@ -887,7 +881,7 @@ def screen_job(work: Work) -> Outcome:
     job, context = work.job, work.context
 
     def record(run: Run) -> str:
-        """Write the run's ledger entry, check it reads back, and name it."""
+        """Write the run's ledger entry and name it."""
         settings: dict[str, Setting] = {
             "unit": job.candidate.unit,
             "rows": job.rows,
@@ -907,9 +901,7 @@ def screen_job(work: Work) -> Outcome:
             epochs=None,
             best_epoch=None,
         )
-        entry = entry_from_run(run, meta)
-        _write_checked(context.ledger / entry_name(entry), entry_to_json(entry))
-        return meta.id
+        return write_entry(context.ledger, run, meta).meta.id
 
     with _at_level(context.log_level):
         fitter = fitter_of(job.candidate, work.space, context.knobs, context.training)

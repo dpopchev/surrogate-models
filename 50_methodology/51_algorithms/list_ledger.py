@@ -10,18 +10,20 @@ Run as `uv run python <this file> <state dir> [--batch <batch id or its prefix>]
 
 import argparse
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 import numpy as np
 
-from shared.runs import LedgerEntry, entry_from_json
+from shared.batches import read_ledger
+from shared.runs import LedgerEntry
 from shared.scorecard import significant_figures
 from shared.surrogate import duration_text
 
 # --- pure functions ---------------------------------------------------------------------------
 
 
-def ledger_table(entries: list[LedgerEntry], batch: str | None) -> list[str]:
+def ledger_table(entries: Sequence[LedgerEntry], batch: str | None) -> list[str]:
     """One line per entry, newest first; only the batch whose id starts with batch, if given."""
     newest = sorted(entries, key=lambda entry: entry.meta.id, reverse=True)
     return [_line(e) for e in newest if batch is None or e.meta.batch.startswith(batch)]
@@ -40,11 +42,6 @@ def _line(entry: LedgerEntry) -> str:
 
 
 # --- shell ------------------------------------------------------------------------------------
-
-
-def read_ledger(folder: Path) -> list[LedgerEntry]:
-    """Every entry in the ledger folder."""
-    return [entry_from_json(path.read_text()) for path in sorted(folder.glob("*.json"))]
 
 
 def main(argv: list[str]) -> None:

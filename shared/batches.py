@@ -18,7 +18,15 @@ from pathlib import Path
 
 import numpy as np
 
-from shared.harness import Fitter, Predictor
+from shared.harness import Fitter, Predictor, Run
+from shared.runs import (
+    LedgerEntry,
+    RunMetadata,
+    entry_from_json,
+    entry_from_run,
+    entry_name,
+    entry_to_json,
+)
 from shared.surrogate import duration_text
 
 # --- vocabulary and types ---------------------------------------------------------------------
@@ -80,6 +88,24 @@ def write_checked(path: Path, text: str, read: Callable[[Path], str] = Path.read
     path.write_text(text)
     if read(path) != text:
         raise WriteCheckError(f"{path} does not read back")
+
+
+def write_entry(ledger: Path, run: Run, meta: RunMetadata) -> LedgerEntry:
+    """Write the run's ledger entry to <ledger>/<id>.json and return it; raise WriteCheckError
+    when the file does not read back to the same text (NaN spreads compare unequal as values,
+    so the texts are compared)."""
+    entry = entry_from_run(run, meta)
+    write_checked(
+        ledger / entry_name(entry),
+        entry_to_json(entry),
+        read=lambda path: entry_to_json(entry_from_json(path.read_text())),
+    )
+    return entry
+
+
+def read_ledger(folder: Path) -> tuple[LedgerEntry, ...]:
+    """Every entry in the ledger folder, in the order of their file names (uuid7: of creation)."""
+    return tuple(entry_from_json(path.read_text()) for path in sorted(folder.glob("*.json")))
 
 
 @contextmanager

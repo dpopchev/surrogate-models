@@ -25,6 +25,7 @@ import numpy as np
 import pandas as pd
 from sklearn.pipeline import Pipeline
 
+from shared.batches import read_ledger, write_entry
 from shared.config import PaperConfig, load_config
 from shared.curvewise import curvewise_fitter
 from shared.design import (
@@ -39,15 +40,7 @@ from shared.design import (
 from shared.eda import CurveSpace, booktabs, make_curve_space
 from shared.families import make_knn, make_rbf
 from shared.harness import Fitter, Run, harness
-from shared.runs import (
-    LedgerEntry,
-    RunMetadata,
-    Setting,
-    entry_from_json,
-    entry_from_run,
-    entry_name,
-    entry_to_json,
-)
+from shared.runs import LedgerEntry, RunMetadata, Setting
 from shared.scorecard import significant_figures
 from shared.surrogate import Training, network_fitter, sklearn_fitter
 from shared.trials import ReportEpochs, open_study, tell_run
@@ -347,7 +340,7 @@ def main(
         else:
             batch = args.batch
             logger.info("rebuilding the table from batch %s; nothing is fitted", batch)
-        entries = [entry for entry in _read_ledger(ledger) if entry.meta.batch == batch]
+        entries = [entry for entry in read_ledger(ledger) if entry.meta.batch == batch]
         assert len(entries) == jobs, f"batch {batch}: {len(entries)} ledger entries for {jobs} jobs"
         path = _write_table(args.assets / SECTION, representation_table(scores(entries)))
         logger.info("done: representation table of batch %s -> %s", batch, path)
@@ -451,7 +444,7 @@ def _run_trial(work: Work) -> None:
         trial.set_user_attr(key, value)
 
     def record(settings: dict[str, Setting], ran: Run) -> None:
-        """Write the run's ledger entry, check it reads back, then tell the trial."""
+        """Write the run's ledger entry, then tell the trial."""
         meta = RunMetadata(
             id=_new_id(),
             batch=context.batch,
@@ -465,14 +458,7 @@ def _run_trial(work: Work) -> None:
             epochs=None,
             best_epoch=None,
         )
-        entry = entry_from_run(ran, meta)
-        path = context.ledger / entry_name(entry)
-        text = entry_to_json(entry)
-        path.write_text(text)
-        assert entry_to_json(entry_from_json(path.read_text())) == text, (
-            f"{path} does not round-trip"
-        )
-        tell_run(study, trial, entry)
+        tell_run(study, trial, write_entry(context.ledger, ran, meta))
 
     built: list[Pipeline] = []
 
@@ -492,11 +478,6 @@ def _run_trial(work: Work) -> None:
         job.model,
         job.seed,
     )
-
-
-def _read_ledger(folder: Path) -> list[LedgerEntry]:
-    """Every entry in the ledger folder."""
-    return [entry_from_json(path.read_text()) for path in sorted(folder.glob("*.json"))]
 
 
 def _write_table(out: Path, table: str) -> Path:
