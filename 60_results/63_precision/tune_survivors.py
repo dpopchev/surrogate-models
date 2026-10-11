@@ -28,7 +28,7 @@ import seaborn as sns
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.ticker import FixedLocator, NullFormatter, ScalarFormatter
-from optuna.distributions import IntDistribution
+from optuna.distributions import BaseDistribution, IntDistribution
 from optuna.storages import JournalStorage
 from optuna.storages.journal import JournalFileBackend
 from optuna.trial import TrialState
@@ -217,6 +217,26 @@ def run_job(
     )
     test = significant_figures(run.test.zones["test"].p95)
     return Tuned(job, dict(found.params), found.figures, test, found.trials, walls, entries[0])
+
+
+@dataclass(frozen=True)
+class RangeEnds:
+    """The two ends of an integer search range, drawn on the ranges figure."""
+
+    low: int
+    high: int
+
+
+def range_ends(distribution: BaseDistribution) -> RangeEnds:
+    """The ends of an integer distribution of the search spaces.
+
+    Raises TypeError on any other distribution, which has no integer range.
+    """
+    match distribution:
+        case IntDistribution(low=low, high=high):
+            return RangeEnds(low, high)
+        case _:
+            raise TypeError(f"{distribution} has no integer range")
 
 
 def screen_figures(entries: Sequence[LedgerEntry], batch: str) -> Mapping[Job, float]:
@@ -486,8 +506,8 @@ def ranges_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
         (neighbours_axes, SPACES["local RBF"]["neighbours"]),
         (network_axes, SPACES["ResNet"]["width"]),
     ):
-        assert isinstance(distribution, IntDistribution), f"{distribution} is no integer range"
-        for end in (distribution.low, distribution.high):
+        ends = range_ends(distribution)
+        for end in (ends.low, ends.high):
             axes.axvline(end, color="grey", linestyle="--", linewidth=0.8)
     network = [p for p in points if p.job.candidate.family == "ResNet"]
     ran = [p for p in network if p.figures is not None]

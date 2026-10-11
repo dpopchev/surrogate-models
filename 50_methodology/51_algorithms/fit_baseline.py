@@ -205,34 +205,51 @@ def _recording(
 CANDIDATES = ("MLP", "mean", "nearest curve")
 
 
-def score_candidate(
+def score_network(
     design: Design,
     target: Target,
     training: Training,
-    name: str,
     live_plot: Path | None = None,
     after_fit: Callable[[], None] = lambda: None,
     clock: Callable[[], float] | None = None,
     record: Recorder = lambda name, settings, run, epochs: None,
     before_fit: Callable[[Pipeline], None] = lambda _: None,
-) -> tuple[Scored, Run, Pipeline | None]:
-    """Score one candidate of CANDIDATES through the harness; after_fit and before_fit wrap
-    every MLP fit, record is handed its run as it ends. Returns its scores, its run and, for
-    the MLP, its last fitted network."""
+) -> tuple[Scored, Run, Pipeline]:
+    """Score the MLP through the harness; after_fit and before_fit wrap every fit, record is
+    handed its run as it ends. Returns its scores, its run and its last fitted network."""
     networks: list[Pipeline] = []
+    network = network_fitter(training, live_plot, networks.append, before_fit)
+    settings: dict[str, Setting] = asdict(training)
+    (run,) = harness(
+        design,
+        target,
+        _counted(network, after_fit),
+        [training.seed],
+        training.valid_fraction,
+        clock=clock,
+        record=_recording(record, "MLP", settings, lambda: _epochs(networks[-1])),
+    )
+    return Scored("MLP", run.test.zones["test"], run.folds, run.timing), run, networks[-1]
+
+
+def score_reference(
+    design: Design,
+    target: Target,
+    training: Training,
+    name: str,
+    clock: Callable[[], float] | None = None,
+    record: Recorder = lambda name, settings, run, epochs: None,
+) -> tuple[Scored, Run]:
+    """Score one reference of CANDIDATES, the mean or the nearest curve, through the harness;
+    record is handed its run as it ends. Returns its scores and its run."""
     fitter: Fitter
-    settings: dict[str, Setting]
     match name:
-        case "MLP":
-            network = network_fitter(training, live_plot, networks.append, before_fit)
-            fitter, settings = _counted(network, after_fit), asdict(training)
         case "mean":
-            fitter, settings = sklearn_fitter(make_mean_reference), {"estimator": name}
+            fitter = sklearn_fitter(make_mean_reference)
         case "nearest curve":
-            fitter, settings = sklearn_fitter(make_nearest_reference), {"estimator": name}
+            fitter = sklearn_fitter(make_nearest_reference)
         case _:
-            raise ValueError(f"no candidate {name!r}; the candidates are {CANDIDATES}")
-    epochs = (lambda: _epochs(networks[-1])) if name == "MLP" else (lambda: None)
+            raise ValueError(f"no reference {name!r}; the candidates are {CANDIDATES}")
     (run,) = harness(
         design,
         target,
@@ -240,10 +257,9 @@ def score_candidate(
         [training.seed],
         training.valid_fraction,
         clock=clock,
-        record=_recording(record, name, settings, epochs),
+        record=_recording(record, name, {"estimator": name}, lambda: None),
     )
-    scored = Scored(name, run.test.zones["test"], run.folds, run.timing)
-    return scored, run, networks[-1] if networks else None
+    return Scored(name, run.test.zones["test"], run.folds, run.timing), run
 
 
 def score_pair(
@@ -260,14 +276,16 @@ def score_pair(
     nearest-curve references, each on the same folds, validation curves and test curves.
     after_fit is called after every MLP fit; record is handed each candidate's run as it ends.
     Returns the scores and the MLP's final fit, for the figures and the run record."""
-    found = [
-        score_candidate(design, target, training, name, live_plot, after_fit, clock, record)
+    mlp, mlp_run, network = score_network(
+        design, target, training, live_plot, after_fit, clock, record
+    )
+    references = [
+        score_reference(design, target, training, name, clock, record)[0]
         for name in CANDIDATES
+        if name != "MLP"
     ]
-    _, mlp_run, network = found[0]
-    assert network is not None, "the MLP left no fitted network"
     fit = final_fit(design, mlp_run, network, metric_for(target))
-    return PairScores(dataset, target, tuple(scored for scored, _, _ in found)), fit
+    return PairScores(dataset, target, (mlp, *references)), fit
 
 
 def metric_for(target: Target) -> Metric:
@@ -608,7 +626,7 @@ def _score_job(job: _Job) -> tuple[Scored, Fit | None]:
         trial = ask_trial(study, pair.dataset, pair.target, job.candidate)
         record = _ledger_writer(pair, run, lambda entry: tell_run(study, trial, entry))
         if job.candidate != "MLP":
-            scored, _, _ = score_candidate(
+            scored, _ = score_reference(
                 pair.design, pair.target, job.training, job.candidate, record=record
             )
             return scored, None
@@ -638,17 +656,15 @@ def _score_mlp(
     logger.info("== baseline run: %s / %s ==", pair.dataset, pair.target)
     for line in start_banner(run.folder, run.out, training, rows, curves, job.settings.threads):
         logger.info(line)
-    scored, ran, network = score_candidate(
+    scored, ran, network = score_network(
         data,
         pair.target,
         training,
-        "MLP",
         live_plot=run.folder / "loss_curve.png",
         after_fit=partial(_tick, job.progress),
         record=record,
         before_fit=before_fit,
     )
-    assert network is not None, "the MLP left no fitted network"
     fit = final_fit(data, ran, network, metric_for(pair.target))
     summary = RunRecord(
         dataset=pair.dataset,

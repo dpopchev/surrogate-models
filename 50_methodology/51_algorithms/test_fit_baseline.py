@@ -158,6 +158,9 @@ class TestScorePair:
         score_pair(TOY, "toy", "mass", short, after_fit=lambda: fits.append(1))
         assert len(fits) == 3  # two folds and the final fit
 
+    def test_score_pair_returns_the_network_fit(self, pair: tuple[PairScores, Fit]) -> None:
+        assert pair[1].epochs >= 1
+
     def test_times_the_references_too(self, pair: tuple[PairScores, Fit]) -> None:
         assert isinstance(pair[0].scored[2].timing, Timing)
 

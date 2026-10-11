@@ -28,6 +28,7 @@ from tune_survivors import (
     main,
     outcomes_from_json,
     outcomes_to_json,
+    range_ends,
     ranges_figure,
     recovered,
     run_job,
@@ -270,6 +271,12 @@ def test_a_study_without_a_complete_trial_is_recovered_as_a_wall() -> None:
     study.tell(study.ask(), state=optuna.trial.TrialState.FAIL)
     found = recovered("b", {study_name("b", NS_MASS_RBF): study}, [], minutes=30.0)
     assert found == (Walled(NS_MASS_RBF, "all 1 trials past 30 min"),)
+
+
+@pytest.mark.model
+def test_range_ends_of_a_categorical_distribution_raises() -> None:
+    with pytest.raises(TypeError, match="no integer range"):
+        range_ends(CategoricalDistribution(("a", "b")))
 
 
 @pytest.mark.edge
