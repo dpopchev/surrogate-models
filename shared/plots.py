@@ -62,6 +62,14 @@ class PlotStyle(BaseModel):
     aspect: float = 0.62
     # Figures are written as PNG at this resolution (W-029).
     dpi: PositiveInt = 600
+    # A histogram of a variable with at most this many distinct values bins one per value
+    # (shared/eda.py grid_bins): the density figures and the univariate ones.
+    grid_values: PositiveInt = 250
+    univariate_grid_values: PositiveInt = 60
+    # The baseline's diagnostic figures, and its live loss curve redrawn every live_every epochs.
+    diagnostics_dpi: PositiveInt = 150
+    live_every: PositiveInt = 5
+    live_dpi: PositiveInt = 100
     neutron_stars: NeutronStarColors = NeutronStarColors()
     black_holes: BlackHoleColors = BlackHoleColors()
 

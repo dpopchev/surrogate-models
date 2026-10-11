@@ -74,7 +74,7 @@ from shared.runs import (
 )
 from shared.scorecard import significant_figures
 from shared.surrogate import (
-    LIVE_EVERY,
+    LivePlot,
     Training,
     duration_text,
     make_mean_reference,
@@ -93,8 +93,6 @@ from shared.workers import run_jobs
 logger = logging.getLogger(__name__)
 
 SECTION = "51_algorithms"
-# The diagnostics are for the screen, not print: a lower resolution than the paper's figures.
-DIAGNOSTICS_DPI = 150
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
@@ -209,7 +207,7 @@ def score_network(
     design: Design,
     target: Target,
     training: Training,
-    live_plot: Path | None = None,
+    live_plot: LivePlot | None = None,
     after_fit: Callable[[], None] = lambda: None,
     clock: Callable[[], float] | None = None,
     record: Recorder = lambda name, settings, run, epochs: None,
@@ -267,7 +265,7 @@ def score_pair(
     dataset: str,
     target: Target,
     training: Training,
-    live_plot: Path | None = None,
+    live_plot: LivePlot | None = None,
     after_fit: Callable[[], None] = lambda: None,
     clock: Callable[[], float] | None = None,
     record: Recorder = lambda name, settings, run, epochs: None,
@@ -371,10 +369,11 @@ def start_banner(
     rows: tuple[int, int],
     curves: tuple[int, int],
     threads: int,
+    live_every: int,
 ) -> list[str]:
     """The lines a run's log opens with: the stop criterion first, then what it fits on, the
     files to watch while it runs and those it writes at the end; rows and curves are
-    (training, test)."""
+    (training, test), the loss curve redrawn every live_every epochs."""
     data = (
         f"data: {rows[0]} training rows on {curves[0]} curves, "
         f"{rows[1]} test rows on {curves[1]} curves"
@@ -391,7 +390,7 @@ def start_banner(
         f"threads: {threads} torch threads per fit",
         "live while it runs:",
         f"  - {run / 'train.log'} (this log)",
-        f"  - {run / 'loss_curve.png'} (redrawn every {LIVE_EVERY} epochs)",
+        f"  - {run / 'loss_curve.png'} (redrawn every {live_every} epochs)",
         "at the end:",
         f"  - {run}/ (run.json, error_cdf.png, curves.png)",
         f"  - {out}/ (Section 4.1 numbers, parity figure)",
@@ -529,7 +528,10 @@ def main(
             planned.append((pair, run))
             table = tables[pair.dataset]
             jobs += [
-                partial(_score_job, _Job(pair, table, run, name, training, settings, progress))
+                partial(
+                    _score_job,
+                    _Job(pair, table, run, name, training, settings, progress, config.plot),
+                )
                 for name in CANDIDATES
             ]
         with at_level(settings.log_level):
@@ -588,7 +590,7 @@ class _Progress:
 @dataclass(frozen=True)
 class _Job:
     """One candidate on one pair, run in a worker process, with the table its curve names
-    come from."""
+    come from and the plot style its live curve and diagnostics are drawn at."""
 
     pair: Pair
     table: pd.DataFrame
@@ -597,6 +599,7 @@ class _Job:
     training: Training
     settings: AlgorithmsSection
     progress: _Progress
+    style: PlotStyle
 
 
 def ask_trial(study: optuna.Study, dataset: str, target: str, candidate: str) -> optuna.Trial:
@@ -647,20 +650,23 @@ def _score_mlp(
 ) -> tuple[Scored, Fit]:
     """Score the MLP on one pair, its log lines going to the run's train.log; leave its run
     record and diagnostics in the run's folder."""
-    pair, run, training = job.pair, job.run, job.training
+    pair, run, training, style = job.pair, job.run, job.training, job.style
     if run.batch.dirty:
         logger.info("the code holds uncommitted changes: run.json marks this run dirty")
     data, train = pair.design, ~pair.design.test
     rows = (int(train.sum()), int(data.test.sum()))
     curves = (len(np.unique(data.groups[train])), len(np.unique(data.groups[data.test])))
     logger.info("== baseline run: %s / %s ==", pair.dataset, pair.target)
-    for line in start_banner(run.folder, run.out, training, rows, curves, job.settings.threads):
+    banner = start_banner(
+        run.folder, run.out, training, rows, curves, job.settings.threads, style.live_every
+    )
+    for line in banner:
         logger.info(line)
     scored, ran, network = score_network(
         data,
         pair.target,
         training,
-        live_plot=run.folder / "loss_curve.png",
+        live_plot=LivePlot(run.folder / "loss_curve.png", style.live_every, style.live_dpi),
         after_fit=partial(_tick, job.progress),
         record=record,
         before_fit=before_fit,
@@ -682,7 +688,9 @@ def _score_mlp(
     folder = run.folder
     assert folder.name == run_name(summary), f"run folder {folder.name} is not {run_name(summary)}"
     names = curve_names(job.table, pair.space)
-    write_diagnostics(fit, summary, folder, names, SYMBOLS[X_SYMBOL[pair.dataset]])
+    write_diagnostics(
+        fit, summary, folder, names, SYMBOLS[X_SYMBOL[pair.dataset]], style.diagnostics_dpi
+    )
     assert from_json((folder / "run.json").read_text()) == summary, (
         f"{folder}/run.json does not round-trip"
     )
@@ -741,10 +749,11 @@ def _write_section(
 
 
 def write_diagnostics(
-    fit: Fit, record: RunRecord, run: Path, names: dict[int, str], x_label: str
+    fit: Fit, record: RunRecord, run: Path, names: dict[int, str], x_label: str, dpi: int
 ) -> None:
     """Write the run record, the loss curve, the error CDF and the curve overlay (curves
-    labelled by names, the first input on the x axis as x_label) into run."""
+    labelled by names, the first input on the x axis as x_label) into run, the figures at dpi
+    (the screen's, below the paper's)."""
     run.mkdir(parents=True, exist_ok=True)
     (run / "run.json").write_text(to_json(record))
     overlay = curve_overlay(
@@ -757,7 +766,7 @@ def write_diagnostics(
         "curves": overlay,
     }
     for name, figure in figures.items():
-        figure.savefig(run / f"{name}.png", dpi=DIAGNOSTICS_DPI)
+        figure.savefig(run / f"{name}.png", dpi=dpi)
         plt.close(figure)
 
 

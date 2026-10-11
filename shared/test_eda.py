@@ -177,7 +177,7 @@ def test_a_tiny_number_prints_in_scientific_notation() -> None:
 
 @pytest.mark.model
 def test_grid_bins_give_one_bin_per_grid_value() -> None:
-    edges = np.asarray(grid_bins(np.array([1.0, 1.0, 2.0, 3.0])))
+    edges = np.asarray(grid_bins(np.array([1.0, 1.0, 2.0, 3.0]), limit=60))
     assert len(edges) - 1 == 3
 
 

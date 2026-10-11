@@ -377,10 +377,6 @@ def figure_tex(figure: BhFigure) -> str:
     )
 
 
-# r_h sits on a fine grid of thousands of values; up to this many, one bar per value.
-GRID_LIMIT = 250
-
-
 def _univariate_continuous(table: pd.DataFrame, style: PlotStyle) -> Figure:
     """Histograms of the continuous variables, raw and in log10, grid-aware bins."""
     fig, axes = plt.subplots(
@@ -391,8 +387,9 @@ def _univariate_continuous(table: pd.DataFrame, style: PlotStyle) -> Figure:
     for row, column in enumerate(SUMMARY_COLUMNS):
         raw = table[column].to_numpy(dtype=float)
         logged = np.log10(raw)
-        axes[row, 0].hist(raw, bins=grid_bins(raw, GRID_LIMIT), **bars)
-        axes[row, 1].hist(logged, bins=grid_bins(logged, GRID_LIMIT), **bars)
+        # r_h sits on a fine grid of thousands of values; up to grid_values, one bar per value.
+        axes[row, 0].hist(raw, bins=grid_bins(raw, style.grid_values), **bars)
+        axes[row, 1].hist(logged, bins=grid_bins(logged, style.grid_values), **bars)
         axes[row, 0].set_xlabel(LABELS[column])
         axes[row, 1].set_xlabel(f"$\\log_{{10}}$ {LABELS[column]}")
     return fig

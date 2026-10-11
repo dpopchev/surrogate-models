@@ -133,6 +133,14 @@ def test_figures_are_written_at_600_dpi_by_default() -> None:
 
 
 @pytest.mark.model
+def test_plot_style_reads_the_grid_values_and_diagnostics_dpi() -> None:
+    keys = {"grid_values": 250, "univariate_grid_values": 60, "diagnostics_dpi": 150}
+    style = PlotStyle.model_validate({**keys, "live_every": 5, "live_dpi": 100})
+    read = (style.grid_values, style.univariate_grid_values, style.diagnostics_dpi)
+    assert (*read, style.live_every, style.live_dpi) == (250, 60, 150, 5, 100)
+
+
+@pytest.mark.model
 def test_a_non_positive_dpi_is_rejected() -> None:
     with pytest.raises(ValidationError, match="dpi"):
         PlotStyle.model_validate({"dpi": 0})

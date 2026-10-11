@@ -19,6 +19,7 @@ from shared.surrogate import (
     MLP,
     Activation,
     EpochTable,
+    LivePlot,
     Loss,
     ResMLP,
     Training,
@@ -294,7 +295,8 @@ class TestEpochTable:
 def test_the_loss_curve_is_drawn_live_while_training(tmp_path: Path) -> None:
     live = tmp_path / "loss_curve.png"
     keep = ~HELD_OUT
-    estimator = make_estimator(replace(TOY, max_epochs=5), n_inputs=2, live_plot=live)
+    live_plot = LivePlot(live, every=5, dpi=100)
+    estimator = make_estimator(replace(TOY, max_epochs=5), n_inputs=2, live_plot=live_plot)
     estimator.fit(INPUTS[keep], TARGET[keep], net__groups=GROUPS[keep])
     assert live.stat().st_size > 0
 

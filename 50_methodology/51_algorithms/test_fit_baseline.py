@@ -263,6 +263,7 @@ class TestStartBanner:
             rows=(100, 20),
             curves=(10, 2),
             threads=2,
+            live_every=5,
         )
 
     def test_states_the_torch_threads_per_fit(self, lines: list[str]) -> None:

@@ -277,11 +277,9 @@ def booktabs(label: str, caption: str, spec: str, header: str, rows: list[str]) 
     )
 
 
-GRID_VALUES = 60
-
-
-def grid_bins(values: np.ndarray, limit: int = GRID_VALUES) -> np.ndarray | int:
-    """One bin per value for a variable on a grid (at most limit distinct values), else 40.
+def grid_bins(values: np.ndarray, limit: int) -> np.ndarray | int:
+    """One bin per value for a variable on a grid (at most limit distinct values, a plot
+    style's grid_values or univariate_grid_values), else 40.
 
     Equal-width bins alias against a parameter grid and draw spikes that are not in the data.
     """

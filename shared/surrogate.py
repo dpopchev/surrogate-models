@@ -37,9 +37,16 @@ logger = logging.getLogger(__name__)
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
-# The live loss curve is redrawn every LIVE_EVERY epochs, at a screen resolution.
-LIVE_EVERY = 5
-LIVE_DPI = 100
+
+@dataclass(frozen=True)
+class LivePlot:
+    """Where the live loss curve is redrawn while a network trains: every `every` epochs, at
+    dpi (the plot style's live_every and live_dpi)."""
+
+    path: Path
+    every: int
+    dpi: int
+
 
 Activation = Literal["relu", "gelu", "tanh"]
 Loss = Literal["mse", "huber"]
@@ -324,15 +331,16 @@ class Progress(Callback):
 
 
 class LiveLossCurve(Callback):
-    """Rewrite the loss curve at path every `every` epochs while the fit runs.
+    """Rewrite the loss curve at path every `every` epochs at dpi while the fit runs.
 
     The image is written beside path and then moved over it, so a viewer never reads half a
     file.
     """
 
-    def __init__(self, path: Path, every: int) -> None:
+    def __init__(self, path: Path, every: int, dpi: int) -> None:
         self.path = path
         self.every = every
+        self.dpi = dpi
 
     def on_epoch_end(
         self,
@@ -347,7 +355,7 @@ class LiveLossCurve(Callback):
             return
         figure = loss_curve([{k: v for k, v in row.items() if k != "batches"} for row in rows])
         partial = self.path.with_name(f".{self.path.name}")
-        figure.savefig(partial, format="png", dpi=LIVE_DPI)
+        figure.savefig(partial, format="png", dpi=self.dpi)
         plt.close(figure)
         partial.replace(self.path)
 
@@ -368,7 +376,7 @@ def curve_valid_split(fraction: float, seed: int) -> ValidSplit:
 
 def network_fitter(
     training: Training,
-    live_plot: Path | None = None,
+    live_plot: LivePlot | None = None,
     on_fit: Callable[[Pipeline], None] = lambda _: None,
     before_fit: Callable[[Pipeline], None] = lambda _: None,
 ) -> Fitter:
@@ -416,7 +424,7 @@ def make_nearest_reference() -> Pipeline:
 def make_estimator(
     training: Training,
     n_inputs: int,
-    live_plot: Path | None = None,
+    live_plot: LivePlot | None = None,
     valid_fold: np.ndarray | None = None,
     n_outputs: int = 1,
     skips: bool = False,
@@ -424,7 +432,7 @@ def make_estimator(
     """Pipeline(StandardScaler, ScaledNetRegressor) with the training callbacks, n_outputs
     target columns (the curve-wise spline coefficients, W-067), the residual network when
     skips is set (W-067); with live_plot,
-    the loss curve is also redrawn there every LIVE_EVERY epochs while it trains. With
+    the loss curve is also redrawn at its path every `every` epochs while it trains. With
     valid_fold (-1 for a fit row, 0 for a validation row) the net validates on exactly those
     rows; without it, on a share of whole curves from the groups passed to fit."""
     split = (
@@ -432,7 +440,11 @@ def make_estimator(
         if valid_fold is not None
         else curve_valid_split(training.valid_fraction, training.seed)
     )
-    live = [("live_loss_curve", LiveLossCurve(live_plot, LIVE_EVERY))] if live_plot else []
+    live = (
+        [("live_loss_curve", LiveLossCurve(live_plot.path, live_plot.every, live_plot.dpi))]
+        if live_plot
+        else []
+    )
     net = ScaledNetRegressor(
         module=ResMLP if skips else MLP,
         module__n_inputs=n_inputs,

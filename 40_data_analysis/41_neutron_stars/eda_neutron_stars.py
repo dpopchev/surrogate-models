@@ -441,15 +441,12 @@ def _univariate(table: pd.DataFrame, style: PlotStyle) -> Figure:
     color = anchor_color(style, "neutron_stars")
     for row, (column, label) in enumerate(LABELS.items()):
         raw = table[column].to_numpy(dtype=float)
-        axes[row, 0].hist(raw, bins=grid_bins(raw), color=color)
-        axes[row, 1].hist(np.log10(raw), bins=grid_bins(np.log10(raw)), color=color)
+        limit = style.univariate_grid_values
+        axes[row, 0].hist(raw, bins=grid_bins(raw, limit), color=color)
+        axes[row, 1].hist(np.log10(raw), bins=grid_bins(np.log10(raw), limit), color=color)
         axes[row, 0].set_xlabel(label)
         axes[row, 1].set_xlabel(f"$\\log_{{10}}$ {label}")
     return fig
-
-
-# rho_c sits on a shared grid of a few hundred values; one bar per value avoids aliasing.
-DENSITY_GRID_VALUES = 250
 
 
 def _univariate_continuous(table: pd.DataFrame, style: PlotStyle) -> Figure:
@@ -463,8 +460,9 @@ def _univariate_continuous(table: pd.DataFrame, style: PlotStyle) -> Figure:
         logged = np.log10(raw)
         # Without edges: a few hundred thin bars would vanish under the style's white edges.
         bars = {"color": color, "linewidth": 0}
-        axes[row, 0].hist(raw, bins=grid_bins(raw, DENSITY_GRID_VALUES), **bars)
-        axes[row, 1].hist(logged, bins=grid_bins(logged, DENSITY_GRID_VALUES), **bars)
+        # rho_c sits on a shared grid of a few hundred values; one bar per value avoids aliasing.
+        axes[row, 0].hist(raw, bins=grid_bins(raw, style.grid_values), **bars)
+        axes[row, 1].hist(logged, bins=grid_bins(logged, style.grid_values), **bars)
         axes[row, 0].set_xlabel(LABELS[column])
         axes[row, 1].set_xlabel(f"$\\log_{{10}}$ {LABELS[column]}")
     return fig
