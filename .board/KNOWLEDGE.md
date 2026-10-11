@@ -46,4 +46,5 @@
 
 ## Deviations
 - 2026-10-11 E-011: W-111: T-260, T-261, T-263 pruned at activation (their checks could not pass: make -q runs nothing; an env override does not rerun make assets) and re-filed as T-308, T-309, T-310; order T-308, T-309, T-262, T-310; the criterion is unchanged
+- 2026-10-11 E-011: W-112: T-264 to T-267 pruned at activation (make -q checks, Actions missing title files) and re-filed as T-311 to T-314; T-314's constrained layout re-records the two annotated ceilings PNGs in local/assets-baseline.sha at landing, as the plan says
 - 2026-10-11 E-011: W-122 filed during T-237: make compile keeps a deselected figure in article.pdf (latexmk runs no pass); queued todo, the developer orders it at W-102's re-aim
