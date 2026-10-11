@@ -25,6 +25,7 @@ from fit_baseline import (
     ChargeMares,
     Fit,
     PairScores,
+    Predicted,
     Scored,
     ask_trial,
     baseline_table,
@@ -37,6 +38,7 @@ from fit_baseline import (
     metric_for,
     numbers,
     parity,
+    parity_figure,
     progress_line,
     score_pair,
     start_banner,
@@ -353,6 +355,25 @@ class TestProgressLine:
 @pytest.mark.view
 def test_the_parity_figure_draws_the_identity_line() -> None:
     assert len(parity(SCORED, PlotStyle(usetex=False)).axes[0].lines) == 1
+
+
+FOUND = {
+    (dataset, target): Predicted(np.array([1.0, 2.0]), np.array([1.1, 1.8]))
+    for dataset in ("neutron_stars", "black_holes")
+    for target in ("mass", "charge")
+}
+
+
+@pytest.mark.view
+def test_parity_residual_strip_has_two_axes() -> None:
+    figure = parity_figure(FOUND, PlotStyle(usetex=False), "residual_strip")
+    assert len(figure.axes) == 2
+
+
+@pytest.mark.view
+def test_parity_all_pairs_has_four_axes() -> None:
+    figure = parity_figure(FOUND, PlotStyle(usetex=False), "all_pairs")
+    assert len(figure.axes) == 4
 
 
 @pytest.mark.view

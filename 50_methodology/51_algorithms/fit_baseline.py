@@ -17,13 +17,13 @@ import logging
 import multiprocessing
 import sys
 import time
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from functools import partial
 from pathlib import Path
-from typing import Any, assert_never
+from typing import Any, Protocol, assert_never, get_args
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -41,16 +41,24 @@ from shared.batches import (
     make_batch,
     new_id,
     progress_tail,
+    read_ledger,
     utc_now,
     write_entry,
 )
 from shared.ceilings import Spread
-from shared.config import NOTATION_TEX, AlgorithmsSection, PaperConfig, load_config
+from shared.config import (
+    NOTATION_TEX,
+    AlgorithmsSection,
+    AlgParityVariant,
+    PaperConfig,
+    load_config,
+)
 from shared.design import (
     BLACK_HOLES,
     DATASET_TEX,
     NEUTRON_STARS,
     SPECS,
+    TARGET_TEX,
     TARGETS,
     Design,
     Pair,
@@ -59,10 +67,10 @@ from shared.design import (
     pairs,
 )
 from shared.diagnostics import curve_overlay, error_cdf, loss_curve
-from shared.eda import CurveSpace, booktabs, curve_ids, render_macros, sci_tex
+from shared.eda import CurveSpace, booktabs, curve_ids, render_macros, sci_tex, text_width_size
 from shared.families import make_mean_reference, make_nearest_reference
 from shared.harness import FitRows, Fitter, Predictor, Run, Timing, harness
-from shared.plots import SYMBOLS, PlotStyle, anchor_color, apply_style
+from shared.plots import SYMBOLS, Dataset, PlotStyle, anchor_color, apply_style, contact_sheet
 from shared.progress import duration_text
 from shared.runs import (
     Epochs,
@@ -110,6 +118,24 @@ class ChargeMares:
 
     true_m: float
     pred_m: float
+
+
+class Predictions(Protocol):
+    """A pair's true and predicted target on its test rows: a Fit, or a Predicted read back."""
+
+    @property
+    def y_true(self) -> np.ndarray: ...
+
+    @property
+    def y_pred(self) -> np.ndarray: ...
+
+
+@dataclass(frozen=True)
+class Predicted:
+    """A pair's true and predicted target on its test rows, read back from its ledger entry."""
+
+    y_true: np.ndarray
+    y_pred: np.ndarray
 
 
 @dataclass(frozen=True)
@@ -484,7 +510,7 @@ def curve_names(table: pd.DataFrame, space: CurveSpace) -> dict[int, str]:
     }
 
 
-def parity(fit: Fit, style: PlotStyle) -> Figure:
+def parity(fit: Predictions, style: PlotStyle) -> Figure:
     """Predicted against true mass on the test curves, with the y = x line."""
     side = 0.5 * float(plt.rcParams["figure.figsize"][0])
     figure, axes = plt.subplots(figsize=(side, side), layout="constrained")
@@ -500,16 +526,108 @@ def parity(fit: Fit, style: PlotStyle) -> Figure:
     return figure
 
 
+def _parity_with_residuals(found: Predictions, style: PlotStyle) -> Figure:
+    """The NS mass parity above its residuals, predicted minus true, on a shared true axis."""
+    side = 0.5 * float(plt.rcParams["figure.figsize"][0])
+    figure, (top, bottom) = plt.subplots(
+        2,
+        1,
+        figsize=(side, 1.3 * side),
+        sharex=True,
+        height_ratios=(3, 1),
+        layout="constrained",
+    )
+    color = anchor_color(style, "neutron_stars")
+    top.scatter(found.y_true, found.y_pred, s=2, alpha=0.3, color=color)
+    span = [float(found.y_true.min()), float(found.y_true.max())]
+    top.plot(span, span, color="black", linestyle="--", linewidth=0.8)
+    top.set_ylabel(f"predicted {SYMBOLS['M']} ({SYMBOLS['Msun']})")
+    bottom.scatter(found.y_true, found.y_pred - found.y_true, s=2, alpha=0.3, color=color)
+    bottom.axhline(0.0, color="black", linestyle="--", linewidth=0.8)
+    bottom.set_xlabel(f"true {SYMBOLS['M']} ({SYMBOLS['Msun']})")
+    bottom.set_ylabel("residual")
+    return figure
+
+
+# The parity axis of each target: the mass in solar masses, the charge as the model's Y.
+PARITY_AXIS = {"mass": ("M", "Msun"), "charge": ("Y", None)}
+
+
+def _parity_all_pairs(found: Mapping[tuple[str, str], Predictions], style: PlotStyle) -> Figure:
+    """Predicted against true target on the test curves, a row per dataset and a column per
+    target, each with its y = x line."""
+    datasets: tuple[Dataset, ...] = ("neutron_stars", "black_holes")
+    figure, grid = plt.subplots(
+        len(datasets), len(TARGETS), figsize=text_width_size(0.9), layout="constrained"
+    )
+    for row, dataset in enumerate(datasets):
+        for column, target in enumerate(TARGETS):
+            axes, pair = grid[row, column], found[dataset, target]
+            axes.scatter(
+                pair.y_true, pair.y_pred, s=2, alpha=0.3, color=anchor_color(style, dataset)
+            )
+            span = [float(pair.y_true.min()), float(pair.y_true.max())]
+            axes.plot(span, span, color="black", linestyle="--", linewidth=0.8)
+            symbol, unit = PARITY_AXIS[target]
+            label = SYMBOLS[symbol] + (f" ({SYMBOLS[unit]})" if unit else "")
+            axes.set_xlabel(f"true {label}")
+            axes.set_ylabel(f"predicted {label}")
+            axes.set_title(f"{DATASET_TEX[dataset]} {TARGET_TEX[target]}", fontsize="small")
+    return figure
+
+
+def parity_figure(
+    found: Mapping[tuple[str, str], Predictions], style: PlotStyle, variant: AlgParityVariant
+) -> Figure:
+    """The baseline's parity figure in one variant: the NS mass alone (ns_mass), with its
+    residuals below (residual_strip), or every dataset and target 2 x 2 (all_pairs)."""
+    ns_mass = found[NEUTRON_STARS.dataset, "mass"]
+    match variant:
+        case "ns_mass":
+            return parity(ns_mass, style)
+        case "residual_strip":
+            return _parity_with_residuals(ns_mass, style)
+        case "all_pairs":
+            return _parity_all_pairs(found, style)
+        case _:
+            assert_never(variant)
+
+
 PARITY = f"{SECTION}_fig_parity"
 
 
-def figure_tex() -> str:
-    """The figure environment of the parity figure, placed here or at the top of a page."""
+def _parity_caption(variant: AlgParityVariant) -> str:
+    """The caption of the parity figure in one variant."""
+    match variant:
+        case "ns_mass":
+            return (
+                "Neutron stars: the baseline MLP's predicted mass against the true mass on "
+                "the test curves; the dashed line is $y = x$."
+            )
+        case "residual_strip":
+            return (
+                "Neutron stars: the baseline MLP's predicted mass against the true mass on "
+                "the test curves, the dashed line $y = x$ (top), and the residual, predicted "
+                "minus true (bottom)."
+            )
+        case "all_pairs":
+            return (
+                "The baseline MLP's predicted against true target on the test curves, a row "
+                "per dataset and a column per target, the charge as the model's $Y$; the "
+                "dashed lines are $y = x$."
+            )
+        case _:
+            assert_never(variant)
+
+
+def figure_tex(variant: AlgParityVariant = "ns_mass") -> str:
+    """The figure environment of the parity figure in one variant, placed here or at the top
+    of a page; a 2 x 2 figure takes the text width, a single panel half of it."""
+    width = "\\textwidth" if variant == "all_pairs" else "0.5\\textwidth"
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=0.5\\textwidth]{{{PARITY}}}\n"
-        "\\caption{Neutron stars: the baseline MLP's predicted mass against the true mass on "
-        "the test curves; the dashed line is $y = x$.}\n"
+        f"\\includegraphics[width={width}]{{{PARITY}}}\n"
+        f"\\caption{{{_parity_caption(variant)}}}\n"
         "\\label{fig:alg-parity}\n\\end{figure}\n"
     )
 
@@ -644,22 +762,64 @@ def _ledger_writer(
 def _write_section(
     out: Path,
     pairs: list[PairScores],
-    ns_mass: Fit,
+    fits: Mapping[tuple[str, str], Fit],
     config: PaperConfig,
     mares: Mapping[str, ChargeMares],
 ) -> None:
     """Empty the section's asset folder, then write the baseline table, the NS mass numbers
-    with the charge MAREs of each dataset, and the NS mass parity figure."""
+    with the charge MAREs of each dataset, and the parity figure in its picked variant."""
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
     (out / f"{SECTION}_tab_baseline.tex").write_text(baseline_table(pairs))
-    figure = parity(ns_mass, config.plot)
+    variant = config.methodology.algorithms.variants.parity
+    figure = parity_figure(fits, config.plot, variant)
     figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)
     plt.close(figure)
-    (out / f"{PARITY}.tex").write_text(figure_tex())
-    macros = numbers(ns_mass) | charge_numbers(mares)
+    (out / f"{PARITY}.tex").write_text(figure_tex(variant))
+    macros = numbers(fits[NEUTRON_STARS.dataset, "mass"]) | charge_numbers(mares)
     (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
+
+
+def read_back(
+    entries: Sequence[LedgerEntry], designs: Mapping[tuple[str, str], Design]
+) -> dict[tuple[str, str], Predicted]:
+    """Each pair's MLP test predictions of the latest baseline batch -- the latest batch whose
+    entries hold every baseline candidate -- beside the pair's true test target."""
+    batches: dict[str, set[str]] = {}
+    for entry in entries:
+        batches.setdefault(entry.meta.batch, set()).add(entry.meta.candidate)
+    baseline = [batch for batch, held in batches.items() if set(CANDIDATES) <= held]
+    if not baseline:
+        raise ValueError("no baseline batch in the ledger -- run make baseline first")
+    latest = max(baseline)  # uuid7 batch ids sort by creation time
+    found: dict[tuple[str, str], Predicted] = {}
+    for entry in entries:
+        meta = entry.meta
+        if meta.batch == latest and meta.candidate == "MLP":
+            design = designs[meta.dataset, meta.target]
+            found[meta.dataset, meta.target] = Predicted(
+                design.y[design.test], np.array(entry.predictions)
+            )
+    return found
+
+
+def _write_variants(
+    out: Path, found: Mapping[tuple[str, str], Predicted], style: PlotStyle
+) -> None:
+    """Every parity variant as <stem>_<variant>.png in out and their contact sheet as
+    <stem>_variants.png, at the screen's resolution."""
+    out.mkdir(parents=True, exist_ok=True)
+    images: dict[str, Path] = {}
+    for variant in get_args(AlgParityVariant):
+        figure = parity_figure(found, style, variant)
+        images[variant] = out / f"{PARITY}_{variant}.png"
+        figure.savefig(images[variant], dpi=style.dpi)
+        plt.close(figure)
+    sheet = contact_sheet(images)
+    sheet.savefig(out / f"{PARITY}_variants.png", dpi=style.diagnostics_dpi)
+    plt.close(sheet)
+    logger.info("done: parity variants %s and their sheet -> %s", tuple(images), out)
 
 
 def write_diagnostics(
@@ -712,10 +872,15 @@ def main(
     """Score the baseline and its references on every dataset and target; write the baseline
     table, the NS mass numbers and parity figure into the section's folder of the asset dir,
     after emptying that folder of an earlier run; leave each pair's run record and diagnostics
-    in a folder named after its run under the state dir."""
+    in a folder named after its run under the state dir. Given --variants <dir>, fit nothing:
+    draw every parity variant from the latest baseline batch's ledger entries into <dir>."""
+    variants_dir = None
+    if "--variants" in argv:
+        at = argv.index("--variants")
+        variants_dir, argv = Path(argv[at + 1]), argv[:at] + argv[at + 2 :]
     assert len(argv) == 5, (
         "usage: fit_baseline.py <ns.parquet> <bh.parquet> <split.parquet> <asset dir> "
-        f"<state dir>, got {argv}"
+        f"<state dir> [--variants <dir>], got {argv}"
     )
     ns, bh, split_file = Path(argv[0]), Path(argv[1]), Path(argv[2])
     out, state = Path(argv[3]) / SECTION, Path(argv[4]) / SECTION
@@ -730,6 +895,11 @@ def main(
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
     split = pd.read_parquet(split_file)
     found_pairs = pairs(tables, split, SPECS, TARGETS)
+    if variants_dir is not None:
+        designs = {(p.dataset, p.target): p.design for p in found_pairs}
+        found = read_back(read_ledger(Path(argv[4]) / "ledger"), designs)
+        _write_variants(variants_dir / SECTION, found, config.plot)
+        return
     total = sum(len(set(p.design.fold[p.design.fold >= 0].tolist())) + 1 for p in found_pairs)
     first = time.time()
     batch = make_batch(
@@ -791,7 +961,7 @@ def main(
         mares[dataset] = charge_mares(mass, charge)
     # The section's assets are written last, into the last run's log that make follow shows.
     with _logging_into(run / "train.log", settings.log_level):
-        _write_section(out, scores, fits[NEUTRON_STARS.dataset, "mass"], config, mares)
+        _write_section(out, scores, fits, config, mares)
         logger.info("all %d fits done in %s", total, duration_text(time.time() - first))
         logger.info("done: baseline table, NS mass numbers and parity figure -> %s", out)
 

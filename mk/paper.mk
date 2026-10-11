@@ -73,13 +73,16 @@ $(BH_EDA_ASSETS): $(BH_EDA) paper.toml $(SHARED) $(STATE)/black_holes.parquet
 	$(call log_done,BH EDA figures and numbers written to $(@D)/)
 
 # Every variant of each figure that has them, with one contact sheet per figure, drawn to
-# pick from: paper.toml records the pick, make compile places it (W-111). Never an asset.
+# pick from: paper.toml records the pick, make compile places it (W-111). Never an asset. The
+# results figures are drawn from the recorded runs -- the baseline's ledger entries and the
+# batches below -- and nothing is fitted (W-113).
 VARIANTS := $(BUILD)/variants
 
 .PHONY: variants
-variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet ## Draw every figure variant and its contact sheet under build/variants/
+variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every figure variant and its contact sheet under build/variants/
 	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) --variants $(VARIANTS)
 	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --variants $(VARIANTS)
+	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) --variants $(VARIANTS)
 	$(call log_done,figure variants and contact sheets in $(VARIANTS)/)
 
 # Section 3.3: the split numbers, from the split file.

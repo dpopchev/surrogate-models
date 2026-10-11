@@ -117,6 +117,17 @@ class DataAnalysis(BaseModel):
 # imports torch; test_config.py holds the two equal.
 NetActivation = Literal["relu", "gelu", "tanh"]
 NetLoss = Literal["mse", "huber"]
+# ns_mass: the NS mass parity; residual_strip: the same with its residuals below; all_pairs:
+# every dataset and target, 2 x 2 (W-113).
+AlgParityVariant = Literal["ns_mass", "residual_strip", "all_pairs"]
+
+
+class AlgorithmsVariants(BaseModel):
+    """Section 4.1: which variant of each figure the paper places (W-113)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    parity: AlgParityVariant = "ns_mass"
 
 
 class AlgorithmsSection(BaseModel):
@@ -140,6 +151,7 @@ class AlgorithmsSection(BaseModel):
     # one-thread worker processes running the fits at once: 6 gives 3.2x the fits per hour of 1
     # (W-072 T-148); 1 for a run whose fit seconds are reported, since sharing slows each fit.
     workers: PositiveInt = 6
+    variants: AlgorithmsVariants = AlgorithmsVariants()
 
 
 class Methodology(BaseModel):
