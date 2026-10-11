@@ -24,7 +24,16 @@ from eda_black_holes import (
 
 from shared.config import PaperConfig
 from shared.eda import number_tex, with_charge_targets
-from shared.plots import PlotStyle
+from shared.plots import NOTATION_TEX, PlotStyle, apply_style
+
+
+@pytest.fixture(autouse=True)
+def _notation():
+    """The style with the paper's notation, as main applies it, so labels expand under
+    mathtext; restored after each test."""
+    with plt.rc_context():
+        apply_style(PlotStyle(usetex=False), NOTATION_TEX.read_text())
+        yield
 
 
 def curves(start_step: float = 0.5) -> pd.DataFrame:

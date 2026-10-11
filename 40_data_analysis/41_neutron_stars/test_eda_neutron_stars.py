@@ -27,7 +27,16 @@ from eda_neutron_stars import (
 
 from shared.config import PaperConfig
 from shared.eda import with_charge_targets
-from shared.plots import PlotStyle, anchor_color
+from shared.plots import NOTATION_TEX, PlotStyle, anchor_color, apply_style
+
+
+@pytest.fixture(autouse=True)
+def _notation():
+    """The style with the paper's notation, as main applies it, so labels expand under
+    mathtext; restored after each test."""
+    with plt.rc_context():
+        apply_style(PlotStyle(usetex=False), NOTATION_TEX.read_text())
+        yield
 
 
 def curves(target: dict[tuple[float, float], list[float]]) -> pd.DataFrame:

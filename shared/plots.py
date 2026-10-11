@@ -94,11 +94,12 @@ NOTATION_TEX = Path(__file__).resolve().parents[1] / "00_metadata" / "notation.t
 class Symbols(Mapping[str, str]):
     """MACROS, or the named subset of them in that order, as a figure label reads them at the
     time of the lookup: the macro under usetex, else its body from the notation apply_style
-    received, or from the notation file before any style was applied (mathtext knows no
-    macros)."""
+    received (mathtext knows no macros); built by make_symbols.
 
-    def __init__(self, names: tuple[str, ...] = tuple(MACROS)) -> None:
-        assert all(name in MACROS for name in names), f"unknown symbols: {names}"
+    A lookup under mathtext before apply_style handed a notation raises LookupError.
+    """
+
+    def __init__(self, names: tuple[str, ...]) -> None:
         self._names = names
 
     def __getitem__(self, key: str) -> str:
@@ -107,7 +108,9 @@ class Symbols(Mapping[str, str]):
         macro = MACROS[key]
         if plt.rcParams["text.usetex"]:
             return macro
-        notation = str(plt.rcParams["text.latex.preamble"]) or NOTATION_TEX.read_text()
+        notation = str(plt.rcParams["text.latex.preamble"])
+        if not notation:
+            raise LookupError(f"{key}: no notation to expand {macro}; call apply_style first")
         return expand(macro, notation)
 
     def __iter__(self) -> Iterator[str]:
@@ -118,10 +121,20 @@ class Symbols(Mapping[str, str]):
 
     def of(self, *names: str) -> Symbols:
         """The symbols of these columns, in this order."""
-        return Symbols(names)
+        return make_symbols(names)
 
 
-SYMBOLS = Symbols()
+def make_symbols(names: tuple[str, ...]) -> Symbols:
+    """The Symbols of these names, each one of MACROS.
+
+    Raises ValueError naming the names MACROS does not hold.
+    """
+    if unknown := [name for name in names if name not in MACROS]:
+        raise ValueError(f"unknown symbols: {unknown}")
+    return Symbols(names)
+
+
+SYMBOLS = make_symbols(tuple(MACROS))
 
 _NEWCOMMAND = re.compile(r"\\newcommand\{\\(\w+)\}\{(.*)\}")
 

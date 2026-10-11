@@ -717,8 +717,9 @@ def main(
         path = out / f"{SECTION}_tab_families.tex"
         write_checked(path, family_table(outcomes))
         logger.info("done: family table of batch %s, %d outcomes -> %s", batch, len(outcomes), path)
-        panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
+        # The panels' titles read the symbols, which expand the notation the style hands on.
         apply_style(config.plot, NOTATION_TEX.read_text())
+        panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
         drawn = (
             (PARITY, parity_figure(panels, config.plot), parity_tex()),
             (ERRORS, error_figure(panels, config.plot), errors_tex()),

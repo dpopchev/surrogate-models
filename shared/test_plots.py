@@ -18,6 +18,7 @@ from shared.plots import (
     apply_style,
     colormap,
     figure_size,
+    make_symbols,
 )
 
 # A 2 in wide, 3 in tall text block.
@@ -28,6 +29,20 @@ STYLE = PlotStyle(usetex=False, font_size=9.0, text_width_pt=144.54, text_height
 def _restore_rcparams():
     with plt.rc_context():
         yield
+
+
+@pytest.mark.model
+def test_make_symbols_refuses_an_unknown_name() -> None:
+    with pytest.raises(ValueError, match="unknown symbols"):
+        make_symbols(("M", "no_such_column"))
+
+
+@pytest.mark.view
+def test_a_symbol_lookup_without_a_preamble_raises_lookup_error() -> None:
+    plt.rcParams["text.usetex"] = False
+    plt.rcParams["text.latex.preamble"] = ""
+    with pytest.raises(LookupError, match="apply_style"):
+        SYMBOLS["D"]
 
 
 @pytest.mark.view

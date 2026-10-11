@@ -18,6 +18,7 @@ from optuna.trial import TrialState
 
 matplotlib.use("Agg")
 
+import matplotlib.pyplot as plt
 from fit_baseline import (
     SECTION,
     Fit,
@@ -43,9 +44,19 @@ from shared.ceilings import Spread
 from shared.config import PaperConfig
 from shared.design import NEUTRON_STARS, Design
 from shared.harness import Timing
-from shared.plots import PlotStyle
+from shared.plots import NOTATION_TEX, PlotStyle, apply_style
 from shared.runs import from_json
 from shared.surrogate import Training, mare, mare_in_d
+
+
+@pytest.fixture(autouse=True)
+def _notation():
+    """The style with the paper's notation, as main applies it, so labels expand under
+    mathtext; restored after each test."""
+    with plt.rc_context():
+        apply_style(PlotStyle(usetex=False), NOTATION_TEX.read_text())
+        yield
+
 
 # Six curves keyed by p along x in [0, 1]: y = 1 + 0.1 p + x^2; curve p = 2 is the test curve.
 P = np.repeat(np.arange(6.0), 10)
