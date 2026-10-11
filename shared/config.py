@@ -163,6 +163,20 @@ class Methodology(BaseModel):
 
 
 FamiliesFigure = Literal["parity", "errors", "scaling"]
+# parity: predicted against true; residual: predicted minus true against true (W-113).
+FamiliesParityVariant = Literal["parity", "residual"]
+# scatter_profiles: a panel per pair and candidate, scatter and profiles; profiles: the
+# profiles only, the candidates overlaid, a panel per pair; hexbin: a density per panel (W-113).
+FamiliesErrorsVariant = Literal["scatter_profiles", "profiles", "hexbin"]
+
+
+class FamiliesVariants(BaseModel):
+    """Section 5.2: which variant of each family-screen figure the paper places (W-113)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    parity: FamiliesParityVariant = "parity"
+    errors: FamiliesErrorsVariant = "scatter_profiles"
 
 
 class FamiliesSection(BaseModel):
@@ -171,6 +185,7 @@ class FamiliesSection(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     figures: tuple[FamiliesFigure, ...] = get_args(FamiliesFigure)
+    variants: FamiliesVariants = FamiliesVariants()
 
 
 class Results(BaseModel):

@@ -83,6 +83,7 @@ variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/s
 	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) --variants $(VARIANTS)
 	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --variants $(VARIANTS)
 	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) --variants $(VARIANTS)
+	@$(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) --variants $(VARIANTS)
 	$(call log_done,figure variants and contact sheets in $(VARIANTS)/)
 
 # Section 3.3: the split numbers, from the split file.

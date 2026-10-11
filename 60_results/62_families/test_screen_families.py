@@ -416,9 +416,27 @@ def test_the_parity_figure_has_a_panel_per_pair() -> None:
 
 
 @pytest.mark.view
+def test_parity_figure_residual_centres_on_zero() -> None:
+    figure = parity_figure(TOY_PANELS, PlotStyle(usetex=False), "residual")
+    assert np.asarray(figure.axes[0].get_lines()[0].get_ydata()).tolist() == [0.0, 0.0]
+
+
+@pytest.mark.view
 def test_the_error_figure_has_a_panel_per_pair_and_candidate() -> None:
     figure = error_figure(TOY_PANELS, PlotStyle(usetex=False))
     assert len([axes for axes in figure.axes if axes.collections]) == 4 * 2
+
+
+@pytest.mark.view
+def test_error_figure_profiles_has_one_panel_per_pair() -> None:
+    figure = error_figure(TOY_PANELS, PlotStyle(usetex=False), "profiles")
+    assert len(figure.axes) == 4
+
+
+@pytest.mark.view
+def test_error_figure_hexbin_draws_a_collection() -> None:
+    figure = error_figure(TOY_PANELS, PlotStyle(usetex=False), "hexbin")
+    assert type(figure.axes[0].collections[0]).__name__ == "PolyCollection"
 
 
 @pytest.mark.view

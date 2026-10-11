@@ -20,7 +20,7 @@ from datetime import datetime
 from functools import partial
 from itertools import product
 from pathlib import Path
-from typing import Any, assert_never
+from typing import Any, assert_never, get_args
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,7 +54,14 @@ from shared.candidates import (
     fitter_of,
 )
 from shared.ceilings import PROFILE_BINS, profile
-from shared.config import NOTATION_TEX, FamiliesFigure, PaperConfig, load_config
+from shared.config import (
+    NOTATION_TEX,
+    FamiliesErrorsVariant,
+    FamiliesFigure,
+    FamiliesParityVariant,
+    PaperConfig,
+    load_config,
+)
 from shared.design import (
     BLACK_HOLES,
     DATASET_TEX,
@@ -77,6 +84,7 @@ from shared.plots import (
     WarmCmap,
     apply_style,
     colormap,
+    contact_sheet,
     figure_size,
 )
 from shared.runs import RunMetadata, Setting, entry_from_json
@@ -320,9 +328,13 @@ def axis_label(target: Target) -> str:
             assert_never(target)
 
 
-def parity_figure(panels: Sequence[Panel], style: PlotStyle) -> Figure:
-    """Predicted against true target on the test curves, one panel per pair in a grid of two
-    columns, with the y = x line; each candidate in one end of its dataset's colormap.
+def parity_figure(
+    panels: Sequence[Panel], style: PlotStyle, variant: FamiliesParityVariant = "parity"
+) -> Figure:
+    """Predicted against true target on the test curves with the y = x line (parity), or the
+    residual, predicted minus true, against the true target with the zero line (residual):
+    one panel per pair in a grid of two columns, each candidate in one end of its dataset's
+    colormap.
 
     Raises ValueError for a panel of a dataset with no colormap.
     """
@@ -332,28 +344,76 @@ def parity_figure(panels: Sequence[Panel], style: PlotStyle) -> Figure:
     )
     for axes, panel in zip(grid.flat, panels, strict=False):
         colors = _colors(panel, style)
-        for color, series in zip(colors, panel.series, strict=True):
-            axes.scatter(
-                series.y_true, series.y_pred, s=2, alpha=0.4, color=color, label=series.label
-            )
-        values = np.concatenate([np.r_[s.y_true, s.y_pred] for s in panel.series])
-        span = [float(values.min()), float(values.max())]
-        axes.plot(span, span, color="black", linestyle="--", linewidth=0.8)
+        match variant:
+            case "parity":
+                for color, series in zip(colors, panel.series, strict=True):
+                    axes.scatter(
+                        series.y_true,
+                        series.y_pred,
+                        s=2,
+                        alpha=0.4,
+                        color=color,
+                        label=series.label,
+                    )
+                values = np.concatenate([np.r_[s.y_true, s.y_pred] for s in panel.series])
+                span = [float(values.min()), float(values.max())]
+                axes.plot(span, span, color="black", linestyle="--", linewidth=0.8)
+                axes.set_ylabel(f"predicted {panel.target}")
+                # The points follow the diagonal, so the lower right corner stays empty.
+                axes.legend(fontsize="x-small", markerscale=3, loc="lower right")
+            case "residual":
+                axes.axhline(0.0, color="black", linestyle="--", linewidth=0.8)
+                for color, series in zip(colors, panel.series, strict=True):
+                    axes.scatter(
+                        series.y_true,
+                        series.y_pred - series.y_true,
+                        s=2,
+                        alpha=0.4,
+                        color=color,
+                        label=series.label,
+                    )
+                axes.set_ylabel(f"predicted - true {panel.target}")
+                axes.legend(fontsize="x-small", markerscale=3)
+            case _:
+                assert_never(variant)
         axes.set_title(panel.title)
         axes.set_xlabel(f"true {panel.target}")
-        axes.set_ylabel(f"predicted {panel.target}")
-        # The points follow the diagonal, so the lower right corner stays empty.
-        axes.legend(fontsize="x-small", markerscale=3, loc="lower right")
     return figure
 
 
-def error_figure(panels: Sequence[Panel], style: PlotStyle) -> Figure:
-    """The relative error in M or D against the true target on a log scale, a row per pair
-    and a column per candidate, the y axis shared along a row: each panel the candidate's
-    scatter in its color, with its median (solid) and 95th percentile (dashed) in black.
+def _error_profiles(panels: Sequence[Panel], style: PlotStyle) -> Figure:
+    """The relative error profiles only, a panel per pair in a grid of two columns: each
+    candidate's median (solid) and 95th percentile (dashed) in its color, overlaid."""
+    rows = (len(panels) + 1) // 2
+    figure, grid = plt.subplots(
+        rows, 2, figsize=figure_size(style, rows, 0.5), layout="constrained", squeeze=False
+    )
+    for axes, panel in zip(grid.flat, panels, strict=False):
+        for color, series in zip(_colors(panel, style), panel.series, strict=True):
+            found = profile(series.y_true, series.errors, PROFILE_BINS)
+            axes.plot(found.centers, found.median, color=color, linewidth=1.0, label=series.label)
+            axes.plot(found.centers, found.p95, color=color, linewidth=1.0, linestyle="--")
+        axes.set_yscale("log")
+        axes.set_title(panel.title, fontsize="small")
+        axes.set_xlabel(f"true {panel.target}")
+        axes.set_ylabel("relative error")
+        axes.legend(fontsize="x-small")
+    return figure
+
+
+def error_figure(
+    panels: Sequence[Panel], style: PlotStyle, variant: FamiliesErrorsVariant = "scatter_profiles"
+) -> Figure:
+    """The relative error in M or D against the true target on a log scale: a row per pair
+    and a column per candidate, the y axis shared along a row, each panel the candidate's
+    scatter in its color with its median (solid) and 95th percentile (dashed) in black
+    (scatter_profiles) or its density as hexagons (hexbin); or the profiles alone, the
+    candidates overlaid, a panel per pair (profiles).
 
     Raises ValueError for a panel of a dataset with no colormap.
     """
+    if variant == "profiles":
+        return _error_profiles(panels, style)
     columns = max(len(panel.series) for panel in panels)
     figure, grid = plt.subplots(
         len(panels),
@@ -368,9 +428,24 @@ def error_figure(panels: Sequence[Panel], style: PlotStyle) -> Figure:
             zip(_colors(panel, style), panel.series, strict=True)
         ):
             axes = grid[row, column]
-            axes.scatter(
-                series.y_true, series.errors, s=1, alpha=0.15, color=color, rasterized=True
-            )
+            match variant:
+                case "scatter_profiles":
+                    axes.scatter(
+                        series.y_true, series.errors, s=1, alpha=0.15, color=color, rasterized=True
+                    )
+                case "hexbin":
+                    # An exact prediction has no logarithm: it is drawn at the floor.
+                    axes.hexbin(
+                        series.y_true,
+                        np.maximum(series.errors, 1e-12),
+                        yscale="log",
+                        gridsize=30,
+                        mincnt=1,
+                        cmap=colormap(_cmap(panel.dataset, style)),
+                        bins="log",
+                    )
+                case _:
+                    assert_never(variant)
             found = profile(series.y_true, series.errors, PROFILE_BINS)
             axes.plot(found.centers, found.median, color="black", linewidth=1.0)
             axes.plot(found.centers, found.p95, color="black", linewidth=1.0, linestyle="--")
@@ -439,31 +514,77 @@ def _colors(panel: Panel, style: PlotStyle) -> list[Any]:
     return [shades(p) for p in np.linspace(0.15, 0.85, len(panel.series))]
 
 
-def parity_tex() -> str:
+CHARGE_AS_Y = "The charge is shown as the target the models see, $Y = \\log_{10}(\\Dch/M)$."
+
+
+def _parity_caption(variant: FamiliesParityVariant) -> str:
+    """The caption of the parity figure in one variant."""
+    picks = (
+        "per dataset and target, for the best candidate of each unit of prediction on the most "
+        "training rows; the legend gives the significant figures kept on the folds"
+    )
+    match variant:
+        case "parity":
+            return (
+                f"Predicted against true target on the test curves, {picks}, and the dashed "
+                "line is $y = x$. At these precisions every candidate lies on the line; "
+                f"\\cref{{fig:families-errors}} shows where they differ. {CHARGE_AS_Y}"
+            )
+        case "residual":
+            return (
+                f"The residual, predicted minus true target, on the test curves against the "
+                f"true target, {picks}, and the dashed line is zero; "
+                f"\\cref{{fig:families-errors}} shows the relative errors. {CHARGE_AS_Y}"
+            )
+        case _:
+            assert_never(variant)
+
+
+def parity_tex(variant: FamiliesParityVariant = "parity") -> str:
     """The figure environment of the parity figure, placed here or at the top of a page."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
         f"\\includegraphics[width=\\textwidth]{{{PARITY}}}\n"
-        "\\caption{Predicted against true target on the test curves, per dataset and target, for "
-        "the best candidate of each unit of prediction on the most training rows; the legend "
-        "gives the significant figures kept on the folds, and the dashed line is $y = x$. At "
-        "these precisions every candidate lies on the line; \\cref{fig:families-errors} shows "
-        "where they differ. The charge is shown as the target the models see, $Y = "
-        "\\log_{10}(\\Dch/M)$.}\n"
+        f"\\caption{{{_parity_caption(variant)}}}\n"
         "\\label{fig:families-parity}\n\\end{figure}\n"
     )
 
 
-def errors_tex() -> str:
+def _errors_caption(variant: FamiliesErrorsVariant) -> str:
+    """The caption of the error figure in one variant."""
+    error = (
+        "The relative error in $M$ or $\\Dch$ on the test curves against the true target, for "
+        "the candidates of \\cref{fig:families-parity}"
+    )
+    profiles = "95th percentile (dashed) in equal-count bins of the true target"
+    match variant:
+        case "scatter_profiles":
+            return (
+                f"{error}: a row per dataset and target, a column per unit of prediction, the "
+                "error axis shared along a row. The black lines are each candidate's median "
+                f"(solid) and {profiles}."
+            )
+        case "profiles":
+            return (
+                f"{error}, a panel per dataset and target: each candidate's median (solid) "
+                f"and {profiles}, in its colour."
+            )
+        case "hexbin":
+            return (
+                f"{error}: a row per dataset and target, a column per unit of prediction, the "
+                "test rows' density as hexagons, darker where more. The black lines are each "
+                f"candidate's median (solid) and {profiles}."
+            )
+        case _:
+            assert_never(variant)
+
+
+def errors_tex(variant: FamiliesErrorsVariant = "scatter_profiles") -> str:
     """The figure environment of the error figure, placed here or at the top of a page."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
         f"\\includegraphics[width=\\textwidth]{{{ERRORS}}}\n"
-        "\\caption{The relative error in $M$ or $\\Dch$ on the test curves against the true "
-        "target, for the candidates of \\cref{fig:families-parity}: a row per dataset and "
-        "target, a column per unit of prediction, the error axis shared along a row. The black "
-        "lines are each candidate's median (solid) and 95th percentile (dashed) in equal-count "
-        "bins of the true target.}\n"
+        f"\\caption{{{_errors_caption(variant)}}}\n"
         "\\label{fig:families-errors}\n\\end{figure}\n"
     )
 
@@ -712,6 +833,11 @@ def main(
             logger.info("rebuilding the assets from batch %s; nothing is fitted", batch)
         saved = outcomes_path(args.state, SECTION, batch)
         outcomes = outcomes_from_json(saved.read_text())
+        if args.variants is not None:
+            apply_style(config.plot, NOTATION_TEX.read_text())
+            panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
+            _write_variants(args.variants / SECTION, panels, config.plot)
+            return
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
         for stale in out.iterdir():  # a deselected figure's wrapper of an earlier run (W-102)
@@ -722,9 +848,18 @@ def main(
         # The panels' titles read the symbols, which expand the notation the style hands on.
         apply_style(config.plot, NOTATION_TEX.read_text())
         panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
+        picks = config.results.families.variants
         drawers: dict[FamiliesFigure, Callable[[], tuple[str, Figure, str]]] = {
-            "parity": lambda: (PARITY, parity_figure(panels, config.plot), parity_tex()),
-            "errors": lambda: (ERRORS, error_figure(panels, config.plot), errors_tex()),
+            "parity": lambda: (
+                PARITY,
+                parity_figure(panels, config.plot, picks.parity),
+                parity_tex(picks.parity),
+            ),
+            "errors": lambda: (
+                ERRORS,
+                error_figure(panels, config.plot, picks.errors),
+                errors_tex(picks.errors),
+            ),
             "scaling": lambda: (
                 SCALING,
                 scaling_figure(trajectories(outcomes), config.plot, args.minutes * 60.0),
@@ -916,7 +1051,40 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--memory-gb", type=float, required=True, help="memory budget of a fit")
     parser.add_argument("--workers", type=int, required=True, help="fits at once")
     parser.add_argument("--batch", help="fit nothing; rebuild the assets from this saved batch")
-    return parser.parse_args(argv)
+    parser.add_argument(
+        "--variants",
+        type=Path,
+        help="with --batch: draw every figure variant into this dir to pick from; assets untouched",
+    )
+    args = parser.parse_args(argv)
+    if args.variants is not None and args.batch is None:
+        parser.error("--variants draws from a recorded batch: give --batch too")
+    return args
+
+
+def _write_variants(out: Path, panels: Sequence[Panel], style: PlotStyle) -> None:
+    """Every variant of the parity and error figures as <stem>_<variant>.png in out and per
+    figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
+    out.mkdir(parents=True, exist_ok=True)
+    sheets: dict[str, dict[str, Callable[[], Figure]]] = {
+        PARITY: {
+            v: partial(parity_figure, panels, style, v) for v in get_args(FamiliesParityVariant)
+        },
+        ERRORS: {
+            v: partial(error_figure, panels, style, v) for v in get_args(FamiliesErrorsVariant)
+        },
+    }
+    for stem, drawers in sheets.items():
+        images: dict[str, Path] = {}
+        for variant, drawer in drawers.items():
+            figure = drawer()
+            images[variant] = out / f"{stem}_{variant}.png"
+            figure.savefig(images[variant], dpi=style.dpi)
+            plt.close(figure)
+        sheet = contact_sheet(images)
+        sheet.savefig(out / f"{stem}_variants.png", dpi=style.diagnostics_dpi)
+        plt.close(sheet)
+        logger.info("done: %s variants %s and their sheet -> %s", stem, tuple(images), out)
 
 
 if __name__ == "__main__":

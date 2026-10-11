@@ -88,6 +88,14 @@ figures = [
   "scaling",                # folds' figures and the final fit's seconds against the training rows
 ]
 
+# Which variant of each Section 5.2 figure the paper places; `make variants` draws them from
+# FAMILIES_BATCH, nothing fitted (W-113).
+[results.families.variants]
+parity = "parity"            # parity: predicted against true | residual: predicted minus true
+errors = "scatter_profiles"  # scatter_profiles: a panel per pair and candidate, scatter and profiles
+                             # profiles: the profiles alone, candidates overlaid, a panel per pair
+                             # hexbin: the rows' density as hexagons, with the profiles
+
 # Section 4.1 -- the baseline network fit_baseline.py trains (E-005): a plain MLP, the control
 # arm of H2 (MSE, ReLU) and H3 (no skips). PAPER__METHODOLOGY__ALGORITHMS__MAX_EPOCHS=2 in the
 # environment gives a quick smoke run.
