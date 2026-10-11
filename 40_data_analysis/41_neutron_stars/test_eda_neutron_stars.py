@@ -304,6 +304,23 @@ class TestFigures:
         figure = draw("univariate_continuous", with_charge_targets(DENSE), STYLE, WINDOW)
         assert figure.axes[0].patches[0].get_linewidth() == 0
 
+    def test_univariate_log_counts_labels_the_rows(self) -> None:
+        variants = NeutronStarVariants(univariate_continuous="log_counts")
+        table = with_charge_targets(DENSE)
+        figure = draw("univariate_continuous", table, STYLE, WINDOW, variants)
+        assert {axes.get_ylabel() for axes in figure.axes} == {"rows"}
+
+    def test_univariate_transposed_has_two_rows(self) -> None:
+        variants = NeutronStarVariants(univariate_continuous="transposed")
+        table = with_charge_targets(DENSE)
+        figure = draw("univariate_continuous", table, STYLE, WINDOW, variants)
+        assert len({round(axes.get_position().y0, 6) for axes in figure.axes}) == 2
+
+    def test_mass_max_heatmap_only_has_one_axes(self) -> None:
+        variants = NeutronStarVariants(mass_max="heatmap_contours")
+        figure = draw("mass_max", with_charge_targets(DENSE), STYLE, WINDOW, variants)
+        assert len(panels(figure)) == 1
+
     def test_mass_max_has_two_panels_and_a_colorbar(self) -> None:
         assert len(draw("mass_max", with_charge_targets(DENSE), STYLE, WINDOW).axes) == 3
 

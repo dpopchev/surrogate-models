@@ -159,6 +159,11 @@ class TestFigures:
     def test_mass_radius_has_one_panel_and_its_colorbar(self) -> None:
         assert len(draw("mass_radius", TABLE, STYLE).axes) == 2
 
+    def test_univariate_transposed_has_two_rows(self) -> None:
+        variants = BlackHoleVariants(univariate_continuous="transposed")
+        figure = draw("univariate_continuous", TABLE, STYLE, variants)
+        assert len({round(axes.get_position().y0, 6) for axes in figure.axes}) == 2
+
     def test_the_mass_radius_panel_holds_one_inset(self) -> None:
         assert len(draw("mass_radius", TABLE, STYLE).axes[0].child_axes) == 1
 

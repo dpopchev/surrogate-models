@@ -39,6 +39,20 @@ figures = [
 ]
 tables = ["univariate", "charge_correlation", "split_strategies"]
 
+# Which variant of each Section 3.1 figure the paper places; `make variants` draws them all
+# side by side under build/variants/41_neutron_stars/ to pick from (W-112).
+[data_analysis.neutron_stars.variants]
+charge_target = "scatter"            # scatter: every row | lines: one line per curve
+                                     # lambda_inset: by lambda, a beta miniature inset
+mass_density = "by_lambda"           # by_lambda | by_beta: the curves coloured by it
+                                     # two_panels: by lambda and by beta side by side
+univariate_continuous = "histograms" # histograms: a row per variable, raw and log10
+                                     # log_counts: the same, log-y row counts
+                                     # transposed: raw and log10 as two rows, half the height
+mass_max = "histogram_heatmap"       # histogram_heatmap: distance to M_max and the M_max grid
+                                     # heatmap_contours: the grid alone, M_max contours
+                                     # log_histogram: the distance alone, log-y counts
+
 # Section 3.2 -- which BH EDA figures and tables eda_black_holes.py renders; placed by the text.
 [data_analysis.black_holes]
 figures = [
@@ -55,6 +69,7 @@ tables = ["univariate", "charge_correlation", "split_strategies"]
 mass_radius = "inset"     # inset: M against r_h, the departure from GR in an inset
                           # departure: M - r_h/2 against r_h, the GR relation as the zero line
                           # both: the two side by side
+univariate_continuous = "histograms"  # histograms | log_counts | transposed, as in 3.1
 
 # Section 5.2 -- which family-screen figures screen_families.py writes (W-102); placed by the
 # text like Section 3's, a deselected one drops out. The family table is always written.

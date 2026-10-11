@@ -12,7 +12,7 @@ import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, assert_never, get_args
+from typing import Literal, assert_never, cast, get_args
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,6 +37,7 @@ from shared.config import (
     BhTable,
     BlackHoleVariants,
     PaperConfig,
+    UnivariateVariant,
     load_config,
 )
 from shared.eda import (
@@ -47,7 +48,6 @@ from shared.eda import (
     camel,
     curve_adjacency,
     curve_ids,
-    grid_bins,
     group_splitter,
     holdout_mae,
     kfold_mae,
@@ -58,6 +58,8 @@ from shared.eda import (
     row_splitter,
     summarize,
     text_width_size,
+    univariate_caption,
+    univariate_figure,
     with_charge_targets,
 )
 from shared.plots import (
@@ -409,10 +411,7 @@ def caption(figure: BhFigure, variants: BlackHoleVariants = DEFAULT_VARIANTS) ->
     """The caption of one figure in its picked variant."""
     match figure:
         case "univariate_continuous":
-            return (
-                "Black holes: distributions of the continuous variables, raw (left) and "
-                "$\\log_{10}$ (right)."
-            )
+            return univariate_caption("Black holes", variants.univariate_continuous)
         case "mass_radius":
             return _mass_radius_caption(variants.mass_radius)
         case "charge_target":
@@ -441,22 +440,13 @@ def figure_tex(figure: BhFigure, variants: BlackHoleVariants = DEFAULT_VARIANTS)
     )
 
 
-def _univariate_continuous(table: pd.DataFrame, style: PlotStyle) -> Figure:
-    """Histograms of the continuous variables, raw and in log10, grid-aware bins."""
-    fig, axes = plt.subplots(
-        len(SUMMARY_COLUMNS), 2, figsize=text_width_size(1.1), layout="constrained"
-    )
-    # Without edges: many thin bars would vanish under the style's white edges.
-    bars = {"color": anchor_color(style, "black_holes"), "linewidth": 0}
-    for row, column in enumerate(SUMMARY_COLUMNS):
-        raw = table[column].to_numpy(dtype=float)
-        logged = np.log10(raw)
-        # r_h sits on a fine grid of thousands of values; up to grid_values, one bar per value.
-        axes[row, 0].hist(raw, bins=grid_bins(raw, style.grid_values), **bars)
-        axes[row, 1].hist(logged, bins=grid_bins(logged, style.grid_values), **bars)
-        axes[row, 0].set_xlabel(LABELS[column])
-        axes[row, 1].set_xlabel(f"$\\log_{{10}}$ {LABELS[column]}")
-    return fig
+def _univariate_continuous(
+    table: pd.DataFrame, style: PlotStyle, variant: UnivariateVariant
+) -> Figure:
+    """Histograms of the continuous variables, raw and in log10, grid-aware bins: r_h sits on
+    a fine grid of thousands of values; up to grid_values, one bar per value."""
+    color = anchor_color(style, "black_holes")
+    return univariate_figure(table, SUMMARY_COLUMNS, LABELS, color, style.grid_values, variant)
 
 
 def _curve_lines(table: pd.DataFrame, y: str, cmap: Colormap) -> LineCollection:
@@ -584,7 +574,7 @@ def draw(
     """Draw one BH EDA figure from a table with the charge targets, in its picked variant."""
     match figure:
         case "univariate_continuous":
-            return _univariate_continuous(table, style)
+            return _univariate_continuous(table, style, variants.univariate_continuous)
         case "mass_radius":
             return _mass_radius(table, style, variants.mass_radius)
         case "charge_target":
@@ -614,19 +604,24 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
 
 
 def _write_variants(out: Path, table: pd.DataFrame, style: PlotStyle) -> None:
-    """Every variant of mass_radius as <stem>_<variant>.png in out, and their contact sheet
-    as <stem>_variants.png, at the screen's resolution."""
+    """Every variant of each figure with variants as <stem>_<variant>.png in out, and per
+    figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
     out.mkdir(parents=True, exist_ok=True)
-    images: dict[str, Path] = {}
-    for variant in get_args(BhMassRadiusVariant):
-        fig = draw("mass_radius", table, style, BlackHoleVariants(mass_radius=variant))
-        images[variant] = out / f"{asset('mass_radius')}_{variant}.png"
-        fig.savefig(images[variant], dpi=style.dpi)
-        plt.close(fig)
-    sheet = contact_sheet(images)
-    sheet.savefig(out / f"{asset('mass_radius')}_variants.png", dpi=style.diagnostics_dpi)
-    plt.close(sheet)
-    logger.info("done: mass_radius variants %s and their sheet -> %s", tuple(images), out)
+    for name, field in BlackHoleVariants.model_fields.items():
+        if name not in get_args(BhFigure):
+            raise ValueError(f"variants field {name} names no BH figure")
+        figure = cast(BhFigure, name)
+        images: dict[str, Path] = {}
+        for variant in get_args(field.annotation):
+            picked = BlackHoleVariants.model_validate({name: variant})
+            fig = draw(figure, table, style, picked)
+            images[variant] = out / f"{asset(figure)}_{variant}.png"
+            fig.savefig(images[variant], dpi=style.dpi)
+            plt.close(fig)
+        sheet = contact_sheet(images)
+        sheet.savefig(out / f"{asset(figure)}_variants.png", dpi=style.diagnostics_dpi)
+        plt.close(sheet)
+        logger.info("done: %s variants %s and their sheet -> %s", name, tuple(images), out)
 
 
 def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:

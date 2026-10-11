@@ -39,8 +39,10 @@ from shared.config import (
     NsChargeTargetVariant,
     NsFigure,
     NsMassDensityVariant,
+    NsMassMaxVariant,
     NsTable,
     PaperConfig,
+    UnivariateVariant,
     load_config,
 )
 from shared.eda import (
@@ -65,6 +67,8 @@ from shared.eda import (
     sci_tex,
     summarize,
     text_width_size,
+    univariate_caption,
+    univariate_figure,
     with_charge_targets,
 )
 from shared.plots import (
@@ -466,6 +470,21 @@ def _mass_density_caption(variant: NsMassDensityVariant) -> str:
             assert_never(variant)
 
 
+def _mass_max_caption(variant: NsMassMaxVariant) -> str:
+    """The caption of the mass-max figure in one variant."""
+    distance = "distance of each row to its own curve's maximum mass, the pile-up window dashed"
+    grid = "each curve's maximum mass over the $(\\beta, \\lambda)$ grid"
+    match variant:
+        case "histogram_heatmap":
+            return f"Neutron stars: {distance} (left), and {grid} (right)."
+        case "heatmap_contours":
+            return f"Neutron stars: {grid}, its contours labelled in $M_\\odot$."
+        case "log_histogram":
+            return f"Neutron stars: {distance}, the row counts on a log scale."
+        case _:
+            assert_never(variant)
+
+
 def caption(figure: NsFigure, variants: NeutronStarVariants = DEFAULT_VARIANTS) -> str:
     """The caption of one figure in its picked variant."""
     match figure:
@@ -489,16 +508,13 @@ def caption(figure: NsFigure, variants: NeutronStarVariants = DEFAULT_VARIANTS) 
                 "and in another curve, in standardized $(\\beta, \\lambda, \\log_{10}\\rhoc)$."
             )
         case "univariate_continuous":
-            return (
-                "Neutron stars: distributions of the continuous variables, raw (left) and "
-                "$\\log_{10}$ (right), one bar per value where the variable sits on a grid."
+            return univariate_caption(
+                "Neutron stars",
+                variants.univariate_continuous,
+                ", one bar per value where the variable sits on a grid",
             )
         case "mass_max":
-            return (
-                "Neutron stars: distance of each row to its own curve's maximum mass, the "
-                "pile-up window dashed (left), and each curve's maximum mass over the "
-                "$(\\beta, \\lambda)$ grid (right)."
-            )
+            return _mass_max_caption(variants.mass_max)
         case _:
             assert_never(figure)
 
@@ -532,44 +548,68 @@ def _univariate(table: pd.DataFrame, style: PlotStyle) -> Figure:
     return fig
 
 
-def _univariate_continuous(table: pd.DataFrame, style: PlotStyle) -> Figure:
-    """Histograms of the continuous variables, raw and in log10, grid-aware bins."""
-    fig, axes = plt.subplots(
-        len(SUMMARY_COLUMNS), 2, figsize=text_width_size(1.1), layout="constrained"
-    )
+def _univariate_continuous(
+    table: pd.DataFrame, style: PlotStyle, variant: UnivariateVariant
+) -> Figure:
+    """Histograms of the continuous variables, raw and in log10, grid-aware bins: rho_c sits on
+    a shared grid of a few hundred values, so one bar per value avoids aliasing."""
     color = anchor_color(style, "neutron_stars")
-    for row, column in enumerate(SUMMARY_COLUMNS):
-        raw = table[column].to_numpy(dtype=float)
-        logged = np.log10(raw)
-        # Without edges: a few hundred thin bars would vanish under the style's white edges.
-        bars = {"color": color, "linewidth": 0}
-        # rho_c sits on a shared grid of a few hundred values; one bar per value avoids aliasing.
-        axes[row, 0].hist(raw, bins=grid_bins(raw, style.grid_values), **bars)
-        axes[row, 1].hist(logged, bins=grid_bins(logged, style.grid_values), **bars)
-        axes[row, 0].set_xlabel(LABELS[column])
-        axes[row, 1].set_xlabel(f"$\\log_{{10}}$ {LABELS[column]}")
-    return fig
+    return univariate_figure(table, SUMMARY_COLUMNS, LABELS, color, style.grid_values, variant)
 
 
-def _mass_max(table: pd.DataFrame, style: PlotStyle, window: float) -> Figure:
-    """Rows' distance to their curve's M_max, and each curve's M_max over the grid."""
-    fig, (left, right) = plt.subplots(1, 2, figsize=text_width_size(0.45), layout="constrained")
+def _distance_to_peak(ax: Axes, table: pd.DataFrame, style: PlotStyle, window: float) -> None:
+    """Rows' distance to their curve's M_max on ax, the pile-up window dashed."""
     peak = table.groupby(list(CURVE))["M"].transform("max")
-    left.hist(peak - table["M"], bins=40, color=anchor_color(style, "neutron_stars"))
-    left.axvline(window, color="black", linestyle="--", linewidth=0.8)
-    left.set_xlabel(SYMBOLS["M_max_minus_M"])
-    left.set_ylabel("rows")
+    ax.hist(peak - table["M"], bins=40, color=anchor_color(style, "neutron_stars"))
+    ax.axvline(window, color="black", linestyle="--", linewidth=0.8)
+    ax.set_xlabel(SYMBOLS["M_max_minus_M"])
+    ax.set_ylabel("rows")
+
+
+def _peak_grid(
+    fig: Figure, ax: Axes, table: pd.DataFrame, style: PlotStyle, contours: bool
+) -> None:
+    """Each curve's M_max over the (beta, lambda) grid on ax, with labelled contours if asked."""
     maxima = table.groupby(list(CURVE))["M"].max().unstack("beta")
-    mesh = right.pcolormesh(
+    mesh = ax.pcolormesh(
         maxima.columns,
         maxima.index,
         maxima.to_numpy(),
         cmap=colormap(style.neutron_stars.lambda_cmap),
         shading="nearest",
     )
-    right.set_xlabel(LABELS["beta"])
-    right.set_ylabel(LABELS["lambda"])
-    fig.colorbar(mesh, ax=right, label=SYMBOLS["M_max"])
+    if contours:
+        lines = ax.contour(
+            maxima.columns, maxima.index, maxima.to_numpy(), colors="white", linewidths=0.6
+        )
+        ax.clabel(lines, fontsize="small", fmt="%.2f")
+    ax.set_xlabel(LABELS["beta"])
+    ax.set_ylabel(LABELS["lambda"])
+    fig.colorbar(mesh, ax=ax, label=SYMBOLS["M_max"])
+
+
+def _mass_max(
+    table: pd.DataFrame, style: PlotStyle, window: float, variant: NsMassMaxVariant
+) -> Figure:
+    """Rows' distance to their curve's M_max beside each curve's M_max over the grid
+    (histogram_heatmap), the grid alone with M_max contours (heatmap_contours), or the
+    distance alone on log-y counts (log_histogram)."""
+    match variant:
+        case "histogram_heatmap":
+            fig, (left, right) = plt.subplots(
+                1, 2, figsize=text_width_size(0.45), layout="constrained"
+            )
+            _distance_to_peak(left, table, style, window)
+            _peak_grid(fig, right, table, style, contours=False)
+        case "heatmap_contours":
+            fig, ax = plt.subplots(figsize=text_width_size(0.62), layout="constrained")
+            _peak_grid(fig, ax, table, style, contours=True)
+        case "log_histogram":
+            fig, ax = plt.subplots(figsize=text_width_size(0.45), layout="constrained")
+            _distance_to_peak(ax, table, style, window)
+            ax.set_yscale("log")
+        case _:
+            assert_never(variant)
     return fig
 
 
@@ -761,9 +801,9 @@ def draw(
         case "curve_adjacency":
             return _curve_adjacency(table, style)
         case "univariate_continuous":
-            return _univariate_continuous(table, style)
+            return _univariate_continuous(table, style, variants.univariate_continuous)
         case "mass_max":
-            return _mass_max(table, style, window)
+            return _mass_max(table, style, window, variants.mass_max)
         case _:
             assert_never(figure)
 

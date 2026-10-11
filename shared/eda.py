@@ -8,14 +8,17 @@ macros, tables and histogram bins for the generated assets.
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, assert_never
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.figure import Figure
 from scipy.stats import skew
 from sklearn.model_selection import GroupKFold, KFold, cross_val_predict
 from sklearn.neighbors import KNeighborsRegressor, NearestNeighbors
+
+from shared.config import UnivariateVariant
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
@@ -304,3 +307,57 @@ def text_width_size(height_ratio: float) -> tuple[float, float]:
     """A figure size as wide as the text (the style's figure width), height_ratio times as high."""
     width = float(plt.rcParams["figure.figsize"][0])
     return (width, width * height_ratio)
+
+
+def univariate_caption(subject: str, variant: UnivariateVariant, tail: str = "") -> str:
+    """The caption of the univariate figure of one dataset (subject) in one variant."""
+    match variant:
+        case "histograms":
+            layout = "raw (left) and $\\log_{10}$ (right)"
+        case "log_counts":
+            layout = "raw (left) and $\\log_{10}$ (right), the row counts on a log scale"
+        case "transposed":
+            layout = "raw (top) and $\\log_{10}$ (bottom), a column per variable"
+        case _:
+            assert_never(variant)
+    return f"{subject}: distributions of the continuous variables, {layout}{tail}."
+
+
+def univariate_figure(
+    table: pd.DataFrame,
+    columns: tuple[str, ...],
+    labels: Mapping[str, str],
+    color: tuple[float, float, float],
+    grid_values: int,
+    variant: UnivariateVariant,
+) -> Figure:
+    """Histograms of the continuous columns, raw and in log10, one bar per value up to
+    grid_values distinct values: a row per column (histograms), the same with log-y row counts
+    (log_counts), or the raw and the log10 as two rows at half the height (transposed)."""
+    match variant:
+        case "histograms" | "log_counts":
+            fig, axes = plt.subplots(
+                len(columns), 2, figsize=text_width_size(1.1), layout="constrained"
+            )
+            pairs = [(axes[row, 0], axes[row, 1]) for row in range(len(columns))]
+        case "transposed":
+            fig, axes = plt.subplots(
+                2, len(columns), figsize=text_width_size(0.55), layout="constrained"
+            )
+            pairs = [(axes[0, col], axes[1, col]) for col in range(len(columns))]
+        case _:
+            assert_never(variant)
+    # Without edges: a few hundred thin bars would vanish under the style's white edges.
+    bars = {"color": color, "linewidth": 0}
+    for (raw_axes, log_axes), column in zip(pairs, columns, strict=True):
+        raw = table[column].to_numpy(dtype=float)
+        logged = np.log10(raw)
+        raw_axes.hist(raw, bins=grid_bins(raw, grid_values), **bars)
+        log_axes.hist(logged, bins=grid_bins(logged, grid_values), **bars)
+        raw_axes.set_xlabel(labels[column])
+        log_axes.set_xlabel(f"$\\log_{{10}}$ {labels[column]}")
+        if variant == "log_counts":
+            for axes_ in (raw_axes, log_axes):
+                axes_.set_yscale("log")
+                axes_.set_ylabel("rows")
+    return fig
