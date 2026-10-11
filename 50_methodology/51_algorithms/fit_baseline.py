@@ -79,6 +79,7 @@ from shared.surrogate import (
     duration_text,
     make_mean_reference,
     make_nearest_reference,
+    make_training,
     mare,
     mare_in_d,
     network_fitter,
@@ -477,7 +478,7 @@ def main(
     settings = config.methodology.algorithms
     apply_style(config.plot, NOTATION_TEX.read_text())
     torch.set_num_threads(settings.threads)
-    training = Training(**settings.model_dump(exclude={"log_level", "threads", "workers"}))
+    training = make_training(settings)
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
     split = pd.read_parquet(split_file)
     found_pairs = pairs(tables, split, SPECS, TARGETS)

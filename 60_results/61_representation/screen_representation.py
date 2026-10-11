@@ -54,7 +54,7 @@ from shared.families import make_knn, make_rbf
 from shared.harness import Fitter, Run, harness
 from shared.runs import LedgerEntry, RunMetadata, Setting
 from shared.scorecard import significant_figures
-from shared.surrogate import Training, network_fitter, sklearn_fitter
+from shared.surrogate import Training, make_training, network_fitter, sklearn_fitter
 from shared.trials import ReportEpochs, open_study, tell_run
 from shared.workers import run_jobs
 
@@ -334,7 +334,7 @@ def main(
         assert path.is_file(), f"input not found: {path}"
     config = config or load_config()
     settings = config.methodology.algorithms
-    training = Training(**settings.model_dump(exclude={"log_level", "threads", "workers"}))
+    training = make_training(settings)
     seeds = tuple(training.seed + i for i in range(args.seeds))
     jobs = len(plan(cells(), seeds))
     ledger = args.state / "ledger"

@@ -29,6 +29,7 @@ from tabulate import tabulate
 from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
+from shared.config import AlgorithmsSection
 from shared.diagnostics import loss_curve
 from shared.harness import FitRows, Fitter, Predictor
 
@@ -58,6 +59,22 @@ class Training:
     patience: int
     valid_fraction: float
     seed: int
+
+
+def make_training(section: AlgorithmsSection) -> Training:
+    """The Training of the configured baseline network, every field named."""
+    return Training(
+        width=section.width,
+        depth=section.depth,
+        activation=section.activation,
+        loss=section.loss,
+        lr=section.lr,
+        max_epochs=section.max_epochs,
+        batch_size=section.batch_size,
+        patience=section.patience,
+        valid_fraction=section.valid_fraction,
+        seed=section.seed,
+    )
 
 
 # --- metrics ----------------------------------------------------------------------------------

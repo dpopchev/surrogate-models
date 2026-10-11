@@ -57,11 +57,11 @@ class Ceilings:
     and curve key varied the across-curve ceiling (cubic, two curves on each side) and its
     profile along the curves; per curve key varied the decade target's ceiling by decade."""
 
-    noise: dict[str, Spread]
-    along: dict[str, Spread]
-    across: dict[tuple[str, str], Spread]
-    profiles: dict[tuple[str, str], Profile]
-    decades: dict[str, dict[int, Spread]]
+    noise: Mapping[str, Spread]
+    along: Mapping[str, Spread]
+    across: Mapping[tuple[str, str], Spread]
+    profiles: Mapping[tuple[str, str], Profile]
+    decades: Mapping[str, Mapping[int, Spread]]
 
 
 PROFILE_BINS = 20

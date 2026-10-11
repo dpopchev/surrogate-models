@@ -23,8 +23,8 @@ from shared.design import TargetForm
 class Scorecard:
     """The spread of the relative errors per zone and per decade of D."""
 
-    zones: dict[str, Spread]
-    decades: dict[int, Spread]
+    zones: Mapping[str, Spread]
+    decades: Mapping[int, Spread]
 
 
 # --- pure functions ---------------------------------------------------------------------------

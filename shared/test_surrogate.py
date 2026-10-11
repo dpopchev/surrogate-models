@@ -13,6 +13,7 @@ from skorch.dataset import Dataset
 from skorch.utils import Ansi
 from torch import nn
 
+from shared.config import AlgorithmsSection
 from shared.harness import FitRows
 from shared.surrogate import (
     MLP,
@@ -26,6 +27,7 @@ from shared.surrogate import (
     make_estimator,
     make_mean_reference,
     make_nearest_reference,
+    make_training,
     mare,
     mare_in_d,
     network_fitter,
@@ -34,6 +36,26 @@ from shared.surrogate import (
     sklearn_fitter,
     stop_window,
 )
+
+
+@pytest.mark.edge
+def test_make_training_carries_every_network_field_of_the_section() -> None:
+    section = AlgorithmsSection(
+        width=7,
+        depth=2,
+        activation="gelu",
+        loss="huber",
+        lr=0.5,
+        max_epochs=9,
+        batch_size=4,
+        patience=3,
+        valid_fraction=0.25,
+        seed=11,
+        log_level="DEBUG",
+        threads=2,
+        workers=3,
+    )
+    assert make_training(section) == Training(7, 2, "gelu", "huber", 0.5, 9, 4, 3, 0.25, 11)
 
 
 @pytest.mark.model

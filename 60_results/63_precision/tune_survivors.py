@@ -69,7 +69,7 @@ from shared.plots import SYMBOLS, PlotStyle, apply_style, colormap, figure_size
 from shared.runs import LedgerEntry, RunMetadata, Setting
 from shared.scorecard import significant_figures
 from shared.search import KNOTS, SPACES, Family, Space, search, space_of
-from shared.surrogate import Training
+from shared.surrogate import Training, make_training
 from shared.trials import open_study
 from shared.workers import run_jobs
 
@@ -613,7 +613,7 @@ def main(
         assert path.is_file(), f"input not found: {path}"
     config = config or load_config()
     settings = config.methodology.algorithms
-    training = Training(**settings.model_dump(exclude={"log_level", "threads", "workers"}))
+    training = make_training(settings)
     tables = {
         NEUTRON_STARS.dataset: pd.read_parquet(args.ns),
         BLACK_HOLES.dataset: pd.read_parquet(args.bh),

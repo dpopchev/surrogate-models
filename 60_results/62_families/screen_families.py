@@ -80,7 +80,7 @@ from shared.plots import (
 from shared.runs import RunMetadata, Setting, entry_from_json
 from shared.scorecard import relative_errors, significant_figures
 from shared.search import Unit
-from shared.surrogate import Training
+from shared.surrogate import Training, make_training
 from shared.workers import run_jobs
 
 logger = logging.getLogger(__name__)
@@ -702,7 +702,7 @@ def main(
     assert len(args.keeps) == len(args.budgets) - 1, "one keep per round after the first"
     config = config or load_config()
     settings = config.methodology.algorithms
-    training = Training(**settings.model_dump(exclude={"log_level", "threads", "workers"}))
+    training = make_training(settings)
     tables = {
         NEUTRON_STARS.dataset: pd.read_parquet(args.ns),
         BLACK_HOLES.dataset: pd.read_parquet(args.bh),
