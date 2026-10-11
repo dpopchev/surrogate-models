@@ -41,6 +41,9 @@
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
 - 2026-10-10 E-010: E-010 before E-011, W-110 (module order) and W-115 (style presets) kept, the standalone W-079, W-091, W-096, W-095, W-105 adopted (developer, 2026-10-10)
 - 2026-10-10 E-011: the picks live in paper.toml per figure and table (E-003 d1), W-102 and W-104 adopted (developer, 2026-10-10)
+- 2026-10-11 E-010: the developer approves every E-010 work item to land on make check and the asset hashes, and the E-010 order as planned stands as the re-aim answer; [landing] approver = agent until E-010 closes
+- 2026-10-11 W-091: criterion amended (developer, 2026-10-11): the screens' toy inputs live once in 60_results/conftest.py, not under shared/
 
 ## Deviations
 - 2026-10-11 E-010: W-091 gains T-282, the ledger entry writer and reader written once (developer, 2026-10-11)
+- 2026-10-11 E-010: W-091's criterion amended: the screens' toy inputs move to 60_results/conftest.py (developer, 2026-10-11)
