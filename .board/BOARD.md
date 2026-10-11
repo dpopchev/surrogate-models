@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-010 > W-079   | blocked: 0 | todo roots: 5 | done: 283 | pruned: 19
+open path: E-010   | blocked: 0 | todo roots: 5 | done: 284 | pruned: 19
 
 ## Tree
 
@@ -44,7 +44,7 @@ E-009         [doing]    The paper follows the revised structure, and the releas
   W-060  issue  [done]     Title and outline bullets aligned to the revised structure -- T-114 [done], T-115 [done], T-116 [done]
   W-100  spike  [todo]     What the paper claims once the search names its winners   (filed during T-206) -- T-233 [todo], T-234 [todo]
 E-010         [doing]    Every module meets the Python gates
-  W-079  issue  [doing]    Every test carries one category marker, registered and enforced   (filed during T-164) -- T-167 [done], T-168 [done], T-232 [done]
+  W-079  issue  [done]     Every test carries one category marker, registered and enforced   (filed during T-164) -- T-167 [done], T-168 [done], T-232 [done]
   W-091  issue  [todo]     The screens' shared shell and test inputs live once -- one helper module, one toy fixture   (filed during T-205) -- T-213 [todo], T-214 [todo], T-215 [todo]
   W-095  bug    [todo]     The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206) -- T-219 [todo]
   W-096  issue  [todo]     One Pair and one FitRows value through the fit path   (filed during T-206) -- T-220 [todo], T-221 [todo], T-222 [todo]
@@ -595,7 +595,7 @@ flowchart TD
   W100 --> T233["T-233 todo: List every claim of the title block, abstract, introduction, Section 3.4 and Section 7 against Section 5 -> Findings on W-100"]
   W100 --> T234["T-234 todo: Decide the thesis with the developer and the supervisors -> the W-100 spike decision"]
   E010["E-010 doing: Every module meets the Python gates"]
-  E010 --> W079["W-079 issue doing: Every test carries one category marker, registered and enforced"]
+  E010 --> W079["W-079 issue done: Every test carries one category marker, registered and enforced"]
   W079 --> T167["T-167 done: Mark every test module with its category -> the test_*.py files"]
   W079 --> T168["T-168 done: Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py"]
   W079 --> T232["T-232 done: Refresh mk/python.mk from add-python -> M= selection, test-integration, test-stats"]
@@ -676,8 +676,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E010,W079 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T167,T168,T232 done
+  class E006,E009,E010 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W079,T167,T168,T232 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W091,T213,T214,T215,W095,T219,W096,T220,T221,T222,W105,T242,W106,T243,T244,T245,T246,W107,T247,T248,T249,W108,T250,T251,T252,T253,W109,T254,T255,T256,W110,T257,T258,T259,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
