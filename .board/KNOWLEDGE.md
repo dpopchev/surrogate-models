@@ -42,6 +42,7 @@
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
 - 2026-10-10 E-011: the picks live in paper.toml per figure and table (E-003 d1), W-102 and W-104 adopted (developer, 2026-10-10)
+- 2026-10-11 E-011: W-122 before W-104 at W-102's re-aim, so make compile shows the picks before more are added (developer, 2026-10-11)
 
 ## Deviations
 - 2026-10-11 E-011: W-122 filed during T-237: make compile keeps a deselected figure in article.pdf (latexmk runs no pass); queued todo, the developer orders it at W-102's re-aim
