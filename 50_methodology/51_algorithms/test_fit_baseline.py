@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import cast
 
 import matplotlib
 import numpy as np
@@ -21,6 +22,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from fit_baseline import (
     SECTION,
+    ChargeMares,
     Fit,
     PairScores,
     Scored,
@@ -45,7 +47,7 @@ from shared.config import PaperConfig
 from shared.design import NEUTRON_STARS, Design
 from shared.harness import Timing
 from shared.plots import NOTATION_TEX, PlotStyle, apply_style
-from shared.runs import from_json
+from shared.runs import Epochs, from_json
 from shared.surrogate import Training, mare, mare_in_d
 
 
@@ -161,6 +163,12 @@ class TestScorePair:
     def test_score_pair_returns_the_network_fit(self, pair: tuple[PairScores, Fit]) -> None:
         assert pair[1].epochs >= 1
 
+    def test_epochs_of_a_fitted_network_is_a_record(self) -> None:
+        found: list[Epochs | None] = []
+        short = replace(SHORT, max_epochs=1)
+        score_pair(TOY, "toy", "mass", short, record=lambda *ran: found.append(ran[3]))
+        assert found[0] == Epochs(ran=1, best=1)
+
     def test_times_the_references_too(self, pair: tuple[PairScores, Fit]) -> None:
         assert isinstance(pair[0].scored[2].timing, Timing)
 
@@ -224,27 +232,30 @@ class TestChargeMares:
     pytestmark = pytest.mark.model
 
     @pytest.fixture
-    def mares(self) -> tuple[float, float]:
+    def mares(self) -> ChargeMares:
         mass = replace(SCORED, y_true=np.array([2.0, 4.0]), y_pred=np.array([2.2, 4.0]))
         charge = replace(SCORED, y_true=np.array([-1.0, -1.0]), y_pred=np.array([-1.0, -1.0]))
         return charge_mares(mass, charge)
 
     def test_with_the_true_mass_only_the_charge_model_errs(self, mares) -> None:
-        assert mares[0] == pytest.approx(0.0)
+        assert mares.true_m == pytest.approx(0.0)
 
     def test_with_the_predicted_mass_its_error_carries_into_d(self, mares) -> None:
-        assert mares[1] == pytest.approx(0.05)
+        assert mares.pred_m == pytest.approx(0.05)
+
+    def test_charge_mares_is_a_record(self, mares) -> None:
+        assert isinstance(mares, ChargeMares)
 
 
 class TestChargeNumbers:
     pytestmark = pytest.mark.view
 
     def test_names_the_true_mass_mare_per_dataset(self) -> None:
-        found = charge_numbers({"black_holes": (0.0123, 0.0456)})
+        found = charge_numbers({"black_holes": ChargeMares(0.0123, 0.0456)})
         assert found["baseBhChargeMareTrueM"] == "1.23\\times 10^{-2}"
 
     def test_names_the_predicted_mass_mare_per_dataset(self) -> None:
-        found = charge_numbers({"neutron_stars": (0.0123, 0.0456)})
+        found = charge_numbers({"neutron_stars": ChargeMares(0.0123, 0.0456)})
         assert found["baseNsChargeMarePredM"] == "4.56\\times 10^{-2}"
 
 
@@ -553,4 +564,5 @@ class TestFinalFit:
         assert fit.epochs == SHORT.max_epochs
 
     def test_names_the_epoch_of_the_lowest_valid_loss(self, fit: Fit) -> None:
-        assert fit.best_epoch == min(fit.history, key=lambda row: row["valid_loss"])["epoch"]
+        best = min(fit.history, key=lambda row: cast(float, row["valid_loss"]))
+        assert fit.best_epoch == best["epoch"]

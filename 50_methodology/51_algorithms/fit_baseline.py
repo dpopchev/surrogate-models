@@ -17,7 +17,7 @@ import logging
 import multiprocessing
 import sys
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -63,6 +63,7 @@ from shared.eda import CurveSpace, booktabs, curve_ids, render_macros, sci_tex
 from shared.harness import FitRows, Fitter, Predictor, Run, Timing, harness
 from shared.plots import SYMBOLS, PlotStyle, anchor_color, apply_style
 from shared.runs import (
+    Epochs,
     LedgerEntry,
     RunMetadata,
     RunRecord,
@@ -99,8 +100,17 @@ SECTION = "51_algorithms"
 # A score of predictions against the truth on the target's rows: mare, or mare_in_d for the
 # charge target, whose error is measured in D rebuilt with the true M (W-073).
 Metric = Callable[[np.ndarray, np.ndarray], float]
-# record(candidate, settings, run, (epochs, best epoch) or None): keeps one harness run.
-Recorder = Callable[[str, dict[str, Setting], Run, tuple[int, int] | None], None]
+# record(candidate, settings, run, its epochs or None): keeps one harness run.
+Recorder = Callable[[str, dict[str, Setting], Run, Epochs | None], None]
+
+
+@dataclass(frozen=True)
+class ChargeMares:
+    """The MARE of D rebuilt from the charge model's Y with the true M and with the mass
+    model's predicted M."""
+
+    true_m: float
+    pred_m: float
 
 
 @dataclass(frozen=True)
@@ -115,7 +125,7 @@ class Fit:
     seconds: float
     epochs: int
     best_epoch: int
-    history: tuple[dict[str, Any], ...]
+    history: tuple[Mapping[str, Setting], ...]
     x_test: np.ndarray
     groups_test: np.ndarray
 
@@ -156,7 +166,7 @@ def final_fit(design: Design, run: Run, estimator: Pipeline, score: Metric) -> F
         {key: value for key, value in row.items() if key != "batches"}
         for row in estimator.named_steps["net"].history
     )
-    _, best_epoch = _epochs(estimator)
+    best_epoch = _epochs(estimator).best
     return Fit(
         y_true=y_true,
         y_pred=y_pred,
@@ -182,18 +192,18 @@ def _counted(fitter: Fitter, after_fit: Callable[[], None]) -> Fitter:
     return fit
 
 
-def _epochs(network: Pipeline) -> tuple[int, int]:
+def _epochs(network: Pipeline) -> Epochs:
     """The epochs a fitted network ran and the epoch of its lowest validation loss."""
     history = network.named_steps["net"].history
     best = min(history, key=lambda row: row["valid_loss"])
-    return len(history), int(best["epoch"])
+    return Epochs(ran=len(history), best=int(best["epoch"]))
 
 
 def _recording(
     record: Recorder,
     name: str,
     settings: dict[str, Setting],
-    epochs: Callable[[], tuple[int, int] | None],
+    epochs: Callable[[], Epochs | None],
 ) -> Callable[[Run], None]:
     """The harness's record of one candidate: its run, with its name, settings and epochs."""
     return lambda run: record(name, settings, run, epochs())
@@ -343,22 +353,22 @@ def numbers(fit: Fit) -> dict[str, str]:
     }
 
 
-def charge_mares(mass: Fit, charge: Fit) -> tuple[float, float]:
+def charge_mares(mass: Fit, charge: Fit) -> ChargeMares:
     """The MARE of D rebuilt from the charge model's Y with the true M, and with the mass
     model's predicted M; both fits are of one dataset, on the same test rows in the same order."""
     d_true = rebuild_charge(charge.y_true, mass.y_true)
     with_true_m = rebuild_charge(charge.y_pred, mass.y_true)
     with_pred_m = rebuild_charge(charge.y_pred, mass.y_pred)
-    return mare(d_true, with_true_m), mare(d_true, with_pred_m)
+    return ChargeMares(mare(d_true, with_true_m), mare(d_true, with_pred_m))
 
 
-def charge_numbers(mares: dict[str, tuple[float, float]]) -> dict[str, str]:
+def charge_numbers(mares: Mapping[str, ChargeMares]) -> dict[str, str]:
     """The \\base<Ns|Bh>ChargeMareTrueM and ...MarePredM macros, keyed by dataset."""
     found = {}
-    for dataset, (true_m, pred_m) in mares.items():
+    for dataset, found_mares in mares.items():
         tag = DATASET_TEX[dataset].capitalize()
-        found[f"base{tag}ChargeMareTrueM"] = sci_tex(true_m)
-        found[f"base{tag}ChargeMarePredM"] = sci_tex(pred_m)
+        found[f"base{tag}ChargeMareTrueM"] = sci_tex(found_mares.true_m)
+        found[f"base{tag}ChargeMarePredM"] = sci_tex(found_mares.pred_m)
     return found
 
 
@@ -707,7 +717,7 @@ def _ledger_writer(
     id per entry, then handing the entry to on_entry (the trial is told it)."""
 
     def record(
-        candidate: str, settings: dict[str, Setting], ran: Run, epochs: tuple[int, int] | None
+        candidate: str, settings: dict[str, Setting], ran: Run, epochs: Epochs | None
     ) -> None:
         meta = RunMetadata(
             id=new_id(),
@@ -719,8 +729,8 @@ def _ledger_writer(
             commit=run.batch.commit,
             dirty=run.batch.dirty,
             started=run.started,
-            epochs=None if epochs is None else epochs[0],
-            best_epoch=None if epochs is None else epochs[1],
+            epochs=None if epochs is None else epochs.ran,
+            best_epoch=None if epochs is None else epochs.best,
         )
         on_entry(write_entry(run.batch.ledger, ran, meta))
 
@@ -732,7 +742,7 @@ def _write_section(
     pairs: list[PairScores],
     ns_mass: Fit,
     config: PaperConfig,
-    mares: dict[str, tuple[float, float]],
+    mares: Mapping[str, ChargeMares],
 ) -> None:
     """Empty the section's asset folder, then write the baseline table, the NS mass numbers
     with the charge MAREs of each dataset, and the NS mass parity figure."""

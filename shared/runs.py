@@ -41,6 +41,14 @@ Setting = str | int | float | bool | None
 
 
 @dataclass(frozen=True)
+class Epochs:
+    """The epochs a fitted network ran and the epoch of its lowest validation loss."""
+
+    ran: int
+    best: int
+
+
+@dataclass(frozen=True)
 class RunMetadata:
     """What a harness Run does not know about itself: its ledger id (a uuid7, made by the
     shell, so ids sort by creation time), the batch
