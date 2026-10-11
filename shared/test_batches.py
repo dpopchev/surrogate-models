@@ -37,8 +37,16 @@ ROWS = np.zeros((3, 2))
 
 
 def slow(x_fit, y_fit, x_valid, y_valid, seed):
-    """A toy fitter that takes a second."""
-    time.sleep(1.0)
+    """A toy fitter that computes for a second of CPU time."""
+    started = time.process_time()
+    while time.process_time() - started < 1.0:
+        pass
+    return lambda x: np.zeros(len(x))
+
+
+def idle(x_fit, y_fit, x_valid, y_valid, seed):
+    """A toy fitter that waits 0.3 s without computing, as a fit does through a suspend."""
+    time.sleep(0.3)
     return lambda x: np.zeros(len(x))
 
 
@@ -101,6 +109,12 @@ def test_the_progress_tail_tells_the_elapsed_and_the_time_left() -> None:
 def test_a_fit_past_its_wall_is_stopped() -> None:
     with pytest.raises(WallError):
         wall(slow, seconds=0.05)(ROWS, ROWS[:, 0], ROWS, ROWS[:, 0], 0)
+
+
+@pytest.mark.model
+def test_a_fit_that_waits_past_its_wall_without_computing_is_not_stopped() -> None:
+    predict = wall(idle, seconds=0.1)(ROWS, ROWS[:, 0], ROWS, ROWS[:, 0], 0)
+    assert (predict(ROWS) == 0).all()
 
 
 @pytest.mark.model

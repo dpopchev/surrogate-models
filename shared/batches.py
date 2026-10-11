@@ -148,9 +148,10 @@ def utc_now() -> datetime:
 
 
 def wall(fitter: Fitter, seconds: float) -> Fitter:
-    """The fitter, each of its fits stopped by WallError once it runs past `seconds`: a real
-    timer's signal, so it runs in a process's main thread, as a worker's job does, and it stops
-    a fit when the interpreter next runs, not inside one long library call."""
+    """The fitter, each of its fits stopped by WallError once it computes past `seconds` of the
+    process's CPU time: a wait or a suspend is not charged, and a fit pinned to one thread is
+    charged its compute. A timer's signal, so it runs in a process's main thread, as a worker's
+    job does, and it stops a fit when the interpreter next runs, not inside one library call."""
 
     def stop(signum: int, frame: object) -> None:
         raise WallError(f"past {seconds / 60:g} min")
@@ -158,20 +159,20 @@ def wall(fitter: Fitter, seconds: float) -> Fitter:
     def fit(
         x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
     ) -> Predictor:
-        previous = signal.signal(signal.SIGALRM, stop)
-        signal.setitimer(signal.ITIMER_REAL, seconds)
+        previous = signal.signal(signal.SIGPROF, stop)
+        signal.setitimer(signal.ITIMER_PROF, seconds)
         try:
             return fitter(x_fit, y_fit, x_valid, y_valid, seed)
         finally:
-            signal.setitimer(signal.ITIMER_REAL, 0)
-            signal.signal(signal.SIGALRM, previous)
+            signal.setitimer(signal.ITIMER_PROF, 0)
+            signal.signal(signal.SIGPROF, previous)
 
     return fit
 
 
 def walled(fitter: Fitter, seconds: float) -> Fitter:
-    """The fitter behind its wall: a fit past `seconds` predicts nan, and so does every later fit
-    of the same fitter, so a walled trial scores nan (failed) without waiting again."""
+    """The fitter behind its wall: a fit past `seconds` of compute predicts nan, and so does every
+    later fit of the same fitter, so a walled trial scores nan (failed) without waiting again."""
     timed = wall(fitter, seconds)
     met = False
 
