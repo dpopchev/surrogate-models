@@ -10,15 +10,11 @@ the time budget fails its trial -- the trial's wall -- and the job goes on.
 import argparse
 import json
 import logging
-import signal
-import subprocess
 import sys
 import time
-import uuid
-from collections.abc import Callable, Iterator, Mapping, Sequence
-from contextlib import contextmanager
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from functools import partial
 from pathlib import Path
 from typing import Any, assert_never
@@ -37,17 +33,31 @@ from optuna.storages.journal import JournalFileBackend
 from optuna.trial import TrialState
 
 from shared import surrogate
-from shared.batches import read_ledger, write_entry
+from shared.batches import (
+    Batch,
+    at_level,
+    git_commit,
+    git_dirty,
+    make_batch,
+    new_id,
+    outcomes_path,
+    progress_tail,
+    read_ledger,
+    utc_now,
+    walled,
+    write_checked,
+    write_entry,
+)
 from shared.candidates import FAMILIES, UNITS, Candidate, Knobs, tuned_fitter
 from shared.config import NOTATION_TEX, PaperConfig, load_config
 from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
 from shared.eda import CurveSpace, booktabs
-from shared.harness import Fitter, Predictor, Run, harness
+from shared.harness import Run, harness
 from shared.plots import SYMBOLS, PlotStyle, apply_style, colormap, figure_size
 from shared.runs import LedgerEntry, RunMetadata, Setting
 from shared.scorecard import significant_figures
 from shared.search import KNOTS, SPACES, Family, Space, search, space_of
-from shared.surrogate import Training, duration_text
+from shared.surrogate import Training
 from shared.trials import open_study
 from shared.workers import run_jobs
 
@@ -196,45 +206,6 @@ def run_job(
     )
     test = significant_figures(run.test.zones["test"].p95)
     return Tuned(job, dict(found.params), found.figures, test, found.trials, walls, entries[0])
-
-
-def walled(fitter: Fitter, seconds: float) -> Fitter:
-    """The fitter with a wall: a fit past `seconds` predicts nan, and so does every later fit
-    of the same fitter, so a walled trial scores nan (failed) without waiting again. The wall
-    is a real timer's signal, so it runs in a process's main thread, as a worker's job does."""
-
-    met = False
-
-    def stop(signum: int, frame: object) -> None:
-        raise _WallError
-
-    def fit(
-        x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
-    ) -> Predictor:
-        nonlocal met
-        if met:
-            return _nan
-        previous = signal.signal(signal.SIGALRM, stop)
-        signal.setitimer(signal.ITIMER_REAL, seconds)
-        try:
-            return fitter(x_fit, y_fit, x_valid, y_valid, seed)
-        except _WallError:
-            met = True
-            return _nan
-        finally:
-            signal.setitimer(signal.ITIMER_REAL, 0)
-            signal.signal(signal.SIGALRM, previous)
-
-    return fit
-
-
-class _WallError(Exception):
-    """A fit ran past its wall."""
-
-
-def _nan(x: np.ndarray) -> np.ndarray:
-    """The prediction of a walled fit: nan for every row."""
-    return np.full(len(x), np.nan)
 
 
 def screen_figures(entries: Sequence[LedgerEntry], batch: str) -> Mapping[Job, float]:
@@ -583,7 +554,6 @@ def job_line(outcome: Outcome, done: int, total: int, elapsed: float) -> str:
     """One finished job: its pair and candidate, its tuned figures or its wall, then how many
     jobs are done, the elapsed time and the time left."""
     job = outcome.job
-    left = elapsed / done * (total - done)
     match outcome:
         case Tuned():
             result = (
@@ -597,7 +567,7 @@ def job_line(outcome: Outcome, done: int, total: int, elapsed: float) -> str:
     return (
         f"job {done}/{total} done: {job.dataset} {job.target}, "
         f"{job.candidate.family} {job.candidate.unit}: {result}; "
-        f"elapsed {duration_text(elapsed)}, about {duration_text(left)} left"
+        f"{progress_tail(done, total, elapsed)}"
     )
 
 
@@ -606,16 +576,11 @@ def job_line(outcome: Outcome, done: int, total: int, elapsed: float) -> str:
 
 @dataclass(frozen=True)
 class Context:
-    """What every job of one tuning shares: the batch, where its ledger entries and its trials'
-    journal go, the code it ran from and when, the settings a trial does not search, the
-    trials per job and the wall of one fit."""
+    """What every job of one tuning shares: the batch (its ledger, its trials' journal, its code
+    and its start), the settings a trial does not search, the trials per job and the wall of one
+    fit."""
 
-    batch: str
-    ledger: Path
-    journal: Path
-    commit: str
-    dirty: bool
-    started: datetime
+    batch: Batch
     knobs: Knobs
     training: Training
     trials: int
@@ -657,7 +622,7 @@ def main(
         (spec.dataset, target): (design(tables[spec.dataset], split, spec, target), spec.space)
         for spec, target in PAIRS
     }
-    with _at_level(settings.log_level):
+    with at_level(settings.log_level):
         if args.recover is not None:
             batch = args.recover
             _recover(args, batch)
@@ -666,16 +631,17 @@ def main(
         else:
             batch = args.batch
             logger.info("rebuilding the tuning table from batch %s; nothing is fitted", batch)
-        outcomes = outcomes_from_json(_outcomes_path(args.state, batch).read_text())
+        saved = outcomes_path(args.state, SECTION, batch)
+        outcomes = outcomes_from_json(saved.read_text())
         screen: Mapping[Job, float] = {}
         if args.screen_batch is not None:
             screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
         path = out / f"{SECTION}_tab_tuning.tex"
-        _write_checked(path, tuning_table(outcomes, screen))
+        write_checked(path, tuning_table(outcomes, screen))
         logger.info("done: tuning table of batch %s, %d jobs -> %s", batch, len(outcomes), path)
-        points = _journal_points(_outcomes_path(args.state, batch).with_suffix(".journal"), batch)
+        points = _journal_points(saved.with_suffix(".journal"), batch)
         apply_style(config.plot, NOTATION_TEX.read_text())
         drawn = (
             (HISTORY, history_figure(points, config.plot), history_tex(args.minutes)),
@@ -684,7 +650,7 @@ def main(
         for name, figure, tex in drawn:
             figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
             plt.close(figure)
-            _write_checked(out / f"{name}.tex", tex)
+            write_checked(out / f"{name}.tex", tex)
             logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.png")
 
 
@@ -699,17 +665,18 @@ def _run_tuning(
 ) -> str:
     """Run every job of the tuning as a new batch on the workers, a line logged as each ends,
     and save the outcomes; return the batch id."""
-    commit, dirty, now = commit or _git_commit, dirty or _git_dirty, now or _utc_now
-    batch = _new_id()
-    saved = _outcomes_path(args.state, batch)
+    batch = make_batch(
+        args.state,
+        journal=lambda found: outcomes_path(args.state, SECTION, found).with_suffix(".journal"),
+        commit=commit or git_commit,
+        dirty=dirty or git_dirty,
+        now=now or utc_now,
+        new_id=new_id,
+    )
+    saved = outcomes_path(args.state, SECTION, batch.id)
     saved.parent.mkdir(parents=True, exist_ok=True)
     context = Context(
         batch=batch,
-        ledger=args.state / "ledger",
-        journal=saved.with_suffix(".journal"),
-        commit=commit(),
-        dirty=dirty(),
-        started=now(),
         # The tuning never thins a design, so no rows per curve.
         knobs=Knobs(args.k, args.neighbours, args.knots, per_curve=0),
         training=training,
@@ -717,15 +684,15 @@ def _run_tuning(
         seconds=args.minutes * 60.0,
         log_level=log_level,
     )
-    context.ledger.mkdir(parents=True, exist_ok=True)
+    batch.ledger.mkdir(parents=True, exist_ok=True)
     found = jobs()
     logger.info(
         "tuning %d jobs, %d trials each, on %d workers, batch %s; journal %s",
         len(found),
         args.trials,
         args.workers,
-        batch,
-        context.journal,
+        batch.id,
+        batch.journal,
     )
     works = [
         partial(tune_job, Work(job, *designs[(job.dataset, job.target)], context)) for job in found
@@ -737,11 +704,11 @@ def _run_tuning(
         # Saved after every job, in job order, so a parent that dies leaves the finished ones.
         finished[index] = outcome
         logger.info(job_line(outcome, len(finished), len(works), time.monotonic() - started))
-        _write_checked(saved, outcomes_to_json([finished[i] for i in sorted(finished)]))
+        write_checked(saved, outcomes_to_json([finished[i] for i in sorted(finished)]))
 
     outcomes = run_jobs(works, args.workers, on_done=report)
-    _write_checked(saved, outcomes_to_json(outcomes))
-    return batch
+    write_checked(saved, outcomes_to_json(outcomes))
+    return batch.id
 
 
 def tune_job(work: Work) -> Outcome:
@@ -752,7 +719,8 @@ def tune_job(work: Work) -> Outcome:
     logging.getLogger(surrogate.__name__).setLevel(logging.WARNING)
     job, context = work.job, work.context
     candidate = job.candidate
-    study = open_study(study_name(context.batch, job), context.journal)
+    batch = context.batch
+    study = open_study(study_name(batch.id, job), batch.journal)
     study.sampler = optuna.samplers.TPESampler(seed=context.training.seed)
 
     def record(run: Run) -> str:
@@ -765,21 +733,21 @@ def tune_job(work: Work) -> Outcome:
             **best,
         }
         meta = RunMetadata(
-            id=_new_id(),
-            batch=context.batch,
+            id=new_id(),
+            batch=batch.id,
             dataset=job.dataset,
             target=job.target,
             candidate=candidate.family,
             settings=settings,
-            commit=context.commit,
-            dirty=context.dirty,
-            started=context.started,
+            commit=batch.commit,
+            dirty=batch.dirty,
+            started=batch.started,
             epochs=None,
             best_epoch=None,
         )
-        return write_entry(context.ledger, run, meta).meta.id
+        return write_entry(batch.ledger, run, meta).meta.id
 
-    with _at_level(context.log_level):
+    with at_level(context.log_level):
         return run_job(
             job,
             work.data,
@@ -810,7 +778,7 @@ def _journal_points(journal: Path, batch: str) -> tuple[TrialPoint, ...]:
 
 def _recover(args: argparse.Namespace, batch: str) -> None:
     """Rebuild the batch's outcomes file from its journal and the ledger; nothing is fitted."""
-    saved = _outcomes_path(args.state, batch)
+    saved = outcomes_path(args.state, SECTION, batch)
     journal = saved.with_suffix(".journal")
     assert journal.is_file(), f"no journal of batch {batch}: {journal}"
     storage = JournalStorage(JournalFileBackend(str(journal)))
@@ -820,19 +788,8 @@ def _recover(args: argparse.Namespace, batch: str) -> None:
         if name.startswith(f"{batch} ")
     }
     outcomes = recovered(batch, studies, read_ledger(args.state / "ledger"), args.minutes)
-    _write_checked(saved, outcomes_to_json(outcomes))
+    write_checked(saved, outcomes_to_json(outcomes))
     logger.info("recovered %d outcomes of batch %s -> %s", len(outcomes), batch, saved)
-
-
-def _outcomes_path(state: Path, batch: str) -> Path:
-    """Where a batch's outcomes are saved."""
-    return state / SECTION / f"{batch}.json"
-
-
-def _write_checked(path: Path, text: str) -> None:
-    """Write the text; it must read back unchanged."""
-    path.write_text(text)
-    assert path.read_text() == text, f"{path} does not read back"
 
 
 def _arguments(argv: list[str]) -> argparse.Namespace:
@@ -855,44 +812,6 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--screen-batch", help="the family screen's batch, for its figures")
     return parser.parse_args(argv)
-
-
-@contextmanager
-def _at_level(level: str) -> Iterator[None]:
-    """While the block runs, let the root logger pass records at level; then restore it."""
-    root = logging.getLogger()
-    previous = root.level
-    root.setLevel(level)
-    try:
-        yield
-    finally:
-        root.setLevel(previous)
-
-
-def _git_commit() -> str:
-    """The short hash of the checked-out commit."""
-    done = subprocess.run(
-        ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
-    )
-    return done.stdout.strip()
-
-
-def _git_dirty() -> bool:
-    """Whether the work tree holds uncommitted changes."""
-    done = subprocess.run(
-        ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
-    )
-    return bool(done.stdout.strip())
-
-
-def _new_id() -> str:
-    """A new time-sortable id (uuid7), for a batch or a ledger entry."""
-    return str(uuid.uuid7())
-
-
-def _utc_now() -> datetime:
-    """The current time in UTC."""
-    return datetime.now(UTC)
 
 
 if __name__ == "__main__":

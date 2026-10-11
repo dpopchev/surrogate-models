@@ -10,13 +10,10 @@ and the baseline MLP.
 
 import argparse
 import logging
-import subprocess
 import sys
-import uuid
-from collections.abc import Callable, Iterator, Sequence
-from contextlib import contextmanager
+from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from functools import partial
 from pathlib import Path
 from typing import Literal, assert_never
@@ -25,7 +22,18 @@ import numpy as np
 import pandas as pd
 from sklearn.pipeline import Pipeline
 
-from shared.batches import read_ledger, write_entry
+from shared.batches import (
+    Batch,
+    at_level,
+    git_commit,
+    git_dirty,
+    make_batch,
+    new_id,
+    read_ledger,
+    utc_now,
+    write_checked,
+    write_entry,
+)
 from shared.config import PaperConfig, load_config
 from shared.curvewise import curvewise_fitter
 from shared.design import (
@@ -334,7 +342,7 @@ def main(
     seeds = tuple(training.seed + i for i in range(args.seeds))
     jobs = len(plan(cells(), seeds))
     ledger = args.state / "ledger"
-    with _at_level(settings.log_level):
+    with at_level(settings.log_level):
         if args.batch is None:
             batch = _run_screen(args, config, training, seeds, commit, dirty, now)
         else:
@@ -356,7 +364,6 @@ def _run_screen(
     now: Callable[[], datetime] | None,
 ) -> str:
     """Run every job of the screen on the workers as trials of a new batch; return its id."""
-    commit, dirty, now = commit or _git_commit, dirty or _git_dirty, now or _utc_now
     settings = config.methodology.algorithms
     tables = {
         NEUTRON_STARS.dataset: pd.read_parquet(args.ns),
@@ -365,21 +372,24 @@ def _run_screen(
     split = pd.read_parquet(args.split)
     screened = cells()
     designs = {cell: design(tables[cell.dataset], split, cell.spec, cell.form) for cell in screened}
-    batch, ledger = _new_id(), args.state / "ledger"
-    ledger.mkdir(parents=True, exist_ok=True)
+    batch = make_batch(
+        args.state,
+        # Every batch of the screen is a study of the one journal make baseline also writes.
+        journal=lambda _: args.state / "optuna" / "journal.log",
+        commit=commit or git_commit,
+        dirty=dirty or git_dirty,
+        now=now or utc_now,
+        new_id=new_id,
+    )
+    batch.ledger.mkdir(parents=True, exist_ok=True)
     context = Context(
         batch=batch,
-        ledger=ledger,
-        journal=args.state / "optuna" / "journal.log",
-        commit=commit(),
-        dirty=dirty(),
-        started=now(),
         knobs=Knobs(args.k, args.neighbours, args.knots),
         training=training,
         log_level=settings.log_level,
     )
     # The batch's study is made once here; every job joins it as its trial runs.
-    open_study(batch, context.journal)
+    open_study(batch.id, batch.journal)
     jobs = [
         partial(screen_job, Work(job, designs[job.cell], context)) for job in plan(screened, seeds)
     ]
@@ -387,23 +397,18 @@ def _run_screen(
         "%d jobs on %d workers, batch %s; follow them with make dashboard",
         len(jobs),
         settings.workers,
-        batch,
+        batch.id,
     )
     run_jobs(jobs, settings.workers)
-    return batch
+    return batch.id
 
 
 @dataclass(frozen=True)
 class Context:
-    """What every job of one run shares: the batch, where its ledger entries and its study
-    journal go, the code it ran from and when, and the settings of its models."""
+    """What every job of one run shares: the batch (its ledger, its study journal, its code
+    and its start) and the settings of its models."""
 
-    batch: str
-    ledger: Path
-    journal: Path
-    commit: str
-    dirty: bool
-    started: datetime
+    batch: Batch
     knobs: Knobs
     training: Training
     log_level: str
@@ -423,7 +428,7 @@ def screen_job(work: Work) -> None:
     level nor the console handler of the process that made it."""
     if not logging.getLogger().handlers:
         logging.basicConfig(format="%(message)s")
-    with _at_level(work.context.log_level):
+    with at_level(work.context.log_level):
         _run_trial(work)
 
 
@@ -431,8 +436,8 @@ def _run_trial(work: Work) -> None:
     """Run one job as a trial of the batch's study: its ledger entry is written and told to the
     trial as the run ends; an MLP reports each epoch to the trial."""
     job, context = work.job, work.context
-    cell = job.cell
-    study = open_study(context.batch, context.journal)
+    cell, batch = job.cell, context.batch
+    study = open_study(batch.id, batch.journal)
     trial = study.ask()
     attributes = {
         "dataset": cell.dataset,
@@ -446,19 +451,19 @@ def _run_trial(work: Work) -> None:
     def record(settings: dict[str, Setting], ran: Run) -> None:
         """Write the run's ledger entry, then tell the trial."""
         meta = RunMetadata(
-            id=_new_id(),
-            batch=context.batch,
+            id=new_id(),
+            batch=batch.id,
             dataset=cell.dataset,
             target=cell.target,
             candidate=job.model,
             settings=settings,
-            commit=context.commit,
-            dirty=context.dirty,
-            started=context.started,
+            commit=batch.commit,
+            dirty=batch.dirty,
+            started=batch.started,
             epochs=None,
             best_epoch=None,
         )
-        tell_run(study, trial, write_entry(context.ledger, ran, meta))
+        tell_run(study, trial, write_entry(batch.ledger, ran, meta))
 
     built: list[Pipeline] = []
 
@@ -486,8 +491,7 @@ def _write_table(out: Path, table: str) -> Path:
     for stale in out.iterdir():
         stale.unlink()
     path = out / f"{SECTION}_tab_representation.tex"
-    path.write_text(table)
-    assert path.read_text() == table, f"{path} does not read back"
+    write_checked(path, table)
     return path
 
 
@@ -503,44 +507,6 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--seeds", type=int, required=True, help="MLP seeds from paper.toml's")
     parser.add_argument("--batch", help="fit nothing; rebuild the table from this recorded batch")
     return parser.parse_args(argv)
-
-
-@contextmanager
-def _at_level(level: str) -> Iterator[None]:
-    """While the block runs, let the root logger pass records at level; then restore it."""
-    root = logging.getLogger()
-    previous = root.level
-    root.setLevel(level)
-    try:
-        yield
-    finally:
-        root.setLevel(previous)
-
-
-def _git_commit() -> str:
-    """The short hash of the checked-out commit."""
-    done = subprocess.run(
-        ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
-    )
-    return done.stdout.strip()
-
-
-def _git_dirty() -> bool:
-    """Whether the work tree holds uncommitted changes."""
-    done = subprocess.run(
-        ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
-    )
-    return bool(done.stdout.strip())
-
-
-def _new_id() -> str:
-    """A new time-sortable id (uuid7), for a batch or a ledger entry."""
-    return str(uuid.uuid7())
-
-
-def _utc_now() -> datetime:
-    """The current time in UTC."""
-    return datetime.now(UTC)
 
 
 if __name__ == "__main__":

@@ -31,6 +31,7 @@ from screen_representation import (
     screen_job,
 )
 
+from shared.batches import Batch
 from shared.ceilings import Spread
 from shared.config import PaperConfig
 from shared.design import NEUTRON_STARS, Design, DesignSpec
@@ -240,13 +241,16 @@ def test_a_job_logs_its_done_line_at_the_runs_level_in_a_fresh_process(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     # A worker started by forkserver keeps the root logger at WARNING, as pytest leaves it.
-    context = Context(
-        batch="0190a000-0000-7000-8000-000000000000",
+    batch = Batch(
+        id="0190a000-0000-7000-8000-000000000000",
         ledger=tmp_path,
         journal=tmp_path / "journal.log",
         commit="abc1234",
         dirty=False,
         started=datetime(2026, 10, 8, 12, 0, 0, tzinfo=UTC),
+    )
+    context = Context(
+        batch=batch,
         knobs=KNOBS,
         training=SHORT,
         log_level="INFO",

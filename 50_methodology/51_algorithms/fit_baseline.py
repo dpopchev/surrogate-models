@@ -15,14 +15,12 @@ Run as `uv run python <this file> <ns.parquet> <bh.parquet> <split.parquet> <ass
 
 import logging
 import multiprocessing
-import subprocess
 import sys
 import time
-import uuid
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from functools import partial
 from pathlib import Path
 from typing import Any, assert_never
@@ -35,7 +33,17 @@ import torch
 from matplotlib.figure import Figure
 from sklearn.pipeline import Pipeline
 
-from shared.batches import write_entry
+from shared.batches import (
+    Batch,
+    at_level,
+    git_commit,
+    git_dirty,
+    make_batch,
+    new_id,
+    progress_tail,
+    utc_now,
+    write_entry,
+)
 from shared.ceilings import Spread
 from shared.config import NOTATION_TEX, AlgorithmsSection, PaperConfig, load_config
 from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
@@ -396,11 +404,7 @@ def end_banner(fit: Fit, training: Training, files: list[Path]) -> list[str]:
 
 def progress_line(done: int, total: int, elapsed: float) -> str:
     """How far a series of fits has come and, from the mean time per fit, how long is left."""
-    left = elapsed / done * (total - done)
-    return (
-        f"fit {done}/{total} done, elapsed {duration_text(elapsed)}, "
-        f"about {duration_text(left)} left"
-    )
+    return f"fit {done}/{total} done, {progress_tail(done, total, elapsed)}"
 
 
 def curve_names(table: pd.DataFrame, spec: DesignSpec) -> dict[int, str]:
@@ -468,7 +472,7 @@ def main(
     for path in (ns, bh, split_file):
         assert path.is_file(), f"input not found: {path}"
     config = config or load_config()
-    commit, dirty, now = commit or _git_commit, dirty or _git_dirty, now or _utc_now
+    now = now or utc_now
     settings = config.methodology.algorithms
     apply_style(config.plot, NOTATION_TEX.read_text())
     torch.set_num_threads(settings.threads)
@@ -480,12 +484,17 @@ def main(
     ]
     total = sum(len(set(data.fold[data.fold >= 0].tolist())) + 1 for _, _, data in designs)
     first = time.time()
-    head, tail = commit(), dirty()
-    batch, ledger = _new_id(), Path(argv[4]) / "ledger"
-    journal = Path(argv[4]) / "optuna" / "journal.log"
-    ledger.mkdir(parents=True, exist_ok=True)
+    batch = make_batch(
+        Path(argv[4]),
+        journal=lambda _: Path(argv[4]) / "optuna" / "journal.log",
+        commit=commit or git_commit,
+        dirty=dirty or git_dirty,
+        now=now,
+        new_id=new_id,
+    )
+    batch.ledger.mkdir(parents=True, exist_ok=True)
     # The batch's study is made once here; every job joins it as its trials run.
-    open_study(batch, journal)
+    open_study(batch.id, batch.journal)
     planned: list[tuple[_Pair, _Run]] = []
     with multiprocessing.Manager() as manager:
         progress = _Progress(manager.Value("i", 0), manager.Lock(), total, first)
@@ -499,13 +508,13 @@ def main(
             latest.unlink(missing_ok=True)
             latest.symlink_to(Path(folder.name) / "train.log")
             pair = _Pair(spec, target, data, tables[spec.dataset])
-            run = _Run(folder, out, started, head, tail, batch, ledger, journal)
+            run = _Run(folder, out, started, batch)
             planned.append((pair, run))
             jobs += [
                 partial(_score_job, _Job(pair, run, name, training, settings, progress))
                 for name in CANDIDATES
             ]
-        with _at_level(settings.log_level):
+        with at_level(settings.log_level):
             logger.info(
                 "%d jobs on %d workers; follow them with make dashboard",
                 len(jobs),
@@ -547,17 +556,13 @@ class _Pair:
 
 @dataclass(frozen=True)
 class _Run:
-    """Where and from what one pair's run is recorded; batch names the make baseline run it
-    belongs to, ledger the folder its ledger entries go to."""
+    """Where and from what one pair's run is recorded: its folder, the section's asset folder,
+    its own start, and the make baseline batch it belongs to (its ledger, journal and code)."""
 
     folder: Path
     out: Path
     started: datetime
-    commit: str
-    dirty: bool
-    batch: str
-    ledger: Path
-    journal: Path
+    batch: Batch
 
 
 @dataclass(frozen=True)
@@ -606,7 +611,7 @@ def _score_job(job: _Job) -> tuple[Scored, Fit | None]:
     reports each epoch to the trial and leaves the pair's run record and diagnostics."""
     pair, run = job.pair, job.run
     with _logging_into(run.folder / "train.log", job.settings.log_level):
-        study = open_study(run.batch, run.journal)
+        study = open_study(run.batch.id, run.batch.journal)
         trial = ask_trial(study, pair.spec.dataset, pair.target, job.candidate)
         record = _ledger_writer(pair, run, lambda entry: tell_run(study, trial, entry))
         if job.candidate != "MLP":
@@ -632,7 +637,7 @@ def _score_mlp(
     """Score the MLP on one pair, its log lines going to the run's train.log; leave its run
     record and diagnostics in the run's folder."""
     pair, run, training = job.pair, job.run, job.training
-    if run.dirty:
+    if run.batch.dirty:
         logger.info("the code holds uncommitted changes: run.json marks this run dirty")
     data, train = pair.data, ~pair.data.test
     rows = (int(train.sum()), int(data.test.sum()))
@@ -656,8 +661,8 @@ def _score_mlp(
         dataset=pair.spec.dataset,
         target=pair.target,
         training=training,
-        commit=run.commit,
-        dirty=run.dirty,
+        commit=run.batch.commit,
+        dirty=run.batch.dirty,
         started=run.started,
         seconds=fit.seconds,
         epochs=fit.epochs,
@@ -688,19 +693,19 @@ def _ledger_writer(
         candidate: str, settings: dict[str, Setting], ran: Run, epochs: tuple[int, int] | None
     ) -> None:
         meta = RunMetadata(
-            id=_new_id(),
-            batch=run.batch,
+            id=new_id(),
+            batch=run.batch.id,
             dataset=pair.spec.dataset,
             target=pair.target,
             candidate=candidate,
             settings=settings,
-            commit=run.commit,
-            dirty=run.dirty,
+            commit=run.batch.commit,
+            dirty=run.batch.dirty,
             started=run.started,
             epochs=None if epochs is None else epochs[0],
             best_epoch=None if epochs is None else epochs[1],
         )
-        on_entry(write_entry(run.ledger, ran, meta))
+        on_entry(write_entry(run.batch.ledger, ran, meta))
 
     return record
 
@@ -748,18 +753,6 @@ def write_diagnostics(
 
 
 @contextmanager
-def _at_level(level: str) -> Iterator[None]:
-    """While the block runs, let the root logger pass records at level; then restore it."""
-    root = logging.getLogger()
-    previous = root.level
-    root.setLevel(level)
-    try:
-        yield
-    finally:
-        root.setLevel(previous)
-
-
-@contextmanager
 def _logging_into(log: Path, level: str) -> Iterator[None]:
     """While the block runs, log at level to the console handlers and to the file log; then
     detach the file and restore the level, also when the block raises."""
@@ -775,32 +768,6 @@ def _logging_into(log: Path, level: str) -> Iterator[None]:
         root.removeHandler(handler)
         handler.close()
         root.setLevel(previous)
-
-
-def _git_commit() -> str:
-    """The short hash of the checked-out commit."""
-    done = subprocess.run(
-        ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
-    )
-    return done.stdout.strip()
-
-
-def _git_dirty() -> bool:
-    """Whether the work tree holds uncommitted changes (the query of 00_metadata/build_stamp.py)."""
-    done = subprocess.run(
-        ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
-    )
-    return bool(done.stdout.strip())
-
-
-def _new_id() -> str:
-    """A new time-sortable id (uuid7), for a batch or a ledger entry."""
-    return str(uuid.uuid7())
-
-
-def _utc_now() -> datetime:
-    """The current time in UTC."""
-    return datetime.now(UTC)
 
 
 if __name__ == "__main__":

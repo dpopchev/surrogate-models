@@ -32,7 +32,6 @@ from tune_survivors import (
     study_name,
     trial_points,
     tuning_table,
-    walled,
 )
 
 from shared.candidates import Candidate
@@ -295,21 +294,6 @@ def test_a_study_without_a_complete_trial_is_recovered_as_a_wall() -> None:
     study.tell(study.ask(), state=optuna.trial.TrialState.FAIL)
     found = recovered("b", {study_name("b", NS_MASS_RBF): study}, [], minutes=30.0)
     assert found == (Walled(NS_MASS_RBF, "all 1 trials past 30 min"),)
-
-
-@pytest.mark.model
-def test_a_fit_past_the_wall_predicts_nan() -> None:
-    predict = walled(slow, seconds=0.05)(TOY.X, TOY.y, TOY.X, TOY.y, 0)
-    assert np.isnan(predict(TOY.X)).all()
-
-
-@pytest.mark.model
-def test_a_fitter_past_its_wall_skips_its_later_fits() -> None:
-    fit = walled(slow, seconds=0.05)
-    fit(TOY.X, TOY.y, TOY.X, TOY.y, 0)
-    started = time.monotonic()
-    fit(TOY.X, TOY.y, TOY.X, TOY.y, 0)
-    assert time.monotonic() - started < 0.05
 
 
 NS_RBF = Job("neutron_stars", "mass", Candidate("local RBF", "curve-wise"))

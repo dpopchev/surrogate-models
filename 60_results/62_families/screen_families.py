@@ -12,15 +12,11 @@ budget. One line per finished job tells how far the screen is and how long is le
 import argparse
 import json
 import logging
-import signal
-import subprocess
 import sys
 import time
-import uuid
-from collections.abc import Callable, Iterator, Sequence
-from contextlib import contextmanager
+from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from functools import partial
 from pathlib import Path
 from typing import Any, assert_never
@@ -33,7 +29,21 @@ from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
 from shared import surrogate
-from shared.batches import write_entry
+from shared.batches import (
+    Batch,
+    WallError,
+    at_level,
+    git_commit,
+    git_dirty,
+    make_batch,
+    new_id,
+    outcomes_path,
+    progress_tail,
+    utc_now,
+    wall,
+    write_checked,
+    write_entry,
+)
 from shared.candidates import (
     FAMILIES,
     UNITS,
@@ -45,7 +55,7 @@ from shared.ceilings import profile
 from shared.config import NOTATION_TEX, PaperConfig, load_config
 from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
 from shared.eda import CurveSpace, booktabs
-from shared.harness import Fitter, Predictor, Run, harness
+from shared.harness import Fitter, Run, harness
 from shared.plots import (
     SYMBOLS,
     CoolCmap,
@@ -58,10 +68,7 @@ from shared.plots import (
 from shared.runs import RunMetadata, Setting, entry_from_json
 from shared.scorecard import relative_errors, significant_figures
 from shared.search import Unit
-from shared.surrogate import (
-    Training,
-    duration_text,
-)
+from shared.surrogate import Training
 from shared.workers import run_jobs
 
 logger = logging.getLogger(__name__)
@@ -167,10 +174,6 @@ class Trajectory:
     folds: tuple[float, ...]
     seconds: tuple[float, ...]
     walls: tuple[int, ...]
-
-
-class FitTimeoutError(Exception):
-    """A fit ran past its time budget."""
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -620,12 +623,12 @@ def run_job(
         (run,) = harness(
             thinned,
             job.target,
-            timed(fitter, seconds),
+            wall(fitter, seconds),
             [seed],
             valid_fraction,
             record=lambda ran: entries.append(record(ran)),
         )
-    except FitTimeoutError as stopped:
+    except WallError as stopped:
         return Wall(job, str(stopped))
     except MemoryError:
         return Wall(job, "out of memory")
@@ -634,33 +637,10 @@ def run_job(
     return Scored(job, folds, test, run.ripple, run.timing.fit, entries[0])
 
 
-def timed(fitter: Fitter, seconds: float) -> Fitter:
-    """The fitter, each of its fits stopped by FitTimeoutError once it runs past `seconds`: a real
-    timer's signal, so it runs in a process's main thread, as a worker's job does, and it stops
-    a fit when the interpreter next runs, not inside one long library call."""
-
-    def stop(signum: int, frame: object) -> None:
-        raise FitTimeoutError(f"past {seconds / 60:g} min")
-
-    def fit(
-        x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
-    ) -> Predictor:
-        previous = signal.signal(signal.SIGALRM, stop)
-        signal.setitimer(signal.ITIMER_REAL, seconds)
-        try:
-            return fitter(x_fit, y_fit, x_valid, y_valid, seed)
-        finally:
-            signal.setitimer(signal.ITIMER_REAL, 0)
-            signal.signal(signal.SIGALRM, previous)
-
-    return fit
-
-
 def job_line(outcome: Outcome, done: int, total: int, elapsed: float) -> str:
     """One finished job: its pair, candidate, rows and round, its fold and test figures or its
     wall, then how many of the round's jobs are done, the elapsed time and the time left."""
     job = outcome.job
-    left = elapsed / done * (total - done)
     match outcome:
         case Scored():
             result = f"folds {outcome.folds:.2f}, test {outcome.test:.2f} figures"
@@ -671,7 +651,7 @@ def job_line(outcome: Outcome, done: int, total: int, elapsed: float) -> str:
     return (
         f"job {done}/{total} of round {job.round + 1} done: {job.dataset} {job.target}, "
         f"{job.candidate.family} {job.candidate.unit}, {job.rows} rows: {result}; "
-        f"elapsed {duration_text(elapsed)}, about {duration_text(left)} left"
+        f"{progress_tail(done, total, elapsed)}"
     )
 
 
@@ -680,14 +660,10 @@ def job_line(outcome: Outcome, done: int, total: int, elapsed: float) -> str:
 
 @dataclass(frozen=True)
 class Context:
-    """What every job of one screen shares: the batch, where its ledger entries go, the code
-    it ran from and when, the families' settings and the budgets of one fit."""
+    """What every job of one screen shares: the batch (its ledger, its code and its start), the
+    families' settings and the budgets of one fit."""
 
-    batch: str
-    ledger: Path
-    commit: str
-    dirty: bool
-    started: datetime
+    batch: Batch
     knobs: Knobs
     training: Training
     seconds: float
@@ -731,18 +707,18 @@ def main(
         (spec.dataset, target): (design(tables[spec.dataset], split, spec, target), spec.space)
         for spec, target in PAIRS
     }
-    with _at_level(settings.log_level):
+    with at_level(settings.log_level):
         if args.batch is None:
             batch = _run_screen(args, designs, training, settings.log_level, commit, dirty, now)
         else:
             batch = args.batch
             logger.info("rebuilding the assets from batch %s; nothing is fitted", batch)
-        saved = _outcomes_path(args.state, batch)
+        saved = outcomes_path(args.state, SECTION, batch)
         outcomes = outcomes_from_json(saved.read_text())
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
         path = out / f"{SECTION}_tab_families.tex"
-        _write_checked(path, family_table(outcomes))
+        write_checked(path, family_table(outcomes))
         logger.info("done: family table of batch %s, %d outcomes -> %s", batch, len(outcomes), path)
         panels = _parity_panels(parity_picks(outcomes), designs, args.state / "ledger")
         apply_style(config.plot, NOTATION_TEX.read_text())
@@ -758,7 +734,7 @@ def main(
         for name, figure, tex in drawn:
             figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
             plt.close(figure)
-            _write_checked(out / f"{name}.tex", tex)
+            write_checked(out / f"{name}.tex", tex)
             logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.png")
 
 
@@ -805,22 +781,25 @@ def _run_screen(
 ) -> str:
     """Run every round of the screen as a new batch, saving the outcomes after each round;
     return the batch id."""
-    commit, dirty, now = commit or _git_commit, dirty or _git_dirty, now or _utc_now
-    batch = _new_id()
+    batch = make_batch(
+        args.state,
+        # The screen keeps no trial journal; the batch names where one would go.
+        journal=lambda found: outcomes_path(args.state, SECTION, found).with_suffix(".journal"),
+        commit=commit or git_commit,
+        dirty=dirty or git_dirty,
+        now=now or utc_now,
+        new_id=new_id,
+    )
     context = Context(
         batch=batch,
-        ledger=args.state / "ledger",
-        commit=commit(),
-        dirty=dirty(),
-        started=now(),
         knobs=Knobs(args.k, args.neighbours, args.knots, args.per_curve),
         training=training,
         seconds=args.minutes * 60.0,
         memory_bytes=args.memory_gb * 1e9,
         log_level=log_level,
     )
-    context.ledger.mkdir(parents=True, exist_ok=True)
-    saved = _outcomes_path(args.state, batch)
+    batch.ledger.mkdir(parents=True, exist_ok=True)
+    saved = outcomes_path(args.state, SECTION, batch.id)
     saved.parent.mkdir(parents=True, exist_ok=True)
     jobs = tuple(
         Job(spec.dataset, target, candidate, args.budgets[0], 0)
@@ -836,14 +815,14 @@ def _run_screen(
             len(jobs),
             args.budgets[round_],
             args.workers,
-            batch,
+            batch.id,
         )
         found = _run_round(jobs, designs, context, args.workers, saved, outcomes)
         outcomes += found
-        _write_checked(saved, outcomes_to_json(outcomes))
+        write_checked(saved, outcomes_to_json(outcomes))
         if round_ + 1 < len(args.budgets):
             jobs = next_jobs(found, args.budgets, args.keeps)
-    return batch
+    return batch.id
 
 
 def _run_round(
@@ -867,7 +846,7 @@ def _run_round(
         finished[index] = outcome
         logger.info(job_line(outcome, len(finished), len(works), time.monotonic() - started))
         kept = [*before, *(finished[i] for i in sorted(finished))]
-        _write_checked(saved, outcomes_to_json(kept))
+        write_checked(saved, outcomes_to_json(kept))
 
     return run_jobs(works, workers, on_done=report)
 
@@ -888,22 +867,23 @@ def screen_job(work: Work) -> Outcome:
             "round": job.round,
             **asdict(context.knobs),
         }
+        batch = context.batch
         meta = RunMetadata(
-            id=_new_id(),
-            batch=context.batch,
+            id=new_id(),
+            batch=batch.id,
             dataset=job.dataset,
             target=job.target,
             candidate=job.candidate.family,
             settings=settings,
-            commit=context.commit,
-            dirty=context.dirty,
-            started=context.started,
+            commit=batch.commit,
+            dirty=batch.dirty,
+            started=batch.started,
             epochs=None,
             best_epoch=None,
         )
-        return write_entry(context.ledger, run, meta).meta.id
+        return write_entry(batch.ledger, run, meta).meta.id
 
-    with _at_level(context.log_level):
+    with at_level(context.log_level):
         fitter = fitter_of(job.candidate, work.space, context.knobs, context.training)
         return run_job(
             job,
@@ -916,17 +896,6 @@ def screen_job(work: Work) -> Outcome:
             context.memory_bytes,
             record,
         )
-
-
-def _outcomes_path(state: Path, batch: str) -> Path:
-    """Where a batch's outcomes are saved."""
-    return state / SECTION / f"{batch}.json"
-
-
-def _write_checked(path: Path, text: str) -> None:
-    """Write the text; it must read back unchanged."""
-    path.write_text(text)
-    assert path.read_text() == text, f"{path} does not read back"
 
 
 def _arguments(argv: list[str]) -> argparse.Namespace:
@@ -946,44 +915,6 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--workers", type=int, required=True, help="fits at once")
     parser.add_argument("--batch", help="fit nothing; rebuild the assets from this saved batch")
     return parser.parse_args(argv)
-
-
-@contextmanager
-def _at_level(level: str) -> Iterator[None]:
-    """While the block runs, let the root logger pass records at level; then restore it."""
-    root = logging.getLogger()
-    previous = root.level
-    root.setLevel(level)
-    try:
-        yield
-    finally:
-        root.setLevel(previous)
-
-
-def _git_commit() -> str:
-    """The short hash of the checked-out commit."""
-    done = subprocess.run(
-        ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
-    )
-    return done.stdout.strip()
-
-
-def _git_dirty() -> bool:
-    """Whether the work tree holds uncommitted changes."""
-    done = subprocess.run(
-        ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
-    )
-    return bool(done.stdout.strip())
-
-
-def _new_id() -> str:
-    """A new time-sortable id (uuid7), for a batch or a ledger entry."""
-    return str(uuid.uuid7())
-
-
-def _utc_now() -> datetime:
-    """The current time in UTC."""
-    return datetime.now(UTC)
 
 
 if __name__ == "__main__":

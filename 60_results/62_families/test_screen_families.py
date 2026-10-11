@@ -11,7 +11,6 @@ import screen_families
 from screen_families import (
     SECTION,
     Candidate,
-    FitTimeoutError,
     Job,
     Panel,
     Scored,
@@ -34,7 +33,6 @@ from screen_families import (
     scaling_figure,
     survivors,
     thin,
-    timed,
     trajectories,
 )
 
@@ -146,12 +144,6 @@ def slow(x_fit, y_fit, x_valid, y_valid, seed):
     """A toy fitter that takes a second."""
     time.sleep(1.0)
     return lambda x: np.zeros(len(x))
-
-
-@pytest.mark.model
-def test_a_fit_past_its_time_budget_is_stopped() -> None:
-    with pytest.raises(FitTimeoutError):
-        timed(slow, seconds=0.05)(TOY.X, TOY.y, TOY.X, TOY.y, 0)
 
 
 # Twelve curves of ten rows, y = p + x: curves 10 and 11 are test.
