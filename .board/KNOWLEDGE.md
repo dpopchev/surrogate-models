@@ -26,7 +26,8 @@
 - 2026-10-08 W-073: standing: scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1), the nearest curve beats the MLP on the test curves of all four pairs; the MLP leads only on the NS folds -> no pair is won by the baseline supersedes: W-073#1, W-073#2
 - 2026-10-10 W-068: T-206: fact: batch 01a11d49, folds/test vs ceiling: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure
 - 2026-10-11 W-091: standing: --doctest-modules imports each conftest.py as conftest -> a per-folder conftest needs --ignore=conftest.py --ignore-glob=*/conftest.py supersedes: W-091#1
-- 2026-10-11 W-117: fact: local/assets-baseline.sha (50 files) held the NS numbers order of hash seed 1 (18f0cdf6cf75); fixed, seeds 1 and 2 both write c07c8ef01076 -> W-117 landing re-records the baseline supersedes: E-010#2
+- 2026-10-11 W-117: standing: every asset writer iterates in a fixed order -> local/assets-baseline.sha (50 files) is seed-independent since W-117 supersedes: W-117#1
+- 2026-10-11 W-118: fact: its steps pass on main 9e2c60a (T-290) -> prune as fixed? (developer)
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
