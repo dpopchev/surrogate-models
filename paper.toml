@@ -95,6 +95,9 @@ parity = "parity"            # parity: predicted against true | residual: predic
 errors = "scatter_profiles"  # scatter_profiles: a panel per pair and candidate, scatter and profiles
                              # profiles: the profiles alone, candidates overlaid, a panel per pair
                              # hexbin: the rows' density as hexagons, with the profiles
+scaling = "figures_and_seconds"  # figures_and_seconds: per pair the folds' figures and the fit seconds
+                                 # marker_size: a panel per pair, the seconds as marker size
+                                 # small_multiples: a panel per family
 
 # Section 4.1 -- the baseline network fit_baseline.py trains (E-005): a plain MLP, the control
 # arm of H2 (MSE, ReLU) and H3 (no skips). PAPER__METHODOLOGY__ALGORITHMS__MAX_EPOCHS=2 in the

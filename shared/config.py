@@ -168,6 +168,9 @@ FamiliesParityVariant = Literal["parity", "residual"]
 # scatter_profiles: a panel per pair and candidate, scatter and profiles; profiles: the
 # profiles only, the candidates overlaid, a panel per pair; hexbin: a density per panel (W-113).
 FamiliesErrorsVariant = Literal["scatter_profiles", "profiles", "hexbin"]
+# figures_and_seconds: per pair the folds' figures and the fit seconds; marker_size: a panel per
+# pair, the seconds as marker size; small_multiples: a panel per family (W-113).
+FamiliesScalingVariant = Literal["figures_and_seconds", "marker_size", "small_multiples"]
 
 
 class FamiliesVariants(BaseModel):
@@ -177,6 +180,7 @@ class FamiliesVariants(BaseModel):
 
     parity: FamiliesParityVariant = "parity"
     errors: FamiliesErrorsVariant = "scatter_profiles"
+    scaling: FamiliesScalingVariant = "figures_and_seconds"
 
 
 class FamiliesSection(BaseModel):

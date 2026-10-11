@@ -49,6 +49,7 @@ from shared.candidates import (
     FAMILIES,
     UNITS,
     Candidate,
+    Family,
     Knobs,
     Unit,
     fitter_of,
@@ -59,6 +60,7 @@ from shared.config import (
     FamiliesErrorsVariant,
     FamiliesFigure,
     FamiliesParityVariant,
+    FamiliesScalingVariant,
     PaperConfig,
     load_config,
 )
@@ -456,13 +458,113 @@ def error_figure(
     return figure
 
 
+def _scaling_legend(figure: Figure, palette: Mapping[Family, Any], wall: bool) -> None:
+    """The families by colour and the units by line style, and the wall cross if drawn, in one
+    row below the panels."""
+    handles = [
+        *(Line2D([], [], color=palette[family]) for family in FAMILIES),
+        Line2D([], [], color="black"),
+        Line2D([], [], color="black", linestyle="--"),
+    ]
+    labels = [*FAMILIES, *UNITS]
+    if wall:
+        handles.append(Line2D([], [], color="black", marker="x", linestyle=""))
+        labels.append("wall")
+    figure.legend(handles, labels, loc="outside lower center", ncols=5, fontsize="x-small")
+
+
+def _scaling_marker_size(paths: Sequence[Trajectory], style: PlotStyle) -> Figure:
+    """Per pair a panel: the folds' p95 significant figures against the training rows, a line
+    per candidate, its family by colour and its unit by line style, each round's marker as
+    large as the final fit took seconds (area proportional to log10 seconds)."""
+    pairs: list[tuple[str, Target]] = list(dict.fromkeys((p.dataset, p.target) for p in paths))
+    rows = (len(pairs) + 1) // 2
+    figure, grid = plt.subplots(
+        rows, 2, figsize=figure_size(style, rows, 0.5), layout="constrained", squeeze=False
+    )
+    palette = dict(zip(FAMILIES, sns.color_palette(style.palette, len(FAMILIES)), strict=True))
+    for axes, (dataset, target) in zip(grid.flat, pairs, strict=False):
+        for path in (p for p in paths if (p.dataset, p.target) == (dataset, target)):
+            color = palette[path.candidate.family]
+            dashes = "--" if path.candidate.unit == "curve-wise" else "-"
+            axes.plot(path.rows, path.folds, color=color, linestyle=dashes, linewidth=0.8)
+            sizes = 6.0 * (1.0 + np.log10(np.maximum(np.array(path.seconds), 1e-3) / 1e-3))
+            axes.scatter(path.rows, path.folds, s=sizes, color=color, zorder=3)
+        axes.set_xscale("log")
+        axes.set_title(f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}")
+        axes.set_xlabel("training rows")
+        axes.set_ylabel("folds' figures")
+    for axes in grid.flat[len(pairs) :]:
+        axes.remove()
+    _scaling_legend(figure, palette, wall=False)
+    return figure
+
+
+def _scaling_small_multiples(paths: Sequence[Trajectory], style: PlotStyle) -> Figure:
+    """Per family a panel, the axes shared: the folds' p95 significant figures against the
+    training rows, a line per pair and unit, the pair by colour and the unit by line style."""
+    families = [f for f in FAMILIES if any(p.candidate.family == f for p in paths)]
+    pairs: list[tuple[str, Target]] = list(dict.fromkeys((p.dataset, p.target) for p in paths))
+    columns = min(3, len(families))
+    rows = (len(families) + columns - 1) // columns
+    figure, grid = plt.subplots(
+        rows,
+        columns,
+        figsize=figure_size(style, rows, 0.4),
+        layout="constrained",
+        squeeze=False,
+        sharex=True,
+        sharey=True,
+    )
+    palette = dict(zip(pairs, sns.color_palette(style.palette, len(pairs)), strict=True))
+    for axes, family in zip(grid.flat, families, strict=False):
+        for path in (p for p in paths if p.candidate.family == family):
+            axes.plot(
+                path.rows,
+                path.folds,
+                color=palette[path.dataset, path.target],
+                linestyle="--" if path.candidate.unit == "curve-wise" else "-",
+                marker="o",
+                markersize=3,
+            )
+        axes.set_xscale("log")
+        axes.set_title(family, fontsize="small")
+    for axes in grid.flat[len(families) :]:
+        axes.remove()
+    for axes in grid[:, 0]:
+        axes.set_ylabel("folds' figures")
+    for axes in grid[-1]:
+        axes.set_xlabel("training rows")
+    handles = [
+        *(Line2D([], [], color=palette[pair]) for pair in pairs),
+        Line2D([], [], color="black"),
+        Line2D([], [], color="black", linestyle="--"),
+    ]
+    labels = [*(f"{DATASET_TEX[d]} {SYMBOLS[target_symbol(t)]}" for d, t in pairs), *UNITS]
+    figure.legend(handles, labels, loc="outside lower center", ncols=3, fontsize="x-small")
+    return figure
+
+
 def scaling_figure(
-    paths: Sequence[Trajectory], style: PlotStyle, wall_seconds: float = 1800.0
+    paths: Sequence[Trajectory],
+    style: PlotStyle,
+    wall_seconds: float = 1800.0,
+    variant: FamiliesScalingVariant = "figures_and_seconds",
 ) -> Figure:
     """Per pair a row: the folds' p95 significant figures and the final fit's seconds against
     the training rows on a log scale, a line per candidate up to the round it left, its family
     by color and its unit by line style (curve-wise dashed), a wall a cross at its rows and at
-    wall_seconds, the time budget of a fit."""
+    wall_seconds, the time budget of a fit (figures_and_seconds); or the figures alone with the
+    seconds as marker size (marker_size), or a panel per family (small_multiples)."""
+    match variant:
+        case "figures_and_seconds":
+            pass
+        case "marker_size":
+            return _scaling_marker_size(paths, style)
+        case "small_multiples":
+            return _scaling_small_multiples(paths, style)
+        case _:
+            assert_never(variant)
     pairs: list[tuple[str, Target]] = list(dict.fromkeys((p.dataset, p.target) for p in paths))
     figure, grid = plt.subplots(
         len(pairs),
@@ -496,14 +598,7 @@ def scaling_figure(
             axes.set_xscale("log")
     for axes in grid[-1]:
         axes.set_xlabel("training rows")
-    handles = [
-        *(Line2D([], [], color=palette[family]) for family in FAMILIES),
-        Line2D([], [], color="black"),
-        Line2D([], [], color="black", linestyle="--"),
-        Line2D([], [], color="black", marker="x", linestyle=""),
-    ]
-    labels = [*FAMILIES, *UNITS, "wall"]
-    figure.legend(handles, labels, loc="outside lower center", ncols=5, fontsize="x-small")
+    _scaling_legend(figure, palette, wall=True)
     return figure
 
 
@@ -589,17 +684,45 @@ def errors_tex(variant: FamiliesErrorsVariant = "scatter_profiles") -> str:
     )
 
 
-def scaling_tex(minutes: float, memory_gb: float) -> str:
+def _scaling_caption(minutes: float, memory_gb: float, variant: FamiliesScalingVariant) -> str:
+    """The caption of the scaling figure in one variant, its budgets stated."""
+    match variant:
+        case "figures_and_seconds":
+            return (
+                "Successive halving over the training rows, per dataset and target: the "
+                "significant figures kept on the folds (left) and the seconds of the final fit "
+                "at one thread (right) against the training rows, a line per candidate up to the "
+                "round it was eliminated in, curve-wise dashed. A cross is a wall, a fit past "
+                f"${minutes:g}$ minutes or ${memory_gb:g}$\\,GB at those rows, drawn at the "
+                "time budget."
+            )
+        case "marker_size":
+            return (
+                "Successive halving over the training rows, a panel per dataset and target: the "
+                "significant figures kept on the folds against the training rows, a line per "
+                "candidate up to the round it was eliminated in, curve-wise dashed, each marker "
+                "as large as the final fit took seconds at one thread. A candidate that met its "
+                f"wall, ${minutes:g}$ minutes or ${memory_gb:g}$\\,GB, ends a round earlier."
+            )
+        case "small_multiples":
+            return (
+                "Successive halving over the training rows, a panel per model family: the "
+                "significant figures kept on the folds against the training rows, a line per "
+                "dataset and target up to the round the family was eliminated in, curve-wise "
+                f"dashed. A wall, ${minutes:g}$ minutes or ${memory_gb:g}$\\,GB, ends a line."
+            )
+        case _:
+            assert_never(variant)
+
+
+def scaling_tex(
+    minutes: float, memory_gb: float, variant: FamiliesScalingVariant = "figures_and_seconds"
+) -> str:
     """The figure environment of the scaling figure, its budgets stated in the caption."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
         f"\\includegraphics[width=\\textwidth]{{{SCALING}}}\n"
-        "\\caption{Successive halving over the training rows, per dataset and target: the "
-        "significant figures kept on the folds (left) and the seconds of the final fit at one "
-        "thread (right) against the training rows, a line per candidate up to the round it "
-        "was eliminated in, curve-wise dashed. A cross is a wall, a fit past "
-        f"${minutes:g}$ minutes or ${memory_gb:g}$\\,GB at those rows, drawn at the time "
-        "budget.}\n"
+        f"\\caption{{{_scaling_caption(minutes, memory_gb, variant)}}}\n"
         "\\label{fig:families-scaling}\n\\end{figure}\n"
     )
 
@@ -836,7 +959,8 @@ def main(
         if args.variants is not None:
             apply_style(config.plot, NOTATION_TEX.read_text())
             panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
-            _write_variants(args.variants / SECTION, panels, config.plot)
+            paths = trajectories(outcomes)
+            _write_variants(args.variants / SECTION, panels, paths, config.plot, args.minutes)
             return
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
@@ -862,8 +986,10 @@ def main(
             ),
             "scaling": lambda: (
                 SCALING,
-                scaling_figure(trajectories(outcomes), config.plot, args.minutes * 60.0),
-                scaling_tex(args.minutes, args.memory_gb),
+                scaling_figure(
+                    trajectories(outcomes), config.plot, args.minutes * 60.0, picks.scaling
+                ),
+                scaling_tex(args.minutes, args.memory_gb, picks.scaling),
             ),
         }
         for selected in config.results.families.figures:
@@ -1062,9 +1188,15 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     return args
 
 
-def _write_variants(out: Path, panels: Sequence[Panel], style: PlotStyle) -> None:
-    """Every variant of the parity and error figures as <stem>_<variant>.png in out and per
-    figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
+def _write_variants(
+    out: Path,
+    panels: Sequence[Panel],
+    paths: Sequence[Trajectory],
+    style: PlotStyle,
+    minutes: float,
+) -> None:
+    """Every variant of the parity, error and scaling figures as <stem>_<variant>.png in out
+    and per figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
     out.mkdir(parents=True, exist_ok=True)
     sheets: dict[str, dict[str, Callable[[], Figure]]] = {
         PARITY: {
@@ -1072,6 +1204,10 @@ def _write_variants(out: Path, panels: Sequence[Panel], style: PlotStyle) -> Non
         },
         ERRORS: {
             v: partial(error_figure, panels, style, v) for v in get_args(FamiliesErrorsVariant)
+        },
+        SCALING: {
+            v: partial(scaling_figure, paths, style, minutes * 60.0, v)
+            for v in get_args(FamiliesScalingVariant)
         },
     }
     for stem, drawers in sheets.items():

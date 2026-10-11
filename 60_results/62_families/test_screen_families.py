@@ -2,6 +2,7 @@
 
 import time
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -475,6 +476,19 @@ TOY_PATHS = [
 def test_the_scaling_figure_has_a_figures_and_a_seconds_panel_per_pair() -> None:
     figure = scaling_figure(TOY_PATHS, PlotStyle(usetex=False))
     assert len([axes for axes in figure.axes if axes.lines]) == 4 * 2
+
+
+@pytest.mark.view
+def test_scaling_figure_marker_size_has_one_panel_per_pair() -> None:
+    figure = scaling_figure(TOY_PATHS, PlotStyle(usetex=False), variant="marker_size")
+    assert len(figure.axes) == 4
+
+
+@pytest.mark.view
+def test_scaling_figure_small_multiples_has_one_panel_per_family() -> None:
+    paths = [replace(toy_path("neutron_stars", "mass"), candidate=c) for c in (KNN, MLP, GPR)]
+    figure = scaling_figure(paths, PlotStyle(usetex=False), variant="small_multiples")
+    assert len(figure.axes) == 3
 
 
 @pytest.mark.view
