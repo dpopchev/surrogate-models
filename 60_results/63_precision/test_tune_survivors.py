@@ -2,13 +2,13 @@
 
 import shutil
 import time
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 
 import numpy as np
 import optuna
-import pandas as pd
 import pytest
 import tune_survivors
 from optuna.distributions import BaseDistribution, CategoricalDistribution, IntDistribution
@@ -42,6 +42,9 @@ from shared.harness import Run, Timing
 from shared.plots import PlotStyle
 from shared.runs import RunMetadata, entry_from_run
 from shared.scorecard import Scorecard
+
+# The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
+ToyInputs = Callable[[Path], tuple[Path, Path, Path]]
 
 # Eight curves of five rows, y = 1 + 0.1 p + x: curves 6 and 7 are test; the six training
 # curves fall into two frozen folds.
@@ -157,39 +160,6 @@ def test_a_saved_batch_reads_back_as_its_outcomes() -> None:
     assert outcomes_from_json(outcomes_to_json(outcomes)) == outcomes
 
 
-CURVES = range(1, 11)
-TOY_LABELS = ["test", "test", *["fold0"] * 4, *["fold1"] * 4]
-
-
-def toy_inputs(folder: Path) -> tuple[Path, Path, Path]:
-    """Tiny NS- and BH-shaped tables and one split for both: two curves of each in test, four in
-    each of two folds."""
-    ns_rows = [
-        {"beta": float(i), "lambda": float(i * i), "rho_c": 10.0 ** (1 + j / 7)}
-        | {"M": 1.0 + 0.1 * j + 0.01 * i, "D": 0.1 + 0.01 * j}
-        for i in CURVES
-        for j in range(8)
-    ]
-    bh_rows = [
-        {"r_h": 4.0 + j, "beta": float(i), "M": 2.0 + 0.5 * j + 0.01 * i, "D": 0.3 - 0.02 * j}
-        for i in CURVES
-        for j in range(8)
-    ]
-    split = [
-        {"dataset": "neutron_stars", "beta": float(i), "lambda": float(i * i)}
-        | {"label": label, "ablation": False}
-        for i, label in zip(CURVES, TOY_LABELS, strict=True)
-    ] + [
-        {"dataset": "black_holes", "beta": float(i), "label": label, "ablation": False}
-        for i, label in zip(CURVES, TOY_LABELS, strict=True)
-    ]
-    ns, bh, split_file = folder / "ns.parquet", folder / "bh.parquet", folder / "split.parquet"
-    pd.DataFrame(ns_rows).to_parquet(ns)
-    pd.DataFrame(bh_rows).to_parquet(bh)
-    pd.DataFrame(split).to_parquet(split_file)
-    return ns, bh, split_file
-
-
 TOY_CONFIG = PaperConfig.model_validate(
     {
         "plot": {"usetex": False},
@@ -203,18 +173,18 @@ TOY_KNOBS = [
 
 
 def toy_paths(folder: Path, assets: str = "assets") -> list[str]:
-    """The toy run's inputs (written once) and its asset and state folders, as arguments."""
+    """The toy run's inputs (toy_inputs writes them) and its asset and state folders, as
+    arguments."""
     ns, bh, split_file = (folder / name for name in ("ns.parquet", "bh.parquet", "split.parquet"))
-    if not ns.exists():
-        toy_inputs(folder)
     return [str(ns), str(bh), str(split_file), str(folder / assets), str(folder / "state")]
 
 
 @pytest.fixture(scope="module")
-def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """One main run on the toy tables, two trials a job, one worker, the commit and clock
-    injected; returns its working folder (assets/ and state/ inside)."""
+def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path:
+    """One main run on the toy tables (60_results/conftest.py), two trials a job, one worker,
+    the commit and clock injected; returns its working folder (assets/ and state/ inside)."""
     folder = tmp_path_factory.mktemp("tuning")
+    toy_inputs(folder)
     main(
         [*toy_paths(folder), *TOY_KNOBS],
         TOY_CONFIG,
@@ -256,8 +226,9 @@ def test_one_job_per_pair_and_short_listed_candidate() -> None:
 
 @pytest.mark.functional
 def test_a_dying_tuning_leaves_the_outcomes_of_its_finished_jobs(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, toy_inputs: ToyInputs
 ) -> None:
+    toy_inputs(tmp_path)
     calls: list[Job] = []
 
     def toy_job(work: Work) -> Walled:

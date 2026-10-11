@@ -61,7 +61,10 @@ dev = [
 testpaths = ["."]
 pythonpath = ["."]
 norecursedirs = [".*", "build", "local", "node_modules"]
-addopts = "-ra --doctest-modules --strict-markers"
+# --doctest-modules imports every conftest.py as a module named conftest, so a second one (a
+# folder's own, 60_results/conftest.py) clashes with the root's: both are kept out of collection
+# and still load as conftests (W-091; ~/.claude W-194).
+addopts = "-ra --doctest-modules --strict-markers --ignore=conftest.py --ignore-glob=*/conftest.py"
 # Every test carries exactly one category marker (conftest.py, rules/python.md Tests).
 markers = [
   "edge: primitives to domain types and back; an adapter against a local resource",

@@ -1,13 +1,13 @@
 """Facts about the representation screen behind Section 5.1, on tiny synthetic data."""
 
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import optuna
-import pandas as pd
 import pytest
 from optuna.storages import JournalStorage
 from optuna.storages.journal import JournalFileBackend
@@ -40,6 +40,9 @@ from shared.harness import Run, Timing
 from shared.runs import LedgerEntry, RunMetadata, entry_from_run
 from shared.scorecard import Scorecard
 from shared.surrogate import Training
+
+# The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
+ToyInputs = Callable[[Path], tuple[Path, Path, Path]]
 
 # Ten curves keyed by p along x, all y = 1 + x^2; the test curve p = 2 is sampled between the
 # grid points of the others, so only a whole-curve model rebuilds it exactly.
@@ -259,45 +262,10 @@ def test_a_job_logs_its_done_line_at_the_runs_level_in_a_fresh_process(
     assert "job done" in caplog.text
 
 
-# Ten curves per dataset, eight rows each: the NS keys lie on a parabola, so no three are
-# collinear and the local RBF's linear part has full rank on any three curves.
-CURVES = range(1, 11)
-TOY_LABELS = ["test", "test", *["fold0"] * 4, *["fold1"] * 4]
-
-
-def toy_inputs(folder: Path) -> tuple[Path, Path, Path]:
-    """Tiny NS- and BH-shaped tables and one split for both: two curves of each in test, four in
-    each of two folds."""
-    ns_rows = [
-        {"beta": float(i), "lambda": float(i * i), "rho_c": 10.0 ** (1 + j / 7)}
-        | {"M": 1.0 + 0.1 * j + 0.01 * i, "D": 0.1 + 0.01 * j}
-        for i in CURVES
-        for j in range(8)
-    ]
-    bh_rows = [
-        {"r_h": 4.0 + j, "beta": float(i), "M": 2.0 + 0.5 * j + 0.01 * i, "D": 0.3 - 0.02 * j}
-        for i in CURVES
-        for j in range(8)
-    ]
-    split = [
-        {"dataset": "neutron_stars", "beta": float(i), "lambda": float(i * i)}
-        | {"label": label, "ablation": False}
-        for i, label in zip(CURVES, TOY_LABELS, strict=True)
-    ] + [
-        {"dataset": "black_holes", "beta": float(i), "label": label, "ablation": False}
-        for i, label in zip(CURVES, TOY_LABELS, strict=True)
-    ]
-    ns, bh, split_file = folder / "ns.parquet", folder / "bh.parquet", folder / "split.parquet"
-    pd.DataFrame(ns_rows).to_parquet(ns)
-    pd.DataFrame(bh_rows).to_parquet(bh)
-    pd.DataFrame(split).to_parquet(split_file)
-    return ns, bh, split_file
-
-
 @pytest.fixture(scope="module")
-def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """One main run on the toy tables, one seed and one worker, the commit and clock injected;
-    returns its working folder (assets/ and state/ inside)."""
+def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path:
+    """One main run on the toy tables (60_results/conftest.py), one seed and one worker, the
+    commit and clock injected; returns its working folder (assets/ and state/ inside)."""
     folder = tmp_path_factory.mktemp("screen")
     ns, bh, split_file = toy_inputs(folder)
     network = {"width": 8, "depth": 1, "max_epochs": 2, "batch_size": 8, "workers": 1}
