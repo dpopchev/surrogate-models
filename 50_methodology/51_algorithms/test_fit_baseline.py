@@ -371,7 +371,7 @@ def toy_inputs(folder: Path) -> tuple[Path, Path, Path]:
 @pytest.mark.view
 def test_each_curve_is_named_by_its_key(tmp_path: Path) -> None:
     ns, _, _ = toy_inputs(tmp_path)
-    names = curve_names(pd.read_parquet(ns), NEUTRON_STARS)
+    names = curve_names(pd.read_parquet(ns), NEUTRON_STARS.space)
     assert names[1] == "$\\beta$ = 1, $\\lambda$ = 2"
 
 

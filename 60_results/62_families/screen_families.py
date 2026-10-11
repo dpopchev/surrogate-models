@@ -14,10 +14,11 @@ import json
 import logging
 import sys
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from functools import partial
+from itertools import product
 from pathlib import Path
 from typing import Any, assert_never
 
@@ -53,8 +54,19 @@ from shared.candidates import (
 )
 from shared.ceilings import profile
 from shared.config import NOTATION_TEX, PaperConfig, load_config
-from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
-from shared.eda import CurveSpace, booktabs
+from shared.design import (
+    BLACK_HOLES,
+    DATASET_TEX,
+    NEUTRON_STARS,
+    SPECS,
+    TARGETS,
+    Design,
+    Pair,
+    Target,
+    pair_tex,
+    pairs,
+)
+from shared.eda import booktabs
 from shared.harness import Fitter, Run, harness
 from shared.plots import (
     SYMBOLS,
@@ -77,15 +89,6 @@ logger = logging.getLogger(__name__)
 
 SECTION = "62_families"
 
-PAIRS: tuple[tuple[DesignSpec, Target], ...] = (
-    (NEUTRON_STARS, "mass"),
-    (NEUTRON_STARS, "charge"),
-    (BLACK_HOLES, "mass"),
-    (BLACK_HOLES, "charge"),
-)
-
-DATASET_TEX = {"neutron_stars": "NS", "black_holes": "BH"}
-TARGET_TEX = {"mass": "$M$", "charge": "$\\Dch$"}
 # The parity figure's titles and axis labels name the target as the model sees it, through
 # the paper's symbols (shared.plots.SYMBOLS).
 TARGET_SYMBOL = {"mass": "M", "charge": "D"}
@@ -262,23 +265,26 @@ def family_table(outcomes: Sequence[Outcome]) -> str:
     for outcome in sorted(outcomes, key=lambda found: found.job.rows):
         job = outcome.job
         last[(job.dataset, job.target, job.candidate)] = outcome
+    keys: list[tuple[str, Target]] = [
+        (spec.dataset, target) for spec, target in product(SPECS, TARGETS)
+    ]
     leaders = {
-        (spec.dataset, target, leader)
-        for spec, target in PAIRS
-        for leader in survivors(_at_most_rows(outcomes, spec.dataset, target), keep=1)
+        (dataset, target, leader)
+        for dataset, target in keys
+        for leader in survivors(_at_most_rows(outcomes, dataset, target), keep=1)
     }
     rows = [
         f"{FAMILY_TEX[candidate.family]} & {candidate.unit} & "
         + " & ".join(
             _cell(
-                last.get((spec.dataset, target, candidate)),
-                (spec.dataset, target, candidate) in leaders,
+                last.get((dataset, target, candidate)),
+                (dataset, target, candidate) in leaders,
             )
-            for spec, target in PAIRS
+            for dataset, target in keys
         )
         for candidate in candidates()
     ]
-    pairs = " & ".join(f"{DATASET_TEX[s.dataset]} {TARGET_TEX[target]}" for s, target in PAIRS)
+    header = " & ".join(pair_tex(dataset, target) for dataset, target in keys)
     return booktabs(
         "families",
         "Each family in each unit of prediction, eliminated by successive halving over the "
@@ -287,7 +293,7 @@ def family_table(outcomes: Sequence[Outcome]) -> str:
         "(the subscript); a wall is a fit past the time or the memory budget there. The pair's "
         "best at the most rows is in bold. The errors are measured in $M$ or $\\Dch$.",
         "@{}ll*{4}{r}@{}",
-        f"Family & Unit & {pairs}",
+        f"Family & Unit & {header}",
         rows,
     )
 
@@ -673,11 +679,10 @@ class Context:
 
 @dataclass(frozen=True)
 class Work:
-    """One job with its pair's design and curve space, run in a worker process."""
+    """One job with its pair, run in a worker process."""
 
     job: Job
-    data: Design
-    space: CurveSpace
+    pair: Pair
     context: Context
 
 
@@ -703,13 +708,10 @@ def main(
         BLACK_HOLES.dataset: pd.read_parquet(args.bh),
     }
     split = pd.read_parquet(args.split)
-    designs: dict[tuple[str, Target], tuple[Design, CurveSpace]] = {
-        (spec.dataset, target): (design(tables[spec.dataset], split, spec, target), spec.space)
-        for spec, target in PAIRS
-    }
+    by_key = {(p.dataset, p.target): p for p in pairs(tables, split, SPECS, TARGETS)}
     with at_level(settings.log_level):
         if args.batch is None:
-            batch = _run_screen(args, designs, training, settings.log_level, commit, dirty, now)
+            batch = _run_screen(args, by_key, training, settings.log_level, commit, dirty, now)
         else:
             batch = args.batch
             logger.info("rebuilding the assets from batch %s; nothing is fitted", batch)
@@ -720,7 +722,7 @@ def main(
         path = out / f"{SECTION}_tab_families.tex"
         write_checked(path, family_table(outcomes))
         logger.info("done: family table of batch %s, %d outcomes -> %s", batch, len(outcomes), path)
-        panels = _parity_panels(parity_picks(outcomes), designs, args.state / "ledger")
+        panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
         apply_style(config.plot, NOTATION_TEX.read_text())
         drawn = (
             (PARITY, parity_figure(panels, config.plot), parity_tex()),
@@ -740,7 +742,7 @@ def main(
 
 def _parity_panels(
     picks: Sequence[Scored],
-    designs: dict[tuple[str, Target], tuple[Design, CurveSpace]],
+    by_key: Mapping[tuple[str, str], Pair],
     ledger: Path,
 ) -> list[Panel]:
     """One panel per pair of the picks: each pick's test predictions, read from its ledger
@@ -748,8 +750,8 @@ def _parity_panels(
     series: dict[tuple[str, Target], list[Series]] = {}
     for pick in picks:
         job = pick.job
-        truth = designs[(job.dataset, job.target)][0]
-        truth = truth.y[truth.test]
+        data = by_key[(job.dataset, job.target)].design
+        truth = data.y[data.test]
         entry = entry_from_json((ledger / f"{pick.entry}.json").read_text())
         predicted = np.array(entry.predictions)
         assert len(predicted) == len(truth), (
@@ -772,7 +774,7 @@ def _parity_panels(
 
 def _run_screen(
     args: argparse.Namespace,
-    designs: dict[tuple[str, Target], tuple[Design, CurveSpace]],
+    by_key: Mapping[tuple[str, str], Pair],
     training: Training,
     log_level: str,
     commit: Callable[[], str] | None,
@@ -802,8 +804,8 @@ def _run_screen(
     saved = outcomes_path(args.state, SECTION, batch.id)
     saved.parent.mkdir(parents=True, exist_ok=True)
     jobs = tuple(
-        Job(spec.dataset, target, candidate, args.budgets[0], 0)
-        for spec, target in PAIRS
+        Job(pair.dataset, pair.target, candidate, args.budgets[0], 0)
+        for pair in by_key.values()
         for candidate in candidates()
     )
     outcomes: list[Outcome] = []
@@ -817,7 +819,7 @@ def _run_screen(
             args.workers,
             batch.id,
         )
-        found = _run_round(jobs, designs, context, args.workers, saved, outcomes)
+        found = _run_round(jobs, by_key, context, args.workers, saved, outcomes)
         outcomes += found
         write_checked(saved, outcomes_to_json(outcomes))
         if round_ + 1 < len(args.budgets):
@@ -827,7 +829,7 @@ def _run_screen(
 
 def _run_round(
     jobs: Sequence[Job],
-    designs: dict[tuple[str, Target], tuple[Design, CurveSpace]],
+    by_key: Mapping[tuple[str, str], Pair],
     context: Context,
     workers: int,
     saved: Path,
@@ -837,7 +839,7 @@ def _run_round(
     earlier rounds' outcomes (`before`) and the round's finished jobs are saved after every
     job, so a parent that dies leaves them."""
     works = [
-        partial(screen_job, Work(job, *designs[(job.dataset, job.target)], context)) for job in jobs
+        partial(screen_job, Work(job, by_key[(job.dataset, job.target)], context)) for job in jobs
     ]
     started = time.monotonic()
     finished: dict[int, Outcome] = {}
@@ -884,10 +886,10 @@ def screen_job(work: Work) -> Outcome:
         return write_entry(batch.ledger, run, meta).meta.id
 
     with at_level(context.log_level):
-        fitter = fitter_of(job.candidate, work.space, context.knobs, context.training)
+        fitter = fitter_of(job.candidate, work.pair.space, context.knobs, context.training)
         return run_job(
             job,
-            work.data,
+            work.pair.design,
             fitter,
             context.training.seed,
             context.training.valid_fraction,

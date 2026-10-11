@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from shared.design import DesignSpec, UnlabelledCurveError, design
+from shared.design import DesignSpec, UnlabelledCurveError, design, pair_tex, pairs
 from shared.eda import make_curve_space
 
 pytestmark = pytest.mark.model
@@ -93,6 +93,20 @@ def test_the_log_mass_form_is_log10_m(table: pd.DataFrame, split: pd.DataFrame) 
 
 def test_the_linear_charge_form_is_d(table: pd.DataFrame, split: pd.DataFrame) -> None:
     assert design(table, split, SPEC, "linear_charge").y.tolist() == pytest.approx([0.2, 1e-9, 0.1])
+
+
+class TestPairs:
+    """The pairs a runnable fits: one per spec and target, each with its design and space."""
+
+    def test_one_pair_per_spec_and_target_spec_by_spec(
+        self, table: pd.DataFrame, split: pd.DataFrame
+    ) -> None:
+        found = pairs({"toy": table}, split, [SPEC], ["mass", "charge"])
+        assert [(p.dataset, p.target) for p in found] == [("toy", "mass"), ("toy", "charge")]
+
+
+def test_a_pair_s_tex_name_is_the_dataset_tag_and_the_target_symbol() -> None:
+    assert pair_tex("neutron_stars", "charge") == "NS $\\Dch$"
 
 
 class TestChargeTarget:

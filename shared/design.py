@@ -6,6 +6,7 @@ in log10, the target (M in M_sun, or the charge target log10(D/M) of Section 3.3
 integer per curve for grouped splitting, and each row's test and ablation flags.
 """
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal, assert_never
 
@@ -36,6 +37,11 @@ NEUTRON_STARS = DesignSpec(
     make_curve_space({"rho_c": "log10", "beta": "raw", "lambda": "raw"}, ("beta", "lambda")),
 )
 BLACK_HOLES = DesignSpec("black_holes", make_curve_space({"r_h": "raw", "beta": "raw"}, ("beta",)))
+# The pairs every runnable fits, and how a table or a figure names a dataset and a target.
+SPECS = (NEUTRON_STARS, BLACK_HOLES)
+TARGETS: tuple[Target, ...] = ("mass", "charge")
+DATASET_TEX = {"neutron_stars": "NS", "black_holes": "BH"}
+TARGET_TEX = {"mass": "$M$", "charge": "$\\Dch$"}
 
 
 class UnlabelledCurveError(ValueError):
@@ -52,6 +58,16 @@ class Design:
     test: np.ndarray
     fold: np.ndarray
     ablation: np.ndarray
+
+
+@dataclass(frozen=True)
+class Pair:
+    """One dataset and target as a fit sees them: the design and the dataset's curve space."""
+
+    dataset: str
+    target: Target
+    design: Design
+    space: CurveSpace
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -112,6 +128,25 @@ def design(
         test=(labelled["label"] == "test").to_numpy(),
         fold=_folds(labelled["label"]),
         ablation=labelled["ablation"].to_numpy(bool),
+    )
+
+
+def pair_tex(dataset: str, target: str) -> str:
+    """The pair's name in a LaTeX table, as "NS $M$"."""
+    return f"{DATASET_TEX[dataset]} {TARGET_TEX[target]}"
+
+
+def pairs(
+    tables: Mapping[str, pd.DataFrame],
+    split: pd.DataFrame,
+    specs: Sequence[DesignSpec],
+    targets: Sequence[Target],
+) -> tuple[Pair, ...]:
+    """One Pair per spec and target, spec by spec, under the frozen split."""
+    return tuple(
+        Pair(spec.dataset, target, design(tables[spec.dataset], split, spec, target), spec.space)
+        for spec in specs
+        for target in targets
     )
 
 

@@ -15,6 +15,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from functools import partial
+from itertools import product
 from pathlib import Path
 from typing import Literal, assert_never
 
@@ -39,11 +40,14 @@ from shared.curvewise import curvewise_fitter
 from shared.design import (
     BLACK_HOLES,
     NEUTRON_STARS,
+    SPECS,
+    TARGETS,
     Design,
     DesignSpec,
     Target,
     TargetForm,
     design,
+    pair_tex,
 )
 from shared.eda import CurveSpace, booktabs, make_curve_space
 from shared.families import make_knn, make_rbf
@@ -60,14 +64,6 @@ logger = logging.getLogger(__name__)
 
 SECTION = "61_representation"
 
-PAIRS: tuple[tuple[DesignSpec, Target], ...] = (
-    (NEUTRON_STARS, "mass"),
-    (NEUTRON_STARS, "charge"),
-    (BLACK_HOLES, "mass"),
-    (BLACK_HOLES, "charge"),
-)
-DATASET_TEX = {"neutron_stars": "NS", "black_holes": "BH"}
-TARGET_TEX = {"mass": "$M$", "charge": "$\\Dch$"}
 REPRESENTATION_TEX = {
     "baseline": "baseline",
     "raw rho_c": "raw $\\rhoc$",
@@ -142,7 +138,7 @@ class Knobs:
 def cells() -> tuple[Cell, ...]:
     """Every representation cell of the screen, the baseline first within each pair."""
     found = []
-    for spec, target in PAIRS:
+    for spec, target in product(SPECS, TARGETS):
         base: TargetForm = target
         found.append(Cell(spec.dataset, target, "baseline", spec, base, "pointwise"))
         if spec is NEUTRON_STARS:
@@ -271,7 +267,7 @@ def representation_table(found: Sequence[Score]) -> str:
             for model in MODELS
         ]
         rows.append(
-            f"{DATASET_TEX[dataset]} {TARGET_TEX[target]} & "
+            f"{pair_tex(dataset, target)} & "
             f"{REPRESENTATION_TEX[representation]} & {' & '.join(entries)}"
         )
     return booktabs(

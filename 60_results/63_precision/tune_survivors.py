@@ -16,6 +16,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from functools import partial
+from itertools import product
 from pathlib import Path
 from typing import Any, assert_never
 
@@ -50,8 +51,19 @@ from shared.batches import (
 )
 from shared.candidates import FAMILIES, UNITS, Candidate, Knobs, tuned_fitter
 from shared.config import NOTATION_TEX, PaperConfig, load_config
-from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
-from shared.eda import CurveSpace, booktabs
+from shared.design import (
+    BLACK_HOLES,
+    DATASET_TEX,
+    NEUTRON_STARS,
+    SPECS,
+    TARGETS,
+    Design,
+    Pair,
+    Target,
+    pair_tex,
+    pairs,
+)
+from shared.eda import booktabs
 from shared.harness import Run, harness
 from shared.plots import SYMBOLS, PlotStyle, apply_style, colormap, figure_size
 from shared.runs import LedgerEntry, RunMetadata, Setting
@@ -68,9 +80,6 @@ logger = logging.getLogger(__name__)
 SECTION = "63_precision"
 HISTORY = f"{SECTION}_fig_history"
 RANGES = f"{SECTION}_fig_ranges"
-TARGETS: tuple[Target, ...] = ("mass", "charge")
-DATASET_TEX = {"neutron_stars": "NS", "black_holes": "BH"}
-TARGET_TEX = {"mass": "$M$", "charge": "$\\Dch$"}
 # A target's symbol in shared/plots.py's SYMBOLS, for the figures.
 TARGET_SYMBOL = {"mass": "M", "charge": "D"}
 # The data ceilings of Sections 4.1 and 4.2 (W-064) in significant figures, as their macros.
@@ -80,13 +89,6 @@ CEILING_TEX: Mapping[tuple[str, Target], str] = {
     ("black_holes", "mass"): "\\bhEdaCeilMFigures",
     ("black_holes", "charge"): "\\bhEdaCeilDFigures",
 }
-
-PAIRS: tuple[tuple[DesignSpec, Target], ...] = (
-    (NEUTRON_STARS, "mass"),
-    (NEUTRON_STARS, "charge"),
-    (BLACK_HOLES, "mass"),
-    (BLACK_HOLES, "charge"),
-)
 
 _RBF = (Candidate("local RBF", "pointwise"), Candidate("local RBF", "curve-wise"))
 _BH = (*_RBF, Candidate("GPR", "curve-wise"), Candidate("XGBoost", "pointwise"))
@@ -158,7 +160,7 @@ def jobs() -> tuple[Job, ...]:
     """One job per pair and short-listed candidate."""
     return tuple(
         Job(spec.dataset, target, candidate)
-        for spec, target in PAIRS
+        for spec, target in product(SPECS, TARGETS)
         for candidate in SHORT_LIST[(spec.dataset, target)]
     )
 
@@ -330,7 +332,7 @@ def tuning_table(outcomes: Sequence[Outcome], screen: Mapping[Job, float]) -> st
             case _:
                 assert_never(outcome)
         rows.append(
-            f"{DATASET_TEX[job.dataset]} {TARGET_TEX[job.target]} & "
+            f"{pair_tex(job.dataset, job.target)} & "
             f"{job.candidate.family} & {job.candidate.unit} & "
             f"{'--' if before is None else f'${before:.2f}$'} & {tuned} & "
             f"${CEILING_TEX[(job.dataset, job.target)]}$"
@@ -433,7 +435,7 @@ def ranges_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
     figure, (knots_axes, neighbours_axes, network_axes) = plt.subplots(
         1, 3, figsize=figure_size(style, 1, 0.45), layout="constrained"
     )
-    pairs = [(spec.dataset, target) for spec, target in PAIRS]
+    pairs = [(spec.dataset, target) for spec, target in product(SPECS, TARGETS)]
     # the paper's dataset colors, cool for neutron stars and warm for black holes, the mass
     # the darker shade
     shades = {
@@ -590,11 +592,10 @@ class Context:
 
 @dataclass(frozen=True)
 class Work:
-    """One job with its pair's design and curve space, run in a worker process."""
+    """One job with its pair, run in a worker process."""
 
     job: Job
-    data: Design
-    space: CurveSpace
+    pair: Pair
     context: Context
 
 
@@ -618,16 +619,13 @@ def main(
         BLACK_HOLES.dataset: pd.read_parquet(args.bh),
     }
     split = pd.read_parquet(args.split)
-    designs: dict[tuple[str, Target], tuple[Design, CurveSpace]] = {
-        (spec.dataset, target): (design(tables[spec.dataset], split, spec, target), spec.space)
-        for spec, target in PAIRS
-    }
+    by_key = {(p.dataset, p.target): p for p in pairs(tables, split, SPECS, TARGETS)}
     with at_level(settings.log_level):
         if args.recover is not None:
             batch = args.recover
             _recover(args, batch)
         elif args.batch is None:
-            batch = _run_tuning(args, designs, training, settings.log_level, commit, dirty, now)
+            batch = _run_tuning(args, by_key, training, settings.log_level, commit, dirty, now)
         else:
             batch = args.batch
             logger.info("rebuilding the tuning table from batch %s; nothing is fitted", batch)
@@ -656,7 +654,7 @@ def main(
 
 def _run_tuning(
     args: argparse.Namespace,
-    designs: dict[tuple[str, Target], tuple[Design, CurveSpace]],
+    by_key: Mapping[tuple[str, str], Pair],
     training: Training,
     log_level: str,
     commit: Callable[[], str] | None,
@@ -695,7 +693,7 @@ def _run_tuning(
         batch.journal,
     )
     works = [
-        partial(tune_job, Work(job, *designs[(job.dataset, job.target)], context)) for job in found
+        partial(tune_job, Work(job, by_key[(job.dataset, job.target)], context)) for job in found
     ]
     started = time.monotonic()
     finished: dict[int, Outcome] = {}
@@ -750,9 +748,9 @@ def tune_job(work: Work) -> Outcome:
     with at_level(context.log_level):
         return run_job(
             job,
-            work.data,
+            work.pair.design,
             lambda params: tuned_fitter(
-                candidate, work.space, context.knobs, context.training, params
+                candidate, work.pair.space, context.knobs, context.training, params
             ),
             space_of(candidate.family, candidate.unit),
             context.trials,

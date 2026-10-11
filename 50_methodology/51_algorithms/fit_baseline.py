@@ -46,9 +46,20 @@ from shared.batches import (
 )
 from shared.ceilings import Spread
 from shared.config import NOTATION_TEX, AlgorithmsSection, PaperConfig, load_config
-from shared.design import BLACK_HOLES, NEUTRON_STARS, Design, DesignSpec, Target, design
+from shared.design import (
+    BLACK_HOLES,
+    DATASET_TEX,
+    NEUTRON_STARS,
+    SPECS,
+    TARGETS,
+    Design,
+    Pair,
+    Target,
+    pair_tex,
+    pairs,
+)
 from shared.diagnostics import curve_overlay, error_cdf, loss_curve
-from shared.eda import booktabs, curve_ids, render_macros, sci_tex
+from shared.eda import CurveSpace, booktabs, curve_ids, render_macros, sci_tex
 from shared.harness import Fitter, Predictor, Run, Timing, harness
 from shared.plots import SYMBOLS, PlotStyle, anchor_color, apply_style
 from shared.runs import (
@@ -130,14 +141,6 @@ class PairScores:
     scored: tuple[Scored, ...]
 
 
-PAIRS: tuple[tuple[DesignSpec, Target], ...] = (
-    (NEUTRON_STARS, "mass"),
-    (NEUTRON_STARS, "charge"),
-    (BLACK_HOLES, "mass"),
-    (BLACK_HOLES, "charge"),
-)
-DATASET_TEX = {"neutron_stars": "NS", "black_holes": "BH"}
-TARGET_TEX = {"mass": "$M$", "charge": "$\\Dch$"}
 # The symbol (shared.plots.SYMBOLS) of each dataset's curve coordinate on the diagnostics.
 X_SYMBOL = {"neutron_stars": "log10_rho_c", "black_holes": "r_h"}
 
@@ -291,7 +294,7 @@ def _row(pair: PairScores, scored: Scored) -> str:
     significant figures at the 95th percentile, the fit seconds and the one-row call seconds."""
     folds = np.array([fold.mean for fold in scored.folds])
     return (
-        f"{DATASET_TEX[pair.dataset]} {TARGET_TEX[pair.target]} & {scored.predictor} & "
+        f"{pair_tex(pair.dataset, pair.target)} & {scored.predictor} & "
         f"{_enote(scored.test.mean)} & "
         f"{_enote(float(folds.mean()))} $\\pm$ {_enote(float(folds.std()))} & "
         f"{significant_figures(scored.test.p95):.1f} & {scored.timing.fit:.0f} & "
@@ -407,13 +410,13 @@ def progress_line(done: int, total: int, elapsed: float) -> str:
     return f"fit {done}/{total} done, {progress_tail(done, total, elapsed)}"
 
 
-def curve_names(table: pd.DataFrame, spec: DesignSpec) -> dict[int, str]:
+def curve_names(table: pd.DataFrame, space: CurveSpace) -> dict[int, str]:
     """Each curve id of the table named by its key, e.g. "$\\beta$ = 1, $\\lambda$ = 2"; a key
     without a paper symbol is named by its column."""
-    keys = table[list(spec.space.curve)].assign(curve=curve_ids(table, spec.space))
+    keys = table[list(space.curve)].assign(curve=curve_ids(table, space))
     return {
         int(row["curve"]): ", ".join(
-            f"{SYMBOLS.get(column, column)} = {row[column]:g}" for column in spec.space.curve
+            f"{SYMBOLS.get(column, column)} = {row[column]:g}" for column in space.curve
         )
         for _, row in keys.drop_duplicates("curve").iterrows()
     }
@@ -479,10 +482,8 @@ def main(
     training = Training(**settings.model_dump(exclude={"log_level", "threads", "workers"}))
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
     split = pd.read_parquet(split_file)
-    designs: list[tuple[DesignSpec, Target, Design]] = [
-        (spec, target, design(tables[spec.dataset], split, spec, target)) for spec, target in PAIRS
-    ]
-    total = sum(len(set(data.fold[data.fold >= 0].tolist())) + 1 for _, _, data in designs)
+    found_pairs = pairs(tables, split, SPECS, TARGETS)
+    total = sum(len(set(p.design.fold[p.design.fold >= 0].tolist())) + 1 for p in found_pairs)
     first = time.time()
     batch = make_batch(
         Path(argv[4]),
@@ -495,23 +496,23 @@ def main(
     batch.ledger.mkdir(parents=True, exist_ok=True)
     # The batch's study is made once here; every job joins it as its trials run.
     open_study(batch.id, batch.journal)
-    planned: list[tuple[_Pair, _Run]] = []
+    planned: list[tuple[Pair, _Run]] = []
     with multiprocessing.Manager() as manager:
         progress = _Progress(manager.Value("i", 0), manager.Lock(), total, first)
         jobs = []
-        for spec, target, data in designs:
+        for pair in found_pairs:
             started = now()
-            folder = state / run_stem(spec.dataset, target, started)
+            folder = state / run_stem(pair.dataset, pair.target, started)
             folder.mkdir(parents=True, exist_ok=True)
             # latest.log is what make follow tails: repointed at each run's log as it is made.
             latest = state / "latest.log"
             latest.unlink(missing_ok=True)
             latest.symlink_to(Path(folder.name) / "train.log")
-            pair = _Pair(spec, target, data, tables[spec.dataset])
             run = _Run(folder, out, started, batch)
             planned.append((pair, run))
+            table = tables[pair.dataset]
             jobs += [
-                partial(_score_job, _Job(pair, run, name, training, settings, progress))
+                partial(_score_job, _Job(pair, table, run, name, training, settings, progress))
                 for name in CANDIDATES
             ]
         with at_level(settings.log_level):
@@ -521,13 +522,14 @@ def main(
                 settings.workers,
             )
             found = run_jobs(jobs, settings.workers)
-    pairs, fits = [], {}
+    scores: list[PairScores] = []
+    fits: dict[tuple[str, str], Fit] = {}
     for i, (pair, run) in enumerate(planned):
         mine = found[i * len(CANDIDATES) : (i + 1) * len(CANDIDATES)]
-        pairs.append(PairScores(pair.spec.dataset, pair.target, tuple(s for s, _ in mine)))
+        scores.append(PairScores(pair.dataset, pair.target, tuple(s for s, _ in mine)))
         mlp_fit = mine[0][1]
         assert mlp_fit is not None, f"{run.folder.name}: the MLP job returned no fit"
-        fits[pair.spec.dataset, pair.target] = mlp_fit
+        fits[pair.dataset, pair.target] = mlp_fit
     run = planned[-1][1].folder
     assert (NEUTRON_STARS.dataset, "mass") in fits, "the NS mass pair did not run"
     mares = {}
@@ -539,19 +541,9 @@ def main(
         mares[dataset] = charge_mares(mass, charge)
     # The section's assets are written last, into the last run's log that make follow shows.
     with _logging_into(run / "train.log", settings.log_level):
-        _write_section(out, pairs, fits[NEUTRON_STARS.dataset, "mass"], config, mares)
+        _write_section(out, scores, fits[NEUTRON_STARS.dataset, "mass"], config, mares)
         logger.info("all %d fits done in %s", total, duration_text(time.time() - first))
         logger.info("done: baseline table, NS mass numbers and parity figure -> %s", out)
-
-
-@dataclass(frozen=True)
-class _Pair:
-    """One dataset and target to score, with the table its curve names come from."""
-
-    spec: DesignSpec
-    target: Target
-    data: Design
-    table: pd.DataFrame
 
 
 @dataclass(frozen=True)
@@ -578,9 +570,11 @@ class _Progress:
 
 @dataclass(frozen=True)
 class _Job:
-    """One candidate on one pair, run in a worker process."""
+    """One candidate on one pair, run in a worker process, with the table its curve names
+    come from."""
 
-    pair: _Pair
+    pair: Pair
+    table: pd.DataFrame
     run: _Run
     candidate: str
     training: Training
@@ -612,11 +606,11 @@ def _score_job(job: _Job) -> tuple[Scored, Fit | None]:
     pair, run = job.pair, job.run
     with _logging_into(run.folder / "train.log", job.settings.log_level):
         study = open_study(run.batch.id, run.batch.journal)
-        trial = ask_trial(study, pair.spec.dataset, pair.target, job.candidate)
+        trial = ask_trial(study, pair.dataset, pair.target, job.candidate)
         record = _ledger_writer(pair, run, lambda entry: tell_run(study, trial, entry))
         if job.candidate != "MLP":
             scored, _, _ = score_candidate(
-                pair.data, pair.target, job.training, job.candidate, record=record
+                pair.design, pair.target, job.training, job.candidate, record=record
             )
             return scored, None
         built: list[Pipeline] = []
@@ -639,10 +633,10 @@ def _score_mlp(
     pair, run, training = job.pair, job.run, job.training
     if run.batch.dirty:
         logger.info("the code holds uncommitted changes: run.json marks this run dirty")
-    data, train = pair.data, ~pair.data.test
+    data, train = pair.design, ~pair.design.test
     rows = (int(train.sum()), int(data.test.sum()))
     curves = (len(np.unique(data.groups[train])), len(np.unique(data.groups[data.test])))
-    logger.info("== baseline run: %s / %s ==", pair.spec.dataset, pair.target)
+    logger.info("== baseline run: %s / %s ==", pair.dataset, pair.target)
     for line in start_banner(run.folder, run.out, training, rows, curves, job.settings.threads):
         logger.info(line)
     scored, ran, network = score_candidate(
@@ -658,7 +652,7 @@ def _score_mlp(
     assert network is not None, "the MLP left no fitted network"
     fit = final_fit(data, ran, network, metric_for(pair.target))
     summary = RunRecord(
-        dataset=pair.spec.dataset,
+        dataset=pair.dataset,
         target=pair.target,
         training=training,
         commit=run.batch.commit,
@@ -672,8 +666,8 @@ def _score_mlp(
     )
     folder = run.folder
     assert folder.name == run_name(summary), f"run folder {folder.name} is not {run_name(summary)}"
-    names = curve_names(pair.table, pair.spec)
-    write_diagnostics(fit, summary, folder, names, SYMBOLS[X_SYMBOL[pair.spec.dataset]])
+    names = curve_names(job.table, pair.space)
+    write_diagnostics(fit, summary, folder, names, SYMBOLS[X_SYMBOL[pair.dataset]])
     assert from_json((folder / "run.json").read_text()) == summary, (
         f"{folder}/run.json does not round-trip"
     )
@@ -684,7 +678,7 @@ def _score_mlp(
 
 
 def _ledger_writer(
-    pair: _Pair, run: _Run, on_entry: Callable[[LedgerEntry], None] = lambda _: None
+    pair: Pair, run: _Run, on_entry: Callable[[LedgerEntry], None] = lambda _: None
 ) -> Recorder:
     """The recorder writing each harness run of the pair to <ledger>/<id>.json, a new uuid7
     id per entry, then handing the entry to on_entry (the trial is told it)."""
@@ -695,7 +689,7 @@ def _ledger_writer(
         meta = RunMetadata(
             id=new_id(),
             batch=run.batch.id,
-            dataset=pair.spec.dataset,
+            dataset=pair.dataset,
             target=pair.target,
             candidate=candidate,
             settings=settings,
