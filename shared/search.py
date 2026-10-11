@@ -26,6 +26,7 @@ from shared.candidates import Unit
 from shared.ceilings import spread
 from shared.design import Design, TargetForm
 from shared.harness import Fitter, fit_on, one_thread
+from shared.runs import Setting
 from shared.scorecard import relative_errors, significant_figures
 from shared.surrogate import Activation, Loss
 
@@ -74,7 +75,7 @@ class Searched:
     """A finished search: the best trial's parameters, its mean fold figures, the number of
     trials run and how many of them failed (a raising fit, or a nan score)."""
 
-    params: dict[str, Any]
+    params: Mapping[str, Setting]
     figures: float
     trials: int
     failed: int

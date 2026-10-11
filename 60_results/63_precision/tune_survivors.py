@@ -115,7 +115,7 @@ class Tuned:
     ledger entry."""
 
     job: Job
-    params: dict[str, Any]
+    params: Mapping[str, Setting]
     folds: float
     test: float
     trials: int
@@ -144,7 +144,7 @@ class TrialPoint:
     job: Job
     number: int
     figures: float | None
-    params: Mapping[str, Any]
+    params: Mapping[str, Setting]
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -196,13 +196,13 @@ def run_job(
     (run,) = harness(
         data,
         job.target,
-        walled(family(found.params), seconds),
+        walled(family(dict(found.params)), seconds),
         [seed],
         valid_fraction,
         record=lambda ran: entries.append(record(ran)),
     )
     test = significant_figures(run.test.zones["test"].p95)
-    return Tuned(job, dict(found.params), found.figures, test, found.trials, walls, entries[0])
+    return Tuned(job, found.params, found.figures, test, found.trials, walls, entries[0])
 
 
 @dataclass(frozen=True)

@@ -8,6 +8,7 @@ the timing and the test predictions, so a search's progress can be rebuilt witho
 """
 
 import json
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any
@@ -61,7 +62,7 @@ class RunMetadata:
     dataset: str
     target: str
     candidate: str
-    settings: dict[str, Setting]
+    settings: Mapping[str, Setting]
     commit: str
     dirty: bool
     started: datetime
