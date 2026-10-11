@@ -249,6 +249,19 @@ class TestMain:
     def test_leaves_other_sections_alone(self, assets) -> None:
         assert (assets / "41_neutron_stars" / "kept.tex").is_file()
 
+    def test_main_writes_the_picked_mass_radius_variant_into_its_wrapper(
+        self, tmp_path: Path
+    ) -> None:
+        table, assets = tmp_path / "bh.parquet", tmp_path / "assets"
+        curves().to_parquet(table)
+        picked = {"figures": ["mass_radius"], "variants": {"mass_radius": "departure"}}
+        config = PaperConfig.model_validate(
+            {"plot": {"usetex": False}, "data_analysis": {"black_holes": picked}}
+        )
+        main([str(table), str(assets), "--folds", "3", "--seed", "0"], config=config)
+        wrapper = assets / "42_black_holes" / "42_black_holes_fig_mass_radius.tex"
+        assert "departure" in wrapper.read_text()
+
 
 @pytest.mark.model
 def test_split_strategies_score_every_strategy_in_order() -> None:

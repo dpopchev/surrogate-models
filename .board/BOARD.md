@@ -1,6 +1,6 @@
 # Board -- W-111-mass-radius-variants
 record: local
-open path: E-011 > W-111 > T-262   | blocked: 0 | todo roots: 8 | done: 332 | pruned: 37
+open path: E-011 > W-111 > T-310   | blocked: 0 | todo roots: 8 | done: 333 | pruned: 37
 
 ## Tree
 
@@ -46,7 +46,7 @@ E-009         [doing]    The paper follows the revised structure, and the releas
 E-011         [doing]    Figures and tables picked from rendered variants, numbers from macros
   W-102  issue  [done]     Every section's figures are selected in paper.toml   (filed during T-206) -- T-237 [done]
   W-104  bug    [done]     Section 5.2's error and scaling figures float past Section 5.3's text   (filed during T-240) -- T-241 [done]   (filed during T-240)
-  W-111  issue  [doing]    The variant mechanism on one figure -- T-260 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1 (tried 2026-10-11), so it can never print 2 passed; re-filed with the same action and a working check], T-261 [pruned]   [pruned: its check passes -q to make (question mode, runs nothing, exits 1), so it can never print 2 passed; re-filed with the same action and a working check], T-262 [doing]   <- ACTIVE LEAF, T-263 [pruned]   [pruned: an environment override leaves the BH assets current, so make assets does not rerun and the check's grep finds nothing; its Output is an untracked build file the scope gate cannot close; re-filed as a test of main writing the picked variant], T-308 [done], T-309 [done], T-310 [todo]
+  W-111  issue  [doing]    The variant mechanism on one figure -- T-260 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1 (tried 2026-10-11), so it can never print 2 passed; re-filed with the same action and a working check], T-261 [pruned]   [pruned: its check passes -q to make (question mode, runs nothing, exits 1), so it can never print 2 passed; re-filed with the same action and a working check], T-262 [done], T-263 [pruned]   [pruned: an environment override leaves the BH assets current, so make assets does not rerun and the check's grep finds nothing; its Output is an untracked build file the scope gate cannot close; re-filed as a test of main writing the picked variant], T-308 [done], T-309 [done], T-310 [doing]   <- ACTIVE LEAF
   W-112  issue  [todo]     Section 3 figure variants -- T-264 [todo], T-265 [todo], T-266 [todo], T-267 [todo]
   W-113  issue  [todo]     Section 4.1 and 5 figure variants -- T-268 [todo], T-269 [todo], T-270 [todo], T-271 [todo]
   W-114  issue  [todo]     Table layouts rendered to page images -- T-272 [todo], T-273 [todo], T-274 [todo], T-275 [todo]
@@ -679,11 +679,11 @@ flowchart TD
   E011 --> W111["W-111 issue doing: The variant mechanism on one figure"]
   W111 --> T260["T-260 pruned: Add the mass_radius variant choice test-first -> shared/config.py, paper.toml"]
   W111 --> T261["T-261 pruned: Draw the departure and two-panel variants test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py"]
-  W111 --> T262["T-262 doing: Write the contact sheet and make variants test-first -> shared/plots.py, 40_data_analysis/42_black_holes/eda_black_holes.py, mk/paper.mk -- ACTIVE LEAF"]
+  W111 --> T262["T-262 done: Write the contact sheet and make variants test-first -> shared/plots.py, 40_data_analysis/42_black_holes/eda_black_holes.py, mk/paper.mk"]
   W111 --> T263["T-263 pruned: Compile with the pick -> paper.toml, build/assets/42_black_holes/42_black_holes_fig_mass_radius.tex"]
   W111 --> T308["T-308 done: Add the mass_radius variant choice test-first -> shared/config.py, paper.toml"]
   W111 --> T309["T-309 done: Draw the departure and two-panel variants test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py"]
-  W111 --> T310["T-310 todo: Write the picked mass_radius variant into its wrapper test-first -> 40_data_analysis/42_black_holes/test_eda_black_holes.py, 40_data_analysis/42_black_holes/eda_black_holes.py"]
+  W111 --> T310["T-310 doing: Write the picked mass_radius variant into its wrapper test-first -> 40_data_analysis/42_black_holes/test_eda_black_holes.py, 40_data_analysis/42_black_holes/eda_black_holes.py -- ACTIVE LEAF"]
   E011 --> W112["W-112 issue todo: Section 3 figure variants"]
   W112 --> T264["T-264 todo: Draw the NS charge_target and mass_density variants test-first -> eda_neutron_stars.py, shared/config.py, paper.toml, mk/paper.mk"]
   W112 --> T265["T-265 todo: Draw the univariate and mass_max variants test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py, shared/config.py, paper.toml"]
@@ -730,8 +730,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E011,W111,T262 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,T308,T309,W122,T306 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,T310,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W118,T287,W119,T295,W120,T296,W121,T303,T304,T305 todo
+  class E006,E009,E011,W111,T310 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,T262,T308,T309,W122,T306 done
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W118,T287,W119,T295,W120,T296,W121,T303,T304,T305 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T260,T261,T263,T307 pruned
 ```

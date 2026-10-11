@@ -372,6 +372,7 @@ def table_tex(found: Evidence, table: BhTable) -> str:
 
 # The section's asset folder, and the prefix that keeps its basenames unique in the flat build.
 SECTION = "42_black_holes"
+DEFAULT_VARIANTS = BlackHoleVariants()
 
 
 def asset(figure: BhFigure) -> str:
@@ -379,8 +380,33 @@ def asset(figure: BhFigure) -> str:
     return f"{SECTION}_fig_{figure}"
 
 
-def caption(figure: BhFigure) -> str:
-    """The caption of one figure."""
+def _mass_radius_caption(variant: BhMassRadiusVariant) -> str:
+    """The caption of the mass_radius figure in one variant."""
+    match variant:
+        case "inset":
+            return (
+                "Black holes: the mass $M$ against $\\rh$, one line per $\\beta$ curve; the inset "
+                "zooms on $\\rh$ from 4 to 5, where the curves leave the general-relativistic "
+                "relation $M = \\rh/2$ (dashed)."
+            )
+        case "departure":
+            return (
+                "Black holes: the departure $M - \\rh/2$ of the mass from the "
+                "general-relativistic relation $M = \\rh/2$ (dashed zero line) against $\\rh$, "
+                "one line per $\\beta$ curve."
+            )
+        case "both":
+            return (
+                "Black holes: the mass $M$ against $\\rh$ (left) and its departure $M - \\rh/2$ "
+                "from the general-relativistic relation (right, dashed zero line), one line per "
+                "$\\beta$ curve."
+            )
+        case _:
+            assert_never(variant)
+
+
+def caption(figure: BhFigure, variants: BlackHoleVariants = DEFAULT_VARIANTS) -> str:
+    """The caption of one figure in its picked variant."""
     match figure:
         case "univariate_continuous":
             return (
@@ -388,11 +414,7 @@ def caption(figure: BhFigure) -> str:
                 "$\\log_{10}$ (right)."
             )
         case "mass_radius":
-            return (
-                "Black holes: the mass $M$ against $\\rh$, one line per $\\beta$ curve; the inset "
-                "zooms on $\\rh$ from 4 to 5, where the curves leave the general-relativistic "
-                "relation $M = \\rh/2$ (dashed)."
-            )
+            return _mass_radius_caption(variants.mass_radius)
         case "charge_target":
             return (
                 "Black holes: $M$ against $\\log_{10}\\Dch$ (left) and $\\log_{10}(\\Dch/M)$ "
@@ -407,12 +429,14 @@ def caption(figure: BhFigure) -> str:
             assert_never(figure)
 
 
-def figure_tex(figure: BhFigure) -> str:
-    """The figure environment of one figure, placed here or at the top of a page (!htb)."""
+def figure_tex(figure: BhFigure, variants: BlackHoleVariants = DEFAULT_VARIANTS) -> str:
+    """The figure environment of one figure in its picked variant, placed here or at the top
+    of a page (!htb)."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
         f"\\includegraphics[width=\\textwidth]{{{asset(figure)}}}\n"
-        f"\\caption{{{caption(figure)}}}\n\\label{{fig:bh-{figure.replace('_', '-')}}}\n"
+        f"\\caption{{{caption(figure, variants)}}}\n"
+        f"\\label{{fig:bh-{figure.replace('_', '-')}}}\n"
         "\\end{figure}\n"
     )
 
@@ -551,9 +575,6 @@ def _existence_edge(table: pd.DataFrame, style: PlotStyle) -> Figure:
     return fig
 
 
-DEFAULT_VARIANTS = BlackHoleVariants()
-
-
 def draw(
     figure: BhFigure,
     table: pd.DataFrame,
@@ -643,10 +664,10 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
         stale.unlink()
     section = config.data_analysis.black_holes
     for figure in section.figures:
-        fig = draw(figure, table, config.plot)
+        fig = draw(figure, table, config.plot, section.variants)
         fig.savefig(out / f"{asset(figure)}.png", dpi=config.plot.dpi)
         plt.close(fig)
-        (out / f"{asset(figure)}.tex").write_text(figure_tex(figure))
+        (out / f"{asset(figure)}.tex").write_text(figure_tex(figure, section.variants))
     found = evidence(table, args.folds, args.seed)
     bounds = measure(table, CURVE, "r_h", ("M", "D"), "D")
     # The ceilings as uncertainties at the median mass and the median charge (W-076).
