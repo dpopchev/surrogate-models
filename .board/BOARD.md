@@ -1,6 +1,6 @@
-# Board -- W-122-compile-stale-pdf
+# Board -- surrogate-models
 record: local
-open path: E-011 > W-122   | blocked: 0 | todo roots: 8 | done: 327 | pruned: 34
+open path: E-011   | blocked: 0 | todo roots: 8 | done: 328 | pruned: 34
 
 ## Tree
 
@@ -52,7 +52,7 @@ E-011         [doing]    Figures and tables picked from rendered variants, numbe
   W-114  issue  [todo]     Table layouts rendered to page images -- T-272 [todo], T-273 [todo], T-274 [todo], T-275 [todo]
   W-115  issue  [todo]     Two or three style presets on three figures -- T-276 [todo], T-277 [todo]
   W-116  issue  [todo]     Every number the text cites is a macro -- T-278 [todo], T-279 [todo], T-280 [todo], T-281 [todo]
-  W-122  bug    [doing]    make compile keeps a figure a pick removed in build/paper/article.pdf   (filed during T-237) -- T-306 [done], T-307 [pruned]   [pruned: its Output build/paper/article.pdf is an untracked build file no commit carries, so the scope gate cannot close it (a brief defect at filing); its check was run and exited 0 -- make -W paper.toml families compile with the shipped picks, no undefined references -- and the 62_families assets match local/assets-baseline.sha]
+  W-122  bug    [done]     make compile keeps a figure a pick removed in build/paper/article.pdf   (filed during T-237) -- T-306 [done], T-307 [pruned]   [pruned: its Output build/paper/article.pdf is an untracked build file no commit carries, so the scope gate cannot close it (a brief defect at filing); its check was run and exited 0 -- make -W paper.toml families compile with the shipped picks, no undefined references -- and the 62_families assets match local/assets-baseline.sha]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
 W-118  bug    [todo]     (standalone) A screen run leaves the surrogate logger at WARNING, so a later baseline run in the same process loses its epoch table   (filed during T-219) -- T-287 [todo]
@@ -704,7 +704,7 @@ flowchart TD
   W116 --> T279["T-279 todo: Emit the representation and family result macros test-first -> 60_results/61_representation/screen_representation.py, 60_results/62_families/screen_families.py, 00_metadata/article.tex"]
   W116 --> T280["T-280 todo: Emit the tuning result macros test-first -> 60_results/63_precision/tune_survivors.py, 00_metadata/article.tex"]
   W116 --> T281["T-281 todo: Replace the literals in the text -> 51_algorithms.tex, 61_representation.tex, 62_families.tex, 63_precision.tex, 90_appendix.tex, preprocessing_numbers.py"]
-  E011 --> W122["W-122 bug doing: make compile keeps a figure a pick removed in build/paper/article.pdf"]
+  E011 --> W122["W-122 bug done: make compile keeps a figure a pick removed in build/paper/article.pdf"]
   W122 --> T306["T-306 done: Rerun latexmk when the assembled sources change -> mk/paper.mk"]
   W122 --> T307["T-307 pruned: Recompile the paper with the shipped picks -> build/paper/article.pdf"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
@@ -727,8 +727,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E011,W122 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,T306 done
+  class E006,E009,E011 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W122,T306 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W118,T287,W119,T295,W120,T296,W121,T303,T304,T305 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T307 pruned
 ```
