@@ -845,15 +845,18 @@ def _run_round(
         kept = [*before, *(finished[i] for i in sorted(finished))]
         write_checked(saved, outcomes_to_json(kept))
 
-    return run_jobs(works, workers, on_done=report)
+    # Each worker logs at the screen's level with the networks' epoch tables silenced.
+    return run_jobs(
+        works,
+        workers,
+        log_level=context.log_level,
+        quiet=(surrogate.__name__,),
+        on_done=report,
+    )
 
 
 def screen_job(work: Work) -> Outcome:
-    """Run one job at the screen's log level with the networks' epoch tables silenced: a
-    worker started by forkserver inherits neither the level nor the console handler."""
-    if not logging.getLogger().handlers:
-        logging.basicConfig(format="%(message)s")
-    logging.getLogger(surrogate.__name__).setLevel(logging.WARNING)
+    """Run one job: fit its candidate under the wall and record its ledger entry."""
     job, context = work.job, work.context
 
     def record(run: Run) -> str:
@@ -880,19 +883,18 @@ def screen_job(work: Work) -> Outcome:
         )
         return write_entry(batch.ledger, run, meta).meta.id
 
-    with at_level(context.log_level):
-        fitter = fitter_of(job.candidate, work.pair.space, context.knobs, context.training)
-        return run_job(
-            job,
-            work.pair.design,
-            fitter,
-            context.training.seed,
-            context.training.valid_fraction,
-            context.knobs.per_curve,
-            context.seconds,
-            context.memory_bytes,
-            record,
-        )
+    fitter = fitter_of(job.candidate, work.pair.space, context.knobs, context.training)
+    return run_job(
+        job,
+        work.pair.design,
+        fitter,
+        context.training.seed,
+        context.training.valid_fraction,
+        context.knobs.per_curve,
+        context.seconds,
+        context.memory_bytes,
+        record,
+    )
 
 
 def _arguments(argv: list[str]) -> argparse.Namespace:

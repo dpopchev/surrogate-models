@@ -387,7 +387,7 @@ def _run_screen(
         settings.workers,
         batch.id,
     )
-    run_jobs(jobs, settings.workers)
+    run_jobs(jobs, settings.workers, log_level=context.log_level)
     return batch.id
 
 
@@ -412,15 +412,6 @@ class Work:
 
 
 def screen_job(work: Work) -> None:
-    """Run one job at the run's log level: a worker started by forkserver inherits neither the
-    level nor the console handler of the process that made it."""
-    if not logging.getLogger().handlers:
-        logging.basicConfig(format="%(message)s")
-    with at_level(work.context.log_level):
-        _run_trial(work)
-
-
-def _run_trial(work: Work) -> None:
     """Run one job as a trial of the batch's study: its ledger entry is written and told to the
     trial as the run ends; an MLP reports each epoch to the trial."""
     job, context = work.job, work.context

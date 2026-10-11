@@ -707,17 +707,20 @@ def _run_tuning(
         logger.info(job_line(outcome, len(finished), len(works), time.monotonic() - started))
         write_checked(saved, outcomes_to_json([finished[i] for i in sorted(finished)]))
 
-    outcomes = run_jobs(works, args.workers, on_done=report)
+    # Each worker logs at the tuning's level with the networks' epoch tables silenced.
+    outcomes = run_jobs(
+        works,
+        args.workers,
+        log_level=context.log_level,
+        quiet=(surrogate.__name__,),
+        on_done=report,
+    )
     write_checked(saved, outcomes_to_json(outcomes))
     return batch.id
 
 
 def tune_job(work: Work) -> Outcome:
-    """Run one job at the tuning's log level with the networks' epoch tables silenced: a worker
-    started by forkserver inherits neither the level nor the console handler."""
-    if not logging.getLogger().handlers:
-        logging.basicConfig(format="%(message)s")
-    logging.getLogger(surrogate.__name__).setLevel(logging.WARNING)
+    """Run one job: search its candidate's space and record the best params' refit."""
     job, context = work.job, work.context
     candidate = job.candidate
     batch = context.batch
@@ -748,21 +751,20 @@ def tune_job(work: Work) -> Outcome:
         )
         return write_entry(batch.ledger, run, meta).meta.id
 
-    with at_level(context.log_level):
-        return run_job(
-            job,
-            work.pair.design,
-            lambda params: tuned_fitter(
-                candidate, work.pair.space, context.knobs, context.training, params
-            ),
-            space_of(candidate.family, candidate.unit),
-            context.trials,
-            context.training.seed,
-            context.training.valid_fraction,
-            context.seconds,
-            study,
-            record,
-        )
+    return run_job(
+        job,
+        work.pair.design,
+        lambda params: tuned_fitter(
+            candidate, work.pair.space, context.knobs, context.training, params
+        ),
+        space_of(candidate.family, candidate.unit),
+        context.trials,
+        context.training.seed,
+        context.training.valid_fraction,
+        context.seconds,
+        study,
+        record,
+    )
 
 
 def journal_points(journal: Path, batch: str) -> tuple[TrialPoint, ...]:

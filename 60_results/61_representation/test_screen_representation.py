@@ -3,6 +3,7 @@
 import json
 from collections.abc import Callable
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -39,6 +40,7 @@ from shared.harness import Run, Timing
 from shared.runs import LedgerEntry, RunMetadata, entry_from_run
 from shared.scorecard import Scorecard
 from shared.surrogate import Training
+from shared.workers import run_jobs
 
 # The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
 ToyInputs = Callable[[Path], tuple[Path, Path, Path]]
@@ -252,7 +254,8 @@ def test_a_job_logs_its_done_line_at_the_runs_level_in_a_fresh_process(
         training=SHORT,
         log_level="INFO",
     )
-    screen_job(Work(toy_job("baseline", "pointwise", "k-NN"), TOY, context))
+    job = partial(screen_job, Work(toy_job("baseline", "pointwise", "k-NN"), TOY, context))
+    run_jobs([job], workers=1, log_level=context.log_level)
     assert "job done" in caplog.text
 
 
