@@ -14,7 +14,6 @@ from typing import Any, assert_never, get_args
 
 import numpy as np
 import optuna
-import torch
 from optuna.distributions import (
     BaseDistribution,
     CategoricalDistribution,
@@ -22,12 +21,11 @@ from optuna.distributions import (
     IntDistribution,
 )
 from optuna.trial import TrialState
-from threadpoolctl import threadpool_limits
 
 from shared.candidates import Unit
 from shared.ceilings import spread
 from shared.design import Design, TargetForm
-from shared.harness import Fitter, fit_on
+from shared.harness import Fitter, fit_on, one_thread
 from shared.scorecard import relative_errors, significant_figures
 from shared.surrogate import Activation, Loss
 
@@ -138,15 +136,10 @@ def fold_figures(
     fold predicted by a fit on the other training curves, less their validation curves. Every
     numerical library runs on one thread, as in the harness (W-037: one thread is fastest)."""
     figures = []
-    with threadpool_limits(limits=1):
-        threads = torch.get_num_threads()
-        torch.set_num_threads(1)
-        try:
-            for fold in sorted(set(design.fold[design.fold >= 0].tolist())):
-                held = design.fold == fold
-                predict = fit_on(design, ~design.test & ~held, fitter, seed, valid_fraction)
-                errors = relative_errors(design.y[held], predict(design.X[held]), target)
-                figures.append(significant_figures(spread(errors).p95))
-        finally:
-            torch.set_num_threads(threads)
+    with one_thread():
+        for fold in sorted(set(design.fold[design.fold >= 0].tolist())):
+            held = design.fold == fold
+            predict = fit_on(design, ~design.test & ~held, fitter, seed, valid_fraction)
+            errors = relative_errors(design.y[held], predict(design.X[held]), target)
+            figures.append(significant_figures(spread(errors).p95))
     return float(np.mean(figures))

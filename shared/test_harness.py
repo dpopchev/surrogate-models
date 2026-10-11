@@ -8,7 +8,7 @@ import torch
 from threadpoolctl import threadpool_info
 
 from shared.design import Design
-from shared.harness import Run, harness, split_valid
+from shared.harness import Run, harness, one_thread, split_valid
 
 pytestmark = pytest.mark.model
 
@@ -149,3 +149,15 @@ def test_every_library_runs_on_one_thread_during_a_fit() -> None:
 
     harness(TOY, "mass", fit, seeds=[0], valid_fraction=0.34)
     assert set(threads) == {1}
+
+
+def test_one_thread_restores_the_torch_threads() -> None:
+    before = torch.get_num_threads()
+    torch.set_num_threads(2)
+    try:
+        with one_thread():
+            pass
+        after = torch.get_num_threads()
+    finally:
+        torch.set_num_threads(before)
+    assert after == 2

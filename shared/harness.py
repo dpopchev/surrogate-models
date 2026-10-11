@@ -9,7 +9,8 @@ an emcee-sized batch prediction.
 """
 
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 
 import numpy as np
@@ -73,6 +74,19 @@ class Run:
 # --- pure functions ---------------------------------------------------------------------------
 
 
+@contextmanager
+def one_thread() -> Iterator[None]:
+    """Every numerical library on one thread inside the block, torch's count restored after
+    (W-037: one thread is fastest)."""
+    with threadpool_limits(limits=1):
+        threads = torch.get_num_threads()
+        torch.set_num_threads(1)
+        try:
+            yield
+        finally:
+            torch.set_num_threads(threads)
+
+
 def split_valid(groups: np.ndarray, fraction: float, seed: int) -> np.ndarray:
     """A mask of the rows whose curves form the validation share of these rows' curves."""
     splitter = GroupShuffleSplit(n_splits=1, test_size=fraction, random_state=seed)
@@ -97,16 +111,11 @@ def harness(
     (the run ledger, W-077)."""
     tick = clock or time.perf_counter
     runs = []
-    with threadpool_limits(limits=1):
-        threads = torch.get_num_threads()
-        torch.set_num_threads(1)
-        try:
-            for seed in seeds:
-                run = _run(design, target, fitter, seed, valid_fraction, charge, tick)
-                record(run)
-                runs.append(run)
-        finally:
-            torch.set_num_threads(threads)
+    with one_thread():
+        for seed in seeds:
+            run = _run(design, target, fitter, seed, valid_fraction, charge, tick)
+            record(run)
+            runs.append(run)
     return tuple(runs)
 
 
