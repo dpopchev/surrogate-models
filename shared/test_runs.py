@@ -11,6 +11,7 @@ import pytest
 from shared.ceilings import Spread
 from shared.harness import Run, Timing
 from shared.runs import (
+    Epochs,
     RunMetadata,
     RunRecord,
     entry_from_json,
@@ -69,8 +70,7 @@ META = RunMetadata(
     commit="abc1234",
     dirty=False,
     started=datetime(2026, 10, 7, 13, 0, 0, tzinfo=UTC),
-    epochs=3,
-    best_epoch=2,
+    epochs=Epochs(ran=3, best=2),
 )
 
 
@@ -100,6 +100,16 @@ def test_a_ledger_entry_written_before_the_ripple_reads_back_without_one() -> No
     fields = json.loads(entry_to_json(entry_from_run(RUN, META)))
     del fields["ripple"]
     assert entry_from_json(json.dumps(fields)).ripple == ()
+
+
+@pytest.mark.edge
+def test_a_ledger_entry_with_two_epoch_fields_reads_back_as_epochs() -> None:
+    def read(ran: int | None, best: int | None) -> Epochs | None:
+        fields = json.loads(entry_to_json(entry_from_run(RUN, META)))
+        fields["meta"] |= {"epochs": ran, "best_epoch": best}
+        return entry_from_json(json.dumps(fields)).meta.epochs
+
+    assert (read(3, 2), read(None, None)) == (Epochs(ran=3, best=2), None)
 
 
 @pytest.mark.model

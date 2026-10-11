@@ -440,7 +440,6 @@ def screen_job(work: Work) -> None:
             dirty=batch.dirty,
             started=batch.started,
             epochs=None,
-            best_epoch=None,
         )
         tell_run(study, trial, write_entry(batch.ledger, ran, meta))
 

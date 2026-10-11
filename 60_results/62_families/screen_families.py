@@ -880,7 +880,6 @@ def screen_job(work: Work) -> Outcome:
             dirty=batch.dirty,
             started=batch.started,
             epochs=None,
-            best_epoch=None,
         )
         return write_entry(batch.ledger, run, meta).meta.id
 

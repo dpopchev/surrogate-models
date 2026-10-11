@@ -104,7 +104,6 @@ def ledger_entry(
             dirty=False,
             started=datetime(2026, 10, 8, 12, 0, 0, tzinfo=UTC),
             epochs=None,
-            best_epoch=None,
         ),
     )
 

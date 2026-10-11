@@ -729,8 +729,7 @@ def _ledger_writer(
             commit=run.batch.commit,
             dirty=run.batch.dirty,
             started=run.started,
-            epochs=None if epochs is None else epochs.ran,
-            best_epoch=None if epochs is None else epochs.best,
+            epochs=epochs,
         )
         on_entry(write_entry(run.batch.ledger, ran, meta))
 

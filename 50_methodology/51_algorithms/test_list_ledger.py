@@ -10,7 +10,14 @@ from list_ledger import ledger_table, main
 
 from shared.ceilings import Spread
 from shared.harness import Run, Timing
-from shared.runs import LedgerEntry, RunMetadata, entry_from_run, entry_name, entry_to_json
+from shared.runs import (
+    Epochs,
+    LedgerEntry,
+    RunMetadata,
+    entry_from_run,
+    entry_name,
+    entry_to_json,
+)
 from shared.scorecard import Scorecard
 
 
@@ -29,8 +36,7 @@ META = RunMetadata(
     commit="abc1234",
     dirty=False,
     started=datetime(2026, 10, 7, 13, 0, 0, tzinfo=UTC),
-    epochs=3,
-    best_epoch=2,
+    epochs=Epochs(ran=3, best=2),
 )
 ENTRY = entry_from_run(
     Run(

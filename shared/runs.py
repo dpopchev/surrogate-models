@@ -10,6 +10,7 @@ the timing and the test predictions, so a search's progress can be rebuilt witho
 import json
 from dataclasses import asdict, dataclass
 from datetime import datetime
+from typing import Any
 
 from shared.ceilings import Spread
 from shared.harness import Run, Timing
@@ -64,8 +65,7 @@ class RunMetadata:
     commit: str
     dirty: bool
     started: datetime
-    epochs: int | None
-    best_epoch: int | None
+    epochs: Epochs | None
 
 
 @dataclass(frozen=True)
@@ -133,9 +133,14 @@ def entry_to_json(entry: LedgerEntry) -> str:
 
 def entry_from_json(text: str) -> LedgerEntry:
     """The entry an entry_to_json text holds; JSON keys are strings, so the decades of D are
-    read back as integers; an entry written before the ripple (T-170) reads back without one."""
+    read back as integers; an entry written before the ripple (T-170) reads back without one,
+    one written before Epochs (T-299) from its two epoch fields."""
     fields = json.loads(text)
-    meta = fields["meta"] | {"started": datetime.fromisoformat(fields["meta"]["started"])}
+    raw = fields["meta"]
+    meta = {key: value for key, value in raw.items() if key != "best_epoch"} | {
+        "started": datetime.fromisoformat(raw["started"]),
+        "epochs": _epochs_from(raw),
+    }
     test = fields["test"]
     return LedgerEntry(
         meta=RunMetadata(**meta),
@@ -149,3 +154,20 @@ def entry_from_json(text: str) -> LedgerEntry:
         predictions=tuple(fields["predictions"]),
         ripple=tuple(fields.get("ripple", ())),
     )
+
+
+def _epochs_from(meta: dict[str, Any]) -> Epochs | None:
+    """The epochs of an entry's JSON metadata: a record, or the two ints epochs and best_epoch
+    an entry written before T-299 holds, or none.
+
+    Raises ValueError on any other shape.
+    """
+    match meta.get("epochs"):
+        case None:
+            return None
+        case {"ran": int(ran), "best": int(best)}:
+            return Epochs(ran, best)
+        case int(ran):
+            return Epochs(ran, int(meta["best_epoch"]))
+        case other:
+            raise ValueError(f"entry {meta.get('id')}: epochs {other!r} is no epoch record")

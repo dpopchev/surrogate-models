@@ -11,7 +11,7 @@ from skorch.history import History
 
 from shared.ceilings import Spread
 from shared.harness import Run, Timing
-from shared.runs import RunMetadata, entry_from_run
+from shared.runs import Epochs, RunMetadata, entry_from_run
 from shared.scorecard import Scorecard
 from shared.trials import ReportEpochs, open_study, tell_run
 
@@ -39,8 +39,7 @@ ENTRY = entry_from_run(
         commit="abc1234",
         dirty=False,
         started=datetime(2026, 10, 7, 13, 0, 0, tzinfo=UTC),
-        epochs=3,
-        best_epoch=2,
+        epochs=Epochs(ran=3, best=2),
     ),
 )
 
