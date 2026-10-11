@@ -18,6 +18,7 @@ from optuna.trial import TrialState
 from tune_survivors import (
     SECTION,
     Job,
+    ShortList,
     TrialPoint,
     Tuned,
     Walled,
@@ -33,11 +34,13 @@ from tune_survivors import (
     recovered,
     run_job,
     screen_figures,
+    short_list,
     study_name,
     trial_points,
     tuning_table,
 )
 
+from shared.batches import write_entry
 from shared.candidates import Candidate
 from shared.ceilings import Spread
 from shared.config import PaperConfig
@@ -109,37 +112,81 @@ def spread_at(p95: float) -> Spread:
     return Spread(median=p95 / 2, p95=p95, max=2 * p95, mean=p95 / 2)
 
 
-def screened(rows: int, p95: float, batch: str = "screen"):
-    """A toy ledger entry of the k-NN pointwise on the toy pair at that many rows, every fold
-    at that p95."""
-    return entry_from_run(
-        Run(
-            seed=0,
-            test=Scorecard(zones={"test": spread_at(p95)}, decades={}),
-            folds=(spread_at(p95), spread_at(p95)),
-            timing=Timing(fit=1.0, predict_one=1e-3, predict_batch=2e-3),
-            predictions=np.array([1.0]),
-        ),
-        RunMetadata(
-            id=f"{batch}-{rows}",
-            batch=batch,
-            dataset="toy",
-            target="mass",
-            candidate="k-NN",
-            settings={"unit": "pointwise", "rows": rows},
-            commit="abc1234",
-            dirty=False,
-            started=datetime(2026, 10, 8, 12, 0, 0, tzinfo=UTC),
-            epochs=None,
-            best_epoch=None,
-        ),
+def screened_run(
+    rows: int,
+    p95: float,
+    batch: str = "screen",
+    dataset: str = "toy",
+    family: str = "k-NN",
+    unit: str = "pointwise",
+) -> tuple[Run, RunMetadata]:
+    """A toy screen run of a candidate (the k-NN pointwise) on a dataset's mass (the toy's) at
+    that many rows, every fold at that p95, and its metadata."""
+    run = Run(
+        seed=0,
+        test=Scorecard(zones={"test": spread_at(p95)}, decades={}),
+        folds=(spread_at(p95), spread_at(p95)),
+        timing=Timing(fit=1.0, predict_one=1e-3, predict_batch=2e-3),
+        predictions=np.array([1.0]),
     )
+    meta = RunMetadata(
+        id=f"{batch}-{dataset}-{family}-{unit}-{rows}",
+        batch=batch,
+        dataset=dataset,
+        target="mass",
+        candidate=family,
+        settings={"unit": unit, "rows": rows},
+        commit="abc1234",
+        dirty=False,
+        started=datetime(2026, 10, 8, 12, 0, 0, tzinfo=UTC),
+        epochs=None,
+        best_epoch=None,
+    )
+    return run, meta
+
+
+def screened(rows: int, p95: float, **found: str):
+    """The toy ledger entry of screened_run."""
+    return entry_from_run(*screened_run(rows, p95, **found))
+
+
+def write_screen(state: Path) -> None:
+    """A toy screen batch "screen" in the state's ledger: on the NS mass the local RBF in both
+    units and the ResNet at 1000 rows, within one figure, so the short list holds all three
+    (three jobs, every panel of the ranges figure drawn)."""
+    (state / "ledger").mkdir(parents=True, exist_ok=True)
+    for family, unit, p95 in (
+        ("local RBF", "pointwise", 1e-3),
+        ("local RBF", "curve-wise", 1e-2),
+        ("ResNet", "pointwise", 1e-3),
+    ):
+        run, meta = screened_run(1000, p95, dataset="neutron_stars", family=family, unit=unit)
+        write_entry(state / "ledger", run, meta)
 
 
 @pytest.mark.model
 def test_a_screen_figure_is_the_one_on_the_most_rows_the_candidate_ran() -> None:
     figures = screen_figures([screened(100, 1e-2), screened(1000, 1e-3)], "screen")
     assert figures[JOB] == pytest.approx(3.0)
+
+
+@pytest.mark.model
+def test_short_list_keeps_the_candidates_within_one_figure_of_the_best() -> None:
+    # On the toy at 1000 rows: k-NN 3 figures (the best), local RBF 2, GPR 1 (two behind);
+    # XGBoost ran 100 rows only. On the other dataset one candidate, so it is the best.
+    entries = [
+        screened(100, 1e-1),
+        screened(1000, 1e-3),
+        screened(1000, 1e-2, family="local RBF"),
+        screened(1000, 1e-1, family="GPR", unit="curve-wise"),
+        screened(100, 1e-4, family="XGBoost"),
+        screened(1000, 1e-2, dataset="other", family="local RBF", unit="curve-wise"),
+        screened(1000, 1e-6, batch="another screen"),
+    ]
+    assert short_list(entries, "screen", within=1.0) == {
+        ("toy", "mass"): (Candidate("k-NN", "pointwise"), Candidate("local RBF", "pointwise")),
+        ("other", "mass"): (Candidate("local RBF", "curve-wise"),),
+    }
 
 
 NS_MASS_RBF = Job("neutron_stars", "mass", Candidate("local RBF", "pointwise"))
@@ -175,6 +222,7 @@ TOY_CONFIG = PaperConfig.model_validate(
 TOY_KNOBS = [
     *("--k", "2", "--neighbours", "4", "--knots", "4"),
     *("--trials", "2", "--minutes", "30", "--workers", "1"),
+    *("--within", "1.0", "--screen-batch", "screen"),
 ]
 
 
@@ -187,10 +235,12 @@ def toy_paths(folder: Path, assets: str = "assets") -> list[str]:
 
 @pytest.fixture(scope="module")
 def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path:
-    """One main run on the toy tables (60_results/conftest.py), two trials a job, one worker,
-    the commit and clock injected; returns its working folder (assets/ and state/ inside)."""
+    """One main run on the toy tables (60_results/conftest.py) over the toy screen batch's short
+    list, two trials a job, one worker, the commit and clock injected; returns its working folder
+    (assets/ and state/ inside)."""
     folder = tmp_path_factory.mktemp("tuning")
     toy_inputs(folder)
+    write_screen(folder / "state")
     main(
         [*toy_paths(folder), *TOY_KNOBS],
         TOY_CONFIG,
@@ -212,7 +262,7 @@ def test_a_saved_batch_rebuilds_the_table(ran: Path) -> None:
 def test_main_writes_a_table_row_per_job(ran: Path) -> None:
     table = (ran / "assets" / SECTION / f"{SECTION}_tab_tuning.tex").read_text()
     body = table.split("\\midrule\n")[1].split("\\bottomrule")[0]
-    assert body.count("\\\\\n") == 14
+    assert body.count("\\\\\n") == 3
 
 
 @pytest.mark.functional
@@ -227,7 +277,12 @@ def test_main_draws_the_ranges_figure(ran: Path) -> None:
 
 @pytest.mark.model
 def test_one_job_per_pair_and_short_listed_candidate() -> None:
-    assert len(set(jobs())) == 14
+    bh_mass_xgb = Job("black_holes", "mass", Candidate("XGBoost", "pointwise"))
+    short: ShortList = {
+        ("black_holes", "mass"): (bh_mass_xgb.candidate,),
+        ("neutron_stars", "mass"): (NS_MASS_RBF.candidate, NS_MASS_RBF_CW.candidate),
+    }
+    assert jobs(short) == (NS_MASS_RBF, NS_MASS_RBF_CW, bh_mass_xgb)
 
 
 @pytest.mark.functional
@@ -243,7 +298,7 @@ def test_a_dying_tuning_leaves_the_outcomes_of_its_finished_jobs(
             raise RuntimeError("the second job dies")
         return Walled(work.job, "toy")
 
-    monkeypatch.setattr(tune_survivors, "jobs", lambda: (NS_MASS_RBF, NS_MASS_RBF_CW))
+    monkeypatch.setattr(tune_survivors, "jobs", lambda _: (NS_MASS_RBF, NS_MASS_RBF_CW))
     monkeypatch.setattr(tune_survivors, "tune_job", toy_job)
     with pytest.raises(RuntimeError):
         main([*toy_paths(tmp_path), *TOY_KNOBS], TOY_CONFIG, commit=lambda: "abc1234")
@@ -269,7 +324,9 @@ def test_recover_rebuilds_a_batch_s_outcomes_from_its_journal_and_ledger(
 def test_a_study_without_a_complete_trial_is_recovered_as_a_wall() -> None:
     study = optuna.create_study(direction="maximize")
     study.tell(study.ask(), state=optuna.trial.TrialState.FAIL)
-    found = recovered("b", {study_name("b", NS_MASS_RBF): study}, [], minutes=30.0)
+    found = recovered(
+        "b", {study_name("b", NS_MASS_RBF): study}, [], minutes=30.0, wanted=(NS_MASS_RBF,)
+    )
     assert found == (Walled(NS_MASS_RBF, "all 1 trials past 30 min"),)
 
 
@@ -289,7 +346,8 @@ def test_a_journal_without_a_study_for_a_job_yields_the_points_of_the_others(
         study_name=study_name("b", NS_MASS_RBF), storage=storage, direction="maximize"
     )
     study.tell(study.ask(), 2.0)
-    assert {point.job for point in journal_points(journal, "b")} == {NS_MASS_RBF}
+    wanted = (NS_MASS_RBF, NS_MASS_RBF_CW)
+    assert {point.job for point in journal_points(journal, "b", wanted)} == {NS_MASS_RBF}
 
 
 NS_RBF = Job("neutron_stars", "mass", Candidate("local RBF", "curve-wise"))

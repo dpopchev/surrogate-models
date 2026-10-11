@@ -198,11 +198,12 @@ families: $(FAMILIES_ASSETS) ## Run the family screen for Section 5.2
 # wall fails its trial. Hours, so its own target, not in PAPER_ASSETS; one line per finished job
 # in the log, the trials live in optuna-dashboard on the batch's journal under
 # $(STATE)/63_precision/. Its knobs are written here only; k, neighbours and knots are the
-# screen's, each overridden by a trial that searches it. The screen's figures come from its
-# recorded batch in the ledger.
+# screen's, each overridden by a trial that searches it. The short list and the screen's figures
+# come from its recorded batch in the ledger: per pair, the candidates within --within figures
+# of the best on the most rows (Section 5.2).
 TUNING        := 60_results/63_precision/tune_survivors.py
 TUNING_ASSETS := $(ASSETS)/63_precision/63_precision_tab_tuning.tex
-TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --workers 3
+TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --workers 3 --within 1.0
 # The recorded batch (T-206, 2026-10-10): make tuning rebuilds the table from its outcomes in
 # seconds; TUNING_BATCH= (empty) runs the whole tuning again (about 33 hours).
 TUNING_BATCH  ?= 01a11d49-1647-735a-af05-a58e497428f2

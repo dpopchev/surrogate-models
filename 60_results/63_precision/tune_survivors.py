@@ -98,22 +98,6 @@ CEILING_TEX: Mapping[tuple[str, Target], str] = {
     ("black_holes", "charge"): "\\bhEdaCeilDFigures",
 }
 
-_RBF = (Candidate("local RBF", "pointwise"), Candidate("local RBF", "curve-wise"))
-_BH = (*_RBF, Candidate("GPR", "curve-wise"), Candidate("XGBoost", "pointwise"))
-
-# The short list per pair, as Section 5.2 states it: the candidates within one significant
-# figure of the pair's best on the screen's last round.
-SHORT_LIST: Mapping[tuple[str, Target], tuple[Candidate, ...]] = {
-    ("neutron_stars", "mass"): _RBF,
-    ("neutron_stars", "charge"): (
-        *_RBF,
-        Candidate("ResNet", "pointwise"),
-        Candidate("k-NN", "curve-wise"),
-    ),
-    ("black_holes", "mass"): _BH,
-    ("black_holes", "charge"): _BH,
-}
-
 
 @dataclass(frozen=True)
 class Job:
@@ -148,6 +132,8 @@ class Walled:
 
 
 Outcome = Tuned | Walled
+# Per pair, the candidates the family screen short-listed (short_list, Section 5.2).
+ShortList = Mapping[tuple[str, Target], tuple[Candidate, ...]]
 
 
 @dataclass(frozen=True)
@@ -164,12 +150,12 @@ class TrialPoint:
 # --- pure functions ---------------------------------------------------------------------------
 
 
-def jobs() -> tuple[Job, ...]:
-    """One job per pair and short-listed candidate."""
+def jobs(short: ShortList) -> tuple[Job, ...]:
+    """One job per pair and short-listed candidate, the pairs in the paper's order."""
     return tuple(
         Job(spec.dataset, target, candidate)
         for spec, target in product(SPECS, TARGETS)
-        for candidate in SHORT_LIST[(spec.dataset, target)]
+        for candidate in short.get((spec.dataset, target), ())
     )
 
 
@@ -239,9 +225,39 @@ def range_ends(distribution: BaseDistribution) -> RangeEnds:
             raise TypeError(f"{distribution} has no integer range")
 
 
+def short_list(entries: Sequence[LedgerEntry], batch: str, within: float) -> ShortList:
+    """Per pair, the candidates of the screen batch that ran the most rows the pair ran and
+    whose mean fold figures there lie within `within` figures of the best (Section 5.2), in
+    FAMILIES x UNITS order."""
+    by_pair: dict[tuple[str, Target], dict[Job, tuple[int, float]]] = {}
+    for job, last_round in _last_rounds(entries, batch).items():
+        by_pair.setdefault((job.dataset, job.target), {})[job] = last_round
+    found: dict[tuple[str, Target], tuple[Candidate, ...]] = {}
+    for pair, mine in by_pair.items():
+        most = max(rows for rows, _ in mine.values())
+        at = {job.candidate: figures for job, (rows, figures) in mine.items() if rows == most}
+        best = max((f for f in at.values() if np.isfinite(f)), default=float("nan"))
+        found[pair] = tuple(
+            sorted(
+                (c for c, f in at.items() if np.isfinite(f) and f >= best - within),
+                key=lambda c: (FAMILIES.index(c.family), UNITS.index(c.unit)),
+            )
+        )
+    return found
+
+
 def screen_figures(entries: Sequence[LedgerEntry], batch: str) -> Mapping[Job, float]:
     """Each candidate's mean fold figures on the screen's last round it ran, from the screen
     batch's ledger entries."""
+    return {job: figures for job, (_, figures) in _last_rounds(entries, batch).items()}
+
+
+def _last_rounds(entries: Sequence[LedgerEntry], batch: str) -> dict[Job, tuple[int, float]]:
+    """Each candidate of the screen batch with the most rows it ran and its mean fold figures
+    there.
+
+    Raises ValueError on an entry naming an unknown candidate or rows that are no count.
+    """
     last: dict[Job, tuple[int, float]] = {}
     for entry in entries:
         meta = entry.meta
@@ -257,7 +273,7 @@ def screen_figures(entries: Sequence[LedgerEntry], batch: str) -> Mapping[Job, f
         figures = float(np.mean([significant_figures(fold.p95) for fold in entry.folds]))
         if job not in last or rows > last[job][0]:
             last[job] = (rows, figures)
-    return {job: figures for job, (_, figures) in last.items()}
+    return last
 
 
 def study_name(batch: str, job: Job) -> str:
@@ -271,14 +287,15 @@ def recovered(
     studies: Mapping[str, optuna.Study],
     entries: Sequence[LedgerEntry],
     minutes: float,
+    wanted: Sequence[Job],
 ) -> tuple[Outcome, ...]:
-    """The batch's outcomes rebuilt from the records that survive a dying parent: per job,
-    its study on the journal (by study_name) and its refit's ledger entry. A study with no
-    COMPLETE trial is a wall over its finished trials; one with a best trial but no entry
-    did not finish its refit and is left out with a warning; a job without a study did not
-    start."""
+    """The batch's outcomes rebuilt from the records that survive a dying parent: per job it
+    ran (wanted), its study on the journal (by study_name) and its refit's ledger entry. A
+    study with no COMPLETE trial is a wall over its finished trials; one with a best trial but
+    no entry did not finish its refit and is left out with a warning; a job without a study
+    did not start."""
     found: list[Outcome] = []
-    for job in jobs():
+    for job in wanted:
         name = study_name(batch, job)
         if name not in studies:
             continue
@@ -664,15 +681,15 @@ def main(
             logger.info("rebuilding the tuning table from batch %s; nothing is fitted", batch)
         saved = outcomes_path(args.state, SECTION, batch)
         outcomes = outcomes_from_json(saved.read_text())
-        screen: Mapping[Job, float] = {}
-        if args.screen_batch is not None:
-            screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
+        screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
         path = out / f"{SECTION}_tab_tuning.tex"
         write_checked(path, tuning_table(outcomes, screen))
         logger.info("done: tuning table of batch %s, %d jobs -> %s", batch, len(outcomes), path)
-        points = journal_points(saved.with_suffix(".journal"), batch)
+        # A batch's figures show its own jobs, in the order it ran them.
+        ran = tuple(outcome.job for outcome in outcomes)
+        points = journal_points(saved.with_suffix(".journal"), batch, ran)
         apply_style(config.plot, NOTATION_TEX.read_text())
         drawn = (
             (HISTORY, history_figure(points, config.plot), history_tex(args.minutes)),
@@ -716,7 +733,7 @@ def _run_tuning(
         log_level=log_level,
     )
     batch.ledger.mkdir(parents=True, exist_ok=True)
-    found = jobs()
+    found = jobs(short_list(read_ledger(batch.ledger), args.screen_batch, args.within))
     logger.info(
         "tuning %d jobs, %d trials each, on %d workers, batch %s; journal %s",
         len(found),
@@ -797,14 +814,14 @@ def tune_job(work: Work) -> Outcome:
     )
 
 
-def journal_points(journal: Path, batch: str) -> tuple[TrialPoint, ...]:
-    """Every started job's trials, read from the batch's study journal (nothing is created
-    there); a job without a study did not start and has no points."""
+def journal_points(journal: Path, batch: str, wanted: Sequence[Job]) -> tuple[TrialPoint, ...]:
+    """The trials of each wanted job that started, in that order, read from the batch's study
+    journal (nothing is created there); a job without a study did not start and has none."""
     storage = JournalStorage(JournalFileBackend(str(journal)))
     held = set(optuna.get_all_study_names(storage))
     return tuple(
         point
-        for job in jobs()
+        for job in wanted
         if study_name(batch, job) in held
         for point in trial_points(
             optuna.load_study(study_name=study_name(batch, job), storage=storage), job
@@ -823,7 +840,9 @@ def _recover(args: argparse.Namespace, batch: str) -> None:
         for name in optuna.get_all_study_names(storage)
         if name.startswith(f"{batch} ")
     }
-    outcomes = recovered(batch, studies, read_ledger(args.state / "ledger"), args.minutes)
+    entries = read_ledger(args.state / "ledger")
+    wanted = jobs(short_list(entries, args.screen_batch, args.within))
+    outcomes = recovered(batch, studies, entries, args.minutes, wanted)
     write_checked(saved, outcomes_to_json(outcomes))
     logger.info("recovered %d outcomes of batch %s -> %s", len(outcomes), batch, saved)
 
@@ -846,7 +865,17 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
         help="fit nothing; rebuild this batch's outcomes from its journal and the ledger, "
         "then the table",
     )
-    parser.add_argument("--screen-batch", help="the family screen's batch, for its figures")
+    parser.add_argument(
+        "--screen-batch",
+        required=True,
+        help="the family screen's batch: its short list and its figures",
+    )
+    parser.add_argument(
+        "--within",
+        type=float,
+        required=True,
+        help="the short list keeps the candidates this many figures behind the pair's best",
+    )
     return parser.parse_args(argv)
 
 
