@@ -66,8 +66,10 @@ def truth(x_fit, y_fit, x_valid, y_valid, seed):
 
 
 def slow(x_fit, y_fit, x_valid, y_valid, seed):
-    """A toy fitter that takes a second to fit."""
-    time.sleep(1.0)
+    """A toy fitter that computes for a second of CPU time to fit."""
+    started = time.process_time()
+    while time.process_time() - started < 1.0:
+        pass
     return truth(x_fit, y_fit, x_valid, y_valid, seed)
 
 

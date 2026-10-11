@@ -144,8 +144,10 @@ def test_a_wall_s_job_line_names_its_wall() -> None:
 
 
 def slow(x_fit, y_fit, x_valid, y_valid, seed):
-    """A toy fitter that takes a second."""
-    time.sleep(1.0)
+    """A toy fitter that computes for a second of CPU time."""
+    started = time.process_time()
+    while time.process_time() - started < 1.0:
+        pass
     return lambda x: np.zeros(len(x))
 
 
