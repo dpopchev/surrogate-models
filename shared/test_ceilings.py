@@ -169,6 +169,20 @@ class TestCeilingMacros:
     def test_name_the_along_curve_p95_per_target(self) -> None:
         assert ceiling_macros("ex", KNOWN, TAGS)["exCeilYAlong"] == "2.00\\times 10^{-6}"
 
+    def test_the_figures_macros_follow_the_order_of_the_targets(self) -> None:
+        # Eight targets: a hash-ordered loop matches their order about once in 8! = 40320 runs.
+        targets = [f"t{k}" for k in range(8)]
+        many = Ceilings(
+            noise={},
+            along={},
+            across={(t, "p"): Spread(1e-6, 1e-4, 1e-3, 1e-5) for t in targets},
+            profiles={},
+            decades={},
+        )
+        tags = {t: t.upper() for t in targets} | {"p": "P"}
+        names = [name for name in ceiling_macros("ex", many, tags) if name.endswith("Figures")]
+        assert names == [f"exCeilT{k}Figures" for k in range(8)]
+
 
 class TestUncertaintyMacros:
     pytestmark = pytest.mark.view

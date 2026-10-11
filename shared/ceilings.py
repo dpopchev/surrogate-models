@@ -108,7 +108,7 @@ def ceiling_macros(prefix: str, found: Ceilings, tags: Mapping[str, str]) -> dic
         f"{prefix}Ceil{tags[target]}Across{tags[key]}": _sci(found_spread.p95)
         for (target, key), found_spread in found.across.items()
     }
-    for target in {target for target, _ in found.across}:
+    for target in dict.fromkeys(target for target, _ in found.across):
         macros[f"{prefix}Ceil{tags[target]}Figures"] = f"{reachable_figures(found, target):.1f}"
     for target, noise in found.noise.items():
         macros[f"{prefix}Ceil{tags[target]}Noise"] = _sci(noise.median)
