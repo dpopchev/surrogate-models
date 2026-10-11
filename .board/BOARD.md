@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-010 > W-106 > T-290   | blocked: 0 | todo roots: 6 | done: 303 | pruned: 24
+open path: E-010 > W-106   | blocked: 0 | todo roots: 6 | done: 304 | pruned: 24
 
 ## Tree
 
@@ -49,7 +49,7 @@ E-010         [doing]    Every module meets the Python gates
   W-095  bug    [done]     The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206) -- T-219 [done], T-286 [done]
   W-096  issue  [done]     One Pair and one FitRows value through the fit path   (filed during T-206) -- T-220 [done], T-221 [done], T-222 [done]
   W-105  bug    [done]     make tuning with --recover on a partial batch fails at the figures after writing the table   (filed during T-240) -- T-242 [done]   (filed during T-240)
-  W-106  issue  [doing]    One vocabulary for pairs, units, families and labels -- T-243 [done], T-244 [pruned]   [pruned: its pair_tex half landed in T-220 (W-096), and its check passes -q to make, which make reads as question mode (no output, exit 1); the target_symbol half is refiled as T-288 with a working check], T-245 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-289 with the same brief and a working check], T-246 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-290 with the same brief, its files by path and a working check], T-288 [done], T-289 [done], T-290 [doing]   <- ACTIVE LEAF
+  W-106  issue  [doing]    One vocabulary for pairs, units, families and labels -- T-243 [done], T-244 [pruned]   [pruned: its pair_tex half landed in T-220 (W-096), and its check passes -q to make, which make reads as question mode (no output, exit 1); the target_symbol half is refiled as T-288 with a working check], T-245 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-289 with the same brief and a working check], T-246 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-290 with the same brief, its files by path and a working check], T-288 [done], T-289 [done], T-290 [done]
   W-107  issue  [todo]     Asserts out of the domain, I/O out of the data modules -- T-247 [todo], T-248 [todo], T-249 [todo]
   W-108  issue  [todo]     Every knob has one home -- T-250 [todo], T-251 [todo], T-252 [todo], T-253 [todo]
   W-109  issue  [todo]     Records, not tuples and dict blobs -- T-254 [todo], T-255 [todo], T-256 [todo]
@@ -623,7 +623,7 @@ flowchart TD
   W106 --> T246["T-246 pruned: Configure worker logging once in the pool initializer test-first -> shared/workers.py"]
   W106 --> T288["T-288 done: Name a target plot symbol in one function test-first -> shared/design.py"]
   W106 --> T289["T-289 done: Pin one thread in one context manager test-first -> shared/harness.py"]
-  W106 --> T290["T-290 doing: Configure worker logging once in the pool initializer test-first -> shared/workers.py -- ACTIVE LEAF"]
+  W106 --> T290["T-290 done: Configure worker logging once in the pool initializer test-first -> shared/workers.py"]
   E010 --> W107["W-107 issue todo: Asserts out of the domain, I/O out of the data modules"]
   W107 --> T247["T-247 todo: Build Symbols through make_symbols and read no file test-first -> shared/plots.py"]
   W107 --> T248["T-248 todo: Return NoCompletedTrial from search() test-first -> shared/search.py, 60_results/63_precision/tune_survivors.py"]
@@ -689,8 +689,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E010,W106,T290 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W079,T167,T168,T232,W091,T213,T215,T282,T283,W095,T219,T286,W096,T220,T221,T222,W105,T242,T243,T288,T289,W117,T285 done
+  class E006,E009,E010,W106 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W079,T167,T168,T232,W091,T213,T215,T282,T283,W095,T219,T286,W096,T220,T221,T222,W105,T242,T243,T288,T289,T290,W117,T285 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W107,T247,T248,T249,W108,T250,T251,T252,T253,W109,T254,T255,T256,W110,T257,T258,T259,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W118,T287 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T214,T244,T245,T246,T284 pruned
 ```
