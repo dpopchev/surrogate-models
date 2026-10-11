@@ -103,6 +103,25 @@ class Methodology(BaseModel):
     algorithms: AlgorithmsSection = AlgorithmsSection()
 
 
+FamiliesFigure = Literal["parity", "errors", "scaling"]
+
+
+class FamiliesSection(BaseModel):
+    """Section 5.2: which family-screen figures screen_families.py writes."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    figures: tuple[FamiliesFigure, ...] = get_args(FamiliesFigure)
+
+
+class Results(BaseModel):
+    """Chapter 60_results."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    families: FamiliesSection = FamiliesSection()
+
+
 class PaperConfig(BaseSettings):
     """Every choice of the paper: the plot style and one model per chapter."""
 
@@ -113,6 +132,7 @@ class PaperConfig(BaseSettings):
     plot: PlotStyle = PlotStyle()
     data_analysis: DataAnalysis = DataAnalysis()
     methodology: Methodology = Methodology()
+    results: Results = Results()
 
     @classmethod
     def settings_customise_sources(

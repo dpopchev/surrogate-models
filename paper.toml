@@ -49,6 +49,15 @@ figures = [
 ]
 tables = ["univariate", "charge_correlation", "split_strategies"]
 
+# Section 5.2 -- which family-screen figures screen_families.py writes (W-102); placed by the
+# text like Section 3's, a deselected one drops out. The family table is always written.
+[results.families]
+figures = [
+  "parity",                 # each unit's best per pair: predicted against true on the test curves
+  "errors",                 # the same candidates' relative error per test row, median and p95
+  "scaling",                # folds' figures and the final fit's seconds against the training rows
+]
+
 # Section 4.1 -- the baseline network fit_baseline.py trains (E-005): a plain MLP, the control
 # arm of H2 (MSE, ReLU) and H3 (no skips). PAPER__METHODOLOGY__ALGORITHMS__MAX_EPOCHS=2 in the
 # environment gives a quick smoke run.

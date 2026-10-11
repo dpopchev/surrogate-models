@@ -106,6 +106,17 @@ def test_the_shipped_paper_toml_selects_every_ns_table() -> None:
 
 
 @pytest.mark.edge
+def test_a_families_figure_selection_loads_as_its_typed_value(tmp_path: Path) -> None:
+    toml = write(tmp_path, '[results.families]\nfigures = ["parity"]\n')
+    assert load_config(toml).results.families.figures == ("parity",)
+
+
+@pytest.mark.edge
+def test_the_shipped_paper_toml_selects_the_three_families_figures() -> None:
+    assert len(load_config().results.families.figures) == 3
+
+
+@pytest.mark.edge
 def test_the_baseline_network_defaults_to_relu(tmp_path: Path) -> None:
     assert load_config(write(tmp_path, "")).methodology.algorithms.activation == "relu"
 

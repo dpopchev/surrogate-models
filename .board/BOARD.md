@@ -1,4 +1,4 @@
-# Board -- surrogate-models
+# Board -- W-102-families-figures
 record: local
 open path: E-011 > W-102 > T-237   | blocked: 0 | todo roots: 8 | done: 324 | pruned: 33
 

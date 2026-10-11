@@ -303,6 +303,38 @@ def test_main_draws_the_scaling_figure(ran: Path) -> None:
 
 
 @pytest.mark.functional
+def test_main_writes_only_the_selected_figure_and_its_wrapper(
+    ran: Path, tmp_path: Path, toy_inputs: ToyInputs
+) -> None:
+    """Rebuilt from the ran batch into a folder of its own, with paper.toml selecting parity."""
+    (saved,) = (ran / "state" / SECTION).glob("*.json")
+    ns, bh, split_file = toy_inputs(tmp_path)
+    selection = {"results": {"families": {"figures": ["parity"]}}}
+    config = PaperConfig.model_validate({"plot": {"usetex": False}, **selection})
+    paths = [str(ns), str(bh), str(split_file), str(tmp_path / "assets"), str(ran / "state")]
+    main([*paths, *TOY_KNOBS, "--batch", saved.stem], config)
+    written = sorted(p.name for p in (tmp_path / "assets" / SECTION).glob("*_fig_*"))
+    assert written == [f"{SECTION}_fig_parity.png", f"{SECTION}_fig_parity.tex"]
+
+
+@pytest.mark.functional
+def test_main_removes_a_deselected_figure_s_wrapper_of_an_earlier_run(
+    ran: Path, tmp_path: Path, toy_inputs: ToyInputs
+) -> None:
+    (saved,) = (ran / "state" / SECTION).glob("*.json")
+    ns, bh, split_file = toy_inputs(tmp_path)
+    selection = {"results": {"families": {"figures": ["parity"]}}}
+    config = PaperConfig.model_validate({"plot": {"usetex": False}, **selection})
+    out = tmp_path / "assets" / SECTION
+    out.mkdir(parents=True)
+    stale = out / f"{SECTION}_fig_errors.tex"
+    stale.write_text("earlier run")
+    paths = [str(ns), str(bh), str(split_file), str(tmp_path / "assets"), str(ran / "state")]
+    main([*paths, *TOY_KNOBS, "--batch", saved.stem], config)
+    assert not stale.exists()
+
+
+@pytest.mark.functional
 def test_main_writes_the_family_table(ran: Path) -> None:
     table = ran / "assets" / SECTION / f"{SECTION}_tab_families.tex"
     assert len(table_rows(table.read_text())) == 12

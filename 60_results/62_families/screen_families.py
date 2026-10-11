@@ -54,7 +54,7 @@ from shared.candidates import (
     fitter_of,
 )
 from shared.ceilings import PROFILE_BINS, profile
-from shared.config import NOTATION_TEX, PaperConfig, load_config
+from shared.config import NOTATION_TEX, FamiliesFigure, PaperConfig, load_config
 from shared.design import (
     BLACK_HOLES,
     DATASET_TEX,
@@ -714,22 +714,25 @@ def main(
         outcomes = outcomes_from_json(saved.read_text())
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
+        for stale in out.iterdir():  # a deselected figure's wrapper of an earlier run (W-102)
+            stale.unlink()
         path = out / f"{SECTION}_tab_families.tex"
         write_checked(path, family_table(outcomes))
         logger.info("done: family table of batch %s, %d outcomes -> %s", batch, len(outcomes), path)
         # The panels' titles read the symbols, which expand the notation the style hands on.
         apply_style(config.plot, NOTATION_TEX.read_text())
         panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
-        drawn = (
-            (PARITY, parity_figure(panels, config.plot), parity_tex()),
-            (ERRORS, error_figure(panels, config.plot), errors_tex()),
-            (
+        drawers: dict[FamiliesFigure, Callable[[], tuple[str, Figure, str]]] = {
+            "parity": lambda: (PARITY, parity_figure(panels, config.plot), parity_tex()),
+            "errors": lambda: (ERRORS, error_figure(panels, config.plot), errors_tex()),
+            "scaling": lambda: (
                 SCALING,
                 scaling_figure(trajectories(outcomes), config.plot, args.minutes * 60.0),
                 scaling_tex(args.minutes, args.memory_gb),
             ),
-        )
-        for name, figure, tex in drawn:
+        }
+        for selected in config.results.families.figures:
+            name, figure, tex = drawers[selected]()
             figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
             plt.close(figure)
             write_checked(out / f"{name}.tex", tex)
