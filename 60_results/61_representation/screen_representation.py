@@ -131,6 +131,26 @@ class Knobs:
     knots: int
 
 
+@dataclass(frozen=True)
+class Context:
+    """What every job of one run shares: the batch (its ledger, its study journal, its code
+    and its start) and the settings of its models."""
+
+    batch: Batch
+    knobs: Knobs
+    training: Training
+    log_level: str
+
+
+@dataclass(frozen=True)
+class Work:
+    """One job with its cell's design, run in a worker process."""
+
+    job: Job
+    data: Design
+    context: Context
+
+
 # --- pure functions ---------------------------------------------------------------------------
 
 
@@ -310,38 +330,6 @@ def _reference_fitter(
 # --- shell ------------------------------------------------------------------------------------
 
 
-def main(
-    argv: list[str],
-    config: PaperConfig | None = None,
-    commit: Callable[[], str] | None = None,
-    dirty: Callable[[], bool] | None = None,
-    now: Callable[[], datetime] | None = None,
-) -> None:
-    """Run every job of the screen as a trial of one study, each leaving its ledger entry --
-    or, given --batch, fit nothing and take that recorded batch; write the representation table
-    from the batch's entries into the section's asset folder, after emptying that folder of an
-    earlier run."""
-    args = _arguments(argv)
-    for path in (args.ns, args.bh, args.split):
-        assert path.is_file(), f"input not found: {path}"
-    config = config or load_config()
-    settings = config.methodology.algorithms
-    training = make_training(settings)
-    seeds = tuple(training.seed + i for i in range(args.seeds))
-    jobs = len(plan(cells(), seeds))
-    ledger = args.state / "ledger"
-    with at_level(settings.log_level):
-        if args.batch is None:
-            batch = _run_screen(args, config, training, seeds, commit, dirty, now)
-        else:
-            batch = args.batch
-            logger.info("rebuilding the table from batch %s; nothing is fitted", batch)
-        entries = [entry for entry in read_ledger(ledger) if entry.meta.batch == batch]
-        assert len(entries) == jobs, f"batch {batch}: {len(entries)} ledger entries for {jobs} jobs"
-        path = _write_table(args.assets / SECTION, representation_table(scores(entries)))
-        logger.info("done: representation table of batch %s -> %s", batch, path)
-
-
 def _run_screen(
     args: argparse.Namespace,
     config: PaperConfig,
@@ -389,26 +377,6 @@ def _run_screen(
     )
     run_jobs(jobs, settings.workers, log_level=context.log_level)
     return batch.id
-
-
-@dataclass(frozen=True)
-class Context:
-    """What every job of one run shares: the batch (its ledger, its study journal, its code
-    and its start) and the settings of its models."""
-
-    batch: Batch
-    knobs: Knobs
-    training: Training
-    log_level: str
-
-
-@dataclass(frozen=True)
-class Work:
-    """One job with its cell's design, run in a worker process."""
-
-    job: Job
-    data: Design
-    context: Context
 
 
 def screen_job(work: Work) -> None:
@@ -485,6 +453,38 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--seeds", type=int, required=True, help="MLP seeds from paper.toml's")
     parser.add_argument("--batch", help="fit nothing; rebuild the table from this recorded batch")
     return parser.parse_args(argv)
+
+
+def main(
+    argv: list[str],
+    config: PaperConfig | None = None,
+    commit: Callable[[], str] | None = None,
+    dirty: Callable[[], bool] | None = None,
+    now: Callable[[], datetime] | None = None,
+) -> None:
+    """Run every job of the screen as a trial of one study, each leaving its ledger entry --
+    or, given --batch, fit nothing and take that recorded batch; write the representation table
+    from the batch's entries into the section's asset folder, after emptying that folder of an
+    earlier run."""
+    args = _arguments(argv)
+    for path in (args.ns, args.bh, args.split):
+        assert path.is_file(), f"input not found: {path}"
+    config = config or load_config()
+    settings = config.methodology.algorithms
+    training = make_training(settings)
+    seeds = tuple(training.seed + i for i in range(args.seeds))
+    jobs = len(plan(cells(), seeds))
+    ledger = args.state / "ledger"
+    with at_level(settings.log_level):
+        if args.batch is None:
+            batch = _run_screen(args, config, training, seeds, commit, dirty, now)
+        else:
+            batch = args.batch
+            logger.info("rebuilding the table from batch %s; nothing is fitted", batch)
+        entries = [entry for entry in read_ledger(ledger) if entry.meta.batch == batch]
+        assert len(entries) == jobs, f"batch {batch}: {len(entries)} ledger entries for {jobs} jobs"
+        path = _write_table(args.assets / SECTION, representation_table(scores(entries)))
+        logger.info("done: representation table of batch %s -> %s", batch, path)
 
 
 if __name__ == "__main__":

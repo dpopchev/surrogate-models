@@ -115,6 +115,26 @@ class SplitScore:
     mae: float
 
 
+# The data limits (W-064): macro tags and TeX labels of the targets and of the curve keys varied.
+CEILING_TAGS = {"M": "M", "D": "D", "beta": "Beta", "lambda": "Lambda"}
+CEILING_LABELS = SYMBOLS.of("M", "D", "beta", "lambda")
+CEILINGS_CAPTION = (
+    "Neutron stars: the relative error the data allow, at the 95th percentile -- the noise "
+    "along a curve (median), a cubic spline through every other row of a curve (along), and a "
+    "curve predicted from the two curves on each side in $\\beta$ or in $\\lambda$ (across); "
+    "figures is $-\\log_{10}$ of the worse across-curve error."
+)
+DECADES_CAPTION = (
+    "Neutron stars: median relative error of $\\Dch$ predicted from the neighbouring curves, "
+    "per decade of $\\Dch$, and the significant figures the worse direction allows."
+)
+CEILINGS_FIGURE = (
+    "Neutron stars: relative error of a curve predicted from the two curves on each side in "
+    "$\\beta$ or in $\\lambda$, along $\\log_{10}\\rhoc$ -- median solid, 95th percentile dashed; "
+    "dotted lines mark 4 and 5 significant figures."
+)
+
+
 # --- pure functions ---------------------------------------------------------------------------
 
 
@@ -600,6 +620,15 @@ def draw(figure: NsFigure, table: pd.DataFrame, style: PlotStyle, window: float)
             assert_never(figure)
 
 
+def ceiling_colors(style: PlotStyle) -> dict[str, Any]:
+    """The colour of each curve key's line on the ceilings figure, from the NS colormaps (W-097:
+    the palette's index 1 is the BH anchor colour)."""
+    return {
+        "beta": colormap(style.neutron_stars.beta_cmap)(0.6),
+        "lambda": colormap(style.neutron_stars.lambda_cmap)(0.6),
+    }
+
+
 # --- shell ------------------------------------------------------------------------------------
 
 
@@ -612,6 +641,24 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--seed", type=int, required=True, help="the split's seed")
     parser.add_argument("--window", type=float, required=True, help="pile-up window in M")
     return parser.parse_args(argv)
+
+
+def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
+    """Write the ceilings table, the per-decade table and the figure of the data limits."""
+    (out / f"{SECTION}_tab_ceilings.tex").write_text(
+        ceiling_table("ns-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS)
+    )
+    (out / f"{SECTION}_tab_ceiling_decades.tex").write_text(
+        decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS)
+    )
+    fig = ceiling_figure(bounds, CEILING_LABELS, SYMBOLS["log10_rho_c"], ceiling_colors(style))
+    fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
+    plt.close(fig)
+    (out / f"{SECTION}_fig_ceilings.tex").write_text(
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{SECTION}_fig_ceilings}}\n"
+        f"\\caption{{{CEILINGS_FIGURE}}}\n\\label{{fig:ns-ceilings}}\n\\end{{figure}}\n"
+    )
 
 
 def main(argv: list[str], config: PaperConfig | None = None) -> None:
@@ -658,53 +705,6 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
     _write_ceilings(out, bounds, config.plot)
     logger.info(
         "done: NS figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
-    )
-
-
-# The data limits (W-064): macro tags and TeX labels of the targets and of the curve keys varied.
-CEILING_TAGS = {"M": "M", "D": "D", "beta": "Beta", "lambda": "Lambda"}
-CEILING_LABELS = SYMBOLS.of("M", "D", "beta", "lambda")
-CEILINGS_CAPTION = (
-    "Neutron stars: the relative error the data allow, at the 95th percentile -- the noise "
-    "along a curve (median), a cubic spline through every other row of a curve (along), and a "
-    "curve predicted from the two curves on each side in $\\beta$ or in $\\lambda$ (across); "
-    "figures is $-\\log_{10}$ of the worse across-curve error."
-)
-DECADES_CAPTION = (
-    "Neutron stars: median relative error of $\\Dch$ predicted from the neighbouring curves, "
-    "per decade of $\\Dch$, and the significant figures the worse direction allows."
-)
-CEILINGS_FIGURE = (
-    "Neutron stars: relative error of a curve predicted from the two curves on each side in "
-    "$\\beta$ or in $\\lambda$, along $\\log_{10}\\rhoc$ -- median solid, 95th percentile dashed; "
-    "dotted lines mark 4 and 5 significant figures."
-)
-
-
-def ceiling_colors(style: PlotStyle) -> dict[str, Any]:
-    """The colour of each curve key's line on the ceilings figure, from the NS colormaps (W-097:
-    the palette's index 1 is the BH anchor colour)."""
-    return {
-        "beta": colormap(style.neutron_stars.beta_cmap)(0.6),
-        "lambda": colormap(style.neutron_stars.lambda_cmap)(0.6),
-    }
-
-
-def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
-    """Write the ceilings table, the per-decade table and the figure of the data limits."""
-    (out / f"{SECTION}_tab_ceilings.tex").write_text(
-        ceiling_table("ns-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS)
-    )
-    (out / f"{SECTION}_tab_ceiling_decades.tex").write_text(
-        decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS)
-    )
-    fig = ceiling_figure(bounds, CEILING_LABELS, SYMBOLS["log10_rho_c"], ceiling_colors(style))
-    fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
-    plt.close(fig)
-    (out / f"{SECTION}_fig_ceilings.tex").write_text(
-        "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{SECTION}_fig_ceilings}}\n"
-        f"\\caption{{{CEILINGS_FIGURE}}}\n\\label{{fig:ns-ceilings}}\n\\end{{figure}}\n"
     )
 
 

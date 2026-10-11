@@ -114,6 +114,22 @@ class SplitScore:
     mae: float
 
 
+# The data limits (W-064): macro tags and TeX labels of the targets and of the curve key varied.
+CEILING_TAGS = {"M": "M", "D": "D", "beta": "Beta"}
+CEILING_LABELS = SYMBOLS.of("M", "D", "beta")
+CEILINGS_CAPTION = (
+    "Black holes: the relative error the data allow, at the 95th percentile -- the noise "
+    "along a curve (median), a cubic spline through every other row of a curve (along), and a "
+    "curve predicted from the two curves on each side in $\\beta$ (across); figures is "
+    "$-\\log_{10}$ of the across-curve error."
+)
+CEILINGS_FIGURE = (
+    "Black holes: relative error of a curve predicted from the two curves on each side in "
+    "$\\beta$, along $\\rh$ -- median solid, 95th percentile dashed; dotted lines mark 4 and 5 "
+    "significant figures."
+)
+
+
 # --- pure functions ---------------------------------------------------------------------------
 
 
@@ -515,6 +531,23 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
+    """Write the ceilings table and the figure of the data limits."""
+    (out / f"{SECTION}_tab_ceilings.tex").write_text(
+        ceiling_table("bh-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS)
+    )
+    fig = ceiling_figure(
+        bounds, CEILING_LABELS, SYMBOLS["r_h"], {"beta": anchor_color(style, "black_holes")}
+    )
+    fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
+    plt.close(fig)
+    (out / f"{SECTION}_fig_ceilings.tex").write_text(
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{SECTION}_fig_ceilings}}\n"
+        f"\\caption{{{CEILINGS_FIGURE}}}\n\\label{{fig:bh-ceilings}}\n\\end{{figure}}\n"
+    )
+
+
 def main(argv: list[str], config: PaperConfig | None = None) -> None:
     """Write the selected figures and tables and the numbers into the section's folder of the
     asset dir, after emptying that folder of an earlier run."""
@@ -548,39 +581,6 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
     _write_ceilings(out, bounds, config.plot)
     logger.info(
         "done: BH figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
-    )
-
-
-# The data limits (W-064): macro tags and TeX labels of the targets and of the curve key varied.
-CEILING_TAGS = {"M": "M", "D": "D", "beta": "Beta"}
-CEILING_LABELS = SYMBOLS.of("M", "D", "beta")
-CEILINGS_CAPTION = (
-    "Black holes: the relative error the data allow, at the 95th percentile -- the noise "
-    "along a curve (median), a cubic spline through every other row of a curve (along), and a "
-    "curve predicted from the two curves on each side in $\\beta$ (across); figures is "
-    "$-\\log_{10}$ of the across-curve error."
-)
-CEILINGS_FIGURE = (
-    "Black holes: relative error of a curve predicted from the two curves on each side in "
-    "$\\beta$, along $\\rh$ -- median solid, 95th percentile dashed; dotted lines mark 4 and 5 "
-    "significant figures."
-)
-
-
-def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
-    """Write the ceilings table and the figure of the data limits."""
-    (out / f"{SECTION}_tab_ceilings.tex").write_text(
-        ceiling_table("bh-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS)
-    )
-    fig = ceiling_figure(
-        bounds, CEILING_LABELS, SYMBOLS["r_h"], {"beta": anchor_color(style, "black_holes")}
-    )
-    fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
-    plt.close(fig)
-    (out / f"{SECTION}_fig_ceilings.tex").write_text(
-        "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{SECTION}_fig_ceilings}}\n"
-        f"\\caption{{{CEILINGS_FIGURE}}}\n\\label{{fig:bh-ceilings}}\n\\end{{figure}}\n"
     )
 
 

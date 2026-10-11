@@ -154,6 +154,43 @@ class PairScores:
 X_SYMBOL = {"neutron_stars": "log10_rho_c", "black_holes": "r_h"}
 
 
+@dataclass(frozen=True)
+class _Run:
+    """Where and from what one pair's run is recorded: its folder, the section's asset folder,
+    its own start, and the make baseline batch it belongs to (its ledger, journal and code)."""
+
+    folder: Path
+    out: Path
+    started: datetime
+    batch: Batch
+
+
+@dataclass(frozen=True)
+class _Progress:
+    """The fit count every worker shares for the progress line: a counter and its lock from a
+    multiprocessing manager, the fits in all and the wall-clock start."""
+
+    count: Any
+    lock: Any
+    total: int
+    first: float
+
+
+@dataclass(frozen=True)
+class _Job:
+    """One candidate on one pair, run in a worker process, with the table its curve names
+    come from and the plot style its live curve and diagnostics are drawn at."""
+
+    pair: Pair
+    table: pd.DataFrame
+    run: _Run
+    candidate: str
+    training: Training
+    settings: AlgorithmsSection
+    progress: _Progress
+    style: PlotStyle
+
+
 # --- pure functions ---------------------------------------------------------------------------
 
 
@@ -481,137 +518,6 @@ def figure_tex() -> str:
 # --- shell ------------------------------------------------------------------------------------
 
 
-def main(
-    argv: list[str],
-    config: PaperConfig | None = None,
-    commit: Callable[[], str] | None = None,
-    dirty: Callable[[], bool] | None = None,
-    now: Callable[[], datetime] | None = None,
-) -> None:
-    """Score the baseline and its references on every dataset and target; write the baseline
-    table, the NS mass numbers and parity figure into the section's folder of the asset dir,
-    after emptying that folder of an earlier run; leave each pair's run record and diagnostics
-    in a folder named after its run under the state dir."""
-    assert len(argv) == 5, (
-        "usage: fit_baseline.py <ns.parquet> <bh.parquet> <split.parquet> <asset dir> "
-        f"<state dir>, got {argv}"
-    )
-    ns, bh, split_file = Path(argv[0]), Path(argv[1]), Path(argv[2])
-    out, state = Path(argv[3]) / SECTION, Path(argv[4]) / SECTION
-    for path in (ns, bh, split_file):
-        assert path.is_file(), f"input not found: {path}"
-    config = config or load_config()
-    now = now or utc_now
-    settings = config.methodology.algorithms
-    apply_style(config.plot, NOTATION_TEX.read_text())
-    torch.set_num_threads(settings.threads)
-    training = make_training(settings)
-    tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
-    split = pd.read_parquet(split_file)
-    found_pairs = pairs(tables, split, SPECS, TARGETS)
-    total = sum(len(set(p.design.fold[p.design.fold >= 0].tolist())) + 1 for p in found_pairs)
-    first = time.time()
-    batch = make_batch(
-        Path(argv[4]),
-        journal=lambda _: Path(argv[4]) / "optuna" / "journal.log",
-        commit=commit or git_commit,
-        dirty=dirty or git_dirty,
-        now=now,
-        new_id=new_id,
-    )
-    batch.ledger.mkdir(parents=True, exist_ok=True)
-    # The batch's study is made once here; every job joins it as its trials run.
-    open_study(batch.id, batch.journal)
-    planned: list[tuple[Pair, _Run]] = []
-    with multiprocessing.Manager() as manager:
-        progress = _Progress(manager.Value("i", 0), manager.Lock(), total, first)
-        jobs = []
-        for pair in found_pairs:
-            started = now()
-            folder = state / run_stem(pair.dataset, pair.target, started)
-            folder.mkdir(parents=True, exist_ok=True)
-            # latest.log is what make follow tails: repointed at each run's log as it is made.
-            latest = state / "latest.log"
-            latest.unlink(missing_ok=True)
-            latest.symlink_to(Path(folder.name) / "train.log")
-            run = _Run(folder, out, started, batch)
-            planned.append((pair, run))
-            table = tables[pair.dataset]
-            jobs += [
-                partial(
-                    _score_job,
-                    _Job(pair, table, run, name, training, settings, progress, config.plot),
-                )
-                for name in CANDIDATES
-            ]
-        with at_level(settings.log_level):
-            logger.info(
-                "%d jobs on %d workers; follow them with make dashboard",
-                len(jobs),
-                settings.workers,
-            )
-            found = run_jobs(jobs, settings.workers)
-    scores: list[PairScores] = []
-    fits: dict[tuple[str, str], Fit] = {}
-    for i, (pair, run) in enumerate(planned):
-        mine = found[i * len(CANDIDATES) : (i + 1) * len(CANDIDATES)]
-        scores.append(PairScores(pair.dataset, pair.target, tuple(s for s, _ in mine)))
-        mlp_fit = mine[0][1]
-        assert mlp_fit is not None, f"{run.folder.name}: the MLP job returned no fit"
-        fits[pair.dataset, pair.target] = mlp_fit
-    run = planned[-1][1].folder
-    assert (NEUTRON_STARS.dataset, "mass") in fits, "the NS mass pair did not run"
-    mares = {}
-    for dataset in (NEUTRON_STARS.dataset, BLACK_HOLES.dataset):
-        mass, charge = fits[dataset, "mass"], fits[dataset, "charge"]
-        assert np.array_equal(mass.groups_test, charge.groups_test), (
-            f"{dataset}: the mass and charge fits are not scored on the same test rows"
-        )
-        mares[dataset] = charge_mares(mass, charge)
-    # The section's assets are written last, into the last run's log that make follow shows.
-    with _logging_into(run / "train.log", settings.log_level):
-        _write_section(out, scores, fits[NEUTRON_STARS.dataset, "mass"], config, mares)
-        logger.info("all %d fits done in %s", total, duration_text(time.time() - first))
-        logger.info("done: baseline table, NS mass numbers and parity figure -> %s", out)
-
-
-@dataclass(frozen=True)
-class _Run:
-    """Where and from what one pair's run is recorded: its folder, the section's asset folder,
-    its own start, and the make baseline batch it belongs to (its ledger, journal and code)."""
-
-    folder: Path
-    out: Path
-    started: datetime
-    batch: Batch
-
-
-@dataclass(frozen=True)
-class _Progress:
-    """The fit count every worker shares for the progress line: a counter and its lock from a
-    multiprocessing manager, the fits in all and the wall-clock start."""
-
-    count: Any
-    lock: Any
-    total: int
-    first: float
-
-
-@dataclass(frozen=True)
-class _Job:
-    """One candidate on one pair, run in a worker process, with the table its curve names
-    come from and the plot style its live curve and diagnostics are drawn at."""
-
-    pair: Pair
-    table: pd.DataFrame
-    run: _Run
-    candidate: str
-    training: Training
-    settings: AlgorithmsSection
-    progress: _Progress
-    style: PlotStyle
-
-
 def ask_trial(study: optuna.Study, dataset: str, target: str, candidate: str) -> optuna.Trial:
     """A new trial of the study, named by its pair and candidate from its start, so the
     dashboard tells the running trials apart."""
@@ -795,6 +701,100 @@ def _logging_into(log: Path, level: str) -> Iterator[None]:
         root.removeHandler(handler)
         handler.close()
         root.setLevel(previous)
+
+
+def main(
+    argv: list[str],
+    config: PaperConfig | None = None,
+    commit: Callable[[], str] | None = None,
+    dirty: Callable[[], bool] | None = None,
+    now: Callable[[], datetime] | None = None,
+) -> None:
+    """Score the baseline and its references on every dataset and target; write the baseline
+    table, the NS mass numbers and parity figure into the section's folder of the asset dir,
+    after emptying that folder of an earlier run; leave each pair's run record and diagnostics
+    in a folder named after its run under the state dir."""
+    assert len(argv) == 5, (
+        "usage: fit_baseline.py <ns.parquet> <bh.parquet> <split.parquet> <asset dir> "
+        f"<state dir>, got {argv}"
+    )
+    ns, bh, split_file = Path(argv[0]), Path(argv[1]), Path(argv[2])
+    out, state = Path(argv[3]) / SECTION, Path(argv[4]) / SECTION
+    for path in (ns, bh, split_file):
+        assert path.is_file(), f"input not found: {path}"
+    config = config or load_config()
+    now = now or utc_now
+    settings = config.methodology.algorithms
+    apply_style(config.plot, NOTATION_TEX.read_text())
+    torch.set_num_threads(settings.threads)
+    training = make_training(settings)
+    tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
+    split = pd.read_parquet(split_file)
+    found_pairs = pairs(tables, split, SPECS, TARGETS)
+    total = sum(len(set(p.design.fold[p.design.fold >= 0].tolist())) + 1 for p in found_pairs)
+    first = time.time()
+    batch = make_batch(
+        Path(argv[4]),
+        journal=lambda _: Path(argv[4]) / "optuna" / "journal.log",
+        commit=commit or git_commit,
+        dirty=dirty or git_dirty,
+        now=now,
+        new_id=new_id,
+    )
+    batch.ledger.mkdir(parents=True, exist_ok=True)
+    # The batch's study is made once here; every job joins it as its trials run.
+    open_study(batch.id, batch.journal)
+    planned: list[tuple[Pair, _Run]] = []
+    with multiprocessing.Manager() as manager:
+        progress = _Progress(manager.Value("i", 0), manager.Lock(), total, first)
+        jobs = []
+        for pair in found_pairs:
+            started = now()
+            folder = state / run_stem(pair.dataset, pair.target, started)
+            folder.mkdir(parents=True, exist_ok=True)
+            # latest.log is what make follow tails: repointed at each run's log as it is made.
+            latest = state / "latest.log"
+            latest.unlink(missing_ok=True)
+            latest.symlink_to(Path(folder.name) / "train.log")
+            run = _Run(folder, out, started, batch)
+            planned.append((pair, run))
+            table = tables[pair.dataset]
+            jobs += [
+                partial(
+                    _score_job,
+                    _Job(pair, table, run, name, training, settings, progress, config.plot),
+                )
+                for name in CANDIDATES
+            ]
+        with at_level(settings.log_level):
+            logger.info(
+                "%d jobs on %d workers; follow them with make dashboard",
+                len(jobs),
+                settings.workers,
+            )
+            found = run_jobs(jobs, settings.workers)
+    scores: list[PairScores] = []
+    fits: dict[tuple[str, str], Fit] = {}
+    for i, (pair, run) in enumerate(planned):
+        mine = found[i * len(CANDIDATES) : (i + 1) * len(CANDIDATES)]
+        scores.append(PairScores(pair.dataset, pair.target, tuple(s for s, _ in mine)))
+        mlp_fit = mine[0][1]
+        assert mlp_fit is not None, f"{run.folder.name}: the MLP job returned no fit"
+        fits[pair.dataset, pair.target] = mlp_fit
+    run = planned[-1][1].folder
+    assert (NEUTRON_STARS.dataset, "mass") in fits, "the NS mass pair did not run"
+    mares = {}
+    for dataset in (NEUTRON_STARS.dataset, BLACK_HOLES.dataset):
+        mass, charge = fits[dataset, "mass"], fits[dataset, "charge"]
+        assert np.array_equal(mass.groups_test, charge.groups_test), (
+            f"{dataset}: the mass and charge fits are not scored on the same test rows"
+        )
+        mares[dataset] = charge_mares(mass, charge)
+    # The section's assets are written last, into the last run's log that make follow shows.
+    with _logging_into(run / "train.log", settings.log_level):
+        _write_section(out, scores, fits[NEUTRON_STARS.dataset, "mass"], config, mares)
+        logger.info("all %d fits done in %s", total, duration_text(time.time() - first))
+        logger.info("done: baseline table, NS mass numbers and parity figure -> %s", out)
 
 
 if __name__ == "__main__":
