@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-010 > W-091   | blocked: 0 | todo roots: 5 | done: 288 | pruned: 20
+open path: E-010   | blocked: 1 | todo roots: 5 | done: 288 | pruned: 20
 
 ## Tree
 
@@ -45,7 +45,7 @@ E-009         [doing]    The paper follows the revised structure, and the releas
   W-100  spike  [todo]     What the paper claims once the search names its winners   (filed during T-206) -- T-233 [todo], T-234 [todo]
 E-010         [doing]    Every module meets the Python gates
   W-079  issue  [done]     Every test carries one category marker, registered and enforced   (filed during T-164) -- T-167 [done], T-168 [done], T-232 [done]
-  W-091  issue  [doing]    The screens' shared shell and test inputs live once -- one helper module, one toy fixture   (filed during T-205) -- T-213 [done], T-214 [pruned]   [pruned: its Check counts shared/batches.py, whose walled T-213's brief defines, and a test helper named walled, so it can never print 0; continued by the next Task with a runnables-only count], T-215 [done], T-282 [done], T-283 [done]
+  W-091  issue  [blocked]  The screens' shared shell and test inputs live once -- one helper module, one toy fixture   [blocked since 2026-10-11, waiting on W-117: its asset gate fails on a pre-existing run-dependent macro order in the NS numbers file (49 of 50 assets byte-identical, the 50th the same macros reordered); the gate needs W-117 first]   (filed during T-205) -- T-213 [done], T-214 [pruned]   [pruned: its Check counts shared/batches.py, whose walled T-213's brief defines, and a test helper named walled, so it can never print 0; continued by the next Task with a runnables-only count], T-215 [done], T-282 [done], T-283 [done]
   W-095  bug    [todo]     The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206) -- T-219 [todo]
   W-096  issue  [todo]     One Pair and one FitRows value through the fit path   (filed during T-206) -- T-220 [todo], T-221 [todo], T-222 [todo]
   W-105  bug    [todo]     make tuning with --recover on a partial batch fails at the figures after writing the table   (filed during T-240) -- T-242 [todo]   (filed during T-240)
@@ -54,6 +54,7 @@ E-010         [doing]    Every module meets the Python gates
   W-108  issue  [todo]     Every knob has one home -- T-250 [todo], T-251 [todo], T-252 [todo], T-253 [todo]
   W-109  issue  [todo]     Records, not tuples and dict blobs -- T-254 [todo], T-255 [todo], T-256 [todo]
   W-110  issue  [todo]     Module order, notation literals and the surrogate module -- T-257 [todo], T-258 [todo], T-259 [todo]
+  W-117  bug    [todo]     The NS numbers file is written in a run-dependent order, so a rebuilt asset need not match its hash   (filed during T-215) -- T-284 [todo]
 E-011         [todo]     Figures and tables picked from rendered variants, numbers from macros
   W-102  issue  [todo]     Every section's figures are selected in paper.toml   (filed during T-206) -- T-237 [todo]
   W-104  bug    [todo]     Section 5.2's error and scaling figures float past Section 5.3's text   (filed during T-240) -- T-241 [todo]   (filed during T-240)
@@ -599,7 +600,7 @@ flowchart TD
   W079 --> T167["T-167 done: Mark every test module with its category -> the test_*.py files"]
   W079 --> T168["T-168 done: Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py"]
   W079 --> T232["T-232 done: Refresh mk/python.mk from add-python -> M= selection, test-integration, test-stats"]
-  E010 --> W091["W-091 issue doing: The screens' shared shell and test inputs live once -- one helper module, one toy fixture"]
+  E010 --> W091["W-091 issue blocked on W-117: The screens' shared shell and test inputs live once -- one helper module, one toy fixture"]
   W091 --> T213["T-213 done: Write the run shell module test-first -> shared/batches.py"]
   W091 --> T214["T-214 pruned: Point the four runnables at shared/batches.py -> no private copy of the run shell left"]
   W091 --> T215["T-215 done: Write the screens' toy tables once -> 60_results/conftest.py used by the three screen test modules"]
@@ -635,6 +636,8 @@ flowchart TD
   W110 --> T257["T-257 todo: Reorder so main() is the last definition -> eda_neutron_stars.py, eda_black_holes.py, fit_baseline.py, screen_representation.py"]
   W110 --> T258["T-258 todo: Move duration text and the reference predictors -> shared/progress.py, shared/families.py"]
   W110 --> T259["T-259 todo: Label through SYMBOLS test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py, shared/plots.py"]
+  E010 --> W117["W-117 bug todo: The NS numbers file is written in a run-dependent order, so a rebuilt asset need not match its hash"]
+  W117 --> T284["T-284 todo: Write the Figures macros in target order test-first -> shared/ceilings.py"]
   E011["E-011 todo: Figures and tables picked from rendered variants, numbers from macros"]
   E011 --> W102["W-102 issue todo: Every section's figures are selected in paper.toml"]
   W102 --> T237["T-237 todo: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
@@ -678,8 +681,9 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E010,W091 doing
+  class E006,E009,E010 doing
+  class W091 blocked
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W079,T167,T168,T232,T213,T215,T282,T283 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W095,T219,W096,T220,T221,T222,W105,T242,W106,T243,T244,T245,T246,W107,T247,T248,T249,W108,T250,T251,T252,T253,W109,T254,T255,T256,W110,T257,T258,T259,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197 todo
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W095,T219,W096,T220,T221,T222,W105,T242,W106,T243,T244,T245,T246,W107,T247,T248,T249,W108,T250,T251,T252,T253,W109,T254,T255,T256,W110,T257,T258,T259,W117,T284,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T214 pruned
 ```
