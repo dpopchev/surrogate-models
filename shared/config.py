@@ -192,12 +192,38 @@ class FamiliesSection(BaseModel):
     variants: FamiliesVariants = FamiliesVariants()
 
 
+# dots_and_best: every trial and the best so far; best_only: the best so far alone; regret: the
+# best so far minus each trial, log-scaled (W-113).
+PrecisionHistoryVariant = Literal["dots_and_best", "best_only", "regret"]
+# row: knots, neighbours and the network side by side; grid: 2 x 2, the knots split by
+# dataset; no_network: knots and neighbours alone (W-113).
+PrecisionRangesVariant = Literal["row", "grid", "no_network"]
+
+
+class PrecisionVariants(BaseModel):
+    """Section 5.3: which variant of each tuning figure the paper places (W-113)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    history: PrecisionHistoryVariant = "dots_and_best"
+    ranges: PrecisionRangesVariant = "row"
+
+
+class PrecisionSection(BaseModel):
+    """Section 5.3: the tuning figures tune_survivors.py writes (W-113)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    variants: PrecisionVariants = PrecisionVariants()
+
+
 class Results(BaseModel):
     """Chapter 60_results."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     families: FamiliesSection = FamiliesSection()
+    precision: PrecisionSection = PrecisionSection()
 
 
 class PaperConfig(BaseSettings):

@@ -18,13 +18,14 @@ from datetime import datetime
 from functools import partial
 from itertools import product
 from pathlib import Path
-from typing import Any, assert_never
+from typing import Any, assert_never, get_args
 
 import matplotlib.pyplot as plt
 import numpy as np
 import optuna
 import pandas as pd
 import seaborn as sns
+from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.ticker import FixedLocator, NullFormatter, ScalarFormatter
@@ -50,7 +51,13 @@ from shared.batches import (
     write_entry,
 )
 from shared.candidates import FAMILIES, UNITS, Candidate, Knobs, tuned_fitter
-from shared.config import NOTATION_TEX, PaperConfig, load_config
+from shared.config import (
+    NOTATION_TEX,
+    PaperConfig,
+    PrecisionHistoryVariant,
+    PrecisionRangesVariant,
+    load_config,
+)
 from shared.design import (
     BLACK_HOLES,
     DATASET_TEX,
@@ -66,7 +73,7 @@ from shared.design import (
 )
 from shared.eda import booktabs
 from shared.harness import Run, harness
-from shared.plots import SYMBOLS, PlotStyle, apply_style, colormap, figure_size
+from shared.plots import SYMBOLS, PlotStyle, apply_style, colormap, contact_sheet, figure_size
 from shared.runs import LedgerEntry, RunMetadata, Setting
 from shared.scorecard import significant_figures
 from shared.search import (
@@ -410,9 +417,19 @@ def trial_points(study: optuna.Study, job: Job) -> tuple[TrialPoint, ...]:
     )
 
 
-def history_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
+# The regret of a trial that set a new best, on the log axis of the regret history.
+REGRET_FLOOR = 1e-3
+
+
+def history_figure(
+    points: Sequence[TrialPoint],
+    style: PlotStyle,
+    variant: PrecisionHistoryVariant = "dots_and_best",
+) -> Figure:
     """Per pair a panel: each candidate's trial figures against the trial number as dots and
-    its best so far as a line, family by color and unit by line style (curve-wise dashed)."""
+    its best so far as a line (dots_and_best), the best so far alone (best_only), or the best
+    so far minus each trial as dots on a log scale (regret); family by color and unit by line
+    style (curve-wise dashed)."""
     pairs: list[tuple[str, Target]] = list(
         dict.fromkeys((p.job.dataset, p.job.target) for p in points)
     )
@@ -436,15 +453,22 @@ def history_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
             color = palette[job.candidate.family]
             numbers = [p.number for p in trials if p.figures is not None]
             figures = [p.figures for p in trials if p.figures is not None]
-            axes.plot(
-                numbers, figures, linestyle="", marker="o", markersize=2.5, color=color, alpha=0.5
-            )
-            axes.plot(
-                numbers,
-                np.maximum.accumulate(figures),
-                color=color,
-                linestyle="--" if job.candidate.unit == "curve-wise" else "-",
-            )
+            dots = {"linestyle": "", "marker": "o", "markersize": 2.5, "color": color}
+            dots["alpha"] = 0.5
+            best = {"color": color}
+            best["linestyle"] = "--" if job.candidate.unit == "curve-wise" else "-"
+            match variant:
+                case "dots_and_best":
+                    axes.plot(numbers, figures, **dots)
+                    axes.plot(numbers, np.maximum.accumulate(figures), **best)
+                case "best_only":
+                    axes.plot(numbers, np.maximum.accumulate(figures), **best)
+                case "regret":
+                    # A trial that sets a new best has no regret: it is drawn at the floor.
+                    regret = np.maximum.accumulate(figures) - np.asarray(figures)
+                    axes.plot(numbers, np.maximum(regret, REGRET_FLOOR), **dots)
+                case _:
+                    assert_never(variant)
             walls = [p.number for p in trials if p.figures is None]
             if walls:
                 # at the panel's bottom whatever its figures' range: the x in data, the y in axes
@@ -458,7 +482,11 @@ def history_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
                     transform=axes.get_xaxis_transform(),
                 )
         axes.set_title(f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}", fontsize="small")
-        axes.set_ylabel("folds' figures")
+        if variant == "regret":
+            axes.set_yscale("log")
+            axes.set_ylabel("figures behind the best")
+        else:
+            axes.set_ylabel("folds' figures")
     for axes in grid.flat[len(pairs) :]:
         axes.set_visible(False)
     for axes in grid[-1]:
@@ -475,14 +503,41 @@ def history_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
     return figure
 
 
-def ranges_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
+def ranges_figure(
+    points: Sequence[TrialPoint], style: PlotStyle, variant: PrecisionRangesVariant = "row"
+) -> Figure:
     """The trials against the ranges they searched, the ends of each range dashed: the folds'
     figures against the knots of every curve-wise trial and against the neighbours of every
     local RBF trial (a color per pair, pointwise dots and curve-wise squares), and the
-    network's trials in width and learning rate colored by their figures, walled ones crosses."""
-    figure, (knots_axes, neighbours_axes, network_axes) = plt.subplots(
-        1, 3, figsize=figure_size(style, 1, 0.45), layout="constrained"
-    )
+    network's trials in width and learning rate colored by their figures, walled ones crosses:
+    side by side (row), 2 x 2 with the knots split by dataset (grid), or without the network
+    (no_network)."""
+    scored = [p for p in points if p.figures is not None]
+    curve_wise = [p for p in scored if p.job.candidate.unit == "curve-wise"]
+    match variant:
+        case "row":
+            figure, (knots_axes, neighbours_axes, network_axes) = plt.subplots(
+                1, 3, figsize=figure_size(style, 1, 0.45), layout="constrained"
+            )
+            knots = [(knots_axes, curve_wise)]
+        case "grid":
+            figure, grid = plt.subplots(
+                2, 2, figsize=figure_size(style, 2, 0.4), layout="constrained"
+            )
+            knots = [
+                (grid[0, column], [p for p in curve_wise if p.job.dataset == spec.dataset])
+                for column, spec in enumerate(SPECS)
+            ]
+            for (axes, _), spec in zip(knots, SPECS, strict=True):
+                axes.set_title(DATASET_TEX[spec.dataset], fontsize="small")
+            neighbours_axes, network_axes = grid[1, 0], grid[1, 1]
+        case "no_network":
+            figure, (knots_axes, neighbours_axes) = plt.subplots(
+                1, 2, figsize=figure_size(style, 1, 0.45), layout="constrained"
+            )
+            knots, network_axes = [(knots_axes, curve_wise)], None
+        case _:
+            assert_never(variant)
     pairs: list[tuple[str, Target]] = [
         (spec.dataset, target) for spec, target in product(SPECS, TARGETS)
     ]
@@ -495,9 +550,8 @@ def ranges_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
     tone = {"mass": 0.25, "charge": 0.7}
     colors = {(dataset, target): shades[dataset](tone[target]) for dataset, target in pairs}
     marker = {"pointwise": "o", "curve-wise": "s"}
-    scored = [p for p in points if p.figures is not None]
     for axes, name, chosen in (
-        (knots_axes, "knots", [p for p in scored if p.job.candidate.unit == "curve-wise"]),
+        *((axes, "knots", chosen) for axes, chosen in knots),
         (
             neighbours_axes,
             "neighbours",
@@ -518,14 +572,19 @@ def ranges_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
         axes.set_ylabel("folds' figures")
     neighbours_axes.set_xscale("log")
     _plain_log_ticks(neighbours_axes.xaxis, (50, 100, 200, 400))
-    for axes, distribution in (
-        (knots_axes, KNOTS),
+    ranged: list[tuple[Axes, BaseDistribution]] = [
+        *((axes, KNOTS) for axes, _ in knots),
         (neighbours_axes, SPACES["local RBF"]["neighbours"]),
-        (network_axes, SPACES["ResNet"]["width"]),
-    ):
+    ]
+    if network_axes is not None:
+        ranged.append((network_axes, SPACES["ResNet"]["width"]))
+    for axes, distribution in ranged:
         ends = range_ends(distribution)
         for end in (ends.low, ends.high):
             axes.axvline(end, color="grey", linestyle="--", linewidth=0.8)
+    if network_axes is None:
+        _ranges_legend(figure, pairs, colors, wall=False)
+        return figure
     network = [p for p in points if p.job.candidate.family == "ResNet"]
     ran = [p for p in network if p.figures is not None]
     shown = network_axes.scatter(
@@ -550,19 +609,31 @@ def ranges_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
     network_axes.set_xlabel("width")
     network_axes.set_ylabel("learning rate")
     figure.colorbar(shown, ax=network_axes, label="folds' figures")
+    _ranges_legend(figure, pairs, colors, wall=True)
+    return figure
+
+
+def _ranges_legend(
+    figure: Figure,
+    pairs: Sequence[tuple[str, Target]],
+    colors: Mapping[tuple[str, str], Any],
+    wall: bool,
+) -> None:
+    """The pairs by colour, the units by marker, and the wall cross if the network is drawn,
+    below the panels."""
     handles = [
         *(Line2D([], [], color=colors[pair], marker="o", linestyle="") for pair in pairs),
         Line2D([], [], color="black", marker="o", linestyle=""),
         Line2D([], [], color="black", marker="s", linestyle=""),
-        Line2D([], [], color="black", marker="x", linestyle=""),
     ]
     labels = [
         *(f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}" for dataset, target in pairs),
         *UNITS,
-        "wall",
     ]
+    if wall:
+        handles.append(Line2D([], [], color="black", marker="x", linestyle=""))
+        labels.append("wall")
     figure.legend(handles, labels, loc="outside lower center", ncols=4, fontsize="x-small")
-    return figure
 
 
 def _plain_log_ticks(axis: Any, ticks: Sequence[float]) -> None:
@@ -572,32 +643,83 @@ def _plain_log_ticks(axis: Any, ticks: Sequence[float]) -> None:
     axis.set_minor_formatter(NullFormatter())
 
 
-def history_tex(minutes: float) -> str:
+def _history_caption(minutes: float, variant: PrecisionHistoryVariant) -> str:
+    """The caption of the history figure in one variant, its wall stated."""
+    searches = "The searches of \\cref{tab:tuning}, per dataset and target: each short-listed"
+    drawn = (
+        "The first ten trials are drawn at random, the rest by the tree-structured Parzen "
+        "estimator. A cross at the bottom is a trial past the wall of "
+        f"${minutes:g}$ minutes a fit."
+    )
+    match variant:
+        case "dots_and_best":
+            return (
+                f"{searches} candidate's trials scored on the frozen folds (dots) and its best "
+                f"so far (line, curve-wise dashed) against the trial number. {drawn}"
+            )
+        case "best_only":
+            return (
+                f"{searches} candidate's best significant figures on the frozen folds so far "
+                f"(curve-wise dashed) against the trial number. {drawn}"
+            )
+        case "regret":
+            return (
+                f"{searches} candidate's trials as the figures they fall behind its best so far, "
+                f"on a log scale, against the trial number; a new best sits at the bottom. {drawn}"
+            )
+        case _:
+            assert_never(variant)
+
+
+def history_tex(minutes: float, variant: PrecisionHistoryVariant = "dots_and_best") -> str:
     """The figure environment of the history figure, its wall stated in the caption."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
         f"\\includegraphics[width=\\textwidth]{{{HISTORY}}}\n"
-        "\\caption{The searches of \\cref{tab:tuning}, per dataset and target: each "
-        "short-listed candidate's trials scored on the frozen folds (dots) and its best so far "
-        "(line, curve-wise dashed) against the trial number. The first ten trials are drawn at "
-        "random, the rest by the tree-structured Parzen estimator. A cross at the bottom is a "
-        f"trial past the wall of ${minutes:g}$ minutes a fit.}}\n"
+        f"\\caption{{{_history_caption(minutes, variant)}}}\n"
         "\\label{fig:tuning-history}\n\\end{figure}\n"
     )
 
 
-def ranges_tex() -> str:
+def _ranges_caption(variant: PrecisionRangesVariant) -> str:
+    """The caption of the ranges figure in one variant."""
+    trials = (
+        "The trials of \\cref{tab:tuning} against the ranges they searched, the ends of each "
+        "range dashed: the significant figures on the folds against the knots of every "
+        "curve-wise trial"
+    )
+    marks = "a color per dataset and target, pointwise dots and curve-wise squares"
+    network = "the residual network's trials on the neutron-star charge in width and learning rate"
+    widen = "A best trial on the end of its range marks the range to widen."
+    match variant:
+        case "row":
+            return (
+                f"{trials} (left) and against the neighbours of every trial of the local "
+                f"interpolant (middle), {marks}; and {network} (right), colored by their "
+                f"figures, a cross a trial past the wall. {widen}"
+            )
+        case "grid":
+            return (
+                f"{trials}, the neutron stars and the black holes apart (top), and against the "
+                f"neighbours of every trial of the local interpolant (bottom left), {marks}; "
+                f"and {network} (bottom right), colored by their figures, a cross a trial past "
+                f"the wall. {widen}"
+            )
+        case "no_network":
+            return (
+                f"{trials} (left) and against the neighbours of every trial of the local "
+                f"interpolant (right), {marks}. {widen}"
+            )
+        case _:
+            assert_never(variant)
+
+
+def ranges_tex(variant: PrecisionRangesVariant = "row") -> str:
     """The figure environment of the ranges figure, placed here or at the top of a page."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
         f"\\includegraphics[width=\\textwidth]{{{RANGES}}}\n"
-        "\\caption{The trials of \\cref{tab:tuning} against the ranges they searched, the ends "
-        "of each range dashed: the significant figures on the folds against the knots of every "
-        "curve-wise trial (left) and against the neighbours of every trial of the local "
-        "interpolant (middle), a color per dataset and target, pointwise dots and curve-wise "
-        "squares; and the residual network's trials on the neutron-star charge in width and "
-        "learning rate (right), colored by their figures, a cross a trial past the wall. A best "
-        "trial on the end of its range marks the range to widen.}\n"
+        f"\\caption{{{_ranges_caption(variant)}}}\n"
         "\\label{fig:tuning-ranges}\n\\end{figure}\n"
     )
 
@@ -681,6 +803,12 @@ def main(
             logger.info("rebuilding the tuning table from batch %s; nothing is fitted", batch)
         saved = outcomes_path(args.state, SECTION, batch)
         outcomes = outcomes_from_json(saved.read_text())
+        if args.variants is not None:
+            ran = tuple(outcome.job for outcome in outcomes)
+            points = journal_points(saved.with_suffix(".journal"), batch, ran)
+            apply_style(config.plot, NOTATION_TEX.read_text())
+            _write_variants(args.variants / SECTION, points, config.plot)
+            return
         screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
@@ -691,9 +819,18 @@ def main(
         ran = tuple(outcome.job for outcome in outcomes)
         points = journal_points(saved.with_suffix(".journal"), batch, ran)
         apply_style(config.plot, NOTATION_TEX.read_text())
+        picks = config.results.precision.variants
         drawn = (
-            (HISTORY, history_figure(points, config.plot), history_tex(args.minutes)),
-            (RANGES, ranges_figure(points, config.plot), ranges_tex()),
+            (
+                HISTORY,
+                history_figure(points, config.plot, picks.history),
+                history_tex(args.minutes, picks.history),
+            ),
+            (
+                RANGES,
+                ranges_figure(points, config.plot, picks.ranges),
+                ranges_tex(picks.ranges),
+            ),
         )
         for name, figure, tex in drawn:
             figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
@@ -875,7 +1012,40 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
         required=True,
         help="the short list keeps the candidates this many figures behind the pair's best",
     )
-    return parser.parse_args(argv)
+    parser.add_argument(
+        "--variants",
+        type=Path,
+        help="with --batch: draw every figure variant into this dir to pick from; assets untouched",
+    )
+    args = parser.parse_args(argv)
+    if args.variants is not None and args.batch is None:
+        parser.error("--variants draws from a recorded batch: give --batch too")
+    return args
+
+
+def _write_variants(out: Path, points: Sequence[TrialPoint], style: PlotStyle) -> None:
+    """Every variant of the history and ranges figures as <stem>_<variant>.png in out and per
+    figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
+    out.mkdir(parents=True, exist_ok=True)
+    sheets: dict[str, dict[str, Callable[[], Figure]]] = {
+        HISTORY: {
+            v: partial(history_figure, points, style, v) for v in get_args(PrecisionHistoryVariant)
+        },
+        RANGES: {
+            v: partial(ranges_figure, points, style, v) for v in get_args(PrecisionRangesVariant)
+        },
+    }
+    for stem, drawers in sheets.items():
+        images: dict[str, Path] = {}
+        for variant, drawer in drawers.items():
+            figure = drawer()
+            images[variant] = out / f"{stem}_{variant}.png"
+            figure.savefig(images[variant], dpi=style.dpi)
+            plt.close(figure)
+        sheet = contact_sheet(images)
+        sheet.savefig(out / f"{stem}_variants.png", dpi=style.diagnostics_dpi)
+        plt.close(sheet)
+        logger.info("done: %s variants %s and their sheet -> %s", stem, tuple(images), out)
 
 
 if __name__ == "__main__":

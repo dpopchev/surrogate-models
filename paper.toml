@@ -99,6 +99,14 @@ scaling = "figures_and_seconds"  # figures_and_seconds: per pair the folds' figu
                                  # marker_size: a panel per pair, the seconds as marker size
                                  # small_multiples: a panel per family
 
+# Which variant of each Section 5.3 figure the paper places; `make variants` draws them from
+# TUNING_BATCH's journal, nothing fitted (W-113).
+[results.precision.variants]
+history = "dots_and_best"  # dots_and_best: every trial and the best so far | best_only
+                           # regret: the best so far minus each trial, log scale
+ranges = "row"             # row: knots, neighbours, network side by side
+                           # grid: 2 x 2, the knots split by dataset | no_network
+
 # Section 4.1 -- the baseline network fit_baseline.py trains (E-005): a plain MLP, the control
 # arm of H2 (MSE, ReLU) and H3 (no skips). PAPER__METHODOLOGY__ALGORITHMS__MAX_EPOCHS=2 in the
 # environment gives a quick smoke run.
