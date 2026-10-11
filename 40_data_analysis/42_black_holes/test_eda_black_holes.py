@@ -207,7 +207,7 @@ class TestMain:
         config = PaperConfig.model_validate(
             {"plot": {"usetex": False}, "data_analysis": {"black_holes": selection}}
         )
-        main([str(table), str(assets)], config=config, folds=3)
+        main([str(table), str(assets), "--folds", "3", "--seed", "0"], config=config)
         return assets
 
     def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:

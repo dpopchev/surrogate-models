@@ -109,9 +109,9 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("neutron_stars", type=Path)
     parser.add_argument("black_holes", type=Path)
     parser.add_argument("out", type=Path)
-    parser.add_argument("--seed", type=int, default=20261005)
-    parser.add_argument("--test-fraction", type=float, default=0.15)
-    parser.add_argument("--folds", type=int, default=5)
+    parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--test-fraction", type=float, required=True)
+    parser.add_argument("--folds", type=int, required=True)
     return parser.parse_args(argv)
 
 

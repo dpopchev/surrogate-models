@@ -7,6 +7,7 @@ support, and which split the curves support. The mass is raw M throughout (devel
 become \\bhEda... macros; the dataset-agnostic machinery lives in shared/eda.py.
 """
 
+import argparse
 import logging
 import sys
 from dataclasses import dataclass
@@ -498,13 +499,21 @@ def draw(figure: BhFigure, table: pd.DataFrame, style: PlotStyle) -> Figure:
 # --- shell ------------------------------------------------------------------------------------
 
 
-def main(
-    argv: list[str], config: PaperConfig | None = None, folds: int = 5, seed: int = 20261005
-) -> None:
+def _arguments(argv: list[str]) -> argparse.Namespace:
+    """The prepared table, the asset dir and the probe knobs; mk/paper.mk passes every knob."""
+    parser = argparse.ArgumentParser(prog="eda_black_holes.py")
+    parser.add_argument("table", type=Path)
+    parser.add_argument("assets", type=Path)
+    parser.add_argument("--folds", type=int, required=True, help="probe folds of the split")
+    parser.add_argument("--seed", type=int, required=True, help="the split's seed")
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str], config: PaperConfig | None = None) -> None:
     """Write the selected figures and tables and the numbers into the section's folder of the
     asset dir, after emptying that folder of an earlier run."""
-    assert len(argv) == 2, f"usage: eda_black_holes.py <table.parquet> <asset dir>, got {argv}"
-    source, out = Path(argv[0]), Path(argv[1]) / SECTION
+    args = _arguments(argv)
+    source, out = args.table, args.assets / SECTION
     assert source.is_file(), f"prepared BH table not found: {source}"
     config = config or load_config()
     apply_style(config.plot, NOTATION_TEX.read_text())
@@ -518,7 +527,7 @@ def main(
         fig.savefig(out / f"{asset(figure)}.png", dpi=config.plot.dpi)
         plt.close(fig)
         (out / f"{asset(figure)}.tex").write_text(figure_tex(figure))
-    found = evidence(table, folds, seed)
+    found = evidence(table, args.folds, args.seed)
     bounds = measure(table, CURVE, "r_h", ("M", "D"), "D")
     # The ceilings as uncertainties at the median mass and the median charge (W-076).
     typical = {"M": {"": float(table["M"].median())}, "D": {"": float(table["D"].median())}}

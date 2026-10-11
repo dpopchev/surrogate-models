@@ -8,6 +8,7 @@ whether rows of one curve are each other's nearest neighbours (why the split gro
 The dataset-agnostic machinery lives in shared/eda.py.
 """
 
+import argparse
 import logging
 import sys
 from collections.abc import Mapping
@@ -212,7 +213,7 @@ class Evidence:
     splits: tuple[SplitScore, ...]
 
 
-def evidence(table: pd.DataFrame, folds: int, seed: int, window: float = 0.09) -> Evidence:
+def evidence(table: pd.DataFrame, folds: int, seed: int, window: float) -> Evidence:
     """Compute every Section 3.1 result from a table with the charge targets."""
     sizes = table.groupby(list(CURVE)).size()
     return Evidence(
@@ -469,7 +470,7 @@ def _univariate_continuous(table: pd.DataFrame, style: PlotStyle) -> Figure:
     return fig
 
 
-def _mass_max(table: pd.DataFrame, style: PlotStyle, window: float = 0.09) -> Figure:
+def _mass_max(table: pd.DataFrame, style: PlotStyle, window: float) -> Figure:
     """Rows' distance to their curve's M_max, and each curve's M_max over the grid."""
     fig, (left, right) = plt.subplots(1, 2, figsize=text_width_size(0.45), layout="constrained")
     peak = table.groupby(list(CURVE))["M"].transform("max")
@@ -578,8 +579,9 @@ def _curve_adjacency(table: pd.DataFrame, style: PlotStyle) -> Figure:
     return fig
 
 
-def draw(figure: NsFigure, table: pd.DataFrame, style: PlotStyle) -> Figure:
-    """Draw one NS EDA figure from a table with the charge targets."""
+def draw(figure: NsFigure, table: pd.DataFrame, style: PlotStyle, window: float) -> Figure:
+    """Draw one NS EDA figure from a table with the charge targets; window is the pile-up
+    window the mass-max figure marks."""
     match figure:
         case "univariate":
             return _univariate(table, style)
@@ -594,7 +596,7 @@ def draw(figure: NsFigure, table: pd.DataFrame, style: PlotStyle) -> Figure:
         case "univariate_continuous":
             return _univariate_continuous(table, style)
         case "mass_max":
-            return _mass_max(table, style)
+            return _mass_max(table, style, window)
         case _:
             assert_never(figure)
 
@@ -602,13 +604,22 @@ def draw(figure: NsFigure, table: pd.DataFrame, style: PlotStyle) -> Figure:
 # --- shell ------------------------------------------------------------------------------------
 
 
-def main(
-    argv: list[str], config: PaperConfig | None = None, folds: int = 5, seed: int = 20261005
-) -> None:
+def _arguments(argv: list[str]) -> argparse.Namespace:
+    """The prepared table, the asset dir and the probe knobs; mk/paper.mk passes every knob."""
+    parser = argparse.ArgumentParser(prog="eda_neutron_stars.py")
+    parser.add_argument("table", type=Path)
+    parser.add_argument("assets", type=Path)
+    parser.add_argument("--folds", type=int, required=True, help="probe folds of the split")
+    parser.add_argument("--seed", type=int, required=True, help="the split's seed")
+    parser.add_argument("--window", type=float, required=True, help="pile-up window in M")
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str], config: PaperConfig | None = None) -> None:
     """Write the selected figures and tables, the numbers and the figures .tex into the section's
     folder of the asset dir, after emptying that folder of an earlier run."""
-    assert len(argv) == 2, f"usage: eda_neutron_stars.py <table.parquet> <asset dir>, got {argv}"
-    source, out = Path(argv[0]), Path(argv[1]) / SECTION
+    args = _arguments(argv)
+    source, out = args.table, args.assets / SECTION
     assert source.is_file(), f"prepared NS table not found: {source}"
     config = config or load_config()
     apply_style(config.plot, NOTATION_TEX.read_text())
@@ -623,11 +634,11 @@ def main(
         stale.unlink()
     section = config.data_analysis.neutron_stars
     for figure in section.figures:
-        fig = draw(figure, table, config.plot)
+        fig = draw(figure, table, config.plot, args.window)
         fig.savefig(out / f"{asset(figure)}.png", dpi=config.plot.dpi)
         plt.close(fig)
         (out / f"{asset(figure)}.tex").write_text(figure_tex(figure))
-    found = evidence(table, folds, seed)
+    found = evidence(table, args.folds, args.seed, args.window)
     bounds = measure(
         table.assign(log10_rho_c=np.log10(table["rho_c"])), CURVE, "log10_rho_c", ("M", "D"), "D"
     )

@@ -39,6 +39,10 @@ def _notation():
         yield
 
 
+# A toy pile-up window in M (make passes the paper's).
+WINDOW = 0.09
+
+
 def curves(target: dict[tuple[float, float], list[float]]) -> pd.DataFrame:
     """Curves keyed by (beta, lambda): rho_c = 10, 100, ...; M = 1, 1.1, ...; D = target."""
     rows = [
@@ -104,7 +108,7 @@ DENSE = curves({(b, lam): [0.1, 0.2, 0.3, 0.4] for b in (1.0, 50.0) for lam in (
 
 @pytest.mark.view
 def test_numbers_name_the_grid_fill_in_percent() -> None:
-    found = numbers(evidence(with_charge_targets(DENSE), folds=2, seed=0))
+    found = numbers(evidence(with_charge_targets(DENSE), folds=2, seed=0, window=WINDOW))
     assert found["nsEdaGridFillPercent"] == "100.0"
 
 
@@ -142,12 +146,13 @@ def test_split_strategies_score_every_strategy_in_order() -> None:
 @pytest.mark.view
 def test_numbers_name_the_rim_score_of_the_charge_target() -> None:
     table = with_charge_targets(grid(range(1, 4), range(1, 4)))
-    assert "nsEdaSplitRimDM" in numbers(evidence(table, folds=3, seed=0))
+    assert "nsEdaSplitRimDM" in numbers(evidence(table, folds=3, seed=0, window=WINDOW))
 
 
 @pytest.mark.view
 def test_numbers_give_the_charge_range_in_orders_of_magnitude() -> None:
-    assert "nsEdaDOrders" in numbers(evidence(with_charge_targets(DENSE), folds=2, seed=0))
+    found = evidence(with_charge_targets(DENSE), folds=2, seed=0, window=WINDOW)
+    assert "nsEdaDOrders" in numbers(found)
 
 
 class TestGridNumbers:
@@ -156,7 +161,7 @@ class TestGridNumbers:
     @pytest.fixture
     def found(self):
         table = with_charge_targets(DENSE.iloc[:-1])
-        return numbers(evidence(table, folds=2, seed=0))
+        return numbers(evidence(table, folds=2, seed=0, window=WINDOW))
 
     def test_density_grid_values_count_the_distinct_central_densities(self, found) -> None:
         assert found["nsEdaDensityGridValues"] == "4"
@@ -176,7 +181,7 @@ def test_pile_up_share_counts_rows_within_the_window_of_their_curve_maximum() ->
     assert pile_up_share(DENSE, window=0.15) == pytest.approx(0.5)
 
 
-GRID = evidence(with_charge_targets(grid(range(1, 4), range(1, 4))), folds=3, seed=0)
+GRID = evidence(with_charge_targets(grid(range(1, 4), range(1, 4))), folds=3, seed=0, window=WINDOW)
 
 
 class TestChargeNumbers:
@@ -238,37 +243,38 @@ class TestFigures:
         plt.close("all")
 
     def test_univariate_has_a_raw_and_a_log10_panel_per_column(self) -> None:
-        assert len(draw("univariate", with_charge_targets(DENSE), STYLE).axes) == 12
+        assert len(draw("univariate", with_charge_targets(DENSE), STYLE, WINDOW).axes) == 12
 
     def test_univariate_gives_a_grid_parameter_one_bar_per_value(self) -> None:
-        figure = draw("univariate", with_charge_targets(DENSE), STYLE)
+        figure = draw("univariate", with_charge_targets(DENSE), STYLE, WINDOW)
         assert len(figure.axes[0].patches) == 2
 
     def test_charge_target_has_four_panels_and_two_colorbars(self) -> None:
-        assert len(draw("charge_target", with_charge_targets(DENSE), STYLE).axes) == 6
+        assert len(draw("charge_target", with_charge_targets(DENSE), STYLE, WINDOW).axes) == 6
 
     def test_mass_density_has_one_panel_and_its_colorbar(self) -> None:
-        assert len(draw("mass_density", with_charge_targets(DENSE), STYLE).axes) == 2
+        assert len(draw("mass_density", with_charge_targets(DENSE), STYLE, WINDOW).axes) == 2
 
     def test_grid_fill_has_one_panel_and_its_colorbar(self) -> None:
-        assert len(draw("grid_fill", with_charge_targets(DENSE), STYLE).axes) == 2
+        assert len(draw("grid_fill", with_charge_targets(DENSE), STYLE, WINDOW).axes) == 2
 
     def test_curve_adjacency_has_one_panel(self) -> None:
-        assert len(draw("curve_adjacency", with_charge_targets(DENSE), STYLE).axes) == 1
+        assert len(draw("curve_adjacency", with_charge_targets(DENSE), STYLE, WINDOW).axes) == 1
 
     def test_univariate_continuous_has_four_columns_raw_and_log10(self) -> None:
-        assert len(draw("univariate_continuous", with_charge_targets(DENSE), STYLE).axes) == 8
+        figure = draw("univariate_continuous", with_charge_targets(DENSE), STYLE, WINDOW)
+        assert len(figure.axes) == 8
 
     def test_univariate_continuous_gives_the_density_grid_one_bar_per_value(self) -> None:
-        figure = draw("univariate_continuous", with_charge_targets(DENSE), STYLE)
+        figure = draw("univariate_continuous", with_charge_targets(DENSE), STYLE, WINDOW)
         assert len(figure.axes[0].patches) == 4
 
     def test_univariate_continuous_draws_bars_without_edges(self) -> None:
-        figure = draw("univariate_continuous", with_charge_targets(DENSE), STYLE)
+        figure = draw("univariate_continuous", with_charge_targets(DENSE), STYLE, WINDOW)
         assert figure.axes[0].patches[0].get_linewidth() == 0
 
     def test_mass_max_has_two_panels_and_a_colorbar(self) -> None:
-        assert len(draw("mass_max", with_charge_targets(DENSE), STYLE).axes) == 3
+        assert len(draw("mass_max", with_charge_targets(DENSE), STYLE, WINDOW).axes) == 3
 
 
 class TestMain:
@@ -288,7 +294,8 @@ class TestMain:
         config = PaperConfig.model_validate(
             {"plot": {"usetex": False}, "data_analysis": {"neutron_stars": selection}}
         )
-        main([str(table), str(assets)], config=config, folds=2)
+        knobs = ["--folds", "2", "--seed", "0", "--window", str(WINDOW)]
+        main([str(table), str(assets), *knobs], config=config)
         return assets
 
     def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:

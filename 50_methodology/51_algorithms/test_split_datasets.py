@@ -81,7 +81,7 @@ def test_main_writes_both_datasets_to_one_file(tmp_path: Path) -> None:
     ns, bh, out = tmp_path / "ns.parquet", tmp_path / "bh.parquet", tmp_path / "split.parquet"
     ns_table().to_parquet(ns)
     bh_table().to_parquet(bh)
-    main([str(ns), str(bh), str(out), "--folds", "2"])
+    main([str(ns), str(bh), str(out), "--folds", "2", "--seed", "0", "--test-fraction", "0.15"])
     assert set(pd.read_parquet(out)["dataset"]) == {"neutron_stars", "black_holes"}
 
 

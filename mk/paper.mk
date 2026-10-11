@@ -52,9 +52,12 @@ $(ASSETS)/00_metadata/00_metadata_build_stamp.tex: 00_metadata/build_stamp.py FO
 NS_EDA        := 40_data_analysis/41_neutron_stars/eda_neutron_stars.py
 NS_EDA_ASSETS := $(ASSETS)/41_neutron_stars/41_neutron_stars_num.tex
 PAPER_ASSETS  += $(NS_EDA_ASSETS)
+# The EDA probes the split with the split's own folds and seed (mk/data.mk); the NS pile-up
+# window in M is the band below a curve's M_max that Section 3.1 counts.
+NS_PILE_UP_WINDOW := 0.09
 
 $(NS_EDA_ASSETS): $(NS_EDA) paper.toml shared/config.py shared/plots.py shared/eda.py $(STATE)/neutron_stars.parquet
-	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS)
+	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW)
 	$(call log_done,NS EDA figures and numbers written to $(@D)/)
 
 # Section 3.2: the BH EDA, the same way; its numbers file stands for the whole set.
@@ -63,7 +66,7 @@ BH_EDA_ASSETS := $(ASSETS)/42_black_holes/42_black_holes_num.tex
 PAPER_ASSETS  += $(BH_EDA_ASSETS)
 
 $(BH_EDA_ASSETS): $(BH_EDA) paper.toml shared/config.py shared/plots.py shared/eda.py $(STATE)/black_holes.parquet
-	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS)
+	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED)
 	$(call log_done,BH EDA figures and numbers written to $(@D)/)
 
 # Section 3.3: the split numbers, from the split file.
