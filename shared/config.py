@@ -46,6 +46,17 @@ class NeutronStarsSection(BaseModel):
 
 BhFigure = Literal["univariate_continuous", "mass_radius", "charge_target", "existence_edge"]
 BhTable = Literal["univariate", "charge_correlation", "split_strategies"]
+# inset: M against r_h, the departure from GR in an inset; departure: M - r_h/2 against r_h;
+# both: the two side by side (W-111).
+BhMassRadiusVariant = Literal["inset", "departure", "both"]
+
+
+class BlackHoleVariants(BaseModel):
+    """Section 3.2: which variant of each BH figure the paper places (W-111)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    mass_radius: BhMassRadiusVariant = "inset"
 
 
 class BlackHolesSection(BaseModel):
@@ -55,6 +66,7 @@ class BlackHolesSection(BaseModel):
 
     figures: tuple[BhFigure, ...] = get_args(BhFigure)
     tables: tuple[BhTable, ...] = get_args(BhTable)
+    variants: BlackHoleVariants = BlackHoleVariants()
 
 
 class DataAnalysis(BaseModel):
@@ -164,17 +176,22 @@ def _sections(model: type[BaseModel], skip: tuple[str, ...]) -> list[tuple[str, 
 def missing_section_folders(
     model: type[BaseModel], root: Path, skip: tuple[str, ...] = ("plot",)
 ) -> tuple[str, ...]:
-    """Return the dotted section keys of model that name no <nn>_<key> folder under root.
+    """Return the dotted chapter and section keys of model that name no <nn>_<key> folder.
 
-    Only fields whose type is itself a model count as sections; plot is a style, not a chapter.
+    Only fields whose type is itself a model count; plot is a style, not a chapter, and a
+    model inside a section (its variants) is a group of choices, not a folder (W-111).
     """
     missing: list[str] = []
-    for name, section in _sections(model, skip):
+    for name, chapter in _sections(model, skip):
         folders = sorted(root.glob(f"[0-9][0-9]_{name}"))
         if not folders:
             missing.append(name)
             continue
-        missing += [f"{name}.{key}" for key in missing_section_folders(section, folders[0], ())]
+        missing += [
+            f"{name}.{key}"
+            for key, _ in _sections(chapter, ())
+            if not any(folders[0].glob(f"[0-9][0-9]_{key}"))
+        ]
     return tuple(missing)
 
 

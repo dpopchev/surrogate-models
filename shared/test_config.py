@@ -101,6 +101,19 @@ def test_the_shipped_paper_toml_selects_the_four_bh_figures() -> None:
 
 
 @pytest.mark.edge
+def test_the_mass_radius_variant_defaults_to_inset(tmp_path: Path) -> None:
+    variants = load_config(write(tmp_path, "")).data_analysis.black_holes.variants
+    assert variants.mass_radius == "inset"
+
+
+@pytest.mark.edge
+def test_an_unknown_mass_radius_variant_is_refused(tmp_path: Path) -> None:
+    toml = write(tmp_path, '[data_analysis.black_holes.variants]\nmass_radius = "pie"\n')
+    with pytest.raises(ValidationError, match="mass_radius"):
+        load_config(toml)
+
+
+@pytest.mark.edge
 def test_the_shipped_paper_toml_selects_every_ns_table() -> None:
     assert len(load_config().data_analysis.neutron_stars.tables) == 3
 
