@@ -12,6 +12,8 @@ import optuna
 import pytest
 import tune_survivors
 from optuna.distributions import BaseDistribution, CategoricalDistribution, IntDistribution
+from optuna.storages import JournalStorage
+from optuna.storages.journal import JournalFileBackend
 from optuna.trial import TrialState
 from tune_survivors import (
     SECTION,
@@ -22,6 +24,7 @@ from tune_survivors import (
     Work,
     history_figure,
     jobs,
+    journal_points,
     main,
     outcomes_from_json,
     outcomes_to_json,
@@ -267,6 +270,19 @@ def test_a_study_without_a_complete_trial_is_recovered_as_a_wall() -> None:
     study.tell(study.ask(), state=optuna.trial.TrialState.FAIL)
     found = recovered("b", {study_name("b", NS_MASS_RBF): study}, [], minutes=30.0)
     assert found == (Walled(NS_MASS_RBF, "all 1 trials past 30 min"),)
+
+
+@pytest.mark.edge
+def test_a_journal_without_a_study_for_a_job_yields_the_points_of_the_others(
+    tmp_path: Path,
+) -> None:
+    journal = tmp_path / "b.journal"
+    storage = JournalStorage(JournalFileBackend(str(journal)))
+    study = optuna.create_study(
+        study_name=study_name("b", NS_MASS_RBF), storage=storage, direction="maximize"
+    )
+    study.tell(study.ask(), 2.0)
+    assert {point.job for point in journal_points(journal, "b")} == {NS_MASS_RBF}
 
 
 NS_RBF = Job("neutron_stars", "mass", Candidate("local RBF", "curve-wise"))

@@ -639,7 +639,7 @@ def main(
         path = out / f"{SECTION}_tab_tuning.tex"
         write_checked(path, tuning_table(outcomes, screen))
         logger.info("done: tuning table of batch %s, %d jobs -> %s", batch, len(outcomes), path)
-        points = _journal_points(saved.with_suffix(".journal"), batch)
+        points = journal_points(saved.with_suffix(".journal"), batch)
         apply_style(config.plot, NOTATION_TEX.read_text())
         drawn = (
             (HISTORY, history_figure(points, config.plot), history_tex(args.minutes)),
@@ -762,12 +762,15 @@ def tune_job(work: Work) -> Outcome:
         )
 
 
-def _journal_points(journal: Path, batch: str) -> tuple[TrialPoint, ...]:
-    """Every job's trials, read from the batch's study journal (nothing is created there)."""
+def journal_points(journal: Path, batch: str) -> tuple[TrialPoint, ...]:
+    """Every started job's trials, read from the batch's study journal (nothing is created
+    there); a job without a study did not start and has no points."""
     storage = JournalStorage(JournalFileBackend(str(journal)))
+    held = set(optuna.get_all_study_names(storage))
     return tuple(
         point
         for job in jobs()
+        if study_name(batch, job) in held
         for point in trial_points(
             optuna.load_study(study_name=study_name(batch, job), storage=storage), job
         )
