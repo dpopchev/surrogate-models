@@ -18,13 +18,13 @@
 - 2026-10-07 W-036: standing: every prepared D > 0; the 1004 NS rows below 1e-5 (8.2e-8 to 1e-5) open 110 of 1611 curves at low rho_c, monotone in log10 D -> floor dropped (W-063)
 - 2026-10-07 W-064: fact: across-curve p95 ceilings: NS M 7.8e-5 (lambda) / 1.6e-5 (beta) = 4.1 figures, NS D 1.8e-3 / 3.6e-3 = 2.4; BH M 8.5e-8 = 7.1, D 1.0e-6 = 6.0; BH error sits at the existence edge -> the E-006 target per pair
 - 2026-10-07 W-076: fact: the NS median mass is 1.75 M_sun, not 1.4: the p95 ceiling means 1.36e-4 M_sun there, 1.70e-4 at M_max 2.19, the charge 1.56e-3 dex; BH 3.05e-7 M_sun at M 3.58, 4.40e-7 dex -> Sections 3.1, 3.2 (T-161)
-- 2026-10-08 E-006: standing: E-002's speedup and posterior questions live in W-047; the ripple is T-170's, spacing-aware (W-089); the RBF and spline bugs are fixed -> nothing of these is open supersedes: E-002#1, E-002#2, W-065#1, W-086#1, W-087#1
 - 2026-10-08 T-135: fact: batch 01a11be4, 1e5 rows: local RBF leads NS M (3.31 cw), NS D (1.25 cw), BH M (3.29 pw); BH D GPR cw = RBF cw 2.28; at most 3 families within 1 figure per pair -> W-067 holds
 - 2026-10-08 T-135: fact: pointwise GPR walls at 1e4 on all pairs; NS curve-wise <0 figures at 10 rows per curve, 3.31 at \~70; a per-fit wall let one job run 2h20m -> walls per job next supersedes: T-135#1
 - 2026-10-08 T-200: fact: BH p95 is its worst of 3 test curves (pointwise RBF: M flat 5e-5 vs 1e-7; D 1e-3 vs 1e-5); BH curve-wise error arcs between the 8 knots -> E-007 tunes the knots
 - 2026-10-08 W-037: standing: one thread is fastest (2.6 s vs 11.4 s an epoch at 7); one fit took 53-525 s, swinging 2.5x with load -> cite fit times as orders of magnitude, time them repeatedly supersedes: W-035#2, W-036#1, W-037#2
-- 2026-10-08 W-073: standing: scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1), the nearest curve beats the MLP on the test curves of all four pairs; the MLP leads only on the NS folds -> no pair is won by the baseline supersedes: W-073#1, W-073#2
 - 2026-10-10 W-068: T-206: fact: batch 01a11d49, folds/test vs ceiling: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure
+- 2026-10-11 E-006: standing: E-002 speedup and posterior questions live in W-047 -> nothing else of E-002 is open supersedes: E-006#1
+- 2026-10-11 W-073: standing: scored in D, the nearest curve beats the MLP on the test curves of all four pairs, the MLP leads only on NS folds -> no pair won by the baseline supersedes: W-073#3
 - 2026-10-11 W-091: standing: --doctest-modules imports each conftest.py as conftest -> a per-folder conftest needs --ignore=conftest.py --ignore-glob=*/conftest.py supersedes: W-091#1
 - 2026-10-11 W-117: standing: every asset writer iterates in a fixed order -> local/assets-baseline.sha (50 files) is seed-independent since W-117 supersedes: W-117#1
 - 2026-10-11 W-118: fact: its steps pass on main 9e2c60a (T-290) -> prune as fixed? (developer)
@@ -44,6 +44,7 @@
 - 2026-10-10 E-011: the picks live in paper.toml per figure and table (E-003 d1), W-102 and W-104 adopted (developer, 2026-10-10)
 - 2026-10-11 E-010: the developer approves every E-010 work item to land on make check and the asset hashes, and the E-010 order as planned stands as the re-aim answer; [landing] approver = agent until E-010 closes
 - 2026-10-11 W-091: criterion amended (developer, 2026-10-11): the screens' toy inputs live once in 60_results/conftest.py, not under shared/
+- 2026-10-11 W-108: grid keys: PlotStyle grid_values 250 (density), univariate_grid_values 60; assets byte-identical (developer)
 
 ## Deviations
 - 2026-10-11 E-010: T-219 moved done before its close chain: check, deliverable PASS after; scope FAIL (test file unnamed) -- agent error
