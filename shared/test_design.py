@@ -6,7 +6,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from shared.design import DesignSpec, UnlabelledCurveError, design, pair_tex, pairs
+from shared.design import (
+    DesignSpec,
+    UnlabelledCurveError,
+    design,
+    pair_tex,
+    pairs,
+    target_symbol,
+)
 from shared.eda import make_curve_space
 
 pytestmark = pytest.mark.model
@@ -107,6 +114,10 @@ class TestPairs:
 
 def test_a_pair_s_tex_name_is_the_dataset_tag_and_the_target_symbol() -> None:
     assert pair_tex("neutron_stars", "charge") == "NS $\\Dch$"
+
+
+def test_target_symbol_of_the_charge_is_d() -> None:
+    assert target_symbol("charge") == "D"
 
 
 class TestChargeTarget:

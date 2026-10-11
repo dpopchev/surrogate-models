@@ -66,6 +66,7 @@ from shared.design import (
     Target,
     pair_tex,
     pairs,
+    target_symbol,
 )
 from shared.eda import booktabs
 from shared.harness import Fitter, Run, harness
@@ -88,10 +89,6 @@ logger = logging.getLogger(__name__)
 # --- vocabulary and types ---------------------------------------------------------------------
 
 SECTION = "62_families"
-
-# The parity figure's titles and axis labels name the target as the model sees it, through
-# the paper's symbols (shared.plots.SYMBOLS).
-TARGET_SYMBOL = {"mass": "M", "charge": "D"}
 PARITY = f"{SECTION}_fig_parity"
 ERRORS = f"{SECTION}_fig_errors"
 SCALING = f"{SECTION}_fig_scaling"
@@ -391,7 +388,7 @@ def scaling_figure(
     the training rows on a log scale, a line per candidate up to the round it left, its family
     by color and its unit by line style (curve-wise dashed), a wall a cross at its rows and at
     wall_seconds, the time budget of a fit."""
-    pairs = list(dict.fromkeys((p.dataset, p.target) for p in paths))
+    pairs: list[tuple[str, Target]] = list(dict.fromkeys((p.dataset, p.target) for p in paths))
     figure, grid = plt.subplots(
         len(pairs),
         2,
@@ -416,7 +413,7 @@ def scaling_figure(
                 seconds_axes.plot(
                     [rows], [wall_seconds], marker="x", markersize=7, color=line["color"]
                 )
-        title = f"{DATASET_TEX[dataset]} {SYMBOLS[TARGET_SYMBOL[target]]}"
+        title = f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}"
         figures_axes.set_ylabel(f"{title}: folds' figures")
         seconds_axes.set_ylabel("fit seconds")
         seconds_axes.set_yscale("log")
@@ -762,7 +759,7 @@ def _parity_panels(
     return [
         Panel(
             dataset,
-            f"{DATASET_TEX[dataset]} {SYMBOLS[TARGET_SYMBOL[target]]}",
+            f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}",
             axis_label(target),
             tuple(s),
         )

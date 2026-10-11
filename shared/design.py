@@ -136,6 +136,17 @@ def pair_tex(dataset: str, target: str) -> str:
     return f"{DATASET_TEX[dataset]} {TARGET_TEX[target]}"
 
 
+def target_symbol(target: Target) -> str:
+    """The target's key in shared/plots.py's SYMBOLS, for a figure: M or D."""
+    match target:
+        case "mass":
+            return "M"
+        case "charge":
+            return "D"
+        case _:
+            assert_never(target)
+
+
 def pairs(
     tables: Mapping[str, pd.DataFrame],
     split: pd.DataFrame,

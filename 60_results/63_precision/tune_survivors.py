@@ -62,6 +62,7 @@ from shared.design import (
     Target,
     pair_tex,
     pairs,
+    target_symbol,
 )
 from shared.eda import booktabs
 from shared.harness import Run, harness
@@ -80,8 +81,6 @@ logger = logging.getLogger(__name__)
 SECTION = "63_precision"
 HISTORY = f"{SECTION}_fig_history"
 RANGES = f"{SECTION}_fig_ranges"
-# A target's symbol in shared/plots.py's SYMBOLS, for the figures.
-TARGET_SYMBOL = {"mass": "M", "charge": "D"}
 # The data ceilings of Sections 4.1 and 4.2 (W-064) in significant figures, as their macros.
 CEILING_TEX: Mapping[tuple[str, Target], str] = {
     ("neutron_stars", "mass"): "\\nsEdaCeilMFigures",
@@ -367,7 +366,9 @@ def trial_points(study: optuna.Study, job: Job) -> tuple[TrialPoint, ...]:
 def history_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
     """Per pair a panel: each candidate's trial figures against the trial number as dots and
     its best so far as a line, family by color and unit by line style (curve-wise dashed)."""
-    pairs = list(dict.fromkeys((p.job.dataset, p.job.target) for p in points))
+    pairs: list[tuple[str, Target]] = list(
+        dict.fromkeys((p.job.dataset, p.job.target) for p in points)
+    )
     columns = min(2, len(pairs))
     rows = -(-len(pairs) // columns)
     figure, grid = plt.subplots(
@@ -409,7 +410,7 @@ def history_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
                     color=color,
                     transform=axes.get_xaxis_transform(),
                 )
-        axes.set_title(f"{DATASET_TEX[dataset]} {SYMBOLS[TARGET_SYMBOL[target]]}", fontsize="small")
+        axes.set_title(f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}", fontsize="small")
         axes.set_ylabel("folds' figures")
     for axes in grid.flat[len(pairs) :]:
         axes.set_visible(False)
@@ -435,7 +436,9 @@ def ranges_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
     figure, (knots_axes, neighbours_axes, network_axes) = plt.subplots(
         1, 3, figsize=figure_size(style, 1, 0.45), layout="constrained"
     )
-    pairs = [(spec.dataset, target) for spec, target in product(SPECS, TARGETS)]
+    pairs: list[tuple[str, Target]] = [
+        (spec.dataset, target) for spec, target in product(SPECS, TARGETS)
+    ]
     # the paper's dataset colors, cool for neutron stars and warm for black holes, the mass
     # the darker shade
     shades = {
@@ -507,7 +510,7 @@ def ranges_figure(points: Sequence[TrialPoint], style: PlotStyle) -> Figure:
         Line2D([], [], color="black", marker="x", linestyle=""),
     ]
     labels = [
-        *(f"{DATASET_TEX[dataset]} {SYMBOLS[TARGET_SYMBOL[target]]}" for dataset, target in pairs),
+        *(f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}" for dataset, target in pairs),
         *UNITS,
         "wall",
     ]
