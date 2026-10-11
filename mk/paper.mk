@@ -236,7 +236,9 @@ compile: assets ## Build the flat paper and its PDF under build/paper/
 	@find $(ASSETS) -type f -exec cp {} $(PAPER_DIR)/ \;
 	@cp $(PAPER_ENTRY) $(PAPER_DIR)/main.tex
 	$(call log_info,assembled $(words $(PAPER_SRC)) sources and the assets of $(ASSETS)/ into $(PAPER_DIR)/ -- compiling)
-	@$(LATEXMK) -cd -outdir=$(PAPER_LATEX) $(PAPER_DIR)/main.tex
+	@# -g: latexmk records no file an \InputIfFileExists missed, so a figure a pick adds or
+	@# removes would leave the PDF of the previous compile (W-122).
+	@$(LATEXMK) -g -cd -outdir=$(PAPER_LATEX) $(PAPER_DIR)/main.tex
 	@cp $(PAPER_LATEX)/main.pdf $(PAPER_PDF)
 	@rm -f $(PAPER_ZIP)
 	@zip -q -j -X $(PAPER_ZIP) $(PAPER_DIR)/*
