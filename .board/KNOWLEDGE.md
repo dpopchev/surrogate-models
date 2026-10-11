@@ -26,6 +26,7 @@
 - 2026-10-08 W-073: standing: scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1), the nearest curve beats the MLP on the test curves of all four pairs; the MLP leads only on the NS folds -> no pair is won by the baseline supersedes: W-073#1, W-073#2
 - 2026-10-10 E-010: fact: the asset baseline of main c4dc642 is local/assets-baseline.sha (50 files, digest 4eea8ad354c8), two back-to-back rebuilds identical -> every work item closes on diff -q against it
 - 2026-10-10 W-068: T-206: fact: batch 01a11d49, folds/test vs ceiling: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure
+- 2026-10-11 W-091: fact: a conftest.py per folder works here (section fixtures reach subfolders, a folder's own overrides, refusals intact) only with --ignore=conftest.py --ignore-glob=*/conftest.py: --doctest-modules imports each conftest as module conftest -> import file mismatch
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
@@ -42,4 +43,4 @@
 - 2026-10-10 E-011: the picks live in paper.toml per figure and table (E-003 d1), W-102 and W-104 adopted (developer, 2026-10-10)
 
 ## Deviations
-- none recorded
+- 2026-10-11 E-010: W-091 gains T-282, the ledger entry writer and reader written once (developer, 2026-10-11)
