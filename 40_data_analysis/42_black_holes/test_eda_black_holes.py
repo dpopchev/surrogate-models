@@ -7,6 +7,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import pytest
 from eda_black_holes import (
@@ -158,6 +159,20 @@ class TestFigures:
 
     def test_mass_radius_has_one_panel_and_its_colorbar(self) -> None:
         assert len(draw("mass_radius", TABLE, STYLE).axes) == 2
+
+    def test_charge_target_log_d_has_one_axes(self) -> None:
+        figure = draw("charge_target", TABLE, STYLE, BlackHoleVariants(charge_target="log_d"))
+        assert len(panels(figure)) == 1
+
+    def test_existence_edge_line_draws_rh_min_against_beta(self) -> None:
+        variants = BlackHoleVariants(existence_edge="edge_line")
+        line = panels(draw("existence_edge", TABLE, STYLE, variants))[0].get_lines()[0]
+        assert list(np.asarray(line.get_ydata())) == [1.0, 1.5, 2.0]
+
+    def test_existence_edge_zoomed_limits_rh_to_the_edge(self) -> None:
+        variants = BlackHoleVariants(existence_edge="zoomed")
+        axes = panels(draw("existence_edge", TABLE, STYLE, variants))[0]
+        assert axes.get_xlim()[1] < TABLE["r_h"].max()
 
     def test_univariate_transposed_has_two_rows(self) -> None:
         variants = BlackHoleVariants(univariate_continuous="transposed")

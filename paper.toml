@@ -70,6 +70,10 @@ mass_radius = "inset"     # inset: M against r_h, the departure from GR in an in
                           # departure: M - r_h/2 against r_h, the GR relation as the zero line
                           # both: the two side by side
 univariate_continuous = "histograms"  # histograms | log_counts | transposed, as in 3.1
+charge_target = "two_panels"          # two_panels: log10 D and log10 D/M | log_d: log10 D only
+existence_edge = "segments"           # segments: each curve's r_h range
+                                      # edge_line: r_h,min against beta
+                                      # zoomed: the segments near the edge
 
 # Section 5.2 -- which family-screen figures screen_families.py writes (W-102); placed by the
 # text like Section 3's, a deselected one drops out. The family table is always written.

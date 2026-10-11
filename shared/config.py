@@ -71,6 +71,11 @@ BhTable = Literal["univariate", "charge_correlation", "split_strategies"]
 # inset: M against r_h, the departure from GR in an inset; departure: M - r_h/2 against r_h;
 # both: the two side by side (W-111).
 BhMassRadiusVariant = Literal["inset", "departure", "both"]
+# two_panels: M against log10 D and log10 D/M; log_d: log10 D alone (W-112).
+BhChargeTargetVariant = Literal["two_panels", "log_d"]
+# segments: each curve's r_h range; edge_line: r_h,min against beta; zoomed: the segments
+# near the edge (W-112).
+BhExistenceEdgeVariant = Literal["segments", "edge_line", "zoomed"]
 
 
 class BlackHoleVariants(BaseModel):
@@ -80,6 +85,8 @@ class BlackHoleVariants(BaseModel):
 
     mass_radius: BhMassRadiusVariant = "inset"
     univariate_continuous: UnivariateVariant = "histograms"
+    charge_target: BhChargeTargetVariant = "two_panels"
+    existence_edge: BhExistenceEdgeVariant = "segments"
 
 
 class BlackHolesSection(BaseModel):

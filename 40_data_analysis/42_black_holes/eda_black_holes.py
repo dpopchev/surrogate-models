@@ -32,6 +32,8 @@ from shared.ceilings import (
 )
 from shared.config import (
     NOTATION_TEX,
+    BhChargeTargetVariant,
+    BhExistenceEdgeVariant,
     BhFigure,
     BhMassRadiusVariant,
     BhTable,
@@ -415,15 +417,35 @@ def caption(figure: BhFigure, variants: BlackHoleVariants = DEFAULT_VARIANTS) ->
         case "mass_radius":
             return _mass_radius_caption(variants.mass_radius)
         case "charge_target":
-            return (
-                "Black holes: $M$ against $\\log_{10}\\Dch$ (left) and $\\log_{10}(\\Dch/M)$ "
-                "(right), coloured by $\\beta$."
-            )
+            match variants.charge_target:
+                case "two_panels":
+                    return (
+                        "Black holes: $M$ against $\\log_{10}\\Dch$ (left) and "
+                        "$\\log_{10}(\\Dch/M)$ (right), coloured by $\\beta$."
+                    )
+                case "log_d":
+                    return "Black holes: $M$ against $\\log_{10}\\Dch$, coloured by $\\beta$."
+                case _:
+                    assert_never(variants.charge_target)
         case "existence_edge":
-            return (
-                "Black holes: the $\\rh$ range of each $\\beta$ curve; dots mark where each "
-                "curve starts."
-            )
+            match variants.existence_edge:
+                case "segments":
+                    return (
+                        "Black holes: the $\\rh$ range of each $\\beta$ curve; dots mark where "
+                        "each curve starts."
+                    )
+                case "edge_line":
+                    return (
+                        "Black holes: where each $\\beta$ curve starts, its smallest $\\rh$ "
+                        "against $\\beta$."
+                    )
+                case "zoomed":
+                    return (
+                        "Black holes: the $\\rh$ range of each $\\beta$ curve near the existence "
+                        "edge; dots mark where each curve starts."
+                    )
+                case _:
+                    assert_never(variants.existence_edge)
         case _:
             assert_never(figure)
 
@@ -529,7 +551,32 @@ def _mass_radius(table: pd.DataFrame, style: PlotStyle, variant: BhMassRadiusVar
     return fig
 
 
-def _charge_target(table: pd.DataFrame, style: PlotStyle) -> Figure:
+def _charge_target(table: pd.DataFrame, style: PlotStyle, variant: BhChargeTargetVariant) -> Figure:
+    """M against log10 D and log10 D/M (two_panels) or against log10 D alone (log_d), coloured
+    by beta."""
+    match variant:
+        case "two_panels":
+            return _charge_target_pair(table, style)
+        case "log_d":
+            fig, ax = plt.subplots(figsize=text_width_size(0.55), layout="constrained")
+            scatter = ax.scatter(
+                table["M"],
+                table["log10_D"],
+                c=table["beta"],
+                cmap=colormap(style.black_holes.beta_cmap),
+                s=0.2,
+                linewidths=0,
+                rasterized=True,
+            )
+            ax.set_xlabel(LABELS["M"])
+            ax.set_ylabel(TARGET_LABELS["log10_D"])
+            fig.colorbar(scatter, ax=ax, label=LABELS["beta"])
+            return fig
+        case _:
+            assert_never(variant)
+
+
+def _charge_target_pair(table: pd.DataFrame, style: PlotStyle) -> Figure:
     """M against log10 D and log10 D/M, coloured by beta."""
     fig, axes = plt.subplots(1, 2, figsize=text_width_size(0.45), layout="constrained")
     cmap = colormap(style.black_holes.beta_cmap)
@@ -552,7 +599,38 @@ def _charge_target(table: pd.DataFrame, style: PlotStyle) -> Figure:
     return fig
 
 
-def _existence_edge(table: pd.DataFrame, style: PlotStyle) -> Figure:
+def _existence_edge(
+    table: pd.DataFrame, style: PlotStyle, variant: BhExistenceEdgeVariant
+) -> Figure:
+    """Each beta curve's r_h range as a segment, its start marked (segments), the same near
+    the edge (zoomed), or each curve's start r_h,min against beta as one line (edge_line)."""
+    match variant:
+        case "segments":
+            return _existence_segments(table, style)
+        case "edge_line":
+            fig, ax = plt.subplots(figsize=text_width_size(0.45), layout="constrained")
+            found = existence_edge(table)
+            ax.plot(
+                [start.beta for start in found.starts],
+                [start.rh_min for start in found.starts],
+                color=anchor_color(style, "black_holes"),
+                marker="o",
+                markersize=2,
+            )
+            ax.set_xlabel(LABELS["beta"])
+            ax.set_ylabel(f"{LABELS['r_h']}$_{{,\\min}}$")
+            return fig
+        case "zoomed":
+            fig = _existence_segments(table, style)
+            starts = [start.rh_min for start in existence_edge(table).starts]
+            pad = 0.25 * (max(starts) - min(starts))
+            fig.axes[0].set_xlim(min(starts) - pad, max(starts) + pad)
+            return fig
+        case _:
+            assert_never(variant)
+
+
+def _existence_segments(table: pd.DataFrame, style: PlotStyle) -> Figure:
     """Each beta curve's r_h range as a horizontal segment, its start marked."""
     fig, ax = plt.subplots(figsize=text_width_size(0.45), layout="constrained")
     ranges = table.groupby("beta")["r_h"].agg(["min", "max"])
@@ -578,9 +656,9 @@ def draw(
         case "mass_radius":
             return _mass_radius(table, style, variants.mass_radius)
         case "charge_target":
-            return _charge_target(table, style)
+            return _charge_target(table, style, variants.charge_target)
         case "existence_edge":
-            return _existence_edge(table, style)
+            return _existence_edge(table, style, variants.existence_edge)
         case _:
             assert_never(figure)
 
