@@ -60,7 +60,14 @@ from shared.eda import (
     text_width_size,
     with_charge_targets,
 )
-from shared.plots import SYMBOLS, PlotStyle, anchor_color, apply_style, colormap
+from shared.plots import (
+    SYMBOLS,
+    PlotStyle,
+    anchor_color,
+    apply_style,
+    colormap,
+    contact_sheet,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -577,7 +584,28 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("assets", type=Path)
     parser.add_argument("--folds", type=int, required=True, help="probe folds of the split")
     parser.add_argument("--seed", type=int, required=True, help="the split's seed")
+    parser.add_argument(
+        "--variants",
+        type=Path,
+        help="draw every variant of each figure into this dir to pick from; assets untouched",
+    )
     return parser.parse_args(argv)
+
+
+def _write_variants(out: Path, table: pd.DataFrame, style: PlotStyle) -> None:
+    """Every variant of mass_radius as <stem>_<variant>.png in out, and their contact sheet
+    as <stem>_variants.png, at the screen's resolution."""
+    out.mkdir(parents=True, exist_ok=True)
+    images: dict[str, Path] = {}
+    for variant in get_args(BhMassRadiusVariant):
+        fig = draw("mass_radius", table, style, BlackHoleVariants(mass_radius=variant))
+        images[variant] = out / f"{asset('mass_radius')}_{variant}.png"
+        fig.savefig(images[variant], dpi=style.dpi)
+        plt.close(fig)
+    sheet = contact_sheet(images)
+    sheet.savefig(out / f"{asset('mass_radius')}_variants.png", dpi=style.diagnostics_dpi)
+    plt.close(sheet)
+    logger.info("done: mass_radius variants %s and their sheet -> %s", tuple(images), out)
 
 
 def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
@@ -599,13 +627,17 @@ def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
 
 def main(argv: list[str], config: PaperConfig | None = None) -> None:
     """Write the selected figures and tables and the numbers into the section's folder of the
-    asset dir, after emptying that folder of an earlier run."""
+    asset dir, after emptying that folder of an earlier run -- or, given --variants, only
+    every figure variant and its contact sheet into that dir's section folder."""
     args = _arguments(argv)
     source, out = args.table, args.assets / SECTION
     assert source.is_file(), f"prepared BH table not found: {source}"
     config = config or load_config()
     apply_style(config.plot, NOTATION_TEX.read_text())
     table = with_charge_targets(pd.read_parquet(source))
+    if args.variants is not None:
+        _write_variants(args.variants / SECTION, table, config.plot)
+        return
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()

@@ -72,6 +72,15 @@ $(BH_EDA_ASSETS): $(BH_EDA) paper.toml $(SHARED) $(STATE)/black_holes.parquet
 	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED)
 	$(call log_done,BH EDA figures and numbers written to $(@D)/)
 
+# Every variant of each figure that has them, with one contact sheet per figure, drawn to
+# pick from: paper.toml records the pick, make compile places it (W-111). Never an asset.
+VARIANTS := $(BUILD)/variants
+
+.PHONY: variants
+variants: $(STATE)/black_holes.parquet ## Draw every figure variant and its contact sheet under build/variants/
+	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --variants $(VARIANTS)
+	$(call log_done,figure variants and contact sheets in $(VARIANTS)/)
+
 # Section 3.3: the split numbers, from the split file.
 PREP_NUMBERS := 40_data_analysis/43_preprocessing/preprocessing_numbers.py
 PREP_ASSETS  := $(ASSETS)/43_preprocessing/43_preprocessing_num.tex

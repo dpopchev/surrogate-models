@@ -4,7 +4,10 @@ import matplotlib
 
 matplotlib.use("Agg")
 
+from pathlib import Path
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pytest
 import seaborn as sns
 from matplotlib.colors import to_hex
@@ -17,6 +20,7 @@ from shared.plots import (
     anchor_color,
     apply_style,
     colormap,
+    contact_sheet,
     figure_size,
     make_symbols,
 )
@@ -29,6 +33,15 @@ STYLE = PlotStyle(usetex=False, font_size=9.0, text_width_pt=144.54, text_height
 def _restore_rcparams():
     with plt.rc_context():
         yield
+
+
+@pytest.mark.view
+def test_contact_sheet_places_one_labelled_panel_per_image(tmp_path: Path) -> None:
+    images = {label: tmp_path / f"{label}.png" for label in ("inset", "departure")}
+    for path in images.values():
+        plt.imsave(path, np.zeros((4, 6)))
+    sheet = contact_sheet(images)
+    assert [axes.get_title() for axes in sheet.axes] == ["inset", "departure"]
 
 
 @pytest.mark.model

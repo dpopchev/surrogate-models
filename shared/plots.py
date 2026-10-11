@@ -12,6 +12,7 @@ from typing import Literal, assert_never
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.colors import Colormap
+from matplotlib.figure import Figure
 from pydantic import BaseModel, ConfigDict, PositiveInt
 
 # --- vocabulary and types ---------------------------------------------------------------------
@@ -184,6 +185,22 @@ def figure_size(
     width = style.text_width_pt / POINTS_PER_INCH
     height = style.text_height_pt / POINTS_PER_INCH
     return width, min(per_row * width * rows, max_share * height)
+
+
+def contact_sheet(images: Mapping[str, Path]) -> Figure:
+    """One row of the rendered images, each titled by its label and as wide as the text, so
+    the variants of one figure are compared at the size the paper prints them (W-111)."""
+    pictures = {label: plt.imread(path) for label, path in images.items()}
+    width = ARTICLE_TEXT_WIDTH_PT / POINTS_PER_INCH
+    height = max(width * p.shape[0] / p.shape[1] for p in pictures.values())
+    figure, grid = plt.subplots(
+        1, len(pictures), figsize=(width * len(pictures), height * 1.1), squeeze=False
+    )
+    for axes, (label, picture) in zip(grid[0], pictures.items(), strict=True):
+        axes.imshow(picture)
+        axes.set_title(label)
+        axes.set_axis_off()
+    return figure
 
 
 def colormap(name: CoolCmap | WarmCmap) -> Colormap:
