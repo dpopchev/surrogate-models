@@ -1,5 +1,7 @@
 """Facts about the equal-budget search, on a tiny synthetic design and a toy family."""
 
+from typing import cast
+
 import numpy as np
 import optuna
 import pytest
@@ -8,7 +10,7 @@ from optuna.distributions import FloatDistribution
 from threadpoolctl import threadpool_info
 
 from shared.design import Design
-from shared.search import SPACES, search, space_of
+from shared.search import SPACES, NoCompletedTrial, Searched, search, space_of
 
 pytestmark = pytest.mark.model
 
@@ -100,7 +102,7 @@ def test_the_best_trial_is_the_one_nearest_the_truth_on_the_folds() -> None:
     study = optuna.create_study(direction="maximize")
     found = search(scaled, SPACE, 8, TOY, "mass", seed=0, valid_fraction=0.34, study=study)
     scales = [trial.params["scale"] for trial in study.trials]
-    assert found.params["scale"] == min(scales)
+    assert cast(Searched, found).params["scale"] == min(scales)
 
 
 def raising_second(raised: list[dict]):
@@ -129,6 +131,20 @@ def test_a_raising_trial_does_not_end_the_search() -> None:
     assert len(calls) == 4
 
 
+def always_raising(params):
+    """A toy family whose every fit raises."""
+
+    def fit(rows, seed):
+        raise FloatingPointError("loss is nan")
+
+    return fit
+
+
+def test_search_with_every_trial_failed_returns_no_completed_trial() -> None:
+    found = search(always_raising, SPACE, 2, TOY, "mass", seed=0, valid_fraction=0.34)
+    assert found == NoCompletedTrial(trials=2, failed=2)
+
+
 def test_a_raising_trial_is_told_fail_in_the_study() -> None:
     family, _ = raising_second([])
     study = optuna.create_study(direction="maximize")
@@ -141,7 +157,7 @@ def test_the_best_params_come_from_the_trials_that_did_not_raise() -> None:
     raised: list[dict] = []
     family, _ = raising_second(raised)
     found = search(family, SPACE, 4, TOY, "mass", seed=0, valid_fraction=0.34)
-    assert found.params != raised[0]
+    assert cast(Searched, found).params != raised[0]
 
 
 def test_a_search_counts_its_failed_trials() -> None:

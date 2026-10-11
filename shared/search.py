@@ -80,6 +80,18 @@ class Searched:
     failed: int
 
 
+@dataclass(frozen=True)
+class NoCompletedTrial:
+    """A search none of whose trials completed: the number run and how many failed (the rest
+    were pruned or left unfinished)."""
+
+    trials: int
+    failed: int
+
+
+SearchResult = Searched | NoCompletedTrial
+
+
 # --- pure functions ---------------------------------------------------------------------------
 
 
@@ -104,11 +116,12 @@ def search(
     seed: int,
     valid_fraction: float,
     study: optuna.Study | None = None,
-) -> Searched:
+) -> SearchResult:
     """Run `budget` trials of the family over its space on the design's frozen folds, in the
     given study (a journal one, for the dashboard) or an in-memory one sampled from the seed.
     The ask / tell loop is the trial's boundary: a fit that raises fails only its trial (told
-    FAIL, logged), as a nan score does; the search runs its whole budget."""
+    FAIL, logged), as a nan score does; the search runs its whole budget. NoCompletedTrial when
+    the study holds no completed trial."""
     if study is None:
         sampler = optuna.samplers.TPESampler(seed=seed)
         study = optuna.create_study(direction="maximize", sampler=sampler)
@@ -124,6 +137,8 @@ def search(
             logger.warning("trial %d failed: %s", trial.number, error)
     states = {trial.number: trial.state for trial in study.get_trials(deepcopy=False)}
     failed = sum(states[number] == TrialState.FAIL for number in numbers)
+    if TrialState.COMPLETE not in states.values():
+        return NoCompletedTrial(trials=budget, failed=failed)
     return Searched(
         params=study.best_params, figures=study.best_value, trials=budget, failed=failed
     )

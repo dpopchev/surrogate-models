@@ -69,7 +69,16 @@ from shared.harness import Run, harness
 from shared.plots import SYMBOLS, PlotStyle, apply_style, colormap, figure_size
 from shared.runs import LedgerEntry, RunMetadata, Setting
 from shared.scorecard import significant_figures
-from shared.search import KNOTS, SPACES, Space, TrialFitter, search, space_of
+from shared.search import (
+    KNOTS,
+    SPACES,
+    NoCompletedTrial,
+    Searched,
+    Space,
+    TrialFitter,
+    search,
+    space_of,
+)
 from shared.surrogate import Training, make_training
 from shared.trials import open_study
 from shared.workers import run_jobs
@@ -179,22 +188,23 @@ def run_job(
     """Search the job's space with `trials` trials, each fit within `seconds`, then refit the
     best params once through the harness; record keeps that run and names its entry. A Walled
     when no trial completes."""
-    try:
-        found = search(
-            lambda params: walled(family(params), seconds),
-            space,
-            trials,
-            data,
-            job.target,
-            seed,
-            valid_fraction,
-            study,
-        )
-    except ValueError:
-        # Optuna's best_params has no trial to name; any other ValueError is not a wall.
-        if any(trial.state == TrialState.COMPLETE for trial in study.trials):
-            raise
-        return Walled(job, f"all {trials} trials past {seconds / 60:g} min")
+    found = search(
+        lambda params: walled(family(params), seconds),
+        space,
+        trials,
+        data,
+        job.target,
+        seed,
+        valid_fraction,
+        study,
+    )
+    match found:
+        case NoCompletedTrial():
+            return Walled(job, f"all {trials} trials past {seconds / 60:g} min")
+        case Searched():
+            pass
+        case _:
+            assert_never(found)
     walls = sum(trial.state == TrialState.FAIL for trial in study.trials)
     entries: list[str] = []
     (run,) = harness(
