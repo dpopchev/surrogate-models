@@ -143,7 +143,7 @@ def test_a_wall_s_job_line_names_its_wall() -> None:
     )
 
 
-def slow(x_fit, y_fit, x_valid, y_valid, seed):
+def slow(rows, seed):
     """A toy fitter that computes for a second of CPU time."""
     started = time.process_time()
     while time.process_time() - started < 1.0:
@@ -164,7 +164,7 @@ WIDE = Design(
 )
 
 
-def off_by_a_tenth(x_fit, y_fit, x_valid, y_valid, seed):
+def off_by_a_tenth(rows, seed):
     """A toy fitter that predicts the truth (p + x) times 1.1: a relative error of 0.1."""
     return lambda x: 1.1 * (x[:, 1] + x[:, 0])
 
@@ -210,7 +210,7 @@ def test_a_fit_past_the_time_budget_makes_the_job_a_wall() -> None:
     assert outcome == Wall(job_of(KNN), "past 0.000833333 min")
 
 
-def hungry(x_fit, y_fit, x_valid, y_valid, seed):
+def hungry(rows, seed):
     """A toy fitter that runs out of memory."""
     raise MemoryError
 

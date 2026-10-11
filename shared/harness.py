@@ -25,8 +25,20 @@ from shared.scorecard import Scorecard, relative_errors, ripple, scorecard
 # --- vocabulary and types ---------------------------------------------------------------------
 
 Predictor = Callable[[np.ndarray], np.ndarray]
-# fitter(X_fit, y_fit, X_valid, y_valid, seed) -> predictor
-Fitter = Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int], Predictor]
+
+
+@dataclass(frozen=True)
+class FitRows:
+    """The rows one fit sees: the rows to fit and the validation rows, never a test row."""
+
+    x_fit: np.ndarray
+    y_fit: np.ndarray
+    x_valid: np.ndarray
+    y_valid: np.ndarray
+
+
+# fitter(rows, seed) -> predictor
+Fitter = Callable[[FitRows, int], Predictor]
 
 # Rows an MCMC step asks the surrogate for at once (an emcee ensemble of walkers).
 BATCH_ROWS = 64
@@ -98,16 +110,17 @@ def harness(
     return tuple(runs)
 
 
-def _fit(
+def fit_on(
     design: Design, train: np.ndarray, fitter: Fitter, seed: int, fraction: float
 ) -> Predictor:
     """Fit on the training rows less their validation curves, validated on those curves."""
     rows = np.flatnonzero(train)
     valid = split_valid(design.groups[rows], fraction, seed)
     fit_rows, valid_rows = rows[~valid], rows[valid]
-    return fitter(
-        design.X[fit_rows], design.y[fit_rows], design.X[valid_rows], design.y[valid_rows], seed
+    found = FitRows(
+        design.X[fit_rows], design.y[fit_rows], design.X[valid_rows], design.y[valid_rows]
     )
+    return fitter(found, seed)
 
 
 def _run(
@@ -123,10 +136,10 @@ def _run(
     folds = []
     for fold in sorted(set(design.fold[design.fold >= 0].tolist())):
         held = design.fold == fold
-        predict = _fit(design, ~design.test & ~held, fitter, seed, fraction)
+        predict = fit_on(design, ~design.test & ~held, fitter, seed, fraction)
         folds.append(spread(relative_errors(design.y[held], predict(design.X[held]), target)))
     started = tick()
-    predict = _fit(design, ~design.test, fitter, seed, fraction)
+    predict = fit_on(design, ~design.test, fitter, seed, fraction)
     fitted = tick()
     x_test = design.X[design.test]
     predict(x_test[:1])

@@ -32,7 +32,7 @@ SPACE = {"scale": FloatDistribution(0.0, 0.5)}
 def scaled(params):
     """A toy family: a fitter predicting the true y times 1 + params["scale"]."""
 
-    def fit(x_fit, y_fit, x_valid, y_valid, seed):
+    def fit(rows, seed):
         return lambda x: (1.0 + params["scale"]) * (1.0 + 0.1 * x[:, 1] + x[:, 0])
 
     return fit
@@ -47,7 +47,7 @@ def test_every_library_runs_on_one_thread_during_a_trial() -> None:
     threads: list[int] = []
 
     def counting(params):
-        def fit(x_fit, y_fit, x_valid, y_valid, seed):
+        def fit(rows, seed):
             threads.append(torch.get_num_threads())
             threads.extend(pool["num_threads"] for pool in threadpool_info())
             return lambda x: np.ones(len(x))
@@ -81,8 +81,8 @@ def test_a_trial_never_fits_nor_predicts_a_test_curve() -> None:
     seen: list[np.ndarray] = []
 
     def recording(params):
-        def fit(x_fit, y_fit, x_valid, y_valid, seed):
-            seen.extend([x_fit[:, 1], x_valid[:, 1]])
+        def fit(rows, seed):
+            seen.extend([rows.x_fit[:, 1], rows.x_valid[:, 1]])
 
             def predict(x):
                 seen.append(x[:, 1])
@@ -113,7 +113,7 @@ def raising_second(raised: list[dict]):
         if len(calls) == 2:
             raised.append(params)
 
-        def fit(x_fit, y_fit, x_valid, y_valid, seed):
+        def fit(rows, seed):
             if len(calls) == 2:
                 raise FloatingPointError("loss is nan")
             return lambda x: (1.0 + params["scale"]) * (1.0 + 0.1 * x[:, 1] + x[:, 0])

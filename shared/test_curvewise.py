@@ -6,6 +6,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsRegressor
 
 from shared.curvewise import curvewise_fitter
+from shared.harness import FitRows
 
 pytestmark = pytest.mark.model
 
@@ -22,7 +23,7 @@ def curves(keys: list[float], rows: int = 20) -> tuple[np.ndarray, np.ndarray]:
 def test_an_exact_base_reproduces_the_rows_it_was_fitted_on() -> None:
     x, y = curves([0.0, 1.0, 2.0, 3.0])
     fit = curvewise_fitter(lambda: KNeighborsRegressor(n_neighbors=1), keys=[1], along=0, knots=4)
-    predict = fit(x, y, x[:0], y[:0], 0)
+    predict = fit(FitRows(x, y, x[:0], y[:0]), 0)
     assert predict(x).tolist() == pytest.approx(y.tolist(), abs=1e-9)
 
 
@@ -32,7 +33,7 @@ def test_a_curve_shorter_than_its_coefficients_still_lets_the_others_be_reproduc
     short_x, short_y = curves([4.0], rows=4)
     x, y = np.vstack([long_x, short_x]), np.concatenate([long_y, short_y])
     fit = curvewise_fitter(lambda: KNeighborsRegressor(n_neighbors=1), keys=[1], along=0, knots=4)
-    predict = fit(x, y, x[:0], y[:0], 0)
+    predict = fit(FitRows(x, y, x[:0], y[:0]), 0)
     assert predict(long_x).tolist() == pytest.approx(long_y.tolist(), abs=1e-9)
 
 
@@ -41,5 +42,5 @@ def test_a_curve_unseen_in_the_fit_rows_is_predicted_from_its_keys() -> None:
     x, y = curves([0.0, 1.0, 3.0, 4.0])
     unseen_x, unseen_y = curves([2.0])
     fit = curvewise_fitter(LinearRegression, keys=[1], along=0, knots=4)
-    predict = fit(x, y, x[:0], y[:0], 0)
+    predict = fit(FitRows(x, y, x[:0], y[:0]), 0)
     assert predict(unseen_x).tolist() == pytest.approx(unseen_y.tolist(), abs=1e-9)

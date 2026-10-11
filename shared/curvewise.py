@@ -15,7 +15,7 @@ from typing import Any
 import numpy as np
 from scipy.interpolate import BSpline
 
-from shared.harness import Fitter
+from shared.harness import FitRows, Fitter, Predictor
 
 
 def curvewise_fitter(
@@ -27,14 +27,12 @@ def curvewise_fitter(
     keys = list(keys)
     t = np.concatenate([np.zeros(3), np.linspace(0.0, 1.0, knots), np.ones(3)])
 
-    def fit(
-        x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
-    ) -> Callable[[np.ndarray], np.ndarray]:
-        curve_keys, rows_of = np.unique(x_fit[:, keys], axis=0, return_inverse=True)
+    def fit(rows: FitRows, seed: int) -> Predictor:
+        curve_keys, rows_of = np.unique(rows.x_fit[:, keys], axis=0, return_inverse=True)
         outputs = []
         for curve in range(len(curve_keys)):
             mine = rows_of == curve
-            a, y = x_fit[mine, along], y_fit[mine]
+            a, y = rows.x_fit[mine, along], rows.y_fit[mine]
             order = np.argsort(a)
             start, end = float(a.min()), float(a.max())
             s = (a[order] - start) / (end - start)

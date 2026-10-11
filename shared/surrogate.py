@@ -30,6 +30,7 @@ from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from shared.diagnostics import loss_curve
+from shared.harness import FitRows, Fitter, Predictor
 
 logger = logging.getLogger(__name__)
 
@@ -353,36 +354,32 @@ def network_fitter(
     live_plot: Path | None = None,
     on_fit: Callable[[Pipeline], None] = lambda _: None,
     before_fit: Callable[[Pipeline], None] = lambda _: None,
-) -> Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int], Callable[..., np.ndarray]]:
+) -> Fitter:
     """A harness fitter of the network: it early-stops on exactly the validation rows it is
     handed, seeded by the harness's seed; before_fit receives each built pipeline before it
     trains (to add a callback), on_fit each fitted one."""
 
-    def fit(
-        x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
-    ) -> Callable[..., np.ndarray]:
-        fold = np.concatenate([np.full(len(x_fit), -1), np.zeros(len(x_valid), dtype=int)])
-        estimator = make_estimator(
-            replace(training, seed=seed), x_fit.shape[1], live_plot, valid_fold=fold
+    def fit(rows: FitRows, seed: int) -> Predictor:
+        fold = np.concatenate(
+            [np.full(len(rows.x_fit), -1), np.zeros(len(rows.x_valid), dtype=int)]
         )
-        x = np.vstack([x_fit, x_valid]).astype(np.float32)
+        estimator = make_estimator(
+            replace(training, seed=seed), rows.x_fit.shape[1], live_plot, valid_fold=fold
+        )
+        x = np.vstack([rows.x_fit, rows.x_valid]).astype(np.float32)
         before_fit(estimator)
-        estimator.fit(x, np.concatenate([y_fit, y_valid]).astype(np.float32))
+        estimator.fit(x, np.concatenate([rows.y_fit, rows.y_valid]).astype(np.float32))
         on_fit(estimator)
-        return lambda rows: estimator.predict(np.asarray(rows, dtype=np.float32))
+        return lambda x: estimator.predict(np.asarray(x, dtype=np.float32))
 
     return fit
 
 
-def sklearn_fitter(
-    make: Callable[[], Any],
-) -> Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int], Callable[..., np.ndarray]]:
+def sklearn_fitter(make: Callable[[], Any]) -> Fitter:
     """A harness fitter of a scikit-learn estimator, fitted on the fit rows alone."""
 
-    def fit(
-        x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
-    ) -> Callable[..., np.ndarray]:
-        return make().fit(x_fit, y_fit).predict
+    def fit(rows: FitRows, seed: int) -> Predictor:
+        return make().fit(rows.x_fit, rows.y_fit).predict
 
     return fit
 

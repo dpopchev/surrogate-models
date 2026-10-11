@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 
-from shared.harness import Fitter, Predictor, Run
+from shared.harness import FitRows, Fitter, Predictor, Run
 from shared.runs import (
     LedgerEntry,
     RunMetadata,
@@ -156,13 +156,11 @@ def wall(fitter: Fitter, seconds: float) -> Fitter:
     def stop(signum: int, frame: object) -> None:
         raise WallError(f"past {seconds / 60:g} min")
 
-    def fit(
-        x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
-    ) -> Predictor:
+    def fit(rows: FitRows, seed: int) -> Predictor:
         previous = signal.signal(signal.SIGPROF, stop)
         signal.setitimer(signal.ITIMER_PROF, seconds)
         try:
-            return fitter(x_fit, y_fit, x_valid, y_valid, seed)
+            return fitter(rows, seed)
         finally:
             signal.setitimer(signal.ITIMER_PROF, 0)
             signal.signal(signal.SIGPROF, previous)
@@ -176,14 +174,12 @@ def walled(fitter: Fitter, seconds: float) -> Fitter:
     timed = wall(fitter, seconds)
     met = False
 
-    def fit(
-        x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
-    ) -> Predictor:
+    def fit(rows: FitRows, seed: int) -> Predictor:
         nonlocal met
         if met:
             return _nan
         try:
-            return timed(x_fit, y_fit, x_valid, y_valid, seed)
+            return timed(rows, seed)
         except WallError:
             met = True
             return _nan

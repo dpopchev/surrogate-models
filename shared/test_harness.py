@@ -31,9 +31,9 @@ TOY = Design(
 def recording(seen: list[np.ndarray]):
     """A fitter that records the X of its validation rows and predicts the mean of y_fit."""
 
-    def fit(x_fit, y_fit, x_valid, y_valid, seed):
-        seen.append(x_valid)
-        return lambda x: np.full(len(x), y_fit.mean())
+    def fit(rows, seed):
+        seen.append(rows.x_valid)
+        return lambda x: np.full(len(x), rows.y_fit.mean())
 
     return fit
 
@@ -54,7 +54,7 @@ def test_every_fitter_gets_the_same_validation_rows() -> None:
 def scaled(factor: float):
     """A fitter that predicts the true y (1 + 0.1 p + x) times factor."""
 
-    def fit(x_fit, y_fit, x_valid, y_valid, seed):
+    def fit(rows, seed):
         return lambda x: factor * (1.0 + 0.1 * x[:, 1] + x[:, 0])
 
     return fit
@@ -63,8 +63,8 @@ def scaled(factor: float):
 def test_a_fitter_never_sees_a_test_curve() -> None:
     fitted: list[np.ndarray] = []
 
-    def fit(x_fit, y_fit, x_valid, y_valid, seed):
-        fitted.append(np.concatenate([x_fit[:, 1], x_valid[:, 1]]))
+    def fit(rows, seed):
+        fitted.append(np.concatenate([rows.x_fit[:, 1], rows.x_valid[:, 1]]))
         return lambda x: np.zeros(len(x))
 
     harness(TOY, "mass", fit, seeds=[0], valid_fraction=0.34)
@@ -115,7 +115,7 @@ def test_a_candidate_predicting_the_truth_has_ripple_zero() -> None:
 def offset(error):
     """A fitter that predicts the true y (1 + 0.1 p + x) plus error(p)."""
 
-    def fit(x_fit, y_fit, x_valid, y_valid, seed):
+    def fit(rows, seed):
         return lambda x: 1.0 + 0.1 * x[:, 1] + x[:, 0] + error(x[:, 1])
 
     return fit
@@ -142,7 +142,7 @@ def test_the_fit_is_timed_with_the_injected_clock() -> None:
 def test_every_library_runs_on_one_thread_during_a_fit() -> None:
     threads: list[int] = []
 
-    def fit(x_fit, y_fit, x_valid, y_valid, seed):
+    def fit(rows, seed):
         threads.append(torch.get_num_threads())
         threads.extend(pool["num_threads"] for pool in threadpool_info())
         return lambda x: np.zeros(len(x))

@@ -60,17 +60,17 @@ TOY = Design(
 )
 
 
-def truth(x_fit, y_fit, x_valid, y_valid, seed):
+def truth(rows, seed):
     """A toy fitter predicting the true y."""
     return lambda x: 1.0 + 0.1 * x[:, 1] + x[:, 0]
 
 
-def slow(x_fit, y_fit, x_valid, y_valid, seed):
+def slow(rows, seed):
     """A toy fitter that computes for a second of CPU time to fit."""
     started = time.process_time()
     while time.process_time() - started < 1.0:
         pass
-    return truth(x_fit, y_fit, x_valid, y_valid, seed)
+    return truth(rows, seed)
 
 
 SLOW_OR_NOT = {"slow": CategoricalDistribution((True, False))}

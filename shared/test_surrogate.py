@@ -13,6 +13,7 @@ from skorch.dataset import Dataset
 from skorch.utils import Ansi
 from torch import nn
 
+from shared.harness import FitRows
 from shared.surrogate import (
     MLP,
     Activation,
@@ -121,14 +122,15 @@ class TestNetworkFitter:
             replace(TOY, max_epochs=1),
             before_fit=lambda pipeline: seen.append(pipeline.named_steps["net"].initialized_),
         )
-        fitter(INPUTS[GROUPS < 4], TARGET[GROUPS < 4], INPUTS[GROUPS == 4], TARGET[GROUPS == 4], 0)
+        fit, valid = GROUPS < 4, GROUPS == 4
+        fitter(FitRows(INPUTS[fit], TARGET[fit], INPUTS[valid], TARGET[valid]), 0)
         assert seen == [False]
 
     def test_validates_on_exactly_the_rows_it_is_handed(self) -> None:
         fit, valid = GROUPS < 4, (GROUPS == 4) | (GROUPS == 5)
         captured: list[Pipeline] = []
         fitter = network_fitter(replace(TOY, max_epochs=5), on_fit=captured.append)
-        predict = fitter(INPUTS[fit], TARGET[fit], INPUTS[valid], TARGET[valid], 0)
+        predict = fitter(FitRows(INPUTS[fit], TARGET[fit], INPUTS[valid], TARGET[valid]), 0)
         net = captured[0].named_steps["net"]
         best = int(np.argmin(net.history[:, "valid_loss"]))
         scored = mare(TARGET[valid], predict(INPUTS[valid]))
@@ -139,7 +141,7 @@ class TestNetworkFitter:
 def test_a_scikit_learn_fitter_fits_the_fit_rows_alone() -> None:
     fit, valid = GROUPS < 4, GROUPS >= 4
     predict = sklearn_fitter(make_mean_reference)(
-        INPUTS[fit], TARGET[fit], INPUTS[valid], TARGET[valid], 0
+        FitRows(INPUTS[fit], TARGET[fit], INPUTS[valid], TARGET[valid]), 0
     )
     assert predict(INPUTS[:1]).tolist() == pytest.approx([float(TARGET[fit].mean())])
 

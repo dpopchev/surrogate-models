@@ -60,7 +60,7 @@ from shared.design import (
 )
 from shared.diagnostics import curve_overlay, error_cdf, loss_curve
 from shared.eda import CurveSpace, booktabs, curve_ids, render_macros, sci_tex
-from shared.harness import Fitter, Predictor, Run, Timing, harness
+from shared.harness import FitRows, Fitter, Predictor, Run, Timing, harness
 from shared.plots import SYMBOLS, PlotStyle, anchor_color, apply_style
 from shared.runs import (
     LedgerEntry,
@@ -175,10 +175,8 @@ def final_fit(design: Design, run: Run, estimator: Pipeline, score: Metric) -> F
 def _counted(fitter: Fitter, after_fit: Callable[[], None]) -> Fitter:
     """The fitter, calling after_fit once each of its fits is done."""
 
-    def fit(
-        x_fit: np.ndarray, y_fit: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, seed: int
-    ) -> Predictor:
-        predict = fitter(x_fit, y_fit, x_valid, y_valid, seed)
+    def fit(rows: FitRows, seed: int) -> Predictor:
+        predict = fitter(rows, seed)
         after_fit()
         return predict
 

@@ -26,7 +26,7 @@ from threadpoolctl import threadpool_limits
 
 from shared.ceilings import spread
 from shared.design import Design, TargetForm
-from shared.harness import Fitter, split_valid
+from shared.harness import Fitter, fit_on
 from shared.scorecard import relative_errors, significant_figures
 from shared.surrogate import Activation, Loss
 
@@ -145,11 +145,7 @@ def fold_figures(
         try:
             for fold in sorted(set(design.fold[design.fold >= 0].tolist())):
                 held = design.fold == fold
-                rows = np.flatnonzero(~design.test & ~held)
-                valid = split_valid(design.groups[rows], valid_fraction, seed)
-                fit_rows, valid_rows = rows[~valid], rows[valid]
-                x_valid, y_valid = design.X[valid_rows], design.y[valid_rows]
-                predict = fitter(design.X[fit_rows], design.y[fit_rows], x_valid, y_valid, seed)
+                predict = fit_on(design, ~design.test & ~held, fitter, seed, valid_fraction)
                 errors = relative_errors(design.y[held], predict(design.X[held]), target)
                 figures.append(significant_figures(spread(errors).p95))
         finally:

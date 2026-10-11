@@ -29,14 +29,15 @@ from shared.batches import (
     write_entry,
 )
 from shared.ceilings import Spread
-from shared.harness import Run, Timing
+from shared.harness import FitRows, Run, Timing
 from shared.runs import RunMetadata
 from shared.scorecard import Scorecard
 
 ROWS = np.zeros((3, 2))
+FIT_ROWS = FitRows(ROWS, ROWS[:, 0], ROWS, ROWS[:, 0])
 
 
-def slow(x_fit, y_fit, x_valid, y_valid, seed):
+def slow(rows, seed):
     """A toy fitter that computes for a second of CPU time."""
     started = time.process_time()
     while time.process_time() - started < 1.0:
@@ -44,7 +45,7 @@ def slow(x_fit, y_fit, x_valid, y_valid, seed):
     return lambda x: np.zeros(len(x))
 
 
-def idle(x_fit, y_fit, x_valid, y_valid, seed):
+def idle(rows, seed):
     """A toy fitter that waits 0.3 s without computing, as a fit does through a suspend."""
     time.sleep(0.3)
     return lambda x: np.zeros(len(x))
@@ -108,33 +109,33 @@ def test_the_progress_tail_tells_the_elapsed_and_the_time_left() -> None:
 @pytest.mark.model
 def test_a_fit_past_its_wall_is_stopped() -> None:
     with pytest.raises(WallError):
-        wall(slow, seconds=0.05)(ROWS, ROWS[:, 0], ROWS, ROWS[:, 0], 0)
+        wall(slow, seconds=0.05)(FIT_ROWS, 0)
 
 
 @pytest.mark.model
 def test_a_fit_that_waits_past_its_wall_without_computing_is_not_stopped() -> None:
-    predict = wall(idle, seconds=0.1)(ROWS, ROWS[:, 0], ROWS, ROWS[:, 0], 0)
+    predict = wall(idle, seconds=0.1)(FIT_ROWS, 0)
     assert (predict(ROWS) == 0).all()
 
 
 @pytest.mark.model
 def test_the_wall_names_its_budget_in_minutes() -> None:
     with pytest.raises(WallError, match=r"^past 0\.000833333 min$"):
-        wall(slow, seconds=0.05)(ROWS, ROWS[:, 0], ROWS, ROWS[:, 0], 0)
+        wall(slow, seconds=0.05)(FIT_ROWS, 0)
 
 
 @pytest.mark.model
 def test_a_walled_fit_predicts_nan() -> None:
-    predict = walled(slow, seconds=0.05)(ROWS, ROWS[:, 0], ROWS, ROWS[:, 0], 0)
+    predict = walled(slow, seconds=0.05)(FIT_ROWS, 0)
     assert np.isnan(predict(ROWS)).all()
 
 
 @pytest.mark.model
 def test_a_walled_fitter_skips_its_later_fits() -> None:
     fit = walled(slow, seconds=0.05)
-    fit(ROWS, ROWS[:, 0], ROWS, ROWS[:, 0], 0)
+    fit(FIT_ROWS, 0)
     started = time.monotonic()
-    fit(ROWS, ROWS[:, 0], ROWS, ROWS[:, 0], 0)
+    fit(FIT_ROWS, 0)
     assert time.monotonic() - started < 0.05
 
 
