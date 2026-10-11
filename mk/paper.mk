@@ -77,7 +77,8 @@ $(BH_EDA_ASSETS): $(BH_EDA) paper.toml $(SHARED) $(STATE)/black_holes.parquet
 VARIANTS := $(BUILD)/variants
 
 .PHONY: variants
-variants: $(STATE)/black_holes.parquet ## Draw every figure variant and its contact sheet under build/variants/
+variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet ## Draw every figure variant and its contact sheet under build/variants/
+	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) --variants $(VARIANTS)
 	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --variants $(VARIANTS)
 	$(call log_done,figure variants and contact sheets in $(VARIANTS)/)
 

@@ -1,4 +1,4 @@
-# Board -- surrogate-models
+# Board -- W-112-section-3-variants
 record: local
 open path: E-011 > W-112 > T-311   | blocked: 0 | todo roots: 8 | done: 335 | pruned: 41
 

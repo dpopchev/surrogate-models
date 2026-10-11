@@ -7,6 +7,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import pytest
 from eda_neutron_stars import (
@@ -24,8 +25,10 @@ from eda_neutron_stars import (
     split_strategies,
     table_tex,
 )
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
-from shared.config import PaperConfig
+from shared.config import NeutronStarVariants, PaperConfig
 from shared.eda import RowsPerCurve, with_charge_targets
 from shared.plots import NOTATION_TEX, PlotStyle, anchor_color, apply_style
 
@@ -233,6 +236,11 @@ def test_univariate_table_has_a_row_for_the_central_density() -> None:
 STYLE = PlotStyle(usetex=False)
 
 
+def panels(figure: Figure) -> list[Axes]:
+    """The figure's data panels: every axes but a colorbar's."""
+    return [axes for axes in figure.axes if axes.get_label() != "<colorbar>"]
+
+
 @pytest.mark.view
 def test_the_ceilings_colors_are_the_ns_family_not_the_bh_anchor() -> None:
     # The palette's index 1, the old lambda colour, is the BH anchor in paper.toml.
@@ -257,6 +265,23 @@ class TestFigures:
 
     def test_charge_target_has_four_panels_and_two_colorbars(self) -> None:
         assert len(draw("charge_target", with_charge_targets(DENSE), STYLE, WINDOW).axes) == 6
+
+    def test_charge_target_lines_draws_one_collection_per_panel(self) -> None:
+        variants = NeutronStarVariants(charge_target="lines")
+        figure = draw("charge_target", with_charge_targets(DENSE), STYLE, WINDOW, variants)
+        assert [len(axes.collections) for axes in panels(figure)] == [1, 1, 1, 1]
+
+    def test_charge_target_lambda_inset_has_an_inset(self) -> None:
+        variants = NeutronStarVariants(charge_target="lambda_inset")
+        figure = draw("charge_target", with_charge_targets(DENSE), STYLE, WINDOW, variants)
+        assert sum(len(axes.child_axes) for axes in panels(figure)) == 1
+
+    def test_mass_density_by_beta_colours_by_beta(self) -> None:
+        variants = NeutronStarVariants(mass_density="by_beta")
+        table = with_charge_targets(DENSE)
+        figure = draw("mass_density", table, STYLE, WINDOW, variants)
+        colours = np.asarray(panels(figure)[0].collections[0].get_array())
+        assert sorted(set(colours.tolist())) == sorted(set(table["beta"]))
 
     def test_mass_density_has_one_panel_and_its_colorbar(self) -> None:
         assert len(draw("mass_density", with_charge_targets(DENSE), STYLE, WINDOW).axes) == 2

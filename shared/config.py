@@ -33,6 +33,19 @@ NsFigure = Literal[
     "mass_max",
 ]
 NsTable = Literal["univariate", "charge_correlation", "split_strategies"]
+# scatter: every row; lines: one line per curve; lambda_inset: by lambda, a beta inset (W-112).
+NsChargeTargetVariant = Literal["scatter", "lines", "lambda_inset"]
+# by_lambda or by_beta: the curves coloured by that parameter; two_panels: both (W-112).
+NsMassDensityVariant = Literal["by_lambda", "by_beta", "two_panels"]
+
+
+class NeutronStarVariants(BaseModel):
+    """Section 3.1: which variant of each NS figure the paper places (W-112)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    charge_target: NsChargeTargetVariant = "scatter"
+    mass_density: NsMassDensityVariant = "by_lambda"
 
 
 class NeutronStarsSection(BaseModel):
@@ -42,6 +55,7 @@ class NeutronStarsSection(BaseModel):
 
     figures: tuple[NsFigure, ...] = get_args(NsFigure)
     tables: tuple[NsTable, ...] = get_args(NsTable)
+    variants: NeutronStarVariants = NeutronStarVariants()
 
 
 BhFigure = Literal["univariate_continuous", "mass_radius", "charge_target", "existence_edge"]

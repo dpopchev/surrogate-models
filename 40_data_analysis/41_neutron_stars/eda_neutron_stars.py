@@ -14,11 +14,12 @@ import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, assert_never, get_args
+from typing import Any, Literal, assert_never, cast, get_args
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
@@ -32,7 +33,16 @@ from shared.ceilings import (
     measure,
     uncertainty_macros,
 )
-from shared.config import NOTATION_TEX, NsFigure, NsTable, PaperConfig, load_config
+from shared.config import (
+    NOTATION_TEX,
+    NeutronStarVariants,
+    NsChargeTargetVariant,
+    NsFigure,
+    NsMassDensityVariant,
+    NsTable,
+    PaperConfig,
+    load_config,
+)
 from shared.eda import (
     Adjacency,
     ColumnSummary,
@@ -57,7 +67,14 @@ from shared.eda import (
     text_width_size,
     with_charge_targets,
 )
-from shared.plots import SYMBOLS, PlotStyle, anchor_color, apply_style, colormap
+from shared.plots import (
+    SYMBOLS,
+    PlotStyle,
+    anchor_color,
+    apply_style,
+    colormap,
+    contact_sheet,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -393,6 +410,7 @@ def _split_error(score: SplitScore) -> str:
 
 # The section's asset folder, and the prefix that keeps its basenames unique in the flat build.
 SECTION = "41_neutron_stars"
+DEFAULT_VARIANTS = NeutronStarVariants()
 
 
 def asset(figure: NsFigure) -> str:
@@ -400,8 +418,56 @@ def asset(figure: NsFigure) -> str:
     return f"{SECTION}_fig_{figure}"
 
 
-def caption(figure: NsFigure) -> str:
-    """The caption of one figure."""
+def _charge_target_caption(variant: NsChargeTargetVariant) -> str:
+    """The caption of the charge-target figure in one variant."""
+    match variant:
+        case "scatter":
+            return (
+                "Neutron stars: $M$ against $\\log_{10}\\Dch$ (left) and $\\log_{10}(\\Dch/M)$ "
+                "(right), coloured by $\\lambda$ (top) and $\\beta$ (bottom)."
+            )
+        case "lines":
+            return (
+                "Neutron stars: $M$ against $\\log_{10}\\Dch$ (left) and $\\log_{10}(\\Dch/M)$ "
+                "(right), one line per $(\\beta, \\lambda)$ curve coloured by $\\lambda$ (top) "
+                "and $\\beta$ (bottom)."
+            )
+        case "lambda_inset":
+            return (
+                "Neutron stars: $M$ against $\\log_{10}\\Dch$ (left) and $\\log_{10}(\\Dch/M)$ "
+                "(right), coloured by $\\lambda$; the inset colours $\\log_{10}(\\Dch/M)$ by "
+                "$\\beta$."
+            )
+        case _:
+            assert_never(variant)
+
+
+def _mass_density_caption(variant: NsMassDensityVariant) -> str:
+    """The caption of the mass-density figure in one variant."""
+    curves = "one line per $(\\beta, \\lambda)$ curve"
+    ends = "dots mark each curve's last (maximum-mass) point."
+    match variant:
+        case "by_lambda":
+            return (
+                f"Neutron stars: $M$ against $\\log_{{10}}\\rhoc$, {curves} coloured by "
+                f"$\\lambda$; {ends}"
+            )
+        case "by_beta":
+            return (
+                f"Neutron stars: $M$ against $\\log_{{10}}\\rhoc$, {curves} coloured by "
+                f"$\\beta$; {ends}"
+            )
+        case "two_panels":
+            return (
+                f"Neutron stars: $M$ against $\\log_{{10}}\\rhoc$, {curves} coloured by "
+                f"$\\lambda$ (left) and $\\beta$ (right); {ends}"
+            )
+        case _:
+            assert_never(variant)
+
+
+def caption(figure: NsFigure, variants: NeutronStarVariants = DEFAULT_VARIANTS) -> str:
+    """The caption of one figure in its picked variant."""
     match figure:
         case "univariate":
             return (
@@ -409,15 +475,9 @@ def caption(figure: NsFigure) -> str:
                 "$\\log_{10}$ (right)."
             )
         case "charge_target":
-            return (
-                "Neutron stars: $M$ against $\\log_{10}\\Dch$ (left) and $\\log_{10}(\\Dch/M)$ "
-                "(right), coloured by $\\lambda$ (top) and $\\beta$ (bottom)."
-            )
+            return _charge_target_caption(variants.charge_target)
         case "mass_density":
-            return (
-                "Neutron stars: $M$ against $\\log_{10}\\rhoc$, one line per $(\\beta, \\lambda)$ "
-                "curve coloured by $\\lambda$; dots mark each curve's last (maximum-mass) point."
-            )
+            return _mass_density_caption(variants.mass_density)
         case "grid_fill":
             return (
                 "Neutron stars: rows per $(\\beta, \\lambda)$ curve; blank cells hold no converged "
@@ -443,12 +503,14 @@ def caption(figure: NsFigure) -> str:
             assert_never(figure)
 
 
-def figure_tex(figure: NsFigure) -> str:
-    """The figure environment of one figure, placed here or at the top of a page (!htb)."""
+def figure_tex(figure: NsFigure, variants: NeutronStarVariants = DEFAULT_VARIANTS) -> str:
+    """The figure environment of one figure in its picked variant, placed here or at the top
+    of a page (!htb)."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
         f"\\includegraphics[width=\\textwidth]{{{asset(figure)}}}\n"
-        f"\\caption{{{caption(figure)}}}\n\\label{{fig:ns-{figure.replace('_', '-')}}}\n"
+        f"\\caption{{{caption(figure, variants)}}}\n"
+        f"\\label{{fig:ns-{figure.replace('_', '-')}}}\n"
         "\\end{figure}\n"
     )
 
@@ -535,35 +597,115 @@ def _charge_row(
     fig.colorbar(scatters[-1], ax=list(axes), label=LABELS[column])
 
 
-def _charge_target(table: pd.DataFrame, style: PlotStyle) -> Figure:
-    """M against log10 D and log10 D/M, coloured by lambda and by beta."""
-    fig, axes = plt.subplots(2, 2, figsize=text_width_size(0.9), sharex=True, layout="constrained")
-    _charge_row(fig, axes[0, :], table, "lambda", colormap(style.neutron_stars.lambda_cmap))
-    _charge_row(fig, axes[1, :], table, "beta", colormap(style.neutron_stars.beta_cmap))
-    for ax in axes[1, :]:
+def _curve_collection(
+    table: pd.DataFrame, x: str, y: str, column: str, cmap: Colormap
+) -> LineCollection:
+    """One line per (beta, lambda) curve of y against x, coloured by column."""
+    groups = [g for _, g in table.groupby(list(CURVE))]
+    lines = LineCollection(
+        [np.column_stack((g[x], g[y])) for g in groups],
+        array=np.array([g[column].iloc[0] for g in groups]),
+        cmap=cmap,
+        linewidths=0.3,
+    )
+    lines.set_rasterized(True)
+    return lines
+
+
+def _charge_lines_row(
+    fig: Figure, axes: np.ndarray, table: pd.DataFrame, column: str, cmap: Colormap
+) -> None:
+    """One row of the charge-target figure as one line per curve, coloured by column."""
+    collections = []
+    for ax, (target, label) in zip(axes, CHARGE_LABELS.items(), strict=True):
+        collections.append(_curve_collection(table, "M", target, column, cmap))
+        ax.add_collection(collections[-1])
+        ax.autoscale()
+        ax.set_ylabel(label)
+    fig.colorbar(collections[-1], ax=list(axes), label=LABELS[column])
+
+
+def _charge_target(table: pd.DataFrame, style: PlotStyle, variant: NsChargeTargetVariant) -> Figure:
+    """M against log10 D and log10 D/M, coloured by lambda and by beta: every row (scatter),
+    one line per curve (lines), or by lambda with a beta inset (lambda_inset)."""
+    lam, beta = colormap(style.neutron_stars.lambda_cmap), colormap(style.neutron_stars.beta_cmap)
+    match variant:
+        case "scatter":
+            fig, axes = plt.subplots(
+                2, 2, figsize=text_width_size(0.9), sharex=True, layout="constrained"
+            )
+            _charge_row(fig, axes[0, :], table, "lambda", lam)
+            _charge_row(fig, axes[1, :], table, "beta", beta)
+        case "lines":
+            fig, axes = plt.subplots(
+                2, 2, figsize=text_width_size(0.9), sharex=True, layout="constrained"
+            )
+            _charge_lines_row(fig, axes[0, :], table, "lambda", lam)
+            _charge_lines_row(fig, axes[1, :], table, "beta", beta)
+        case "lambda_inset":
+            fig, axes = plt.subplots(
+                1, 2, figsize=text_width_size(0.45), squeeze=False, layout="constrained"
+            )
+            _charge_row(fig, axes[0, :], table, "lambda", lam)
+            inset = axes[0, 1].inset_axes((0.58, 0.06, 0.38, 0.38))
+            inset.scatter(
+                table["M"],
+                table["log10_D_over_M"],
+                c=table["beta"],
+                cmap=beta,
+                s=0.1,
+                linewidths=0,
+                rasterized=True,
+            )
+            # A miniature of the panel for the beta pattern; its axes are the panel's, unlabelled.
+            inset.set_title(f"by {LABELS['beta']}", fontsize="small")
+            inset.set_xticks([])
+            inset.set_yticks([])
+        case _:
+            assert_never(variant)
+    for ax in axes[-1, :]:
         ax.set_xlabel(LABELS["M"])
     return fig
 
 
-def _mass_density(table: pd.DataFrame, style: PlotStyle) -> Figure:
-    """M against log10 rho_c, one line per curve coloured by lambda, last points marked."""
-    fig, ax = plt.subplots(figsize=text_width_size(0.62), layout="constrained")
-    cmap = colormap(style.neutron_stars.lambda_cmap)
+def _density_panel(fig: Figure, ax: Axes, table: pd.DataFrame, column: str, cmap: Colormap) -> None:
+    """M against log10 rho_c on ax, one line per curve coloured by column, last points marked."""
     groups = [g for _, g in table.groupby(list(CURVE))]
     lines = LineCollection(
         [np.column_stack((np.log10(g["rho_c"]), g["M"])) for g in groups],
-        array=np.array([g["lambda"].iloc[0] for g in groups]),
+        array=np.array([g[column].iloc[0] for g in groups]),
         cmap=cmap,
         linewidths=0.3,
     )
     lines.set_rasterized(True)
     ax.add_collection(lines)
     ends = pd.DataFrame([g.iloc[-1] for g in groups])
-    ax.scatter(np.log10(ends["rho_c"]), ends["M"], c=ends["lambda"], cmap=cmap, s=1.5, zorder=3)
+    ax.scatter(np.log10(ends["rho_c"]), ends["M"], c=ends[column], cmap=cmap, s=1.5, zorder=3)
     ax.autoscale()
     ax.set_xlabel(SYMBOLS["log10_rho_c"])
     ax.set_ylabel(LABELS["M"])
-    fig.colorbar(lines, ax=ax, label=LABELS["lambda"])
+    fig.colorbar(lines, ax=ax, label=LABELS[column])
+
+
+def _mass_density(table: pd.DataFrame, style: PlotStyle, variant: NsMassDensityVariant) -> Figure:
+    """M against log10 rho_c, one line per curve with its last point marked, coloured by
+    lambda (by_lambda), by beta (by_beta), or the two side by side (two_panels)."""
+    lam, beta = colormap(style.neutron_stars.lambda_cmap), colormap(style.neutron_stars.beta_cmap)
+    match variant:
+        case "by_lambda":
+            fig, ax = plt.subplots(figsize=text_width_size(0.62), layout="constrained")
+            _density_panel(fig, ax, table, "lambda", lam)
+        case "by_beta":
+            fig, ax = plt.subplots(figsize=text_width_size(0.62), layout="constrained")
+            _density_panel(fig, ax, table, "beta", beta)
+        case "two_panels":
+            fig, (left, right) = plt.subplots(
+                1, 2, figsize=text_width_size(0.45), sharey=True, layout="constrained"
+            )
+            _density_panel(fig, left, table, "lambda", lam)
+            _density_panel(fig, right, table, "beta", beta)
+        case _:
+            assert_never(variant)
     return fig
 
 
@@ -598,16 +740,22 @@ def _curve_adjacency(table: pd.DataFrame, style: PlotStyle) -> Figure:
     return fig
 
 
-def draw(figure: NsFigure, table: pd.DataFrame, style: PlotStyle, window: float) -> Figure:
-    """Draw one NS EDA figure from a table with the charge targets; window is the pile-up
-    window the mass-max figure marks."""
+def draw(
+    figure: NsFigure,
+    table: pd.DataFrame,
+    style: PlotStyle,
+    window: float,
+    variants: NeutronStarVariants = DEFAULT_VARIANTS,
+) -> Figure:
+    """Draw one NS EDA figure from a table with the charge targets in its picked variant;
+    window is the pile-up window the mass-max figure marks."""
     match figure:
         case "univariate":
             return _univariate(table, style)
         case "charge_target":
-            return _charge_target(table, style)
+            return _charge_target(table, style, variants.charge_target)
         case "mass_density":
-            return _mass_density(table, style)
+            return _mass_density(table, style, variants.mass_density)
         case "grid_fill":
             return _grid_fill(table, style)
         case "curve_adjacency":
@@ -640,7 +788,33 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--folds", type=int, required=True, help="probe folds of the split")
     parser.add_argument("--seed", type=int, required=True, help="the split's seed")
     parser.add_argument("--window", type=float, required=True, help="pile-up window in M")
+    parser.add_argument(
+        "--variants",
+        type=Path,
+        help="draw every variant of each figure into this dir to pick from; assets untouched",
+    )
     return parser.parse_args(argv)
+
+
+def _write_variants(out: Path, table: pd.DataFrame, style: PlotStyle, window: float) -> None:
+    """Every variant of each figure with variants as <stem>_<variant>.png in out, and per
+    figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
+    out.mkdir(parents=True, exist_ok=True)
+    for name, field in NeutronStarVariants.model_fields.items():
+        if name not in get_args(NsFigure):
+            raise ValueError(f"variants field {name} names no NS figure")
+        figure = cast(NsFigure, name)
+        images: dict[str, Path] = {}
+        for variant in get_args(field.annotation):
+            picked = NeutronStarVariants.model_validate({name: variant})
+            fig = draw(figure, table, style, window, picked)
+            images[variant] = out / f"{asset(figure)}_{variant}.png"
+            fig.savefig(images[variant], dpi=style.dpi)
+            plt.close(fig)
+        sheet = contact_sheet(images)
+        sheet.savefig(out / f"{asset(figure)}_variants.png", dpi=style.diagnostics_dpi)
+        plt.close(sheet)
+        logger.info("done: %s variants %s and their sheet -> %s", name, tuple(images), out)
 
 
 def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
@@ -675,15 +849,18 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
         f"{source} carries no raw counts -- re-run make data, the preparation writes them"
     )
     table = with_charge_targets(prepared)
+    if args.variants is not None:
+        _write_variants(args.variants / SECTION, table, config.plot, args.window)
+        return
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
     section = config.data_analysis.neutron_stars
     for figure in section.figures:
-        fig = draw(figure, table, config.plot, args.window)
+        fig = draw(figure, table, config.plot, args.window, section.variants)
         fig.savefig(out / f"{asset(figure)}.png", dpi=config.plot.dpi)
         plt.close(fig)
-        (out / f"{asset(figure)}.tex").write_text(figure_tex(figure))
+        (out / f"{asset(figure)}.tex").write_text(figure_tex(figure, section.variants))
     found = evidence(table, args.folds, args.seed, args.window)
     bounds = measure(
         table.assign(log10_rho_c=np.log10(table["rho_c"])), CURVE, "log10_rho_c", ("M", "D"), "D"
