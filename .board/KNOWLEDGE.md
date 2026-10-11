@@ -47,4 +47,5 @@
 
 ## Deviations
 - 2026-10-11 E-011: W-122 filed during T-237: make compile keeps a deselected figure in article.pdf (latexmk runs no pass); queued todo, the developer orders it at W-102's re-aim
+- 2026-10-11 E-011: filed during W-113: W-123 (3 scaling tests fail alone, standalone todo) and T-319 under W-115 (one variant-sheet writer)
 - 2026-10-11 E-011: make -q checks re-filed at activation: W-111 T-260/261/263 -> T-308-310, W-112 T-264-267 -> T-311-314, W-113 T-268-271 -> T-315-318 (4.1 under [methodology.algorithms.variants]); W-112 re-recorded the two ceilings PNG hashes supersedes: E-011#v2, E-011#v3

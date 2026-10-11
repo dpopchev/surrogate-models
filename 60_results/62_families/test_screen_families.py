@@ -6,6 +6,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import screen_families
@@ -39,7 +40,7 @@ from screen_families import (
 
 from shared.config import PaperConfig
 from shared.design import Design, Target
-from shared.plots import PlotStyle
+from shared.plots import NOTATION_TEX, PlotStyle, apply_style
 
 # The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
 ToyInputs = Callable[[Path], tuple[Path, Path, Path]]
@@ -478,13 +479,24 @@ def test_the_scaling_figure_has_a_figures_and_a_seconds_panel_per_pair() -> None
     assert len([axes for axes in figure.axes if axes.lines]) == 4 * 2
 
 
+@pytest.fixture
+def notation():
+    """The style with the paper's notation, so the panel titles' symbols expand; restored
+    after the test."""
+    with plt.rc_context():
+        apply_style(PlotStyle(usetex=False), NOTATION_TEX.read_text())
+        yield
+
+
 @pytest.mark.view
+@pytest.mark.usefixtures("notation")
 def test_scaling_figure_marker_size_has_one_panel_per_pair() -> None:
     figure = scaling_figure(TOY_PATHS, PlotStyle(usetex=False), variant="marker_size")
     assert len(figure.axes) == 4
 
 
 @pytest.mark.view
+@pytest.mark.usefixtures("notation")
 def test_scaling_figure_small_multiples_has_one_panel_per_family() -> None:
     paths = [replace(toy_path("neutron_stars", "mass"), candidate=c) for c in (KNN, MLP, GPR)]
     figure = scaling_figure(paths, PlotStyle(usetex=False), variant="small_multiples")
