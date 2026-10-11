@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-010 > W-117 > T-284   | blocked: 1 | todo roots: 5 | done: 288 | pruned: 20
+open path: E-010 > W-117 > T-285   | blocked: 1 | todo roots: 5 | done: 288 | pruned: 21
 
 ## Tree
 
@@ -54,7 +54,7 @@ E-010         [doing]    Every module meets the Python gates
   W-108  issue  [todo]     Every knob has one home -- T-250 [todo], T-251 [todo], T-252 [todo], T-253 [todo]
   W-109  issue  [todo]     Records, not tuples and dict blobs -- T-254 [todo], T-255 [todo], T-256 [todo]
   W-110  issue  [todo]     Module order, notation literals and the surrogate module -- T-257 [todo], T-258 [todo], T-259 [todo]
-  W-117  bug    [doing]    The NS numbers file is written in a run-dependent order, so a rebuilt asset need not match its hash   (filed during T-215) -- T-284 [doing]   <- ACTIVE LEAF
+  W-117  bug    [doing]    The NS numbers file is written in a run-dependent order, so a rebuilt asset need not match its hash   (filed during T-215) -- T-284 [pruned]   [pruned: its check passes -q to make, which make reads as question mode: it prints nothing and exits 1 whatever the test does; superseded by T-285 with the same brief and a working check], T-285 [doing]   <- ACTIVE LEAF
 E-011         [todo]     Figures and tables picked from rendered variants, numbers from macros
   W-102  issue  [todo]     Every section's figures are selected in paper.toml   (filed during T-206) -- T-237 [todo]
   W-104  bug    [todo]     Section 5.2's error and scaling figures float past Section 5.3's text   (filed during T-240) -- T-241 [todo]   (filed during T-240)
@@ -637,7 +637,8 @@ flowchart TD
   W110 --> T258["T-258 todo: Move duration text and the reference predictors -> shared/progress.py, shared/families.py"]
   W110 --> T259["T-259 todo: Label through SYMBOLS test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py, shared/plots.py"]
   E010 --> W117["W-117 bug doing: The NS numbers file is written in a run-dependent order, so a rebuilt asset need not match its hash"]
-  W117 --> T284["T-284 doing: Write the Figures macros in target order test-first -> shared/ceilings.py -- ACTIVE LEAF"]
+  W117 --> T284["T-284 pruned: Write the Figures macros in target order test-first -> shared/ceilings.py"]
+  W117 --> T285["T-285 doing: Write the Figures macros in target order test-first -> shared/ceilings.py (T-284 with a working check) -- ACTIVE LEAF"]
   E011["E-011 todo: Figures and tables picked from rendered variants, numbers from macros"]
   E011 --> W102["W-102 issue todo: Every section's figures are selected in paper.toml"]
   W102 --> T237["T-237 todo: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
@@ -681,9 +682,9 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E010,W117,T284 doing
+  class E006,E009,E010,W117,T285 doing
   class W091 blocked
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W079,T167,T168,T232,T213,T215,T282,T283 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W095,T219,W096,T220,T221,T222,W105,T242,W106,T243,T244,T245,T246,W107,T247,T248,T249,W108,T250,T251,T252,T253,W109,T254,T255,T256,W110,T257,T258,T259,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197 todo
-  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T214 pruned
+  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T214,T284 pruned
 ```

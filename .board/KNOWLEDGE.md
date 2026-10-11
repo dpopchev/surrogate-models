@@ -24,9 +24,9 @@
 - 2026-10-08 T-200: fact: BH p95 is its worst of 3 test curves (pointwise RBF: M flat 5e-5 vs 1e-7; D 1e-3 vs 1e-5); BH curve-wise error arcs between the 8 knots -> E-007 tunes the knots
 - 2026-10-08 W-037: standing: one thread is fastest (2.6 s vs 11.4 s an epoch at 7); one fit took 53-525 s, swinging 2.5x with load -> cite fit times as orders of magnitude, time them repeatedly supersedes: W-035#2, W-036#1, W-037#2
 - 2026-10-08 W-073: standing: scored in D (MARE on Y read 2.0e-2 where D is off 1.9e-1), the nearest curve beats the MLP on the test curves of all four pairs; the MLP leads only on the NS folds -> no pair is won by the baseline supersedes: W-073#1, W-073#2
-- 2026-10-10 E-010: fact: the asset baseline of main c4dc642 is local/assets-baseline.sha (50 files, digest 4eea8ad354c8), two back-to-back rebuilds identical -> every work item closes on diff -q against it
 - 2026-10-10 W-068: T-206: fact: batch 01a11d49, folds/test vs ceiling: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure
 - 2026-10-11 W-091: fact: a conftest.py per folder works here (section fixtures reach subfolders, a folder's own overrides, refusals intact) only with --ignore=conftest.py --ignore-glob=*/conftest.py: --doctest-modules imports each conftest as module conftest -> import file mismatch
+- 2026-10-11 W-117: fact: local/assets-baseline.sha (50 files) held the NS numbers order of hash seed 1 (18f0cdf6cf75); fixed, seeds 1 and 2 both write c07c8ef01076 -> W-117 landing re-records the baseline supersedes: E-010#2
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
