@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-010 > W-108 > T-294   | blocked: 0 | todo roots: 6 | done: 310 | pruned: 28
+open path: E-010 > W-108 > T-294   | blocked: 0 | todo roots: 8 | done: 310 | pruned: 28
 
 ## Tree
 
@@ -67,6 +67,8 @@ E-011         [todo]     Figures and tables picked from rendered variants, numbe
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
 W-118  bug    [todo]     (standalone) A screen run leaves the surrogate logger at WARNING, so a later baseline run in the same process loses its epoch table   (filed during T-219) -- T-287 [todo]
+W-119  bug    [todo]     (standalone) The ranges figure crashes on a batch with no network job   (filed during T-294) -- T-295 [todo]
+W-120  bug    [todo]     (standalone) The tuning figure tests pass only after main styled the plots   (filed during T-294) -- T-296 [todo]
 ```
 
 ## Closed
@@ -688,6 +690,10 @@ flowchart TD
   W088 --> T197["T-197 todo: Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py"]
   W118["W-118 bug todo, standalone: A screen run leaves the surrogate logger at WARNING, so a later baseline run in the same process loses its epoch table"]
   W118 --> T287["T-287 todo: Restore the surrogate logger level after a screen run test-first -> the two screen modules"]
+  W119["W-119 bug todo, standalone: The ranges figure crashes on a batch with no network job"]
+  W119 --> T295["T-295 todo: Draw an empty panel of the ranges figure test-first -> 60_results/63_precision/tune_survivors.py"]
+  W120["W-120 bug todo, standalone: The tuning figure tests pass only after main styled the plots"]
+  W120 --> T296["T-296 todo: Style the toy plots in a fixture of the figure tests -> 60_results/63_precision/test_tune_survivors.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -695,6 +701,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,E009,E010,W108,T294 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W079,T167,T168,T232,W091,T213,T215,T282,T283,W095,T219,T286,W096,T220,T221,T222,W105,T242,W106,T243,T288,T289,T290,W107,T291,T292,T293,T250,W117,T285 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,T252,T253,W109,T254,T255,T256,W110,T257,T258,T259,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W118,T287 todo
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,T252,T253,W109,T254,T255,T256,W110,T257,T258,T259,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W118,T287,W119,T295,W120,T296 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T214,T244,T245,T246,T247,T248,T249,T251,T284 pruned
 ```
