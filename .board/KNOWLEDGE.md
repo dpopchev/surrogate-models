@@ -45,4 +45,5 @@
 - 2026-10-11 E-011: W-122 before W-104 at W-102's re-aim, so make compile shows the picks before more are added (developer, 2026-10-11)
 
 ## Deviations
+- 2026-10-11 E-011: W-111: T-260, T-261, T-263 pruned at activation (their checks could not pass: make -q runs nothing; an env override does not rerun make assets) and re-filed as T-308, T-309, T-310; order T-308, T-309, T-262, T-310; the criterion is unchanged
 - 2026-10-11 E-011: W-122 filed during T-237: make compile keeps a deselected figure in article.pdf (latexmk runs no pass); queued todo, the developer orders it at W-102's re-aim
