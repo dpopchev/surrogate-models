@@ -40,6 +40,9 @@ NsMassDensityVariant = Literal["by_lambda", "by_beta", "two_panels"]
 # histograms: a row per variable, raw and log10; log_counts: the same with log-y row counts;
 # transposed: raw and log10 as two rows, a column per variable (W-112). Both sections.
 UnivariateVariant = Literal["histograms", "log_counts", "transposed"]
+# annotated: a panel per target, the 4 and 5 figures lines annotated; figures_axis: a right
+# axis in significant figures instead; one_panel: both targets' p95 in one axes (W-112).
+CeilingsVariant = Literal["annotated", "figures_axis", "one_panel"]
 # histogram_heatmap: distance to M_max and the M_max grid; heatmap_contours: the grid alone
 # with M_max contours; log_histogram: the distance alone, log-y (W-112).
 NsMassMaxVariant = Literal["histogram_heatmap", "heatmap_contours", "log_histogram"]
@@ -54,6 +57,7 @@ class NeutronStarVariants(BaseModel):
     mass_density: NsMassDensityVariant = "by_lambda"
     univariate_continuous: UnivariateVariant = "histograms"
     mass_max: NsMassMaxVariant = "histogram_heatmap"
+    ceilings: CeilingsVariant = "annotated"
 
 
 class NeutronStarsSection(BaseModel):
@@ -87,6 +91,7 @@ class BlackHoleVariants(BaseModel):
     univariate_continuous: UnivariateVariant = "histograms"
     charge_target: BhChargeTargetVariant = "two_panels"
     existence_edge: BhExistenceEdgeVariant = "segments"
+    ceilings: CeilingsVariant = "annotated"
 
 
 class BlackHolesSection(BaseModel):

@@ -237,6 +237,18 @@ class TestCeilingFigure:
         assert figure.axes[0].get_yscale() == "log"
 
 
+@pytest.mark.view
+def test_ceiling_figure_figures_axis_has_a_secondary_axis(found) -> None:
+    figure = ceiling_figure(found, LABELS, "$x$", {"p": "C0", "q": "C1"}, "figures_axis")
+    assert len(figure.axes[0].child_axes) == 1
+
+
+@pytest.mark.view
+def test_ceiling_figure_one_panel_has_one_axes(found) -> None:
+    figure = ceiling_figure(found, LABELS, "$x$", {"p": "C0", "q": "C1"}, "one_panel")
+    assert len(figure.axes) == 1
+
+
 TOO_FEW = family(lambda p: 0.1 * p).query("p <= 2.0 and x <= 0.3")  # 2 curves of 4 rows
 
 

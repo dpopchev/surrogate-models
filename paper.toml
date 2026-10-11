@@ -52,6 +52,9 @@ univariate_continuous = "histograms" # histograms: a row per variable, raw and l
 mass_max = "histogram_heatmap"       # histogram_heatmap: distance to M_max and the M_max grid
                                      # heatmap_contours: the grid alone, M_max contours
                                      # log_histogram: the distance alone, log-y counts
+ceilings = "annotated"               # annotated: a panel per target, 4 and 5 figures lines
+                                     # figures_axis: a right axis in significant figures
+                                     # one_panel: both targets' p95, target by line style
 
 # Section 3.2 -- which BH EDA figures and tables eda_black_holes.py renders; placed by the text.
 [data_analysis.black_holes]
@@ -74,6 +77,7 @@ charge_target = "two_panels"          # two_panels: log10 D and log10 D/M | log_
 existence_edge = "segments"           # segments: each curve's r_h range
                                       # edge_line: r_h,min against beta
                                       # zoomed: the segments near the edge
+ceilings = "annotated"                # annotated | figures_axis | one_panel, as in 3.1
 
 # Section 5.2 -- which family-screen figures screen_families.py writes (W-102); placed by the
 # text like Section 3's, a deselected one drops out. The family table is always written.

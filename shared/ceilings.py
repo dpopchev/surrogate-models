@@ -10,14 +10,17 @@ held-out curves, since the curves are sampled far more densely along than across
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, assert_never
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.ticker import FormatStrFormatter, MultipleLocator, NullLocator
 from scipy.interpolate import CubicSpline, PchipInterpolator
 
+from shared.config import CeilingsVariant
 from shared.eda import booktabs, sci_tex
 
 # --- vocabulary and types ---------------------------------------------------------------------
@@ -176,13 +179,103 @@ def decade_table(label: str, caption: str, found: Ceilings, labels: Mapping[str,
     return booktabs(label, caption, "l" + "r" * (len(keys) + 1), header, rows)
 
 
-def ceiling_figure(
-    found: Ceilings, labels: Mapping[str, str], along_label: str, colors: Mapping[str, Any]
+def _figure_lines(ax: Axes) -> None:
+    """The relative errors of 4 and 5 significant figures, dotted and annotated on ax."""
+    for figures in (4, 5):
+        ax.axhline(10.0**-figures, color="0.6", ls=":", lw=0.8)
+        ax.annotate(
+            f"{figures} figures",
+            (1.0, 10.0**-figures),
+            xycoords=("axes fraction", "data"),
+            ha="right",
+            va="bottom",
+            fontsize="x-small",
+            color="0.4",
+        )
+
+
+def _figures_axis(ax: Axes) -> None:
+    """A right axis on ax reading the relative error as significant figures, -log10."""
+    right = ax.secondary_yaxis(
+        "right", functions=(lambda e: -np.log10(e), lambda f: 10.0 ** -np.asarray(f))
+    )
+    # Whole figures: the log axis would otherwise lend its 10^k tick labels.
+    right.yaxis.set_major_locator(MultipleLocator(1))
+    right.yaxis.set_major_formatter(FormatStrFormatter("%d"))
+    right.yaxis.set_minor_locator(NullLocator())
+    right.set_ylabel("significant figures")
+
+
+LINE_STYLES = ("-", "--", "-.", ":")
+
+
+def ceilings_caption(subject: str, across: str, along: str, variant: CeilingsVariant) -> str:
+    """The caption of one dataset's ceilings figure (subject; the curve keys varied across;
+    the coordinate along the curves) in one variant."""
+    error = f"relative error of a curve predicted from the two curves on each side in {across}"
+    figures = "dotted lines mark 4 and 5 significant figures."
+    match variant:
+        case "annotated":
+            return (
+                f"{subject}: {error}, along {along} -- median solid, 95th percentile dashed; "
+                f"{figures}"
+            )
+        case "figures_axis":
+            return (
+                f"{subject}: {error}, along {along} -- median solid, 95th percentile dashed; the "
+                "right axis reads the error as significant figures."
+            )
+        case "one_panel":
+            return (
+                f"{subject}: 95th percentile of the {error}, along {along} -- $M$ solid, $\\Dch$ "
+                f"dashed; {figures}"
+            )
+        case _:
+            assert_never(variant)
+
+
+def _one_panel(
+    found: Ceilings,
+    targets: list[str],
+    labels: Mapping[str, str],
+    along_label: str,
+    colors: Mapping[str, Any],
 ) -> Figure:
-    """One panel per target: the across-curve relative error along the curves, the median
-    solid and the 95th percentile dashed per curve key varied, beside 4 and 5 figures."""
+    """Every target's across-curve 95th percentile in one axes: the key by colour, the target
+    by line style, beside the 4 and 5 figures lines."""
+    fig, ax = plt.subplots(layout="constrained")
+    styles = dict(zip(targets, LINE_STYLES, strict=False))
+    for (target, key), line in found.profiles.items():
+        ax.plot(
+            np.array(line.centers),
+            np.maximum(line.p95, FLOOR_ON_PLOT),
+            color=colors[key],
+            ls=styles[target],
+            label=f"{labels[target]} across {labels[key]}",
+        )
+    ax.set_yscale("log")
+    _figure_lines(ax)
+    ax.set_xlabel(along_label)
+    ax.set_ylabel("relative error, 95th percentile")
+    ax.legend(fontsize="small")
+    return fig
+
+
+def ceiling_figure(
+    found: Ceilings,
+    labels: Mapping[str, str],
+    along_label: str,
+    colors: Mapping[str, Any],
+    variant: CeilingsVariant = "annotated",
+) -> Figure:
+    """The across-curve relative error along the curves per curve key varied: a panel per
+    target with the median solid and the 95th percentile dashed beside the 4 and 5 figures
+    lines (annotated) or a right axis in significant figures (figures_axis), or every
+    target's 95th percentile in one panel, the target by line style (one_panel)."""
     targets = list(found.noise)
-    fig, axes = plt.subplots(1, len(targets), sharey=True, squeeze=False)
+    if variant == "one_panel":
+        return _one_panel(found, targets, labels, along_label, colors)
+    fig, axes = plt.subplots(1, len(targets), sharey=True, squeeze=False, layout="constrained")
     for ax, target in zip(axes[0], targets, strict=True):
         for (t, key), line in found.profiles.items():
             if t != target:
@@ -195,23 +288,18 @@ def ceiling_figure(
                 label=f"across {labels[key]}",
             )
             ax.plot(centers, np.maximum(line.p95, FLOOR_ON_PLOT), color=colors[key], ls="--")
-        for figures in (4, 5):
-            ax.axhline(10.0**-figures, color="0.6", ls=":", lw=0.8)
-            ax.annotate(
-                f"{figures} figures",
-                (1.0, 10.0**-figures),
-                xycoords=("axes fraction", "data"),
-                ha="right",
-                va="bottom",
-                fontsize="x-small",
-                color="0.4",
-            )
         ax.set_yscale("log")
+        match variant:
+            case "annotated":
+                _figure_lines(ax)
+            case "figures_axis":
+                _figures_axis(ax)
+            case _:
+                assert_never(variant)
         ax.set_xlabel(along_label)
         ax.set_title(labels[target])
     axes[0][0].set_ylabel("relative error")
     axes[0][0].legend(fontsize="small")
-    fig.tight_layout()
     return fig
 
 

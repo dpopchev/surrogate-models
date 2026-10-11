@@ -11,8 +11,9 @@ The dataset-agnostic machinery lives in shared/eda.py.
 import argparse
 import logging
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import Any, Literal, assert_never, cast, get_args
 
@@ -29,12 +30,14 @@ from shared.ceilings import (
     ceiling_figure,
     ceiling_macros,
     ceiling_table,
+    ceilings_caption,
     decade_table,
     measure,
     uncertainty_macros,
 )
 from shared.config import (
     NOTATION_TEX,
+    CeilingsVariant,
     NeutronStarVariants,
     NsChargeTargetVariant,
     NsFigure,
@@ -149,11 +152,8 @@ DECADES_CAPTION = (
     "Neutron stars: median relative error of $\\Dch$ predicted from the neighbouring curves, "
     "per decade of $\\Dch$, and the significant figures the worse direction allows."
 )
-CEILINGS_FIGURE = (
-    "Neutron stars: relative error of a curve predicted from the two curves on each side in "
-    "$\\beta$ or in $\\lambda$, along $\\log_{10}\\rhoc$ -- median solid, 95th percentile dashed; "
-    "dotted lines mark 4 and 5 significant figures."
-)
+# The ceilings figure's caption: the dataset, the curve keys varied across, the coordinate along.
+CEILINGS_FIGURE = ("Neutron stars", "$\\beta$ or in $\\lambda$", "$\\log_{10}\\rhoc$")
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -836,28 +836,61 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _write_sheet(
+    out: Path, stem: str, drawers: Mapping[str, Callable[[], Figure]], style: PlotStyle
+) -> None:
+    """Each variant drawn as <stem>_<variant>.png in out and their contact sheet as
+    <stem>_variants.png, at the screen's resolution."""
+    images: dict[str, Path] = {}
+    for variant, drawer in drawers.items():
+        fig = drawer()
+        images[variant] = out / f"{stem}_{variant}.png"
+        fig.savefig(images[variant], dpi=style.dpi)
+        plt.close(fig)
+    sheet = contact_sheet(images)
+    sheet.savefig(out / f"{stem}_variants.png", dpi=style.diagnostics_dpi)
+    plt.close(sheet)
+    logger.info("done: %s variants %s and their sheet -> %s", stem, tuple(images), out)
+
+
 def _write_variants(out: Path, table: pd.DataFrame, style: PlotStyle, window: float) -> None:
-    """Every variant of each figure with variants as <stem>_<variant>.png in out, and per
-    figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
+    """Every variant of each figure with variants, the ceilings figure's included, and per
+    figure their contact sheet, into out."""
     out.mkdir(parents=True, exist_ok=True)
     for name, field in NeutronStarVariants.model_fields.items():
+        if name == "ceilings":
+            continue
         if name not in get_args(NsFigure):
             raise ValueError(f"variants field {name} names no NS figure")
         figure = cast(NsFigure, name)
-        images: dict[str, Path] = {}
-        for variant in get_args(field.annotation):
-            picked = NeutronStarVariants.model_validate({name: variant})
-            fig = draw(figure, table, style, window, picked)
-            images[variant] = out / f"{asset(figure)}_{variant}.png"
-            fig.savefig(images[variant], dpi=style.dpi)
-            plt.close(fig)
-        sheet = contact_sheet(images)
-        sheet.savefig(out / f"{asset(figure)}_variants.png", dpi=style.diagnostics_dpi)
-        plt.close(sheet)
-        logger.info("done: %s variants %s and their sheet -> %s", name, tuple(images), out)
+        drawers = {
+            variant: partial(
+                draw, figure, table, style, window, NeutronStarVariants(**{name: variant})
+            )
+            for variant in get_args(field.annotation)
+        }
+        _write_sheet(out, asset(figure), drawers, style)
+    bounds = _bounds(table)
+    ceilings = {v: partial(_ceilings, bounds, style, v) for v in get_args(CeilingsVariant)}
+    _write_sheet(out, f"{SECTION}_fig_ceilings", ceilings, style)
 
 
-def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
+def _bounds(table: pd.DataFrame) -> Ceilings:
+    """The data ceilings of M and D along log10 rho_c, across beta and lambda."""
+    return measure(
+        table.assign(log10_rho_c=np.log10(table["rho_c"])), CURVE, "log10_rho_c", ("M", "D"), "D"
+    )
+
+
+def _ceilings(bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant) -> Figure:
+    """The ceilings figure in one variant."""
+    labels, along = CEILING_LABELS, SYMBOLS["log10_rho_c"]
+    return ceiling_figure(bounds, labels, along, ceiling_colors(style), variant)
+
+
+def _write_ceilings(
+    out: Path, bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant
+) -> None:
     """Write the ceilings table, the per-decade table and the figure of the data limits."""
     (out / f"{SECTION}_tab_ceilings.tex").write_text(
         ceiling_table("ns-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS)
@@ -865,13 +898,14 @@ def _write_ceilings(out: Path, bounds: Ceilings, style: PlotStyle) -> None:
     (out / f"{SECTION}_tab_ceiling_decades.tex").write_text(
         decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS)
     )
-    fig = ceiling_figure(bounds, CEILING_LABELS, SYMBOLS["log10_rho_c"], ceiling_colors(style))
+    fig = _ceilings(bounds, style, variant)
     fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
     plt.close(fig)
+    caption_ = ceilings_caption(*CEILINGS_FIGURE, variant)
     (out / f"{SECTION}_fig_ceilings.tex").write_text(
         "\\begin{figure}[!htb]\n\\centering\n"
         f"\\includegraphics[width=\\textwidth]{{{SECTION}_fig_ceilings}}\n"
-        f"\\caption{{{CEILINGS_FIGURE}}}\n\\label{{fig:ns-ceilings}}\n\\end{{figure}}\n"
+        f"\\caption{{{caption_}}}\n\\label{{fig:ns-ceilings}}\n\\end{{figure}}\n"
     )
 
 
@@ -902,9 +936,7 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
         plt.close(fig)
         (out / f"{asset(figure)}.tex").write_text(figure_tex(figure, section.variants))
     found = evidence(table, args.folds, args.seed, args.window)
-    bounds = measure(
-        table.assign(log10_rho_c=np.log10(table["rho_c"])), CURVE, "log10_rho_c", ("M", "D"), "D"
-    )
+    bounds = _bounds(table)
     # The ceilings as uncertainties at the median mass, at M_max and at the median charge (W-076).
     typical = {
         "M": {"": float(table["M"].median()), "Max": float(table["M"].max())},
@@ -919,7 +951,7 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
     (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
     for name in section.tables:
         (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name))
-    _write_ceilings(out, bounds, config.plot)
+    _write_ceilings(out, bounds, config.plot, section.variants.ceilings)
     logger.info(
         "done: NS figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
     )
