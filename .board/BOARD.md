@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-010   | blocked: 0 | todo roots: 8 | done: 314 | pruned: 28
+open path: E-010 > W-109 > T-297   | blocked: 0 | todo roots: 8 | done: 314 | pruned: 30
 
 ## Tree
 
@@ -52,7 +52,7 @@ E-010         [doing]    Every module meets the Python gates
   W-106  issue  [done]     One vocabulary for pairs, units, families and labels -- T-243 [done], T-244 [pruned]   [pruned: its pair_tex half landed in T-220 (W-096), and its check passes -q to make, which make reads as question mode (no output, exit 1); the target_symbol half is refiled as T-288 with a working check], T-245 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-289 with the same brief and a working check], T-246 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-290 with the same brief, its files by path and a working check], T-288 [done], T-289 [done], T-290 [done]
   W-107  issue  [done]     Asserts out of the domain, I/O out of the data modules -- T-247 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-291 with the same brief and a working check], T-248 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-292 with the same brief and a working check], T-249 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-293 with the same brief and a working check], T-291 [done], T-292 [done], T-293 [done]
   W-108  issue  [done]     Every knob has one home -- T-250 [done], T-251 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-294 with the same brief and a working check], T-252 [done], T-253 [done], T-294 [done]
-  W-109  issue  [todo]     Records, not tuples and dict blobs -- T-254 [todo], T-255 [todo], T-256 [todo]
+  W-109  issue  [doing]    Records, not tuples and dict blobs -- T-254 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-297 with the same brief and a working check], T-255 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-298 with the same brief and a working check], T-256 [todo], T-297 [doing]   <- ACTIVE LEAF, T-298 [todo]
   W-110  issue  [todo]     Module order, notation literals and the surrogate module -- T-257 [todo], T-258 [todo], T-259 [todo]
   W-117  bug    [done]     The NS numbers file is written in a run-dependent order, so a rebuilt asset need not match its hash   (filed during T-215) -- T-284 [pruned]   [pruned: its check passes -q to make, which make reads as question mode: it prints nothing and exits 1 whatever the test does; superseded by T-285 with the same brief and a working check], T-285 [done]
 E-011         [todo]     Figures and tables picked from rendered variants, numbers from macros
@@ -639,10 +639,12 @@ flowchart TD
   W108 --> T252["T-252 done: List the shared prerequisites by wildcard -> mk/paper.mk"]
   W108 --> T253["T-253 done: Move the grid and dpi constants into PlotStyle test-first -> shared/plots.py, paper.toml, shared/eda.py, eda_neutron_stars.py, eda_black_holes.py, fit_baseline.py, shared/surrogate.py"]
   W108 --> T294["T-294 done: Derive the short list from the screen batch test-first -> 60_results/63_precision/tune_survivors.py, mk/paper.mk"]
-  E010 --> W109["W-109 issue todo: Records, not tuples and dict blobs"]
-  W109 --> T254["T-254 todo: Type the EDA records test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py"]
-  W109 --> T255["T-255 todo: Type the fit path records test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/runs.py"]
+  E010 --> W109["W-109 issue doing: Records, not tuples and dict blobs"]
+  W109 --> T254["T-254 pruned: Type the EDA records test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py"]
+  W109 --> T255["T-255 pruned: Type the fit path records test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/runs.py"]
   W109 --> T256["T-256 todo: Type the maps as Mapping -> shared/ceilings.py, shared/runs.py, shared/search.py, 60_results/63_precision/tune_survivors.py"]
+  W109 --> T297["T-297 doing: Type the EDA records test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py -- ACTIVE LEAF"]
+  W109 --> T298["T-298 todo: Type the fit path records test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/runs.py"]
   E010 --> W110["W-110 issue todo: Module order, notation literals and the surrogate module"]
   W110 --> T257["T-257 todo: Reorder so main() is the last definition -> eda_neutron_stars.py, eda_black_holes.py, fit_baseline.py, screen_representation.py"]
   W110 --> T258["T-258 todo: Move duration text and the reference predictors -> shared/progress.py, shared/families.py"]
@@ -699,8 +701,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E010 doing
+  class E006,E009,E010,W109,T297 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W079,T167,T168,T232,W091,T213,T215,T282,T283,W095,T219,T286,W096,T220,T221,T222,W105,T242,W106,T243,T288,T289,T290,W107,T291,T292,T293,W108,T250,T252,T253,T294,W117,T285 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W109,T254,T255,T256,W110,T257,T258,T259,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W118,T287,W119,T295,W120,T296 todo
-  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T214,T244,T245,T246,T247,T248,T249,T251,T284 pruned
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,T256,T298,W110,T257,T258,T259,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W118,T287,W119,T295,W120,T296 todo
+  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T214,T244,T245,T246,T247,T248,T249,T251,T254,T255,T284 pruned
 ```
