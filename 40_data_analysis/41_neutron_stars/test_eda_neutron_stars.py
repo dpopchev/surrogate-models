@@ -26,7 +26,7 @@ from eda_neutron_stars import (
 )
 
 from shared.config import PaperConfig
-from shared.eda import with_charge_targets
+from shared.eda import RowsPerCurve, with_charge_targets
 from shared.plots import NOTATION_TEX, PlotStyle, anchor_color, apply_style
 
 
@@ -153,6 +153,12 @@ def test_numbers_name_the_rim_score_of_the_charge_target() -> None:
 def test_numbers_give_the_charge_range_in_orders_of_magnitude() -> None:
     found = evidence(with_charge_targets(DENSE), folds=2, seed=0, window=WINDOW)
     assert "nsEdaDOrders" in numbers(found)
+
+
+@pytest.mark.model
+def test_evidence_rows_per_curve_is_a_range() -> None:
+    found = evidence(with_charge_targets(DENSE.iloc[:-1]), folds=2, seed=0, window=WINDOW)
+    assert found.rows_per_curve == RowsPerCurve(minimum=3, maximum=4)
 
 
 class TestGridNumbers:

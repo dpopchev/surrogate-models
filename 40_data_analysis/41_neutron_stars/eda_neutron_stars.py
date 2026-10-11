@@ -36,6 +36,7 @@ from shared.config import NOTATION_TEX, NsFigure, NsTable, PaperConfig, load_con
 from shared.eda import (
     Adjacency,
     ColumnSummary,
+    RowsPerCurve,
     booktabs,
     camel,
     curve_adjacency,
@@ -200,7 +201,7 @@ class Evidence:
 
     rows: int
     density_grid_values: int
-    rows_per_curve: tuple[int, int]
+    rows_per_curve: RowsPerCurve
     folds: int
     window: float
     mass_max: float
@@ -219,7 +220,7 @@ def evidence(table: pd.DataFrame, folds: int, seed: int, window: float) -> Evide
     return Evidence(
         len(table),
         table["rho_c"].nunique(),
-        (int(sizes.min()), int(sizes.max())),
+        RowsPerCurve(int(sizes.min()), int(sizes.max())),
         folds,
         window,
         float(table["M"].max()),
@@ -261,8 +262,8 @@ def numbers(found: Evidence) -> dict[str, str]:
         "nsEdaRhocLogSkew": f"{rho.skew:.2f}",
         "nsEdaRhocOrders": f"{orders_of_magnitude(summary['rho_c', 'raw']):.1f}",
         "nsEdaDensityGridValues": f"{found.density_grid_values}",
-        "nsEdaRowsPerCurveMin": f"{found.rows_per_curve[0]}",
-        "nsEdaRowsPerCurveMax": f"{found.rows_per_curve[1]}",
+        "nsEdaRowsPerCurveMin": f"{found.rows_per_curve.minimum}",
+        "nsEdaRowsPerCurveMax": f"{found.rows_per_curve.maximum}",
         "nsEdaDMin": sci_tex(d.minimum),
         "nsEdaDMax": f"{d.maximum:.3f}",
         "nsEdaDOrders": f"{orders_of_magnitude(d):.1f}",
@@ -322,9 +323,9 @@ def _univariate_table(found: Evidence) -> str:
 def _charge_table(found: Evidence) -> str:
     """Table B: how each charge target correlates with M and the free parameters."""
     rows = [
-        f"{label} & {t.pearson_m:.2f} & {t.spearman_m:.2f} & {t.pearson_lambda:.2f} & "
-        f"{t.pearson_beta:.2f}"
-        for t, (_, label) in zip(found.targets, CHARGE_TARGETS, strict=True)
+        f"{CHARGE_LABELS[t.target]} & {t.pearson_m:.2f} & {t.spearman_m:.2f} & "
+        f"{t.pearson_lambda:.2f} & {t.pearson_beta:.2f}"
+        for t in found.targets
     ]
     header = "Target & Pearson $M$ & Spearman $M$ & Pearson $\\lambda$ & Pearson $\\beta$"
     caption = "Neutron stars: correlation of the two candidate charge targets."
@@ -490,7 +491,7 @@ def _mass_max(table: pd.DataFrame, style: PlotStyle, window: float) -> Figure:
     return fig
 
 
-CHARGE_TARGETS = (("log10_D", "$\\log_{10} D$"), ("log10_D_over_M", "$\\log_{10}(D/M)$"))
+CHARGE_LABELS = SYMBOLS.of("log10_D", "log10_D_over_M")
 
 
 def _charge_row(
@@ -507,9 +508,9 @@ def _charge_row(
             linewidths=0,
             rasterized=True,
         )
-        for ax, (target, _) in zip(axes, CHARGE_TARGETS, strict=True)
+        for ax, target in zip(axes, CHARGE_LABELS, strict=True)
     ]
-    for ax, (_, label) in zip(axes, CHARGE_TARGETS, strict=True):
+    for ax, label in zip(axes, CHARGE_LABELS.values(), strict=True):
         ax.set_ylabel(label)
     fig.colorbar(scatters[-1], ax=list(axes), label=LABELS[column])
 

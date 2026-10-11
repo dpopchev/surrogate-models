@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 from eda_black_holes import (
+    CurveStart,
     beta_effect,
     charge_targets,
     draw,
@@ -53,7 +54,12 @@ TABLE = with_charge_targets(curves())
 
 @pytest.mark.model
 def test_existence_edge_lists_where_each_curve_starts() -> None:
-    assert [r for _, r in existence_edge(TABLE).starts] == [1.0, 1.5, 2.0]
+    assert [start.rh_min for start in existence_edge(TABLE).starts] == [1.0, 1.5, 2.0]
+
+
+@pytest.mark.model
+def test_existence_edge_starts_are_curve_starts() -> None:
+    assert existence_edge(TABLE).starts[0] == CurveStart(beta=1.0, rh_min=1.0)
 
 
 @pytest.mark.model

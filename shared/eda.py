@@ -68,6 +68,14 @@ class NeighbourDistances:
     across: np.ndarray
 
 
+@dataclass(frozen=True)
+class RowsPerCurve:
+    """The fewest and the most rows a curve holds."""
+
+    minimum: int
+    maximum: int
+
+
 # --- columns ----------------------------------------------------------------------------------
 
 

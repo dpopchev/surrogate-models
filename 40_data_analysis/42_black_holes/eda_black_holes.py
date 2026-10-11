@@ -34,6 +34,7 @@ from shared.config import NOTATION_TEX, BhFigure, BhTable, PaperConfig, load_con
 from shared.eda import (
     Adjacency,
     ColumnSummary,
+    RowsPerCurve,
     booktabs,
     camel,
     curve_adjacency,
@@ -83,10 +84,18 @@ class BetaEffect:
 
 
 @dataclass(frozen=True)
-class ExistenceEdge:
-    """Where each beta curve starts: (beta, smallest r_h), ordered by beta."""
+class CurveStart:
+    """Where one beta curve starts: its beta and its smallest r_h."""
 
-    starts: tuple[tuple[float, float], ...]
+    beta: float
+    rh_min: float
+
+
+@dataclass(frozen=True)
+class ExistenceEdge:
+    """Where each beta curve starts, ordered by beta."""
+
+    starts: tuple[CurveStart, ...]
 
 
 BhSplitStrategy = Literal["random_rows", "curves", "outer_curves"]
@@ -136,7 +145,7 @@ def existence_edge(table: pd.DataFrame) -> ExistenceEdge:
     """Find where each beta curve starts in r_h."""
     starts = table.groupby("beta")["r_h"].min()
     pairs = zip(starts.index.to_numpy(dtype=float), starts.to_numpy(dtype=float), strict=True)
-    return ExistenceEdge(tuple((float(b), float(r)) for b, r in pairs))
+    return ExistenceEdge(tuple(CurveStart(float(b), float(r)) for b, r in pairs))
 
 
 def _score(
@@ -178,7 +187,7 @@ class Evidence:
 
     rows: int
     curves: int
-    rows_per_curve: tuple[int, int]
+    rows_per_curve: RowsPerCurve
     rh_step: float
     pearson_m_rh: float
     folds: int
@@ -197,7 +206,7 @@ def evidence(table: pd.DataFrame, folds: int, seed: int) -> Evidence:
     return Evidence(
         len(table),
         len(sizes),
-        (int(sizes.min()), int(sizes.max())),
+        RowsPerCurve(int(sizes.min()), int(sizes.max())),
         float(np.diff(grid).min()),
         float(table["M"].corr(table["r_h"])),
         folds,
@@ -215,14 +224,14 @@ def numbers(found: Evidence) -> dict[str, str]:
     summary = {(s.column, s.scale): s for s in found.summaries}
     target = {t.target: t for t in found.targets}
     effect = {e.target: e.spread_ratio for e in found.beta_effects}
-    (beta_low, rh_low), (beta_high, rh_high) = found.edge.starts[0], found.edge.starts[-1]
+    low, high = found.edge.starts[0], found.edge.starts[-1]
     rh, m = summary["r_h", "raw"], summary["M", "raw"]
     d, dm = summary["D", "raw"], summary["D_over_M", "raw"]
     return {
         "bhEdaRows": f"{found.rows}",
         "bhEdaCurves": f"{found.curves}",
-        "bhEdaRowsPerCurveMin": f"{found.rows_per_curve[0]}",
-        "bhEdaRowsPerCurveMax": f"{found.rows_per_curve[1]}",
+        "bhEdaRowsPerCurveMin": f"{found.rows_per_curve.minimum}",
+        "bhEdaRowsPerCurveMax": f"{found.rows_per_curve.maximum}",
         "bhEdaRhStep": f"{found.rh_step:.3f}",
         "bhEdaRhMin": f"{rh.minimum:.3f}",
         "bhEdaRhMax": f"{rh.maximum:.3f}",
@@ -244,10 +253,10 @@ def numbers(found: Evidence) -> dict[str, str]:
         "bhEdaPearsonBetaLogDM": f"{target['log10_D_over_M'].pearson_beta:.3f}",
         "bhEdaBetaEffectPercentM": f"{100 * effect['M']:.2f}",
         "bhEdaBetaEffectPercentLD": f"{100 * effect['log10_D']:.1f}",
-        "bhEdaEdgeBetaLow": f"{beta_low:.2f}",
-        "bhEdaEdgeBetaHigh": f"{beta_high:.2f}",
-        "bhEdaEdgeRhMinLow": f"{rh_low:.3f}",
-        "bhEdaEdgeRhMinHigh": f"{rh_high:.3f}",
+        "bhEdaEdgeBetaLow": f"{low.beta:.2f}",
+        "bhEdaEdgeBetaHigh": f"{high.beta:.2f}",
+        "bhEdaEdgeRhMinLow": f"{low.rh_min:.3f}",
+        "bhEdaEdgeRhMinHigh": f"{high.rh_min:.3f}",
         "bhEdaSameCurvePercent": f"{100 * found.adjacency.same_curve_share:.1f}",
         "bhEdaWithinMedian": f"{found.adjacency.within_median:.4f}",
         "bhEdaAcrossMedian": f"{found.adjacency.across_median:.4f}",
