@@ -20,7 +20,7 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import FormatStrFormatter, MultipleLocator, NullLocator
 from scipy.interpolate import CubicSpline, PchipInterpolator
 
-from shared.config import CeilingsVariant
+from shared.config import CeilingsVariant, TableLayout
 from shared.eda import booktabs, sci_tex
 
 # --- vocabulary and types ---------------------------------------------------------------------
@@ -142,7 +142,13 @@ def uncertainty_macros(
     return macros
 
 
-def ceiling_table(label: str, caption: str, found: Ceilings, labels: Mapping[str, str]) -> str:
+def ceiling_table(
+    label: str,
+    caption: str,
+    found: Ceilings,
+    labels: Mapping[str, str],
+    layout: TableLayout = "small",
+) -> str:
     """A table of the ceilings: per target the median noise, the along-curve p95, the
     across-curve p95 per curve key and the significant figures they allow."""
     keys = list(dict.fromkeys(key for _, key in found.across))
@@ -160,10 +166,16 @@ def ceiling_table(label: str, caption: str, found: Ceilings, labels: Mapping[str
     ]
     across = " & ".join(f"across {labels[key]}" for key in keys)
     header = f"Target & noise & along & {across} & figures"
-    return booktabs(label, caption, "l" + "r" * (len(keys) + 3), header, rows)
+    return booktabs(label, caption, "l" + "r" * (len(keys) + 3), header, rows, layout)
 
 
-def decade_table(label: str, caption: str, found: Ceilings, labels: Mapping[str, str]) -> str:
+def decade_table(
+    label: str,
+    caption: str,
+    found: Ceilings,
+    labels: Mapping[str, str],
+    layout: TableLayout = "small",
+) -> str:
     """A table of the decade target's across-curve ceiling: per decade the median per curve
     key varied and the significant figures the worse of them allows."""
     keys = list(found.decades)
@@ -176,7 +188,7 @@ def decade_table(label: str, caption: str, found: Ceilings, labels: Mapping[str,
         rows.append(" & ".join([f"$10^{{{decade}}}$", *cells, f"{-np.log10(worst):.1f}"]))
     across = " & ".join(f"across {labels[key]}" for key in keys)
     header = f"Decade & {across} & figures"
-    return booktabs(label, caption, "l" + "r" * (len(keys) + 1), header, rows)
+    return booktabs(label, caption, "l" + "r" * (len(keys) + 1), header, rows, layout)
 
 
 def _figure_lines(ax: Axes) -> None:

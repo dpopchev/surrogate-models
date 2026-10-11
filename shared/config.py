@@ -226,6 +226,28 @@ class Results(BaseModel):
     precision: PrecisionSection = PrecisionSection()
 
 
+# small: booktabs in the small font; aligned: siunitx S columns aligning the decimals (W-114).
+TableLayout = Literal["small", "aligned"]
+RepresentationTableLayout = Literal["eight_columns", "split", "transposed"]
+FamiliesTableLayout = Literal["subscripts", "rows_column"]
+TuningTableLayout = Literal["screen_tuned_test", "no_screen", "delta"]
+BaselineTableLayout = Literal["one_table", "two_tables"]
+DecisionsTableLayout = Literal["wide", "narrow"]
+
+
+class Tables(BaseModel):
+    """The layout of every table and of each results table the paper places (W-114)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    layout: TableLayout = "small"
+    representation: RepresentationTableLayout = "eight_columns"
+    families: FamiliesTableLayout = "subscripts"
+    tuning: TuningTableLayout = "screen_tuned_test"
+    baseline: BaselineTableLayout = "one_table"
+    decisions: DecisionsTableLayout = "wide"
+
+
 class PaperConfig(BaseSettings):
     """Every choice of the paper: the plot style and one model per chapter."""
 
@@ -237,6 +259,7 @@ class PaperConfig(BaseSettings):
     data_analysis: DataAnalysis = DataAnalysis()
     methodology: Methodology = Methodology()
     results: Results = Results()
+    tables: Tables = Tables()
 
     @classmethod
     def settings_customise_sources(
@@ -266,11 +289,12 @@ def _sections(model: type[BaseModel], skip: tuple[str, ...]) -> list[tuple[str, 
 
 
 def missing_section_folders(
-    model: type[BaseModel], root: Path, skip: tuple[str, ...] = ("plot",)
+    model: type[BaseModel], root: Path, skip: tuple[str, ...] = ("plot", "tables")
 ) -> tuple[str, ...]:
     """Return the dotted chapter and section keys of model that name no <nn>_<key> folder.
 
-    Only fields whose type is itself a model count; plot is a style, not a chapter, and a
+    Only fields whose type is itself a model count; plot is a style and tables a choice of
+    layouts, not chapters (W-114), and a
     model inside a section (its variants) is a group of choices, not a folder (W-111).
     """
     missing: list[str] = []

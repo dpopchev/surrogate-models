@@ -62,6 +62,7 @@ from shared.config import (
     FamiliesParityVariant,
     FamiliesScalingVariant,
     PaperConfig,
+    TableLayout,
     load_config,
 )
 from shared.design import (
@@ -262,7 +263,7 @@ def next_jobs(
     return tuple(jobs)
 
 
-def family_table(outcomes: Sequence[Outcome]) -> str:
+def family_table(outcomes: Sequence[Outcome], layout: TableLayout = "small") -> str:
     """The Section 5.2 table: one row per candidate, one column per pair, each cell the
     candidate's folds' p95 significant figures at the most rows it ran on (or its wall there),
     the pair's leader at the most rows in bold."""
@@ -300,6 +301,7 @@ def family_table(outcomes: Sequence[Outcome]) -> str:
         "@{}ll*{4}{r}@{}",
         f"Family & Unit & {header}",
         rows,
+        layout,
     )
 
 
@@ -967,7 +969,7 @@ def main(
         for stale in out.iterdir():  # a deselected figure's wrapper of an earlier run (W-102)
             stale.unlink()
         path = out / f"{SECTION}_tab_families.tex"
-        write_checked(path, family_table(outcomes))
+        write_checked(path, family_table(outcomes, config.tables.layout))
         logger.info("done: family table of batch %s, %d outcomes -> %s", batch, len(outcomes), path)
         # The panels' titles read the symbols, which expand the notation the style hands on.
         apply_style(config.plot, NOTATION_TEX.read_text())

@@ -51,6 +51,7 @@ from shared.config import (
     AlgorithmsSection,
     AlgParityVariant,
     PaperConfig,
+    TableLayout,
     load_config,
 )
 from shared.design import (
@@ -389,7 +390,7 @@ def _row(pair: PairScores, scored: Scored) -> str:
     )
 
 
-def baseline_table(pairs: list[PairScores]) -> str:
+def baseline_table(pairs: list[PairScores], layout: TableLayout = "small") -> str:
     """The Section 4.1 table: every predictor on every dataset and target."""
     return booktabs(
         "baseline",
@@ -402,6 +403,7 @@ def baseline_table(pairs: list[PairScores]) -> str:
         "llrrrrr",
         "Pair & Predictor & Test & Folds & Figures & Fit s & Call s",
         [_row(pair, scored) for pair in pairs for scored in pair.scored],
+        layout,
     )
 
 
@@ -771,7 +773,7 @@ def _write_section(
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
-    (out / f"{SECTION}_tab_baseline.tex").write_text(baseline_table(pairs))
+    (out / f"{SECTION}_tab_baseline.tex").write_text(baseline_table(pairs, config.tables.layout))
     variant = config.methodology.algorithms.variants.parity
     figure = parity_figure(fits, config.plot, variant)
     figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)

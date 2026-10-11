@@ -1,4 +1,4 @@
-# Board -- surrogate-models
+# Board -- W-114-table-layouts
 record: local
 open path: E-011 > W-114 > T-321   | blocked: 0 | todo roots: 9 | done: 345 | pruned: 49
 

@@ -130,3 +130,14 @@ workers = 6               # fits at once on one-thread processes (3.2x at 6); 1 
 [methodology.algorithms.variants]
 parity = "ns_mass"        # ns_mass: the NS mass parity | residual_strip: with its residuals below
                           # all_pairs: every dataset and target, 2 x 2
+
+# The layout of every table, and of each results table; `make variants` renders every layout
+# to a page image under build/variants/tables/ to pick from (W-114).
+[tables]
+layout = "small"                     # small: booktabs in the small font
+                                     # aligned: siunitx columns aligning the decimals
+representation = "eight_columns"     # eight_columns | split: NS and BH apart | transposed
+families = "subscripts"              # subscripts: rows as 10^k | rows_column: a rows column
+tuning = "screen_tuned_test"         # screen_tuned_test | no_screen | delta: tuned minus screen
+baseline = "one_table"               # one_table | two_tables: test and folds apart
+decisions = "wide"                   # wide: three columns | narrow: the item as a row label

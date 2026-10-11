@@ -6,6 +6,7 @@ neighbour each other, score 1-nearest-neighbour probes under a split, and render
 macros, tables and histogram bins for the generated assets.
 """
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal, assert_never
@@ -18,7 +19,7 @@ from scipy.stats import skew
 from sklearn.model_selection import GroupKFold, KFold, cross_val_predict
 from sklearn.neighbors import KNeighborsRegressor, NearestNeighbors
 
-from shared.config import UnivariateVariant
+from shared.config import TableLayout, UnivariateVariant
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
@@ -276,9 +277,146 @@ def camel(name: str) -> str:
     return "".join(part.capitalize() for part in name.split("_"))
 
 
-def booktabs(label: str, caption: str, spec: str, header: str, rows: list[str]) -> str:
+_PLAIN = re.compile(r"^\$?(-?\d+(?:\.\d+)?)\$?$")
+_POWER = re.compile(r"^\$(-?\d+(?:\.\d+)?)\\times 10\^\{(-?\d+)\}\$$")
+_PLUS_MINUS = re.compile(r"^\$(-?\d+(?:\.\d+)?)_\{\\pm (\d+(?:\.\d+)?)\}\$$")
+_MULTICOLUMN = re.compile(r"^\\multicolumn\{(\d+)\}")
+
+
+def _group(spec: str, at: int) -> tuple[str, int]:
+    """The brace group opening at spec[at], nested braces included, and the index after it."""
+    depth = 0
+    for end in range(at, len(spec)):
+        depth += {"{": 1, "}": -1}.get(spec[end], 0)
+        if depth == 0:
+            return spec[at + 1 : end], end + 1
+    raise ValueError(f"unbalanced braces in tabular spec {spec!r}")
+
+
+def _spec_tokens(spec: str) -> list[tuple[str, str]]:
+    """The tabular spec as (kind, text) tokens: a column letter, a repeat *{n}{x} as ("*", n
+    and x), a column with a width as ("p", its text), anything else (an @{} or !{} separator,
+    a rule) as ("", its text)."""
+    tokens, at = [], 0
+    while at < len(spec):
+        char = spec[at]
+        if char in "@!":
+            _, end = _group(spec, at + 1)
+            tokens.append(("", spec[at:end]))
+        elif char == "*":
+            count, middle = _group(spec, at + 1)
+            body, end = _group(spec, middle)
+            tokens.append(("*", f"{count}:{body}"))
+        elif char in "pmb":
+            _, end = _group(spec, at + 1)
+            tokens.append(("p", spec[at:end]))
+        elif char in "lcrS":
+            end = at + 1
+            tokens.append((char, char))
+        else:
+            end = at + 1
+            tokens.append(("", char))
+        at = end
+    return tokens
+
+
+def _columns(spec: str) -> str:
+    """The column letters of a tabular spec, one per column: a *{n}{x} repeat expanded, an
+    @{} or !{} separator and a rule dropped, a p{}, m{} or b{} column read as p.
+
+    >>> _columns("@{}ll*{4}{r}@{}"), _columns("lp{3cm}|r")
+    ('llrrrr', 'lpr')
+    >>> _columns("@{}l@{\\\\hspace{8pt}}l*{6}{@{\\\\hspace{8pt}}r}@{}")
+    'llrrrrrr'
+    """
+    letters = []
+    for kind, text in _spec_tokens(spec):
+        if kind == "*":
+            count, body = text.split(":", 1)
+            letters.append(_columns(body) * int(count))
+        elif kind:
+            letters.append(kind)
+    return "".join(letters)
+
+
+def si_cell(cell: str) -> str:
+    """A cell as siunitx reads it in an S column: a plain number, a power of ten or a value
+    with its spread as numbers, anything else braced so it is set as text.
+
+    >>> si_cell("$5.89\\\\times 10^{14}$"), si_cell("$1.96_{\\\\pm 0.02}$"), si_cell("0.57")
+    ('5.89e14', '1.96 +- 0.02', '0.57')
+    >>> si_cell("$1.02_{10^{3}}$")
+    '{$1.02_{10^{3}}$}'
+    """
+    text = cell.strip()
+    if found := _PLAIN.match(text):
+        return found[1]
+    if found := _POWER.match(text):
+        return f"{found[1]}e{found[2]}"
+    if found := _PLUS_MINUS.match(text):
+        return f"{found[1]} +- {found[2]}"
+    return f"{{{text}}}" if text else ""
+
+
+def _aligned_spec(spec: str) -> str:
+    """The tabular spec with each r column an S column, inside a *{n}{x} repeat too.
+
+    >>> _aligned_spec("lrrr"), _aligned_spec("@{}ll*{4}{r}@{}")
+    ('lSSS', '@{}ll*{4}{S}@{}')
+    >>> _aligned_spec("l*{2}{@{\\\\hspace{8pt}}r}")
+    'l*{2}{@{\\\\hspace{8pt}}S}'
+    """
+    parts = []
+    for kind, text in _spec_tokens(spec):
+        if kind == "*":
+            count, body = text.split(":", 1)
+            parts.append(f"*{{{count}}}{{{_aligned_spec(body)}}}")
+        else:
+            parts.append("S" if kind == "r" else text)
+    return "".join(parts)
+
+
+def _aligned_line(line: str, columns: str, body: bool) -> str:
+    """One header or body line for S columns: a body cell of an S column read as a number, a
+    header cell braced as text; a multicolumn cell spans its columns untouched."""
+    cells, at = [], 0
+    for cell in line.split(" & "):
+        if spanned := _MULTICOLUMN.match(cell.strip()):
+            cells.append(cell)
+            at += int(spanned[1])
+            continue
+        if at < len(columns) and columns[at] == "S":
+            text = cell.strip()
+            cells.append(si_cell(text) if body else (f"{{{text}}}" if text else ""))
+        else:
+            cells.append(cell)
+        at += 1
+    return " & ".join(cells)
+
+
+def booktabs(
+    label: str,
+    caption: str,
+    spec: str,
+    header: str,
+    rows: list[str],
+    layout: TableLayout = "small",
+) -> str:
     """One booktabs table environment, labelled tab:<label>, placed here or atop a page, in the
-    small font so a table of several numeric columns fits the text width."""
+    small font so a table of several numeric columns fits the text width; aligned, each right
+    column becomes an siunitx S column aligning its numbers on the decimal marker."""
+    match layout:
+        case "small":
+            pass
+        case "aligned":
+            spec = _aligned_spec(spec)
+            columns = _columns(spec)
+            header = " \\\\\n".join(
+                _aligned_line(line, columns, body=False) for line in header.split(" \\\\\n")
+            )
+            rows = [_aligned_line(row, columns, body=True) for row in rows]
+        case _:
+            assert_never(layout)
     body = "".join(f"{row} \\\\\n" for row in rows)
     return (
         "\\begin{table}[!htb]\n\\centering\n\\small\n"

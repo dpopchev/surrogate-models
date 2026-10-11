@@ -45,6 +45,7 @@ from shared.config import (
     NsMassMaxVariant,
     NsTable,
     PaperConfig,
+    TableLayout,
     UnivariateVariant,
     load_config,
 )
@@ -343,7 +344,7 @@ STRATEGY_LABELS: dict[SplitStrategy, str] = {
 }
 
 
-def _univariate_table(found: Evidence) -> str:
+def _univariate_table(found: Evidence, layout: TableLayout) -> str:
     """Table A: range, orders of magnitude and skew, raw against log10."""
     summary = {(s.column, s.scale): s for s in found.summaries}
     rows = [
@@ -358,10 +359,10 @@ def _univariate_table(found: Evidence) -> str:
         "Neutron stars: range, orders of magnitude spanned (orders) and skewness of each "
         "continuous variable, raw and in $\\log_{10}$."
     )
-    return booktabs("ns-univariate", caption, "lrrrrr", header, rows)
+    return booktabs("ns-univariate", caption, "lrrrrr", header, rows, layout)
 
 
-def _charge_table(found: Evidence) -> str:
+def _charge_table(found: Evidence, layout: TableLayout) -> str:
     """Table B: how each charge target correlates with M and the free parameters."""
     rows = [
         f"{CHARGE_LABELS[t.target]} & {t.pearson_m:.2f} & {t.spearman_m:.2f} & "
@@ -370,10 +371,10 @@ def _charge_table(found: Evidence) -> str:
     ]
     header = "Target & Pearson $M$ & Spearman $M$ & Pearson $\\lambda$ & Pearson $\\beta$"
     caption = "Neutron stars: correlation of the two candidate charge targets."
-    return booktabs("ns-charge-correlation", caption, "lrrrr", header, rows)
+    return booktabs("ns-charge-correlation", caption, "lrrrr", header, rows, layout)
 
 
-def _split_table(found: Evidence) -> str:
+def _split_table(found: Evidence, layout: TableLayout) -> str:
     """Table C: 1-NN error per split strategy and target."""
     error = {(s.strategy, s.target): _split_error(s) for s in found.splits}
     rows = [
@@ -386,18 +387,18 @@ def _split_table(found: Evidence) -> str:
         f"Neutron stars: 1-nearest-neighbour mean absolute error under each split "
         f"({found.folds} folds; the rim is predicted from the interior)."
     )
-    return booktabs("ns-split-strategies", caption, "lrr", header, rows)
+    return booktabs("ns-split-strategies", caption, "lrr", header, rows, layout)
 
 
-def table_tex(found: Evidence, table: NsTable) -> str:
-    """The booktabs table environment of one table."""
+def table_tex(found: Evidence, table: NsTable, layout: TableLayout = "small") -> str:
+    """The booktabs table environment of one table in the paper's table layout."""
     match table:
         case "univariate":
-            return _univariate_table(found)
+            return _univariate_table(found, layout)
         case "charge_correlation":
-            return _charge_table(found)
+            return _charge_table(found, layout)
         case "split_strategies":
-            return _split_table(found)
+            return _split_table(found, layout)
         case _:
             assert_never(table)
 
@@ -889,14 +890,18 @@ def _ceilings(bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant) -> F
 
 
 def _write_ceilings(
-    out: Path, bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant
+    out: Path,
+    bounds: Ceilings,
+    style: PlotStyle,
+    variant: CeilingsVariant,
+    layout: TableLayout = "small",
 ) -> None:
     """Write the ceilings table, the per-decade table and the figure of the data limits."""
     (out / f"{SECTION}_tab_ceilings.tex").write_text(
-        ceiling_table("ns-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS)
+        ceiling_table("ns-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS, layout)
     )
     (out / f"{SECTION}_tab_ceiling_decades.tex").write_text(
-        decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS)
+        decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS, layout)
     )
     fig = _ceilings(bounds, style, variant)
     fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
@@ -950,8 +955,8 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
     )
     (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
     for name in section.tables:
-        (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name))
-    _write_ceilings(out, bounds, config.plot, section.variants.ceilings)
+        (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name, config.tables.layout))
+    _write_ceilings(out, bounds, config.plot, section.variants.ceilings, config.tables.layout)
     logger.info(
         "done: NS figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
     )

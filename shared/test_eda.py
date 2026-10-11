@@ -151,6 +151,12 @@ def test_a_generated_table_is_set_in_the_small_font() -> None:
 
 
 @pytest.mark.view
+def test_booktabs_aligned_uses_s_columns() -> None:
+    table = booktabs("x", "A table.", "lrr", "a & b & c", ["1 & 2 & 3"], "aligned")
+    assert "\\begin{tabular}{lSS}" in table
+
+
+@pytest.mark.view
 def test_macros_render_one_newcommand_per_number() -> None:
     assert render_macros({"nsEdaX": "1.5"}) == "\\newcommand{\\nsEdaX}{1.5}\n"
 

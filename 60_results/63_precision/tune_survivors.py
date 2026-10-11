@@ -56,6 +56,7 @@ from shared.config import (
     PaperConfig,
     PrecisionHistoryVariant,
     PrecisionRangesVariant,
+    TableLayout,
     load_config,
 )
 from shared.design import (
@@ -370,7 +371,9 @@ def outcomes_from_json(text: str) -> tuple[Outcome, ...]:
     return tuple(found)
 
 
-def tuning_table(outcomes: Sequence[Outcome], screen: Mapping[Job, float]) -> str:
+def tuning_table(
+    outcomes: Sequence[Outcome], screen: Mapping[Job, float], layout: TableLayout = "small"
+) -> str:
     """The tuning table: per pair and candidate the screen's figures, the tuned fold and test
     figures, and the pair's data ceiling."""
     rows = []
@@ -400,6 +403,7 @@ def tuning_table(outcomes: Sequence[Outcome], screen: Mapping[Job, float]) -> st
         "@{}lll*{4}{r}@{}",
         "Pair & Family & Unit & Screen & Tuned & Test & Ceiling",
         rows,
+        layout,
     )
 
 
@@ -813,7 +817,7 @@ def main(
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
         path = out / f"{SECTION}_tab_tuning.tex"
-        write_checked(path, tuning_table(outcomes, screen))
+        write_checked(path, tuning_table(outcomes, screen, config.tables.layout))
         logger.info("done: tuning table of batch %s, %d jobs -> %s", batch, len(outcomes), path)
         # A batch's figures show its own jobs, in the order it ran them.
         ran = tuple(outcome.job for outcome in outcomes)

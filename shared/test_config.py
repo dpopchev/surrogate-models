@@ -101,6 +101,11 @@ def test_the_shipped_paper_toml_selects_the_four_bh_figures() -> None:
 
 
 @pytest.mark.edge
+def test_the_table_layout_defaults_to_small(tmp_path: Path) -> None:
+    assert load_config(write(tmp_path, "")).tables.layout == "small"
+
+
+@pytest.mark.edge
 def test_the_mass_radius_variant_defaults_to_inset(tmp_path: Path) -> None:
     variants = load_config(write(tmp_path, "")).data_analysis.black_holes.variants
     assert variants.mass_radius == "inset"

@@ -43,6 +43,7 @@ from shared.config import (
     BlackHoleVariants,
     CeilingsVariant,
     PaperConfig,
+    TableLayout,
     UnivariateVariant,
     load_config,
 )
@@ -317,7 +318,7 @@ STRATEGY_LABELS: dict[BhSplitStrategy, str] = {
 }
 
 
-def _univariate_table(found: Evidence) -> str:
+def _univariate_table(found: Evidence, layout: TableLayout) -> str:
     """Range, orders of magnitude and skew, raw against log10."""
     summary = {(s.column, s.scale): s for s in found.summaries}
     rows = [
@@ -332,10 +333,10 @@ def _univariate_table(found: Evidence) -> str:
         "Black holes: range, orders of magnitude spanned (orders) and skewness of each "
         "continuous variable, raw and in $\\log_{10}$."
     )
-    return booktabs("bh-univariate", caption, "lrrrrr", header, rows)
+    return booktabs("bh-univariate", caption, "lrrrrr", header, rows, layout)
 
 
-def _charge_table(found: Evidence) -> str:
+def _charge_table(found: Evidence, layout: TableLayout) -> str:
     """How each candidate charge target correlates with M, beta and r_h."""
     rows = [
         f"{TARGET_LABELS[t.target]} & {t.pearson_m:.3f} & {t.spearman_m:.3f} & "
@@ -344,10 +345,10 @@ def _charge_table(found: Evidence) -> str:
     ]
     header = "Target & Pearson $M$ & Spearman $M$ & Pearson $\\beta$ & Pearson $r_h$"
     caption = "Black holes: correlation of the candidate charge targets."
-    return booktabs("bh-charge-correlation", caption, "lrrrr", header, rows)
+    return booktabs("bh-charge-correlation", caption, "lrrrr", header, rows, layout)
 
 
-def _split_table(found: Evidence) -> str:
+def _split_table(found: Evidence, layout: TableLayout) -> str:
     """1-NN error per split strategy and target."""
     error = {(s.strategy, s.target): _split_error(s) for s in found.splits}
     rows = [
@@ -359,18 +360,18 @@ def _split_table(found: Evidence) -> str:
         f"Black holes: 1-nearest-neighbour mean absolute error under each split "
         f"({found.folds} folds; the outer curves are predicted from the others)."
     )
-    return booktabs("bh-split-strategies", caption, "lrr", header, rows)
+    return booktabs("bh-split-strategies", caption, "lrr", header, rows, layout)
 
 
-def table_tex(found: Evidence, table: BhTable) -> str:
-    """The booktabs table environment of one table."""
+def table_tex(found: Evidence, table: BhTable, layout: TableLayout = "small") -> str:
+    """The booktabs table environment of one table in the paper's table layout."""
     match table:
         case "univariate":
-            return _univariate_table(found)
+            return _univariate_table(found, layout)
         case "charge_correlation":
-            return _charge_table(found)
+            return _charge_table(found, layout)
         case "split_strategies":
-            return _split_table(found)
+            return _split_table(found, layout)
         case _:
             assert_never(table)
 
@@ -733,11 +734,15 @@ def _ceilings(bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant) -> F
 
 
 def _write_ceilings(
-    out: Path, bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant
+    out: Path,
+    bounds: Ceilings,
+    style: PlotStyle,
+    variant: CeilingsVariant,
+    layout: TableLayout = "small",
 ) -> None:
     """Write the ceilings table and the figure of the data limits."""
     (out / f"{SECTION}_tab_ceilings.tex").write_text(
-        ceiling_table("bh-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS)
+        ceiling_table("bh-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS, layout)
     )
     fig = _ceilings(bounds, style, variant)
     fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
@@ -783,8 +788,8 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
     )
     (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
     for name in section.tables:
-        (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name))
-    _write_ceilings(out, bounds, config.plot, section.variants.ceilings)
+        (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name, config.tables.layout))
+    _write_ceilings(out, bounds, config.plot, section.variants.ceilings, config.tables.layout)
     logger.info(
         "done: BH figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
     )

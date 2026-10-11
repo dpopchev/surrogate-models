@@ -36,7 +36,7 @@ from shared.batches import (
     write_entry,
 )
 from shared.candidates import Unit, curve_columns
-from shared.config import PaperConfig, load_config
+from shared.config import PaperConfig, TableLayout, load_config
 from shared.curvewise import curvewise_fitter
 from shared.design import (
     BLACK_HOLES,
@@ -264,7 +264,7 @@ def beats(score: Score, baseline: Score) -> bool:
     return score.folds - baseline.folds > max(score.spread, baseline.spread)
 
 
-def representation_table(found: Sequence[Score]) -> str:
+def representation_table(found: Sequence[Score], layout: TableLayout = "small") -> str:
     """The Section 5.1 table: one row per pair and representation, each model's test figures
     and fold figures (mean +/- standard deviation over folds and seeds), a fold entry in bold
     where it beats the pair's baseline at that model."""
@@ -296,6 +296,7 @@ def representation_table(found: Sequence[Score]) -> str:
         "\\multicolumn{2}{c}{local RBF} & \\multicolumn{2}{c}{MLP} \\\\\n"
         " & & Test & Folds & Test & Folds & Test & Folds",
         rows,
+        layout,
     )
 
 
@@ -483,7 +484,8 @@ def main(
             logger.info("rebuilding the table from batch %s; nothing is fitted", batch)
         entries = [entry for entry in read_ledger(ledger) if entry.meta.batch == batch]
         assert len(entries) == jobs, f"batch {batch}: {len(entries)} ledger entries for {jobs} jobs"
-        path = _write_table(args.assets / SECTION, representation_table(scores(entries)))
+        table = representation_table(scores(entries), config.tables.layout)
+        path = _write_table(args.assets / SECTION, table)
         logger.info("done: representation table of batch %s -> %s", batch, path)
 
 
