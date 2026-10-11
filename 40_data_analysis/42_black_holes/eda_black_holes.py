@@ -30,7 +30,15 @@ from shared.ceilings import (
     measure,
     uncertainty_macros,
 )
-from shared.config import NOTATION_TEX, BhFigure, BhTable, PaperConfig, load_config
+from shared.config import (
+    NOTATION_TEX,
+    BhFigure,
+    BhMassRadiusVariant,
+    BhTable,
+    BlackHoleVariants,
+    PaperConfig,
+    load_config,
+)
 from shared.eda import (
     Adjacency,
     ColumnSummary,
@@ -453,17 +461,50 @@ def _gr_inset(ax: Axes, table: pd.DataFrame, cmap: Colormap) -> None:
     ax.indicate_inset_zoom(inset, edgecolor="black")
 
 
-def _mass_radius(table: pd.DataFrame, style: PlotStyle) -> Figure:
-    """M against r_h, one line per beta curve, with the GR inset near the existence edge."""
-    fig, ax = plt.subplots(figsize=text_width_size(0.55), layout="constrained")
-    cmap = colormap(style.black_holes.beta_cmap)
+def _mass_lines(ax: Axes, table: pd.DataFrame, cmap: Colormap) -> LineCollection:
+    """M against r_h on ax, one line per beta curve."""
     lines = _curve_lines(table, "M", cmap)
     ax.add_collection(lines)
     ax.autoscale()
     ax.set_xlabel(LABELS["r_h"])
     ax.set_ylabel(LABELS["M"])
-    _gr_inset(ax, table, cmap)
-    fig.colorbar(lines, ax=ax, label=LABELS["beta"])
+    return lines
+
+
+def _departure_lines(ax: Axes, table: pd.DataFrame, cmap: Colormap) -> LineCollection:
+    """M - r_h/2 against r_h on ax, one line per beta curve; the GR relation is the dashed zero."""
+    lines = _curve_lines(table.assign(departure=table["M"] - table["r_h"] / 2), "departure", cmap)
+    ax.add_collection(lines)
+    ax.autoscale()
+    ax.axhline(0.0, color="black", linestyle="--", linewidth=0.8, label="GR")
+    ax.set_xlabel(LABELS["r_h"])
+    ax.set_ylabel(f"{LABELS['M']} $-$ {LABELS['r_h']}$/2$")
+    return lines
+
+
+def _mass_radius(table: pd.DataFrame, style: PlotStyle, variant: BhMassRadiusVariant) -> Figure:
+    """M against r_h, one line per beta curve: with the GR inset near the existence edge
+    (inset), as the departure M - r_h/2 from GR (departure), or the two side by side (both)."""
+    cmap = colormap(style.black_holes.beta_cmap)
+    match variant:
+        case "inset":
+            fig, ax = plt.subplots(figsize=text_width_size(0.55), layout="constrained")
+            lines = _mass_lines(ax, table, cmap)
+            _gr_inset(ax, table, cmap)
+            fig.colorbar(lines, ax=ax, label=LABELS["beta"])
+        case "departure":
+            fig, ax = plt.subplots(figsize=text_width_size(0.55), layout="constrained")
+            lines = _departure_lines(ax, table, cmap)
+            fig.colorbar(lines, ax=ax, label=LABELS["beta"])
+        case "both":
+            fig, (left, right) = plt.subplots(
+                1, 2, figsize=text_width_size(0.45), layout="constrained"
+            )
+            _mass_lines(left, table, cmap)
+            lines = _departure_lines(right, table, cmap)
+            fig.colorbar(lines, ax=[left, right], label=LABELS["beta"])
+        case _:
+            assert_never(variant)
     return fig
 
 
@@ -503,13 +544,21 @@ def _existence_edge(table: pd.DataFrame, style: PlotStyle) -> Figure:
     return fig
 
 
-def draw(figure: BhFigure, table: pd.DataFrame, style: PlotStyle) -> Figure:
-    """Draw one BH EDA figure from a table with the charge targets."""
+DEFAULT_VARIANTS = BlackHoleVariants()
+
+
+def draw(
+    figure: BhFigure,
+    table: pd.DataFrame,
+    style: PlotStyle,
+    variants: BlackHoleVariants = DEFAULT_VARIANTS,
+) -> Figure:
+    """Draw one BH EDA figure from a table with the charge targets, in its picked variant."""
     match figure:
         case "univariate_continuous":
             return _univariate_continuous(table, style)
         case "mass_radius":
-            return _mass_radius(table, style)
+            return _mass_radius(table, style, variants.mass_radius)
         case "charge_target":
             return _charge_target(table, style)
         case "existence_edge":

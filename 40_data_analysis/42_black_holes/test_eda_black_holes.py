@@ -22,8 +22,10 @@ from eda_black_holes import (
     split_strategies,
     table_tex,
 )
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
-from shared.config import PaperConfig
+from shared.config import BlackHoleVariants, PaperConfig
 from shared.eda import number_tex, with_charge_targets
 from shared.plots import NOTATION_TEX, PlotStyle, apply_style
 
@@ -134,6 +136,11 @@ def test_the_split_scores_raw_m_and_log10_d_only() -> None:
 STYLE = PlotStyle(usetex=False)
 
 
+def panels(figure: Figure) -> list[Axes]:
+    """The figure's data panels: every axes but a colorbar's."""
+    return [axes for axes in figure.axes if axes.get_label() != "<colorbar>"]
+
+
 class TestFigures:
     pytestmark = pytest.mark.view
 
@@ -162,6 +169,14 @@ class TestFigures:
     def test_the_inset_draws_the_gr_relation(self) -> None:
         inset = draw("mass_radius", TABLE, STYLE).axes[0].child_axes[0]
         assert "GR" in [line.get_label() for line in inset.get_lines()]
+
+    def test_mass_radius_departure_has_one_axes_and_no_inset(self) -> None:
+        figure = draw("mass_radius", TABLE, STYLE, BlackHoleVariants(mass_radius="departure"))
+        assert [len(axes.child_axes) for axes in panels(figure)] == [0]
+
+    def test_mass_radius_both_has_two_axes(self) -> None:
+        figure = draw("mass_radius", TABLE, STYLE, BlackHoleVariants(mass_radius="both"))
+        assert len(panels(figure)) == 2
 
     def test_charge_target_has_two_panels_and_a_colorbar(self) -> None:
         assert len(draw("charge_target", TABLE, STYLE).axes) == 3
