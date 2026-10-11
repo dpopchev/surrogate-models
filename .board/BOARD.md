@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-010   | blocked: 0 | todo roots: 8 | done: 323 | pruned: 33
+open path: none   | blocked: 0 | todo roots: 9 | done: 324 | pruned: 33
 
 ## Tree
 
@@ -43,18 +43,6 @@ E-009         [doing]    The paper follows the revised structure, and the releas
   W-059  spike  [done]     Which refs.bib keys the revised structure's citations name -- T-107 [done], T-108 [pruned]   [pruned: superseded: the real references move to the standalone spike W-061 (T-118); W-059 closes on placeholder keys (T-117)], T-117 [done]
   W-060  issue  [done]     Title and outline bullets aligned to the revised structure -- T-114 [done], T-115 [done], T-116 [done]
   W-100  spike  [todo]     What the paper claims once the search names its winners   (filed during T-206) -- T-233 [todo], T-234 [todo]
-E-010         [doing]    Every module meets the Python gates
-  W-079  issue  [done]     Every test carries one category marker, registered and enforced   (filed during T-164) -- T-167 [done], T-168 [done], T-232 [done]
-  W-091  issue  [done]     The screens' shared shell and test inputs live once -- one helper module, one toy fixture   (filed during T-205) -- T-213 [done], T-214 [pruned]   [pruned: its Check counts shared/batches.py, whose walled T-213's brief defines, and a test helper named walled, so it can never print 0; continued by the next Task with a runnables-only count], T-215 [done], T-282 [done], T-283 [done]
-  W-095  bug    [done]     The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206) -- T-219 [done], T-286 [done]
-  W-096  issue  [done]     One Pair and one FitRows value through the fit path   (filed during T-206) -- T-220 [done], T-221 [done], T-222 [done]
-  W-105  bug    [done]     make tuning with --recover on a partial batch fails at the figures after writing the table   (filed during T-240) -- T-242 [done]   (filed during T-240)
-  W-106  issue  [done]     One vocabulary for pairs, units, families and labels -- T-243 [done], T-244 [pruned]   [pruned: its pair_tex half landed in T-220 (W-096), and its check passes -q to make, which make reads as question mode (no output, exit 1); the target_symbol half is refiled as T-288 with a working check], T-245 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-289 with the same brief and a working check], T-246 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-290 with the same brief, its files by path and a working check], T-288 [done], T-289 [done], T-290 [done]
-  W-107  issue  [done]     Asserts out of the domain, I/O out of the data modules -- T-247 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-291 with the same brief and a working check], T-248 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-292 with the same brief and a working check], T-249 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-293 with the same brief and a working check], T-291 [done], T-292 [done], T-293 [done]
-  W-108  issue  [done]     Every knob has one home -- T-250 [done], T-251 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-294 with the same brief and a working check], T-252 [done], T-253 [done], T-294 [done]
-  W-109  issue  [done]     Records, not tuples and dict blobs -- T-254 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-297 with the same brief and a working check], T-255 [pruned]   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-298 with the same brief and a working check], T-256 [pruned]   [pruned: its check counts every 4-space dict annotation, so the dict locals in tune_survivors.py (last, finished: there at filing) keep it above 0, and its Ceilings part was done by 4d3b718; refiled as T-300 with an AST check on class fields], T-297 [done], T-298 [done], T-299 [done], T-300 [pruned]   [pruned: a placeholder filed by mistake while diagnosing a refused filing; the real Task is T-301], T-301 [done]
-  W-110  issue  [done]     Module order, notation literals and the surrogate module -- T-257 [pruned]   [pruned: its check prints each file's whole last def line, so the one-line EDA main signatures and the wrapped ones give two lines, never the one it expects; refiled as T-302 with the check cut to the def main( prefix], T-258 [done], T-259 [done], T-302 [done]
-  W-117  bug    [done]     The NS numbers file is written in a run-dependent order, so a rebuilt asset need not match its hash   (filed during T-215) -- T-284 [pruned]   [pruned: its check passes -q to make, which make reads as question mode: it prints nothing and exits 1 whatever the test does; superseded by T-285 with the same brief and a working check], T-285 [done]
 E-011         [todo]     Figures and tables picked from rendered variants, numbers from macros
   W-102  issue  [todo]     Every section's figures are selected in paper.toml   (filed during T-206) -- T-237 [todo]
   W-104  bug    [todo]     Section 5.2's error and scaling figures float past Section 5.3's text   (filed during T-240) -- T-241 [todo]   (filed during T-240)
@@ -69,6 +57,7 @@ W-088  issue  [todo]     (standalone) A running representation screen is followa
 W-118  bug    [todo]     (standalone) A screen run leaves the surrogate logger at WARNING, so a later baseline run in the same process loses its epoch table   (filed during T-219) -- T-287 [todo]
 W-119  bug    [todo]     (standalone) The ranges figure crashes on a batch with no network job   (filed during T-294) -- T-295 [todo]
 W-120  bug    [todo]     (standalone) The tuning figure tests pass only after main styled the plots   (filed during T-294) -- T-296 [todo]
+W-121  spike  [todo]     (standalone) Where the run time of the screens and the tuning goes   (filed during T-259) -- T-303 [todo], T-304 [todo], T-305 [todo]
 ```
 
 ## Closed
@@ -303,6 +292,89 @@ closed 2026-10-07 -- outcome: make baseline fits the four dataset x target pairs
 
 - T-155 [done] Label the charge rows by D test-first -> 50_methodology/51_algorithms/fit_baseline.py
 - T-156 [done] Rerun the four pairs with the D label -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
+
+### E-010 [done] Every module meets the Python gates
+
+closed 2026-10-11 -- outcome: make check passes with the audit gates closed and make assets representation families tuning rebuilds every file of build/assets byte-identical to the baseline hashes recorded at planning. -- ledger: ledgers/E-010.md
+
+#### W-079 issue [done] Every test carries one category marker, registered and enforced   (filed during T-164)
+
+- T-167 [done] Mark every test module with its category -> the test_*.py files
+- T-168 [done] Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py
+- T-232 [done] Refresh mk/python.mk from add-python -> M= selection, test-integration, test-stats
+
+#### W-091 issue [done] The screens' shared shell and test inputs live once -- one helper module, one toy fixture   (filed during T-205)
+
+- T-213 [done] Write the run shell module test-first -> shared/batches.py
+- T-214 [pruned] Point the four runnables at shared/batches.py -> no private copy of the run shell left   [pruned: its Check counts shared/batches.py, whose walled T-213's brief defines, and a test helper named walled, so it can never print 0; continued by the next Task with a runnables-only count]
+- T-215 [done] Write the screens' toy tables once -> 60_results/conftest.py used by the three screen test modules
+- T-282 [done] Write the ledger entry writer and reader once test-first -> shared/batches.py
+- T-283 [done] Point the four runnables at shared/batches.py -> no private copy of the run shell left in a runnable
+
+#### W-095 bug [done] The wall counts wall-clock time, so a sleeping laptop walls a healthy fit   (filed during T-206)
+
+- T-219 [done] Arm the wall on the process's CPU time test-first -> shared/batches.py
+- T-286 [done] Make the screens slow toy fitters compute instead of sleep -> the two screen tests
+
+#### W-096 issue [done] One Pair and one FitRows value through the fit path   (filed during T-206)
+
+- T-220 [done] Replace PAIRS and designs with a frozen Pair test-first -> shared/design.py and the four runnables
+- T-221 [done] Replace the five-array Fitter with FitRows test-first -> shared/harness.py and its wrappers
+- T-222 [done] Build Training through make_training and type the scorecard's maps as Mapping -> shared/surrogate.py, shared/scorecard.py
+
+#### W-105 bug [done] make tuning with --recover on a partial batch fails at the figures after writing the table   (filed during T-240)
+
+- T-242 [done] Read only the studies a batch's journal holds into the figures test-first -> 60_results/63_precision/tune_survivors.py   (filed during T-240)
+
+#### W-106 issue [done] One vocabulary for pairs, units, families and labels
+
+- T-243 [done] Define Unit, Family, curve_columns and PROFILE_BINS once -> shared/candidates.py, shared/search.py, shared/ceilings.py
+- T-244 [pruned] Name the TeX form of a pair in one function test-first -> shared/design.py   [pruned: its pair_tex half landed in T-220 (W-096), and its check passes -q to make, which make reads as question mode (no output, exit 1); the target_symbol half is refiled as T-288 with a working check]
+- T-245 [pruned] Pin one thread in one context manager test-first -> shared/harness.py   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-289 with the same brief and a working check]
+- T-246 [pruned] Configure worker logging once in the pool initializer test-first -> shared/workers.py   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-290 with the same brief, its files by path and a working check]
+- T-288 [done] Name a target plot symbol in one function test-first -> shared/design.py
+- T-289 [done] Pin one thread in one context manager test-first -> shared/harness.py
+- T-290 [done] Configure worker logging once in the pool initializer test-first -> shared/workers.py
+
+#### W-107 issue [done] Asserts out of the domain, I/O out of the data modules
+
+- T-247 [pruned] Build Symbols through make_symbols and read no file test-first -> shared/plots.py   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-291 with the same brief and a working check]
+- T-248 [pruned] Return NoCompletedTrial from search() test-first -> shared/search.py, 60_results/63_precision/tune_survivors.py   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-292 with the same brief and a working check]
+- T-249 [pruned] Narrow by match, not assert -> 60_results/63_precision/tune_survivors.py, 50_methodology/51_algorithms/fit_baseline.py   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-293 with the same brief and a working check]
+- T-291 [done] Build Symbols through make_symbols and read no file test-first -> shared/plots.py
+- T-292 [done] Return NoCompletedTrial from search() test-first -> shared/search.py, 60_results/63_precision/tune_survivors.py
+- T-293 [done] Narrow by match, not assert -> 60_results/63_precision/tune_survivors.py, 50_methodology/51_algorithms/fit_baseline.py
+
+#### W-108 issue [done] Every knob has one home
+
+- T-250 [done] Pass the probe and split knobs from make -> eda_neutron_stars.py, eda_black_holes.py, split_datasets.py, mk/data.mk, mk/paper.mk
+- T-251 [pruned] Derive the short list from the screen batch test-first -> 60_results/63_precision/tune_survivors.py, mk/paper.mk   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-294 with the same brief and a working check]
+- T-252 [done] List the shared prerequisites by wildcard -> mk/paper.mk
+- T-253 [done] Move the grid and dpi constants into PlotStyle test-first -> shared/plots.py, paper.toml, shared/eda.py, eda_neutron_stars.py, eda_black_holes.py, fit_baseline.py, shared/surrogate.py
+- T-294 [done] Derive the short list from the screen batch test-first -> 60_results/63_precision/tune_survivors.py, mk/paper.mk
+
+#### W-109 issue [done] Records, not tuples and dict blobs
+
+- T-254 [pruned] Type the EDA records test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-297 with the same brief and a working check]
+- T-255 [pruned] Type the fit path records test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/runs.py   [pruned: its check passes -q to make, which make reads as question mode (no output, exit 1); refiled as T-298 with the same brief and a working check]
+- T-256 [pruned] Type the maps as Mapping -> shared/ceilings.py, shared/runs.py, shared/search.py, 60_results/63_precision/tune_survivors.py   [pruned: its check counts every 4-space dict annotation, so the dict locals in tune_survivors.py (last, finished: there at filing) keep it above 0, and its Ceilings part was done by 4d3b718; refiled as T-300 with an AST check on class fields]
+- T-297 [done] Type the EDA records test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py
+- T-298 [done] Type the fit path records test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/runs.py
+- T-299 [done] Carry Epochs in RunMetadata test-first -> shared/runs.py, screen_representation.py, screen_families.py, tune_survivors.py, fit_baseline.py
+- T-300 [pruned] Type the params and settings maps as Mapping -> shared/runs.py, shared/search.py, 60_results/63_precision/tune_survivors.py   [pruned: a placeholder filed by mistake while diagnosing a refused filing; the real Task is T-301]
+- T-301 [done] Type the params and settings maps as Mapping -> shared/runs.py, shared/search.py, 60_results/63_precision/tune_survivors.py
+
+#### W-110 issue [done] Module order, notation literals and the surrogate module
+
+- T-257 [pruned] Reorder so main() is the last definition -> eda_neutron_stars.py, eda_black_holes.py, fit_baseline.py, screen_representation.py   [pruned: its check prints each file's whole last def line, so the one-line EDA main signatures and the wrapped ones give two lines, never the one it expects; refiled as T-302 with the check cut to the def main( prefix]
+- T-258 [done] Move duration text and the reference predictors -> shared/progress.py, shared/families.py
+- T-259 [done] Label through SYMBOLS test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py, shared/plots.py
+- T-302 [done] Reorder so main() is the last definition -> eda_neutron_stars.py, eda_black_holes.py, fit_baseline.py, screen_representation.py
+
+#### W-117 bug [done] The NS numbers file is written in a run-dependent order, so a rebuilt asset need not match its hash   (filed during T-215)
+
+- T-284 [pruned] Write the Figures macros in target order test-first -> shared/ceilings.py   [pruned: its check passes -q to make, which make reads as question mode: it prints nothing and exits 1 whatever the test does; superseded by T-285 with the same brief and a working check]
+- T-285 [done] Write the Figures macros in target order test-first -> shared/ceilings.py (T-284 with a working check)
 
 ### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
 
@@ -598,64 +670,6 @@ flowchart TD
   E009 --> W100["W-100 spike todo: What the paper claims once the search names its winners"]
   W100 --> T233["T-233 todo: List every claim of the title block, abstract, introduction, Section 3.4 and Section 7 against Section 5 -> Findings on W-100"]
   W100 --> T234["T-234 todo: Decide the thesis with the developer and the supervisors -> the W-100 spike decision"]
-  E010["E-010 doing: Every module meets the Python gates"]
-  E010 --> W079["W-079 issue done: Every test carries one category marker, registered and enforced"]
-  W079 --> T167["T-167 done: Mark every test module with its category -> the test_*.py files"]
-  W079 --> T168["T-168 done: Register the markers and refresh the conftest from add-python -> pyproject.toml and conftest.py"]
-  W079 --> T232["T-232 done: Refresh mk/python.mk from add-python -> M= selection, test-integration, test-stats"]
-  E010 --> W091["W-091 issue done: The screens' shared shell and test inputs live once -- one helper module, one toy fixture"]
-  W091 --> T213["T-213 done: Write the run shell module test-first -> shared/batches.py"]
-  W091 --> T214["T-214 pruned: Point the four runnables at shared/batches.py -> no private copy of the run shell left"]
-  W091 --> T215["T-215 done: Write the screens' toy tables once -> 60_results/conftest.py used by the three screen test modules"]
-  W091 --> T282["T-282 done: Write the ledger entry writer and reader once test-first -> shared/batches.py"]
-  W091 --> T283["T-283 done: Point the four runnables at shared/batches.py -> no private copy of the run shell left in a runnable"]
-  E010 --> W095["W-095 bug done: The wall counts wall-clock time, so a sleeping laptop walls a healthy fit"]
-  W095 --> T219["T-219 done: Arm the wall on the process's CPU time test-first -> shared/batches.py"]
-  W095 --> T286["T-286 done: Make the screens slow toy fitters compute instead of sleep -> the two screen tests"]
-  E010 --> W096["W-096 issue done: One Pair and one FitRows value through the fit path"]
-  W096 --> T220["T-220 done: Replace PAIRS and designs with a frozen Pair test-first -> shared/design.py and the four runnables"]
-  W096 --> T221["T-221 done: Replace the five-array Fitter with FitRows test-first -> shared/harness.py and its wrappers"]
-  W096 --> T222["T-222 done: Build Training through make_training and type the scorecard's maps as Mapping -> shared/surrogate.py, shared/scorecard.py"]
-  E010 --> W105["W-105 bug done: make tuning with --recover on a partial batch fails at the figures after writing the table"]
-  W105 --> T242["T-242 done: Read only the studies a batch's journal holds into the figures test-first -> 60_results/63_precision/tune_survivors.py"]
-  E010 --> W106["W-106 issue done: One vocabulary for pairs, units, families and labels"]
-  W106 --> T243["T-243 done: Define Unit, Family, curve_columns and PROFILE_BINS once -> shared/candidates.py, shared/search.py, shared/ceilings.py"]
-  W106 --> T244["T-244 pruned: Name the TeX form of a pair in one function test-first -> shared/design.py"]
-  W106 --> T245["T-245 pruned: Pin one thread in one context manager test-first -> shared/harness.py"]
-  W106 --> T246["T-246 pruned: Configure worker logging once in the pool initializer test-first -> shared/workers.py"]
-  W106 --> T288["T-288 done: Name a target plot symbol in one function test-first -> shared/design.py"]
-  W106 --> T289["T-289 done: Pin one thread in one context manager test-first -> shared/harness.py"]
-  W106 --> T290["T-290 done: Configure worker logging once in the pool initializer test-first -> shared/workers.py"]
-  E010 --> W107["W-107 issue done: Asserts out of the domain, I/O out of the data modules"]
-  W107 --> T247["T-247 pruned: Build Symbols through make_symbols and read no file test-first -> shared/plots.py"]
-  W107 --> T248["T-248 pruned: Return NoCompletedTrial from search() test-first -> shared/search.py, 60_results/63_precision/tune_survivors.py"]
-  W107 --> T249["T-249 pruned: Narrow by match, not assert -> 60_results/63_precision/tune_survivors.py, 50_methodology/51_algorithms/fit_baseline.py"]
-  W107 --> T291["T-291 done: Build Symbols through make_symbols and read no file test-first -> shared/plots.py"]
-  W107 --> T292["T-292 done: Return NoCompletedTrial from search() test-first -> shared/search.py, 60_results/63_precision/tune_survivors.py"]
-  W107 --> T293["T-293 done: Narrow by match, not assert -> 60_results/63_precision/tune_survivors.py, 50_methodology/51_algorithms/fit_baseline.py"]
-  E010 --> W108["W-108 issue done: Every knob has one home"]
-  W108 --> T250["T-250 done: Pass the probe and split knobs from make -> eda_neutron_stars.py, eda_black_holes.py, split_datasets.py, mk/data.mk, mk/paper.mk"]
-  W108 --> T251["T-251 pruned: Derive the short list from the screen batch test-first -> 60_results/63_precision/tune_survivors.py, mk/paper.mk"]
-  W108 --> T252["T-252 done: List the shared prerequisites by wildcard -> mk/paper.mk"]
-  W108 --> T253["T-253 done: Move the grid and dpi constants into PlotStyle test-first -> shared/plots.py, paper.toml, shared/eda.py, eda_neutron_stars.py, eda_black_holes.py, fit_baseline.py, shared/surrogate.py"]
-  W108 --> T294["T-294 done: Derive the short list from the screen batch test-first -> 60_results/63_precision/tune_survivors.py, mk/paper.mk"]
-  E010 --> W109["W-109 issue done: Records, not tuples and dict blobs"]
-  W109 --> T254["T-254 pruned: Type the EDA records test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py"]
-  W109 --> T255["T-255 pruned: Type the fit path records test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/runs.py"]
-  W109 --> T256["T-256 pruned: Type the maps as Mapping -> shared/ceilings.py, shared/runs.py, shared/search.py, 60_results/63_precision/tune_survivors.py"]
-  W109 --> T297["T-297 done: Type the EDA records test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py"]
-  W109 --> T298["T-298 done: Type the fit path records test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/runs.py"]
-  W109 --> T299["T-299 done: Carry Epochs in RunMetadata test-first -> shared/runs.py, screen_representation.py, screen_families.py, tune_survivors.py, fit_baseline.py"]
-  W109 --> T300["T-300 pruned: Type the params and settings maps as Mapping -> shared/runs.py, shared/search.py, 60_results/63_precision/tune_survivors.py"]
-  W109 --> T301["T-301 done: Type the params and settings maps as Mapping -> shared/runs.py, shared/search.py, 60_results/63_precision/tune_survivors.py"]
-  E010 --> W110["W-110 issue done: Module order, notation literals and the surrogate module"]
-  W110 --> T257["T-257 pruned: Reorder so main() is the last definition -> eda_neutron_stars.py, eda_black_holes.py, fit_baseline.py, screen_representation.py"]
-  W110 --> T258["T-258 done: Move duration text and the reference predictors -> shared/progress.py, shared/families.py"]
-  W110 --> T259["T-259 done: Label through SYMBOLS test-first -> 40_data_analysis/41_neutron_stars/eda_neutron_stars.py, shared/plots.py"]
-  W110 --> T302["T-302 done: Reorder so main() is the last definition -> eda_neutron_stars.py, eda_black_holes.py, fit_baseline.py, screen_representation.py"]
-  E010 --> W117["W-117 bug done: The NS numbers file is written in a run-dependent order, so a rebuilt asset need not match its hash"]
-  W117 --> T284["T-284 pruned: Write the Figures macros in target order test-first -> shared/ceilings.py"]
-  W117 --> T285["T-285 done: Write the Figures macros in target order test-first -> shared/ceilings.py (T-284 with a working check)"]
   E011["E-011 todo: Figures and tables picked from rendered variants, numbers from macros"]
   E011 --> W102["W-102 issue todo: Every section's figures are selected in paper.toml"]
   W102 --> T237["T-237 todo: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
@@ -700,13 +714,17 @@ flowchart TD
   W119 --> T295["T-295 todo: Draw an empty panel of the ranges figure test-first -> 60_results/63_precision/tune_survivors.py"]
   W120["W-120 bug todo, standalone: The tuning figure tests pass only after main styled the plots"]
   W120 --> T296["T-296 todo: Style the toy plots in a fixture of the figure tests -> 60_results/63_precision/test_tune_survivors.py"]
+  W121["W-121 spike todo, standalone: Where the run time of the screens and the tuning goes"]
+  W121 --> T303["T-303 todo: Profile one pointwise local-RBF trial -> local/scratch/profile_rbf_trial.txt"]
+  W121 --> T304["T-304 todo: Profile one tuning job -> local/scratch/profile_tuning_job.txt"]
+  W121 --> T305["T-305 todo: Record the run-time decision -> W-121 spike.decision"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E010 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W079,T167,T168,T232,W091,T213,T215,T282,T283,W095,T219,T286,W096,T220,T221,T222,W105,T242,W106,T243,T288,T289,T290,W107,T291,T292,T293,W108,T250,T252,T253,T294,W109,T297,T298,T299,T301,W110,T258,T259,T302,W117,T285 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W118,T287,W119,T295,W120,T296 todo
-  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T214,T244,T245,T246,T247,T248,T249,T251,T254,T255,T256,T300,T257,T284 pruned
+  class E006,E009 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,E011,W102,T237,W104,T241,W111,T260,T261,T262,T263,W112,T264,T265,T266,T267,W113,T268,T269,T270,T271,W114,T272,T273,T274,T275,W115,T276,T277,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W118,T287,W119,T295,W120,T296,W121,T303,T304,T305 todo
+  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```

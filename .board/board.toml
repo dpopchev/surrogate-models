@@ -10,7 +10,7 @@ entry_max_chars = 300     # one Finding, Decision or Deviation line
 
 [landing]
 mode = "ff-main"          # pr | ff-main
-approver = "agent"        # developer | agent -- agent for E-010 only (developer, 2026-10-11): each work item lands on make check and the asset hashes; back to developer at E-010's close
+approver = "agent"        # developer | agent -- agent since E-010 (developer, 2026-10-11), kept at E-010's close (developer, 2026-10-11): each work item lands on make check and the asset hashes
 branch_id = "local"       # local | remote
 tag = "epic-close"        # epic-close | root-close | none
 ci = "none"               # pipeline | none -- everything runs locally: make check before each fast-forward
