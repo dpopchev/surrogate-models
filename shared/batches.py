@@ -19,6 +19,7 @@ from pathlib import Path
 import numpy as np
 
 from shared.harness import FitRows, Fitter, Predictor, Run
+from shared.progress import duration_text
 from shared.runs import (
     LedgerEntry,
     RunMetadata,
@@ -27,7 +28,6 @@ from shared.runs import (
     entry_name,
     entry_to_json,
 )
-from shared.surrogate import duration_text
 
 # --- vocabulary and types ---------------------------------------------------------------------
 

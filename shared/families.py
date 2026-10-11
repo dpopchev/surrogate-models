@@ -8,6 +8,7 @@ in every direction whatever the units.
 import numpy as np
 from scipy.interpolate import RBFInterpolator
 from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.dummy import DummyRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel, WhiteKernel
 from sklearn.neighbors import KNeighborsRegressor
@@ -76,3 +77,15 @@ def make_xgboost() -> XGBRegressor:
     """Gradient-boosted trees on one thread, as the harness times every family; trees split on
     thresholds, so the inputs need no scaling."""
     return XGBRegressor(n_jobs=1)
+
+
+def make_mean_reference() -> DummyRegressor:
+    """The mean predictor: every row gets the mean target of the training rows."""
+    return DummyRegressor(strategy="mean")
+
+
+def make_nearest_reference() -> Pipeline:
+    """The nearest-curve predictor: the target of the closest training row in inputs
+    standardized on the training rows. Test curves are never in training, so the closest row
+    always lies on another curve."""
+    return Pipeline([("scale", StandardScaler()), ("nearest", KNeighborsRegressor(n_neighbors=1))])

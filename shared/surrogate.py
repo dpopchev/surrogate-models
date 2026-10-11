@@ -16,9 +16,7 @@ from typing import Any, Literal, assert_never, cast
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from sklearn.dummy import DummyRegressor
 from sklearn.model_selection import GroupShuffleSplit, PredefinedSplit
-from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from skorch import NeuralNetRegressor
@@ -32,6 +30,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from shared.config import AlgorithmsSection
 from shared.diagnostics import loss_curve
 from shared.harness import FitRows, Fitter, Predictor
+from shared.progress import approx_minutes, stop_window
 
 logger = logging.getLogger(__name__)
 
@@ -108,38 +107,6 @@ def mare_in_d(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 def rebuild_charge(y_charge: np.ndarray, mass: np.ndarray) -> np.ndarray:
     """The charge D from the charge target Y = log10(D/M) and a mass M."""
     return mass * 10.0**y_charge
-
-
-# --- progress ---------------------------------------------------------------------------------
-
-
-def stop_window(epoch: int, best_epoch: int, patience: int, max_epochs: int) -> tuple[int, int]:
-    """Epochs left until the earliest stop (patience runs out without a new best) and the
-    latest (max_epochs)."""
-    latest = max_epochs - epoch
-    return min(patience - (epoch - best_epoch), latest), latest
-
-
-def duration_text(seconds: float) -> str:
-    """Seconds as "1h 4m 24s", "2m 40s" or "12s"."""
-    hours, rest = divmod(round(seconds), 3600)
-    minutes, secs = divmod(rest, 60)
-    if hours:
-        return f"{hours}h {minutes}m {secs}s"
-    return f"{minutes}m {secs}s" if minutes else f"{secs}s"
-
-
-def _minutes_text(seconds: float) -> str:
-    """Seconds to the nearest minute: "1h 4m", "3m", or "<1m" under half a minute."""
-    hours, minutes = divmod(round(seconds / 60), 60)
-    if hours:
-        return f"{hours}h {minutes}m"
-    return f"{minutes}m" if minutes else "<1m"
-
-
-def approx_minutes(epochs: int, epoch_seconds: float) -> str:
-    """The approximate time a number of epochs takes, to the nearest minute: "~3m"."""
-    return f"~{_minutes_text(epochs * epoch_seconds)}"
 
 
 # --- the network ------------------------------------------------------------------------------
@@ -407,18 +374,6 @@ def sklearn_fitter(make: Callable[[], Any]) -> Fitter:
         return make().fit(rows.x_fit, rows.y_fit).predict
 
     return fit
-
-
-def make_mean_reference() -> DummyRegressor:
-    """The mean predictor: every row gets the mean target of the training rows."""
-    return DummyRegressor(strategy="mean")
-
-
-def make_nearest_reference() -> Pipeline:
-    """The nearest-curve predictor: the target of the closest training row in inputs
-    standardized on the training rows. Test curves are never in training, so the closest row
-    always lies on another curve."""
-    return Pipeline([("scale", StandardScaler()), ("nearest", KNeighborsRegressor(n_neighbors=1))])
 
 
 def make_estimator(

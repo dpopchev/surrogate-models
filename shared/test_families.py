@@ -3,7 +3,14 @@
 import numpy as np
 import pytest
 
-from shared.families import make_gpr, make_knn, make_rbf, make_xgboost
+from shared.families import (
+    make_gpr,
+    make_knn,
+    make_mean_reference,
+    make_nearest_reference,
+    make_rbf,
+    make_xgboost,
+)
 
 pytestmark = pytest.mark.model
 
@@ -61,3 +68,20 @@ def test_xgboost_predicts_one_value_per_row() -> None:
 def test_knn_with_one_neighbour_returns_the_target_of_the_row_it_is_given() -> None:
     x, y = np.array([[0.0], [1.0], [2.0]]), np.array([10.0, 20.0, 30.0])
     assert make_knn(1).fit(x, y).predict(np.array([[1.0]])).tolist() == [20.0]
+
+
+def test_the_mean_reference_predicts_the_training_mean() -> None:
+    train = GRID[:30]
+    mean = make_mean_reference().fit(train, linear(train))
+    assert mean.predict(GRID[30:31])[0] == pytest.approx(linear(train).mean())
+
+
+def test_the_nearest_reference_reproduces_a_training_row() -> None:
+    nearest = make_nearest_reference().fit(GRID, linear(GRID))
+    assert nearest.predict(GRID[:1])[0] == pytest.approx(linear(GRID)[0])
+
+
+def test_the_nearest_reference_measures_distance_on_standardized_inputs() -> None:
+    inputs = np.array([[0.0, 0.0], [1.0, 100.0]])
+    nearest = make_nearest_reference().fit(inputs, np.array([10.0, 20.0]))
+    assert nearest.predict(np.array([[0.9, 40.0]]))[0] == 20.0

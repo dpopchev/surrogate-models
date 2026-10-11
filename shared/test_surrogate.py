@@ -14,6 +14,7 @@ from skorch.utils import Ansi
 from torch import nn
 
 from shared.config import AlgorithmsSection
+from shared.families import make_mean_reference
 from shared.harness import FitRows
 from shared.surrogate import (
     MLP,
@@ -23,11 +24,8 @@ from shared.surrogate import (
     Loss,
     ResMLP,
     Training,
-    approx_minutes,
     curve_valid_split,
     make_estimator,
-    make_mean_reference,
-    make_nearest_reference,
     make_training,
     mare,
     mare_in_d,
@@ -35,7 +33,6 @@ from shared.surrogate import (
     rebuild_charge,
     rmse,
     sklearn_fitter,
-    stop_window,
 )
 
 
@@ -207,46 +204,6 @@ def test_the_epoch_table_reaches_the_logger(caplog: pytest.LogCaptureFixture) ->
     with caplog.at_level(logging.INFO, logger="shared.surrogate"):
         fitted(replace(TOY, max_epochs=2))
     assert "valid_mare" in caplog.text
-
-
-class TestReferences:
-    pytestmark = pytest.mark.model
-
-    def test_the_mean_reference_predicts_the_training_mean(self) -> None:
-        mean = make_mean_reference().fit(INPUTS[~HELD_OUT], TARGET[~HELD_OUT])
-        assert mean.predict(INPUTS[HELD_OUT][:1])[0] == pytest.approx(TARGET[~HELD_OUT].mean())
-
-    def test_the_nearest_reference_reproduces_a_training_row(self) -> None:
-        nearest = make_nearest_reference().fit(INPUTS[~HELD_OUT], TARGET[~HELD_OUT])
-        assert nearest.predict(INPUTS[:1])[0] == pytest.approx(TARGET[0])
-
-    def test_the_nearest_reference_measures_distance_on_standardized_inputs(self) -> None:
-        inputs = np.array([[0.0, 0.0], [1.0, 100.0]])
-        nearest = make_nearest_reference().fit(inputs, np.array([10.0, 20.0]))
-        assert nearest.predict(np.array([[0.9, 40.0]]))[0] == 20.0
-
-
-class TestStopWindow:
-    pytestmark = pytest.mark.view
-
-    def test_spans_patience_to_max_epochs_after_a_new_best(self) -> None:
-        assert stop_window(epoch=17, best_epoch=17, patience=20, max_epochs=500) == (20, 483)
-
-    def test_never_lets_the_earliest_stop_pass_max_epochs(self) -> None:
-        assert stop_window(epoch=495, best_epoch=490, patience=20, max_epochs=500) == (5, 5)
-
-
-class TestApproxMinutes:
-    pytestmark = pytest.mark.view
-
-    def test_rounds_to_the_nearest_minute(self) -> None:
-        assert approx_minutes(epochs=20, epoch_seconds=8.0) == "~3m"
-
-    def test_states_hours_beyond_an_hour(self) -> None:
-        assert approx_minutes(epochs=483, epoch_seconds=8.0) == "~1h 4m"
-
-    def test_reads_less_than_a_minute_under_half_a_minute(self) -> None:
-        assert approx_minutes(epochs=3, epoch_seconds=8.0) == "~<1m"
 
 
 def epoch_table(caplog: pytest.LogCaptureFixture) -> str:

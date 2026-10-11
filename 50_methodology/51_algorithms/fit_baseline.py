@@ -60,8 +60,10 @@ from shared.design import (
 )
 from shared.diagnostics import curve_overlay, error_cdf, loss_curve
 from shared.eda import CurveSpace, booktabs, curve_ids, render_macros, sci_tex
+from shared.families import make_mean_reference, make_nearest_reference
 from shared.harness import FitRows, Fitter, Predictor, Run, Timing, harness
 from shared.plots import SYMBOLS, PlotStyle, anchor_color, apply_style
+from shared.progress import duration_text
 from shared.runs import (
     Epochs,
     LedgerEntry,
@@ -77,9 +79,6 @@ from shared.scorecard import significant_figures
 from shared.surrogate import (
     LivePlot,
     Training,
-    duration_text,
-    make_mean_reference,
-    make_nearest_reference,
     make_training,
     mare,
     mare_in_d,

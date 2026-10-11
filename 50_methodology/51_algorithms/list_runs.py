@@ -12,8 +12,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from shared.progress import duration_text
 from shared.runs import RunRecord, from_json
-from shared.surrogate import duration_text
 
 SECTION = "51_algorithms"
 
