@@ -1,4 +1,4 @@
-# Board -- surrogate-models
+# Board -- W-111-mass-radius-variants
 record: local
 open path: E-011 > W-111 > T-308   | blocked: 0 | todo roots: 8 | done: 330 | pruned: 37
 
