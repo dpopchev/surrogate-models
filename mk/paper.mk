@@ -188,6 +188,19 @@ $(BASELINE_ASSETS): $(BASELINE) paper.toml $(SHARED) $(STATE)/neutron_stars.parq
 baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1
 	$(call log_done,baseline assets current in $(dir $(BASELINE_ASSETS)))
 
+# The baseline table alone is a paper asset: rebuilt from the latest baseline batch of the
+# ledger in seconds, nothing fitted, so a change to baseline_table reaches the paper without a
+# refit (W-128). A ledger without a baseline batch keeps the table as make baseline last wrote it.
+BASELINE_TABLE := $(ASSETS)/51_algorithms/51_algorithms_tab_baseline.tex
+PAPER_ASSETS   += $(BASELINE_TABLE)
+
+$(BASELINE_TABLE): $(BASELINE) paper.toml $(SHARED) $(TABLE_DATA) $(wildcard $(STATE)/ledger)
+	@if out=$$($(RUN) python $(BASELINE) $(TABLE_DATA) $(ASSETS) $(STATE) --tables 2>&1); then \
+	  printf "$(BOLD)$(GREEN)%s$(RESET) %s\n" "[DONE]" "baseline table rebuilt from the ledger -> $@" >&2; \
+	elif printf '%s' "$$out" | grep -q 'no baseline batch in the ledger'; then \
+	  printf "$(BOLD)$(YELLOW)%s$(RESET) %s\n" "[WARN]" "no baseline batch in the ledger -- $@ kept; make baseline fits one" >&2; \
+	else printf '%s\n' "$$out" >&2; exit 1; fi
+
 # Each baseline run logs into its own <run>/train.log and repoints latest.log at it (W-054);
 # tail -F follows the name, so one make follow keeps up across runs. It ends with Ctrl-C, so
 # its log_done never prints.
