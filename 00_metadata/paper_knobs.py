@@ -1,5 +1,5 @@
-"""Write the knobs the text cites as LaTeX macros: the baseline network's settings and the
-screens' make knobs (W-116).
+"""Write the knobs the text cites as LaTeX macros: the baseline network's settings, the
+screens' make knobs (W-116) and the tuning's search ranges (W-131).
 
 Reads [methodology.algorithms] of paper.toml; the screens' knobs live in mk/paper.mk only
 (Decision on W-066), so make passes their flag strings. Writes one \\knob... macro per setting:
@@ -15,10 +15,14 @@ import logging
 import math
 import shlex
 import sys
+from collections.abc import Mapping
 from pathlib import Path
+
+from optuna.distributions import FloatDistribution, IntDistribution
 
 from shared.config import AlgorithmsSection, load_config
 from shared.eda import camel, number_tex, render_macros
+from shared.search import KNOTS, SPACES, Space
 
 logger = logging.getLogger(__name__)
 
@@ -30,16 +34,16 @@ _ORDINALS = ("First", "Second", "Third", "Fourth", "Fifth", "Sixth")
 
 
 def knob_tex(value: int | float | str) -> str:
-    """A knob as the text writes it in math mode: an exact power of ten from 1000 or below 0.01
+    """A knob as the text writes it in math mode: an exact power of ten from 1000 or below 0.1
     as 10^{k}, any other integer plain, a float as written between 0.01 and 1000 and through
     number_tex beyond, text as it is.
 
-    >>> knob_tex(1024), knob_tex(1000), knob_tex(1e-3), knob_tex(0.2), knob_tex("relu")
-    ('1024', '10^{3}', '10^{-3}', '0.2', 'relu')
+    >>> knob_tex(1024), knob_tex(1000), knob_tex(1e-2), knob_tex(0.2), knob_tex("relu")
+    ('1024', '10^{3}', '10^{-2}', '0.2', 'relu')
     """
     if isinstance(value, str):
         return value
-    if value > 0 and not 0.01 <= value < 1000:
+    if value > 0 and not 0.1 <= value < 1000:
         exponent = round(math.log10(value))
         if math.isclose(value, 10.0**exponent):
             return f"10^{{{exponent}}}"
@@ -89,10 +93,36 @@ def knob_numbers(net: AlgorithmsSection, screens: dict[str, str]) -> dict[str, s
     return found
 
 
+def space_numbers(spaces: Mapping[str, Space], knots: IntDistribution) -> dict[str, str]:
+    """The tuning's search ranges, keyed \\knobSpace<Tag><Param>Low and High: every int and
+    float range of each tagged space, then the curve-wise knots (\\knobSpaceKnots...); a
+    categorical choice has no bounds and is skipped."""
+    ranges = [
+        (f"{tag}{camel(param)}", distribution)
+        for tag, space in spaces.items()
+        for param, distribution in space.items()
+    ] + [("Knots", knots)]
+    found: dict[str, str] = {}
+    for name, distribution in ranges:
+        if isinstance(distribution, IntDistribution | FloatDistribution):
+            found[f"knobSpace{name}Low"] = knob_tex(distribution.low)
+            found[f"knobSpace{name}High"] = knob_tex(distribution.high)
+    return found
+
+
 # --- shell ------------------------------------------------------------------------------------
 
 # The make option of each screen and the macro tag of its knobs.
 SCREENS = {"representation": "Repr", "families": "Families", "tuning": "Tuning"}
+# The macro tag of each family's search space; the two networks share one space, Net.
+SPACE_TAG = {
+    "k-NN": "Knn",
+    "local RBF": "Rbf",
+    "GPR": "Gpr",
+    "XGBoost": "Xgboost",
+    "MLP": "Net",
+    "ResNet": "Net",
+}
 
 
 def _arguments(argv: list[str]) -> argparse.Namespace:
@@ -109,6 +139,7 @@ def main(argv: list[str]) -> None:
     args = _arguments(argv)
     screens = {tag: getattr(args, screen) for screen, tag in SCREENS.items()}
     found = knob_numbers(load_config().methodology.algorithms, screens)
+    found |= space_numbers({SPACE_TAG[f]: space for f, space in SPACES.items()}, KNOTS)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(render_macros(found))
     logger.info("done: %d knobs -> %s", len(found), args.out)

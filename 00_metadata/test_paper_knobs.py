@@ -1,7 +1,8 @@
 """Facts about the knobs macro file: the baseline network's settings and the screens' make knobs."""
 
 import pytest
-from paper_knobs import knob_numbers
+from optuna.distributions import CategoricalDistribution, FloatDistribution, IntDistribution
+from paper_knobs import knob_numbers, space_numbers
 
 from shared.config import AlgorithmsSection
 
@@ -31,4 +32,20 @@ def test_knob_macros_name_every_setting() -> None:
         "knobFamiliesBudgetsFirst",
         "knobFamiliesBudgetsSecond",
         "knobFamiliesMemoryGb",
+    }
+
+
+def test_space_macros_name_each_range() -> None:
+    space = {
+        "neighbours": IntDistribution(50, 400, log=True),
+        "lr": FloatDistribution(1e-4, 1e-2, log=True),
+        "kernel": CategoricalDistribution(("rbf", "matern52")),
+    }
+    assert space_numbers({"Rbf": space}, IntDistribution(6, 24)) == {
+        "knobSpaceRbfNeighboursLow": "50",
+        "knobSpaceRbfNeighboursHigh": "400",
+        "knobSpaceRbfLrLow": "10^{-4}",
+        "knobSpaceRbfLrHigh": "10^{-2}",
+        "knobSpaceKnotsLow": "6",
+        "knobSpaceKnotsHigh": "24",
     }
