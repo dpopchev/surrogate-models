@@ -54,6 +54,8 @@ E-011         [doing]    Figures and tables picked from rendered variants, numbe
   W-116  issue  [todo]     Every number the text cites is a macro -- T-278 [todo], T-279 [todo], T-280 [todo], T-281 [todo]
   W-122  bug    [done]     make compile keeps a figure a pick removed in build/paper/article.pdf   (filed during T-237) -- T-306 [done], T-307 [pruned]   [pruned: its Output build/paper/article.pdf is an untracked build file no commit carries, so the scope gate cannot close it (a brief defect at filing); its check was run and exited 0 -- make -W paper.toml families compile with the shipped picks, no undefined references -- and the 62_families assets match local/assets-baseline.sha]
   W-124  issue  [todo]     Per-table layouts rendered to page images   (filed during T-322) -- T-326 [todo], T-327 [todo]
+  W-125  issue  [todo]     Table page images cropped to the table   (filed during T-328) -- T-329 [todo], T-330 [todo]
+  W-126  bug    [todo]     The aligned table layout overflows the text width   (filed during T-328) -- T-331 [todo], T-332 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
 W-118  bug    [todo]     (standalone) A screen run leaves the surrogate logger at WARNING, so a later baseline run in the same process loses its epoch table   (filed during T-219) -- T-287 [todo]
@@ -730,6 +732,12 @@ flowchart TD
   E011 --> W124["W-124 issue todo: Per-table layouts rendered to page images"]
   W124 --> T326["T-326 todo: Write the split and transposed results tables test-first -> screen_representation.py, screen_families.py, tune_survivors.py, fit_baseline.py"]
   W124 --> T327["T-327 todo: Select the decisions tables layout by macro test-first -> 40_data_analysis/43_preprocessing/43_preprocessing.tex, preprocessing_numbers.py, paper.toml"]
+  E011 --> W125["W-125 issue todo: Table page images cropped to the table"]
+  W125 --> T329["T-329 todo: Build the crop and rasterize commands test-first -> 00_metadata/tables_entry.py"]
+  W125 --> T330["T-330 todo: Render the cropped table images -> build/variants/tables/"]
+  E011 --> W126["W-126 bug todo: The aligned table layout overflows the text width"]
+  W126 --> T331["T-331 todo: Set a table-format per aligned column test-first -> shared/eda.py"]
+  W126 --> T332["T-332 todo: Confirm the aligned tables fit the text width -> build/.work/tables/aligned/flat/tables_aligned.log"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W088["W-088 issue todo, standalone: A running representation screen is followable -- progress, time left and each entry's representation"]
@@ -754,6 +762,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,E009,E011 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,W111,T262,T308,T309,T310,W112,T311,T312,T313,T314,W113,T315,T316,T317,T318,W114,T321,T325,T328,W122,T306 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W115,T276,T277,T319,W116,T278,T279,T280,T281,W124,T326,T327,W061,T118,W088,T196,T197,W118,T287,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320 todo
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W115,T276,T277,T319,W116,T278,T279,T280,T281,W124,T326,T327,W125,T329,T330,W126,T331,T332,W061,T118,W088,T196,T197,W118,T287,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T260,T261,T263,T264,T265,T266,T267,T268,T269,T270,T271,T272,T273,T274,T275,T322,T323,T324,T307 pruned
 ```

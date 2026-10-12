@@ -47,5 +47,5 @@
 
 ## Deviations
 - 2026-10-11 E-011: Tasks re-filed at activation (make -q checks): W-111 T-308-310, W-112 T-311-314, W-113 T-315-318, W-114 T-321-324 (tables variants in a work folder; aligned = siunitx on plain cells); W-112 re-recorded 2 ceilings hashes supersedes: E-011#v4
-- 2026-10-11 E-011: W-122 filed during T-237: make compile keeps a deselected figure in article.pdf (latexmk runs no pass); queued todo, the developer orders it at W-102's re-aim
 - 2026-10-12 E-011: W-113 filed W-123 (standalone) and T-319 (W-115); T-322 hit a T-321 header defect, W-114 split at V22: T-325 fix + T-328 rasterize stay, T-323/324 -> W-124 (T-326/327); AC5 small+aligned, AC8 -> W-124 (developer, 2026-10-12) supersedes: E-011#v5
+- 2026-10-12 E-011: W-122 filed during T-237, done; W-125 (crop table images, AC9) and bug W-126 (aligned overflow) filed at W-114's landing, a scope exception (developer, 2026-10-12) supersedes: E-011#v1
