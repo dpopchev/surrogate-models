@@ -1,6 +1,7 @@
 """Facts about the representation screen behind Section 5.1, on tiny synthetic data."""
 
 import json
+import re
 from collections.abc import Callable
 from datetime import UTC, datetime
 from functools import partial
@@ -232,6 +233,21 @@ def test_a_fold_entry_that_beats_the_baseline_is_bold() -> None:
 def test_a_negative_test_figure_is_typeset_with_a_minus_sign() -> None:
     found = [ns_mass("baseline", "MLP", -1.04, 0.1)]
     assert "$-1.04$" in table_rows(representation_table(found))[0]
+
+
+@pytest.mark.view
+def test_representation_table_transposed_lists_the_models_as_rows() -> None:
+    found = [ns_mass("baseline", "k-NN", 2.0, 0.1), ns_mass("log10 M", "MLP", 2.5, 0.1)]
+    table = representation_table(found, shape="transposed")
+    assert [row.split(" & ")[1].strip() for row in table_rows(table)] == ["$k$-NN", "MLP"]
+
+
+@pytest.mark.view
+def test_representation_table_split_writes_two_tables() -> None:
+    bh = Score("black_holes", "mass", "baseline", "MLP", 3.0, 3.0, 0.1)
+    table = representation_table([ns_mass("baseline", "MLP", 2.0, 0.1), bh], shape="split")
+    labels = re.findall(r"\\label\{(tab:[^}]*)\}", table)
+    assert labels == ["tab:representation", "tab:representation-bh"]
 
 
 @pytest.mark.command

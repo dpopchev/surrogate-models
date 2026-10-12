@@ -36,7 +36,7 @@ from shared.batches import (
     write_entry,
 )
 from shared.candidates import Unit, curve_columns
-from shared.config import PaperConfig, TableLayout, load_config
+from shared.config import PaperConfig, RepresentationTableLayout, TableLayout, load_config
 from shared.curvewise import curvewise_fitter
 from shared.design import (
     BLACK_HOLES,
@@ -264,10 +264,71 @@ def beats(score: Score, baseline: Score) -> bool:
     return score.folds - baseline.folds > max(score.spread, baseline.spread)
 
 
-def representation_table(found: Sequence[Score], layout: TableLayout = "small") -> str:
-    """The Section 5.1 table: one row per pair and representation, each model's test figures
-    and fold figures (mean +/- standard deviation over folds and seeds), a fold entry in bold
-    where it beats the pair's baseline at that model."""
+REPRESENTATION_CAPTION = (
+    "Each representation at equal model, one factor changed from the baseline: the "
+    "significant figures kept at the 95th percentile of the error ($-\\log_{10}$) on the test "
+    "curves, and on the frozen folds as the mean with the standard deviation over folds and "
+    "seeds as its subscript (the MLP on three seeds, the deterministic references on one). A "
+    "fold entry in bold gains on the pair's baseline at that model by more than the larger "
+    "of the two deviations. The errors of every target form are measured in $M$ or $\\Dch$."
+)
+MODEL_TEX = {"k-NN": "$k$-NN", "local RBF": "local RBF", "MLP": "MLP"}
+
+
+def representation_table(
+    found: Sequence[Score],
+    layout: TableLayout = "small",
+    shape: RepresentationTableLayout = "eight_columns",
+) -> str:
+    """The Section 5.1 table in its shape: every pair in eight columns, the NS and the BH pairs
+    as two such tables (split), or a row per pair and model with a column per representation
+    (transposed)."""
+    match shape:
+        case "eight_columns":
+            return _eight_columns(found, layout, "representation", REPRESENTATION_CAPTION)
+        case "split":
+            ns = [s for s in found if s.dataset == NEUTRON_STARS.dataset]
+            bh = [s for s in found if s.dataset != NEUTRON_STARS.dataset]
+            return _eight_columns(
+                ns, layout, "representation", f"Neutron stars. {REPRESENTATION_CAPTION}"
+            ) + _eight_columns(bh, layout, "representation-bh", "Black holes, as above.")
+        case "transposed":
+            return _transposed(found, layout)
+        case _:
+            assert_never(shape)
+
+
+def _transposed(found: Sequence[Score], layout: TableLayout) -> str:
+    """One row per pair and model, a column per representation, each cell test / folds."""
+    by_key = {(s.dataset, s.target, s.representation, s.model): s for s in found}
+    shown = [r for r in REPRESENTATION_TEX if any(key[2] == r for key in by_key)]
+    rows = []
+    for dataset, target in dict.fromkeys(key[:2] for key in by_key):
+        for model in MODELS:
+            if not any(key[:2] == (dataset, target) and key[3] == model for key in by_key):
+                continue
+            cells = [
+                _entry(
+                    by_key.get((dataset, target, r, model)),
+                    by_key.get((dataset, target, "baseline", model)),
+                ).replace(" & ", " / ")
+                for r in shown
+            ]
+            rows.append(f"{pair_tex(dataset, target)} & {MODEL_TEX[model]} & {' & '.join(cells)}")
+    return booktabs(
+        "representation",
+        f"{REPRESENTATION_CAPTION} Each cell: test / folds.",
+        "@{}ll" + "r" * len(shown) + "@{}",
+        "Pair & Model & " + " & ".join(REPRESENTATION_TEX[r] for r in shown),
+        rows,
+        layout,
+    )
+
+
+def _eight_columns(found: Sequence[Score], layout: TableLayout, label: str, caption: str) -> str:
+    """One row per pair and representation, each model's test figures and fold figures (mean
+    +/- standard deviation over folds and seeds), a fold entry in bold where it beats the
+    pair's baseline at that model."""
     by_key = {(s.dataset, s.target, s.representation, s.model): s for s in found}
     rows = []
     for dataset, target, representation in dict.fromkeys(key[:3] for key in by_key):
@@ -283,13 +344,8 @@ def representation_table(found: Sequence[Score], layout: TableLayout = "small") 
             f"{REPRESENTATION_TEX[representation]} & {' & '.join(entries)}"
         )
     return booktabs(
-        "representation",
-        "Each representation at equal model, one factor changed from the baseline: the "
-        "significant figures kept at the 95th percentile of the error ($-\\log_{10}$) on the test "
-        "curves, and on the frozen folds as the mean with the standard deviation over folds and "
-        "seeds as its subscript (the MLP on three seeds, the deterministic references on one). A "
-        "fold entry in bold gains on the pair's baseline at that model by more than the larger "
-        "of the two deviations. The errors of every target form are measured in $M$ or $\\Dch$.",
+        label,
+        caption,
         # Eight columns fit the text width only with 8pt gaps and no outer padding.
         "@{}l@{\\hspace{8pt}}l*{6}{@{\\hspace{8pt}}r}@{}",
         "Pair & Representation & \\multicolumn{2}{c}{$k$-NN} & "
@@ -484,7 +540,9 @@ def main(
             logger.info("rebuilding the table from batch %s; nothing is fitted", batch)
         entries = [entry for entry in read_ledger(ledger) if entry.meta.batch == batch]
         assert len(entries) == jobs, f"batch {batch}: {len(entries)} ledger entries for {jobs} jobs"
-        table = representation_table(scores(entries), config.tables.layout)
+        table = representation_table(
+            scores(entries), config.tables.layout, config.tables.representation
+        )
         path = _write_table(args.assets / SECTION, table)
         logger.info("done: representation table of batch %s -> %s", batch, path)
 
