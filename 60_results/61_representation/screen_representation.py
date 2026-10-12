@@ -272,6 +272,11 @@ REPRESENTATION_CAPTION = (
     "fold entry in bold gains on the pair's baseline at that model by more than the larger "
     "of the two deviations. The errors of every target form are measured in $M$ or $\\Dch$."
 )
+# The aligned layout's S columns print a fold entry compact, 1.96(2) for 1.96 +- 0.02.
+SPREAD_TEX: dict[TableLayout, str] = {
+    "small": "as its subscript",
+    "aligned": "in parentheses, in units of the mean's last digit",
+}
 MODEL_TEX = {"k-NN": "$k$-NN", "local RBF": "local RBF", "MLP": "MLP"}
 
 
@@ -283,14 +288,15 @@ def representation_table(
     """The Section 5.1 table in its shape: every pair in eight columns, the NS and the BH pairs
     as two such tables (split), or a row per pair and model with a column per representation
     (transposed)."""
+    caption = REPRESENTATION_CAPTION.replace(SPREAD_TEX["small"], SPREAD_TEX[layout])
     match shape:
         case "eight_columns":
-            return _eight_columns(found, layout, "representation", REPRESENTATION_CAPTION)
+            return _eight_columns(found, layout, "representation", caption)
         case "split":
             ns = [s for s in found if s.dataset == NEUTRON_STARS.dataset]
             bh = [s for s in found if s.dataset != NEUTRON_STARS.dataset]
             return _eight_columns(
-                ns, layout, "representation", f"Neutron stars. {REPRESENTATION_CAPTION}"
+                ns, layout, "representation", f"Neutron stars. {caption}"
             ) + _eight_columns(bh, layout, "representation-bh", "Black holes, as above.")
         case "transposed":
             return _transposed(found, layout)
@@ -299,7 +305,8 @@ def representation_table(
 
 
 def _transposed(found: Sequence[Score], layout: TableLayout) -> str:
-    """One row per pair and model, a column per representation, each cell test / folds."""
+    """One row per pair and model, a column per representation, each cell test / folds; a
+    cell is text in either layout, so the caption keeps the spread as the subscript."""
     by_key = {(s.dataset, s.target, s.representation, s.model): s for s in found}
     shown = [r for r in REPRESENTATION_TEX if any(key[2] == r for key in by_key)]
     rows = []

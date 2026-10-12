@@ -236,6 +236,13 @@ def test_a_negative_test_figure_is_typeset_with_a_minus_sign() -> None:
 
 
 @pytest.mark.view
+def test_aligned_caption_puts_the_deviation_in_parentheses() -> None:
+    found = [ns_mass("baseline", "MLP", 2.0, 0.1)]
+    caption = re.findall(r"\\caption\{(.*)\}\n", representation_table(found, "aligned"))[0]
+    assert ("in parentheses" in caption, "subscript" in caption) == (True, False)
+
+
+@pytest.mark.view
 def test_representation_table_transposed_lists_the_models_as_rows() -> None:
     found = [ns_mass("baseline", "k-NN", 2.0, 0.1), ns_mass("log10 M", "MLP", 2.5, 0.1)]
     table = representation_table(found, shape="transposed")
