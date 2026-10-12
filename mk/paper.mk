@@ -91,8 +91,8 @@ variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/s
 # $(VARIANTS)/tables/ (W-114). Per layout, a copy of the assets in $(TABLES_WORK)/<layout>/ gets
 # its tables rewritten with PAPER__TABLES__LAYOUT=<layout> -- the EDA, and the results tables
 # from their recorded batches, nothing fitted; the baseline table stays as make baseline wrote
-# it -- then the paper's sources and those assets, flat, compile one table a page; gs
-# rasterizes the pages. $(ASSETS) itself is never written.
+# it -- then the paper's sources and those assets, flat, compile one table a page; pdfcrop
+# trims each page to its table (W-125) and gs rasterizes it. $(ASSETS) itself is never written.
 TABLES_ENTRY  := 00_metadata/tables_entry.py
 TABLES_WORK   := $(WORK)/tables
 TABLE_LAYOUTS := small aligned
