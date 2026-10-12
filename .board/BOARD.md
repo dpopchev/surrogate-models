@@ -1,6 +1,6 @@
-# Board -- W-124-per-table-layouts
+# Board -- surrogate-models
 record: local
-open path: E-011 > W-124   | blocked: 0 | todo roots: 8 | done: 363 | pruned: 57
+open path: E-011   | blocked: 0 | todo roots: 8 | done: 364 | pruned: 57
 
 ## Tree
 
@@ -53,7 +53,7 @@ E-011         [doing]    Figures and tables picked from rendered variants, numbe
   W-115  issue  [done]     Two or three style presets on three figures -- T-276 [pruned]   [pruned: its check passes -q to make, which runs no test (E-011 finding); a 7-field Marks model cannot keep the paper preset byte-identical over 66 literals of about 22 distinct values; the developer chose scale factors (2026-10-12); re-filed as T-333], T-277 [pruned]   [pruned: its Action named no entry script or test for the cross-preset sheet; re-filed as T-334 at W-115's activation], T-319 [done], T-333 [done], T-334 [done]
   W-116  issue  [todo]     Every number the text cites is a macro -- T-278 [todo], T-279 [todo], T-280 [todo], T-281 [todo]
   W-122  bug    [done]     make compile keeps a figure a pick removed in build/paper/article.pdf   (filed during T-237) -- T-306 [done], T-307 [pruned]   [pruned: its Output build/paper/article.pdf is an untracked build file no commit carries, so the scope gate cannot close it (a brief defect at filing); its check was run and exited 0 -- make -W paper.toml families compile with the shipped picks, no undefined references -- and the 62_families assets match local/assets-baseline.sha]
-  W-124  issue  [doing]    Per-table layouts rendered to page images   (filed during T-322) -- T-326 [pruned]   [pruned: five layouts over four modules plus a baseline rebuild and the per-table rendering in one Task; re-filed at W-124's activation as T-337 (representation), T-338 (families, tuning) and T-339 (baseline, rendering)], T-327 [done], T-337 [done], T-338 [done], T-339 [done]
+  W-124  issue  [done]     Per-table layouts rendered to page images   (filed during T-322) -- T-326 [pruned]   [pruned: five layouts over four modules plus a baseline rebuild and the per-table rendering in one Task; re-filed at W-124's activation as T-337 (representation), T-338 (families, tuning) and T-339 (baseline, rendering)], T-327 [done], T-337 [done], T-338 [done], T-339 [done]
   W-125  issue  [done]     Table page images cropped to the table   (filed during T-328) -- T-329 [done], T-330 [done]
   W-126  bug    [done]     The aligned table layout overflows the text width   (filed during T-328) -- T-331 [done], T-332 [done]
   W-127  bug    [todo]     The aligned representation table mixes compact and subscript spreads   (filed during T-332) -- T-335 [todo], T-336 [todo]
@@ -738,7 +738,7 @@ flowchart TD
   E011 --> W122["W-122 bug done: make compile keeps a figure a pick removed in build/paper/article.pdf"]
   W122 --> T306["T-306 done: Rerun latexmk when the assembled sources change -> mk/paper.mk"]
   W122 --> T307["T-307 pruned: Recompile the paper with the shipped picks -> build/paper/article.pdf"]
-  E011 --> W124["W-124 issue doing: Per-table layouts rendered to page images"]
+  E011 --> W124["W-124 issue done: Per-table layouts rendered to page images"]
   W124 --> T326["T-326 pruned: Write the split and transposed results tables test-first -> screen_representation.py, screen_families.py, tune_survivors.py, fit_baseline.py"]
   W124 --> T327["T-327 done: Select the decisions tables layout by macro test-first -> 40_data_analysis/43_preprocessing/43_preprocessing.tex, preprocessing_numbers.py, paper.toml"]
   W124 --> T337["T-337 done: Write the split and transposed representation tables test-first -> 60_results/61_representation/screen_representation.py"]
@@ -775,8 +775,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E011,W124 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,W111,T262,T308,T309,T310,W112,T311,T312,T313,T314,W113,T315,T316,T317,T318,W114,T321,T325,T328,W115,T319,T333,T334,W122,T306,T327,T337,T338,T339,W125,T329,T330,W126,T331,T332 done
+  class E006,E009,E011 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,W111,T262,T308,T309,T310,W112,T311,T312,T313,T314,W113,T315,T316,T317,T318,W114,T321,T325,T328,W115,T319,T333,T334,W122,T306,W124,T327,T337,T338,T339,W125,T329,T330,W126,T331,T332 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W116,T278,T279,T280,T281,W127,T335,T336,W128,T340,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T260,T261,T263,T264,T265,T266,T267,T268,T269,T270,T271,T272,T273,T274,T275,T322,T323,T324,T276,T277,T307,T326 pruned
 ```
