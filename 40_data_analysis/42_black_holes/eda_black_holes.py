@@ -74,6 +74,8 @@ from shared.plots import (
     anchor_color,
     apply_style,
     colormap,
+    line_width,
+    mark_size,
     write_variant_sheet,
 )
 
@@ -472,14 +474,14 @@ def _univariate_continuous(
     return univariate_figure(table, SUMMARY_COLUMNS, LABELS, color, style.grid_values, variant)
 
 
-def _curve_lines(table: pd.DataFrame, y: str, cmap: Colormap) -> LineCollection:
+def _curve_lines(table: pd.DataFrame, style: PlotStyle, y: str, cmap: Colormap) -> LineCollection:
     """One line per beta curve of y against r_h, coloured by beta."""
     groups = [g for _, g in table.groupby(list(CURVE))]
     lines = LineCollection(
         [np.column_stack((g["r_h"], g[y])) for g in groups],
         array=np.array([g["beta"].iloc[0] for g in groups]),
         cmap=cmap,
-        linewidths=0.6,
+        linewidths=line_width(style, 0.6),
     )
     lines.set_rasterized(True)
     return lines
@@ -490,12 +492,13 @@ ZOOM_RH = (4.0, 5.0)
 ZOOM_M = (2.0, 2.5)
 
 
-def _gr_inset(ax: Axes, table: pd.DataFrame, cmap: Colormap) -> None:
+def _gr_inset(ax: Axes, table: pd.DataFrame, style: PlotStyle, cmap: Colormap) -> None:
     """Zoom on ZOOM_RH x ZOOM_M with the GR relation M = r_h/2 (G = c = 1) dashed."""
     inset = ax.inset_axes((0.55, 0.2, 0.42, 0.4))
-    inset.add_collection(_curve_lines(table, "M", cmap))
+    inset.add_collection(_curve_lines(table, style, "M", cmap))
     rh = np.linspace(*ZOOM_RH, 2)
-    inset.plot(rh, rh / 2, color="black", linestyle="--", linewidth=0.8, label="GR")
+    width = line_width(style, 0.8)
+    inset.plot(rh, rh / 2, color="black", linestyle="--", linewidth=width, label="GR")
     inset.set_xlim(*ZOOM_RH)
     inset.set_ylim(*ZOOM_M)
     inset.set_xticks(np.linspace(*ZOOM_RH, 3))
@@ -505,9 +508,9 @@ def _gr_inset(ax: Axes, table: pd.DataFrame, cmap: Colormap) -> None:
     ax.indicate_inset_zoom(inset, edgecolor="black")
 
 
-def _mass_lines(ax: Axes, table: pd.DataFrame, cmap: Colormap) -> LineCollection:
+def _mass_lines(ax: Axes, table: pd.DataFrame, style: PlotStyle, cmap: Colormap) -> LineCollection:
     """M against r_h on ax, one line per beta curve."""
-    lines = _curve_lines(table, "M", cmap)
+    lines = _curve_lines(table, style, "M", cmap)
     ax.add_collection(lines)
     ax.autoscale()
     ax.set_xlabel(LABELS["r_h"])
@@ -515,12 +518,15 @@ def _mass_lines(ax: Axes, table: pd.DataFrame, cmap: Colormap) -> LineCollection
     return lines
 
 
-def _departure_lines(ax: Axes, table: pd.DataFrame, cmap: Colormap) -> LineCollection:
+def _departure_lines(
+    ax: Axes, table: pd.DataFrame, style: PlotStyle, cmap: Colormap
+) -> LineCollection:
     """M - r_h/2 against r_h on ax, one line per beta curve; the GR relation is the dashed zero."""
-    lines = _curve_lines(table.assign(departure=table["M"] - table["r_h"] / 2), "departure", cmap)
+    departed = table.assign(departure=table["M"] - table["r_h"] / 2)
+    lines = _curve_lines(departed, style, "departure", cmap)
     ax.add_collection(lines)
     ax.autoscale()
-    ax.axhline(0.0, color="black", linestyle="--", linewidth=0.8, label="GR")
+    ax.axhline(0.0, color="black", linestyle="--", linewidth=line_width(style, 0.8), label="GR")
     ax.set_xlabel(LABELS["r_h"])
     ax.set_ylabel(f"{LABELS['M']} $-$ {LABELS['r_h']}$/2$")
     return lines
@@ -533,19 +539,19 @@ def _mass_radius(table: pd.DataFrame, style: PlotStyle, variant: BhMassRadiusVar
     match variant:
         case "inset":
             fig, ax = plt.subplots(figsize=text_width_size(0.55), layout="constrained")
-            lines = _mass_lines(ax, table, cmap)
-            _gr_inset(ax, table, cmap)
+            lines = _mass_lines(ax, table, style, cmap)
+            _gr_inset(ax, table, style, cmap)
             fig.colorbar(lines, ax=ax, label=LABELS["beta"])
         case "departure":
             fig, ax = plt.subplots(figsize=text_width_size(0.55), layout="constrained")
-            lines = _departure_lines(ax, table, cmap)
+            lines = _departure_lines(ax, table, style, cmap)
             fig.colorbar(lines, ax=ax, label=LABELS["beta"])
         case "both":
             fig, (left, right) = plt.subplots(
                 1, 2, figsize=text_width_size(0.45), layout="constrained"
             )
-            _mass_lines(left, table, cmap)
-            lines = _departure_lines(right, table, cmap)
+            _mass_lines(left, table, style, cmap)
+            lines = _departure_lines(right, table, style, cmap)
             fig.colorbar(lines, ax=[left, right], label=LABELS["beta"])
         case _:
             assert_never(variant)
@@ -565,7 +571,7 @@ def _charge_target(table: pd.DataFrame, style: PlotStyle, variant: BhChargeTarge
                 table["log10_D"],
                 c=table["beta"],
                 cmap=colormap(style.black_holes.beta_cmap),
-                s=0.2,
+                s=mark_size(style, 0.2),
                 linewidths=0,
                 rasterized=True,
             )
@@ -587,7 +593,7 @@ def _charge_target_pair(table: pd.DataFrame, style: PlotStyle) -> Figure:
             table[target],
             c=table["beta"],
             cmap=cmap,
-            s=0.2,
+            s=mark_size(style, 0.2),
             linewidths=0,
             rasterized=True,
         )
@@ -616,7 +622,7 @@ def _existence_edge(
                 [start.rh_min for start in found.starts],
                 color=anchor_color(style, "black_holes"),
                 marker="o",
-                markersize=2,
+                markersize=mark_size(style, 2),
             )
             ax.set_xlabel(LABELS["beta"])
             ax.set_ylabel(f"{LABELS['r_h']}$_{{,\\min}}$")
@@ -637,8 +643,14 @@ def _existence_segments(table: pd.DataFrame, style: PlotStyle) -> Figure:
     ranges = table.groupby("beta")["r_h"].agg(["min", "max"])
     cmap = colormap(style.black_holes.beta_cmap)
     shade = (ranges.index - ranges.index.min()) / max(np.ptp(ranges.index), 1e-12)
-    ax.hlines(ranges.index, ranges["min"], ranges["max"], colors=cmap(shade), linewidth=1.2)
-    ax.scatter(ranges["min"], ranges.index, color=cmap(shade), s=6, zorder=3)
+    ax.hlines(
+        ranges.index,
+        ranges["min"],
+        ranges["max"],
+        colors=cmap(shade),
+        linewidth=line_width(style, 1.2),
+    )
+    ax.scatter(ranges["min"], ranges.index, color=cmap(shade), s=mark_size(style, 6), zorder=3)
     ax.set_xlabel(LABELS["r_h"])
     ax.set_ylabel(LABELS["beta"])
     return fig

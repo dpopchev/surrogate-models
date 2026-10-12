@@ -80,6 +80,9 @@ from shared.plots import (
     apply_style,
     colormap,
     figure_size,
+    line_width,
+    mark_alpha,
+    mark_size,
     write_variant_sheet,
 )
 from shared.runs import LedgerEntry, RunMetadata, Setting
@@ -464,7 +467,12 @@ def history_figure(
             color = palette[job.candidate.family]
             numbers = [p.number for p in trials if p.figures is not None]
             figures = [p.figures for p in trials if p.figures is not None]
-            dots = {"linestyle": "", "marker": "o", "markersize": 2.5, "color": color}
+            dots = {
+                "linestyle": "",
+                "marker": "o",
+                "markersize": mark_size(style, 2.5),
+                "color": color,
+            }
             dots["alpha"] = 0.5
             best = {"color": color}
             best["linestyle"] = "--" if job.candidate.unit == "curve-wise" else "-"
@@ -488,7 +496,7 @@ def history_figure(
                     [0.03] * len(walls),
                     linestyle="",
                     marker="x",
-                    markersize=5,
+                    markersize=mark_size(style, 5),
                     color=color,
                     transform=axes.get_xaxis_transform(),
                 )
@@ -575,8 +583,8 @@ def ranges_figure(
                 [p.figures],
                 linestyle="",
                 marker=marker[p.job.candidate.unit],
-                markersize=2.5,
-                alpha=0.6,
+                markersize=mark_size(style, 2.5),
+                alpha=mark_alpha(style, 0.6),
                 color=colors[(p.job.dataset, p.job.target)],
             )
         axes.set_xlabel(name)
@@ -592,7 +600,7 @@ def ranges_figure(
     for axes, distribution in ranged:
         ends = range_ends(distribution)
         for end in (ends.low, ends.high):
-            axes.axvline(end, color="grey", linestyle="--", linewidth=0.8)
+            axes.axvline(end, color="grey", linestyle="--", linewidth=line_width(style, 0.8))
     if network_axes is None:
         _ranges_legend(figure, pairs, colors, wall=False)
         return figure
@@ -603,7 +611,7 @@ def ranges_figure(
         [p.params["lr"] for p in ran],
         c=[p.figures for p in ran],
         cmap="viridis",
-        s=10,
+        s=mark_size(style, 10),
     )
     walls = [p for p in network if p.figures is None]
     network_axes.plot(
@@ -611,7 +619,7 @@ def ranges_figure(
         [p.params["lr"] for p in walls],
         linestyle="",
         marker="x",
-        markersize=4,
+        markersize=mark_size(style, 4),
         color="black",
     )
     network_axes.set_xscale("log")

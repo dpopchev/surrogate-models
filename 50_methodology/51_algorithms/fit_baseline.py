@@ -77,6 +77,9 @@ from shared.plots import (
     PlotStyle,
     anchor_color,
     apply_style,
+    line_width,
+    mark_alpha,
+    mark_size,
     write_variant_sheet,
 )
 from shared.progress import duration_text
@@ -523,12 +526,18 @@ def parity(fit: Predictions, style: PlotStyle) -> Figure:
     """Predicted against true mass on the test curves, with the y = x line."""
     side = 0.5 * float(plt.rcParams["figure.figsize"][0])
     figure, axes = plt.subplots(figsize=(side, side), layout="constrained")
-    axes.scatter(fit.y_true, fit.y_pred, s=2, alpha=0.3, color=anchor_color(style, "neutron_stars"))
+    axes.scatter(
+        fit.y_true,
+        fit.y_pred,
+        s=mark_size(style, 2),
+        alpha=mark_alpha(style, 0.3),
+        color=anchor_color(style, "neutron_stars"),
+    )
     span = [
         float(min(fit.y_true.min(), fit.y_pred.min())),
         float(max(fit.y_true.max(), fit.y_pred.max())),
     ]
-    axes.plot(span, span, color="black", linestyle="--", linewidth=0.8)
+    axes.plot(span, span, color="black", linestyle="--", linewidth=line_width(style, 0.8))
     axes.set_xlabel(f"true {SYMBOLS['M']} ({SYMBOLS['Msun']})")
     axes.set_ylabel(f"predicted {SYMBOLS['M']} ({SYMBOLS['Msun']})")
     axes.set_aspect("equal")
@@ -547,12 +556,13 @@ def _parity_with_residuals(found: Predictions, style: PlotStyle) -> Figure:
         layout="constrained",
     )
     color = anchor_color(style, "neutron_stars")
-    top.scatter(found.y_true, found.y_pred, s=2, alpha=0.3, color=color)
+    size, alpha, width = mark_size(style, 2), mark_alpha(style, 0.3), line_width(style, 0.8)
+    top.scatter(found.y_true, found.y_pred, s=size, alpha=alpha, color=color)
     span = [float(found.y_true.min()), float(found.y_true.max())]
-    top.plot(span, span, color="black", linestyle="--", linewidth=0.8)
+    top.plot(span, span, color="black", linestyle="--", linewidth=width)
     top.set_ylabel(f"predicted {SYMBOLS['M']} ({SYMBOLS['Msun']})")
-    bottom.scatter(found.y_true, found.y_pred - found.y_true, s=2, alpha=0.3, color=color)
-    bottom.axhline(0.0, color="black", linestyle="--", linewidth=0.8)
+    bottom.scatter(found.y_true, found.y_pred - found.y_true, s=size, alpha=alpha, color=color)
+    bottom.axhline(0.0, color="black", linestyle="--", linewidth=width)
     bottom.set_xlabel(f"true {SYMBOLS['M']} ({SYMBOLS['Msun']})")
     bottom.set_ylabel("residual")
     return figure
@@ -573,10 +583,14 @@ def _parity_all_pairs(found: Mapping[tuple[str, str], Predictions], style: PlotS
         for column, target in enumerate(TARGETS):
             axes, pair = grid[row, column], found[dataset, target]
             axes.scatter(
-                pair.y_true, pair.y_pred, s=2, alpha=0.3, color=anchor_color(style, dataset)
+                pair.y_true,
+                pair.y_pred,
+                s=mark_size(style, 2),
+                alpha=mark_alpha(style, 0.3),
+                color=anchor_color(style, dataset),
             )
             span = [float(pair.y_true.min()), float(pair.y_true.max())]
-            axes.plot(span, span, color="black", linestyle="--", linewidth=0.8)
+            axes.plot(span, span, color="black", linestyle="--", linewidth=line_width(style, 0.8))
             symbol, unit = PARITY_AXIS[target]
             label = SYMBOLS[symbol] + (f" ({SYMBOLS[unit]})" if unit else "")
             axes.set_xlabel(f"true {label}")

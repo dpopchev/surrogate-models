@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
-from pydantic import BaseModel, ConfigDict, PositiveInt
+from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, PositiveInt, model_validator
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,18 @@ class BlackHoleColors(BaseModel):
     anchor: int = 1
 
 
+class Marks(BaseModel):
+    """One preset of the global look: the factors every figure's font size, mark sizes, line
+    widths and alphas are scaled by; the paper preset is all 1.0, the figures as drawn."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    font_scale: PositiveFloat = 1.0
+    mark_scale: PositiveFloat = 1.0
+    line_scale: PositiveFloat = 1.0
+    alpha_scale: PositiveFloat = 1.0
+
+
 class PlotStyle(BaseModel):
     """The look every figure shares: seaborn context and palette, LaTeX text, article width."""
 
@@ -76,6 +88,20 @@ class PlotStyle(BaseModel):
     live_dpi: PositiveInt = 100
     neutron_stars: NeutronStarColors = NeutronStarColors()
     black_holes: BlackHoleColors = BlackHoleColors()
+    # The named presets of [plot.presets.<name>] and the one the figures are drawn under (W-115).
+    presets: Mapping[str, Marks] = Field(default_factory=lambda: {"paper": Marks()})
+    preset: str = "paper"
+
+    @model_validator(mode="after")
+    def _preset_is_named(self) -> PlotStyle:
+        if self.preset not in self.presets:
+            raise ValueError(f"preset {self.preset!r} is none of {sorted(self.presets)}")
+        return self
+
+    @property
+    def marks(self) -> Marks:
+        """The active preset."""
+        return self.presets[self.preset]
 
 
 # Every symbol a figure or a table names, by column name, in the paper's notation
@@ -174,7 +200,7 @@ def apply_style(style: PlotStyle, notation: str = "") -> None:
             "text.usetex": style.usetex,
             "text.latex.preamble": notation,
             "font.family": "serif",
-            "font.size": style.font_size,
+            "font.size": style.font_size * style.marks.font_scale,
             "figure.figsize": (width, width * style.aspect),
         }
     )
@@ -238,3 +264,30 @@ def anchor_color(style: PlotStyle, dataset: Dataset) -> tuple[float, float, floa
         case _:
             assert_never(dataset)
     return sns.color_palette(style.palette)[index]
+
+
+def mark_size(style: PlotStyle, size: float) -> float:
+    """A figure's marker size under the active preset.
+
+    >>> mark_size(PlotStyle(presets={"big": Marks(mark_scale=2.0)}, preset="big"), 1.5)
+    3.0
+    """
+    return size * style.marks.mark_scale
+
+
+def line_width(style: PlotStyle, width: float) -> float:
+    """A figure's line width under the active preset.
+
+    >>> line_width(PlotStyle(presets={"thin": Marks(line_scale=0.5)}, preset="thin"), 0.8)
+    0.4
+    """
+    return width * style.marks.line_scale
+
+
+def mark_alpha(style: PlotStyle, alpha: float) -> float:
+    """A figure's alpha under the active preset, never above 1.
+
+    >>> mark_alpha(PlotStyle(presets={"bold": Marks(alpha_scale=4.0)}, preset="bold"), 0.3)
+    1.0
+    """
+    return min(1.0, alpha * style.marks.alpha_scale)

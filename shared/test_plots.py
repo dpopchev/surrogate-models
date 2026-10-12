@@ -17,6 +17,7 @@ from pydantic import ValidationError
 from shared.plots import (
     SYMBOLS,
     BlackHoleColors,
+    Marks,
     PlotStyle,
     anchor_color,
     apply_style,
@@ -169,6 +170,18 @@ def test_plot_style_reads_the_grid_values_and_diagnostics_dpi() -> None:
     style = PlotStyle.model_validate({**keys, "live_every": 5, "live_dpi": 100})
     read = (style.grid_values, style.univariate_grid_values, style.diagnostics_dpi)
     assert (*read, style.live_every, style.live_dpi) == (250, 60, 150, 5, 100)
+
+
+@pytest.mark.model
+def test_a_preset_scales_the_marks() -> None:
+    style = PlotStyle(presets={"large": Marks(mark_scale=2.0)}, preset="large")
+    assert (style.marks.mark_scale, PlotStyle().marks) == (2.0, Marks())
+
+
+@pytest.mark.model
+def test_an_unknown_preset_is_refused() -> None:
+    with pytest.raises(ValidationError, match="preset"):
+        PlotStyle(preset="none")
 
 
 @pytest.mark.model

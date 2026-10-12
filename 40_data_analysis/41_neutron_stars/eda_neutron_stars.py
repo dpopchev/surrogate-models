@@ -81,6 +81,9 @@ from shared.plots import (
     anchor_color,
     apply_style,
     colormap,
+    line_width,
+    mark_alpha,
+    mark_size,
     write_variant_sheet,
 )
 
@@ -562,7 +565,7 @@ def _distance_to_peak(ax: Axes, table: pd.DataFrame, style: PlotStyle, window: f
     """Rows' distance to their curve's M_max on ax, the pile-up window dashed."""
     peak = table.groupby(list(CURVE))["M"].transform("max")
     ax.hist(peak - table["M"], bins=40, color=anchor_color(style, "neutron_stars"))
-    ax.axvline(window, color="black", linestyle="--", linewidth=0.8)
+    ax.axvline(window, color="black", linestyle="--", linewidth=line_width(style, 0.8))
     ax.set_xlabel(SYMBOLS["M_max_minus_M"])
     ax.set_ylabel("rows")
 
@@ -581,7 +584,11 @@ def _peak_grid(
     )
     if contours:
         lines = ax.contour(
-            maxima.columns, maxima.index, maxima.to_numpy(), colors="white", linewidths=0.6
+            maxima.columns,
+            maxima.index,
+            maxima.to_numpy(),
+            colors="white",
+            linewidths=line_width(style, 0.6),
         )
         ax.clabel(lines, fontsize="small", fmt="%.2f")
     ax.set_xlabel(LABELS["beta"])
@@ -618,7 +625,12 @@ CHARGE_LABELS = SYMBOLS.of("log10_D", "log10_D_over_M")
 
 
 def _charge_row(
-    fig: Figure, axes: np.ndarray, table: pd.DataFrame, column: str, cmap: Colormap
+    fig: Figure,
+    axes: np.ndarray,
+    table: pd.DataFrame,
+    style: PlotStyle,
+    column: str,
+    cmap: Colormap,
 ) -> None:
     """One row of the charge-target figure: both targets against M, coloured by column."""
     scatters = [
@@ -627,7 +639,7 @@ def _charge_row(
             table[target],
             c=table[column],
             cmap=cmap,
-            s=0.2,
+            s=mark_size(style, 0.2),
             linewidths=0,
             rasterized=True,
         )
@@ -639,7 +651,7 @@ def _charge_row(
 
 
 def _curve_collection(
-    table: pd.DataFrame, x: str, y: str, column: str, cmap: Colormap
+    table: pd.DataFrame, style: PlotStyle, x: str, y: str, column: str, cmap: Colormap
 ) -> LineCollection:
     """One line per (beta, lambda) curve of y against x, coloured by column."""
     groups = [g for _, g in table.groupby(list(CURVE))]
@@ -647,19 +659,24 @@ def _curve_collection(
         [np.column_stack((g[x], g[y])) for g in groups],
         array=np.array([g[column].iloc[0] for g in groups]),
         cmap=cmap,
-        linewidths=0.3,
+        linewidths=line_width(style, 0.3),
     )
     lines.set_rasterized(True)
     return lines
 
 
 def _charge_lines_row(
-    fig: Figure, axes: np.ndarray, table: pd.DataFrame, column: str, cmap: Colormap
+    fig: Figure,
+    axes: np.ndarray,
+    table: pd.DataFrame,
+    style: PlotStyle,
+    column: str,
+    cmap: Colormap,
 ) -> None:
     """One row of the charge-target figure as one line per curve, coloured by column."""
     collections = []
     for ax, (target, label) in zip(axes, CHARGE_LABELS.items(), strict=True):
-        collections.append(_curve_collection(table, "M", target, column, cmap))
+        collections.append(_curve_collection(table, style, "M", target, column, cmap))
         ax.add_collection(collections[-1])
         ax.autoscale()
         ax.set_ylabel(label)
@@ -675,26 +692,26 @@ def _charge_target(table: pd.DataFrame, style: PlotStyle, variant: NsChargeTarge
             fig, axes = plt.subplots(
                 2, 2, figsize=text_width_size(0.9), sharex=True, layout="constrained"
             )
-            _charge_row(fig, axes[0, :], table, "lambda", lam)
-            _charge_row(fig, axes[1, :], table, "beta", beta)
+            _charge_row(fig, axes[0, :], table, style, "lambda", lam)
+            _charge_row(fig, axes[1, :], table, style, "beta", beta)
         case "lines":
             fig, axes = plt.subplots(
                 2, 2, figsize=text_width_size(0.9), sharex=True, layout="constrained"
             )
-            _charge_lines_row(fig, axes[0, :], table, "lambda", lam)
-            _charge_lines_row(fig, axes[1, :], table, "beta", beta)
+            _charge_lines_row(fig, axes[0, :], table, style, "lambda", lam)
+            _charge_lines_row(fig, axes[1, :], table, style, "beta", beta)
         case "lambda_inset":
             fig, axes = plt.subplots(
                 1, 2, figsize=text_width_size(0.45), squeeze=False, layout="constrained"
             )
-            _charge_row(fig, axes[0, :], table, "lambda", lam)
+            _charge_row(fig, axes[0, :], table, style, "lambda", lam)
             inset = axes[0, 1].inset_axes((0.58, 0.06, 0.38, 0.38))
             inset.scatter(
                 table["M"],
                 table["log10_D_over_M"],
                 c=table["beta"],
                 cmap=beta,
-                s=0.1,
+                s=mark_size(style, 0.1),
                 linewidths=0,
                 rasterized=True,
             )
@@ -709,19 +726,28 @@ def _charge_target(table: pd.DataFrame, style: PlotStyle, variant: NsChargeTarge
     return fig
 
 
-def _density_panel(fig: Figure, ax: Axes, table: pd.DataFrame, column: str, cmap: Colormap) -> None:
+def _density_panel(
+    fig: Figure, ax: Axes, table: pd.DataFrame, style: PlotStyle, column: str, cmap: Colormap
+) -> None:
     """M against log10 rho_c on ax, one line per curve coloured by column, last points marked."""
     groups = [g for _, g in table.groupby(list(CURVE))]
     lines = LineCollection(
         [np.column_stack((np.log10(g["rho_c"]), g["M"])) for g in groups],
         array=np.array([g[column].iloc[0] for g in groups]),
         cmap=cmap,
-        linewidths=0.3,
+        linewidths=line_width(style, 0.3),
     )
     lines.set_rasterized(True)
     ax.add_collection(lines)
     ends = pd.DataFrame([g.iloc[-1] for g in groups])
-    ax.scatter(np.log10(ends["rho_c"]), ends["M"], c=ends[column], cmap=cmap, s=1.5, zorder=3)
+    ax.scatter(
+        np.log10(ends["rho_c"]),
+        ends["M"],
+        c=ends[column],
+        cmap=cmap,
+        s=mark_size(style, 1.5),
+        zorder=3,
+    )
     ax.autoscale()
     ax.set_xlabel(SYMBOLS["log10_rho_c"])
     ax.set_ylabel(LABELS["M"])
@@ -735,16 +761,16 @@ def _mass_density(table: pd.DataFrame, style: PlotStyle, variant: NsMassDensityV
     match variant:
         case "by_lambda":
             fig, ax = plt.subplots(figsize=text_width_size(0.62), layout="constrained")
-            _density_panel(fig, ax, table, "lambda", lam)
+            _density_panel(fig, ax, table, style, "lambda", lam)
         case "by_beta":
             fig, ax = plt.subplots(figsize=text_width_size(0.62), layout="constrained")
-            _density_panel(fig, ax, table, "beta", beta)
+            _density_panel(fig, ax, table, style, "beta", beta)
         case "two_panels":
             fig, (left, right) = plt.subplots(
                 1, 2, figsize=text_width_size(0.45), sharey=True, layout="constrained"
             )
-            _density_panel(fig, left, table, "lambda", lam)
-            _density_panel(fig, right, table, "beta", beta)
+            _density_panel(fig, left, table, style, "lambda", lam)
+            _density_panel(fig, right, table, style, "beta", beta)
         case _:
             assert_never(variant)
     return fig
@@ -772,8 +798,9 @@ def _curve_adjacency(table: pd.DataFrame, style: PlotStyle) -> Figure:
     edges = np.geomspace(
         min(found.within.min(), found.across.min()), max(found.within.max(), found.across.max()), 50
     )
-    ax.hist(found.within, bins=edges, color=cmap(0.8), alpha=0.8, label="own curve")
-    ax.hist(found.across, bins=edges, color=cmap(0.35), alpha=0.8, label="other curve")
+    alpha = mark_alpha(style, 0.8)
+    ax.hist(found.within, bins=edges, color=cmap(0.8), alpha=alpha, label="own curve")
+    ax.hist(found.across, bins=edges, color=cmap(0.35), alpha=alpha, label="other curve")
     ax.set_xscale("log")
     ax.set_xlabel("nearest-neighbour distance (standardized)")
     ax.set_ylabel("rows")

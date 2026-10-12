@@ -88,6 +88,9 @@ from shared.plots import (
     apply_style,
     colormap,
     figure_size,
+    line_width,
+    mark_alpha,
+    mark_size,
     write_variant_sheet,
 )
 from shared.runs import RunMetadata, Setting, entry_from_json
@@ -354,25 +357,26 @@ def parity_figure(
                     axes.scatter(
                         series.y_true,
                         series.y_pred,
-                        s=2,
-                        alpha=0.4,
+                        s=mark_size(style, 2),
+                        alpha=mark_alpha(style, 0.4),
                         color=color,
                         label=series.label,
                     )
                 values = np.concatenate([np.r_[s.y_true, s.y_pred] for s in panel.series])
                 span = [float(values.min()), float(values.max())]
-                axes.plot(span, span, color="black", linestyle="--", linewidth=0.8)
+                width = line_width(style, 0.8)
+                axes.plot(span, span, color="black", linestyle="--", linewidth=width)
                 axes.set_ylabel(f"predicted {panel.target}")
                 # The points follow the diagonal, so the lower right corner stays empty.
                 axes.legend(fontsize="x-small", markerscale=3, loc="lower right")
             case "residual":
-                axes.axhline(0.0, color="black", linestyle="--", linewidth=0.8)
+                axes.axhline(0.0, color="black", linestyle="--", linewidth=line_width(style, 0.8))
                 for color, series in zip(colors, panel.series, strict=True):
                     axes.scatter(
                         series.y_true,
                         series.y_pred - series.y_true,
-                        s=2,
-                        alpha=0.4,
+                        s=mark_size(style, 2),
+                        alpha=mark_alpha(style, 0.4),
                         color=color,
                         label=series.label,
                     )
@@ -395,8 +399,9 @@ def _error_profiles(panels: Sequence[Panel], style: PlotStyle) -> Figure:
     for axes, panel in zip(grid.flat, panels, strict=False):
         for color, series in zip(_colors(panel, style), panel.series, strict=True):
             found = profile(series.y_true, series.errors, PROFILE_BINS)
-            axes.plot(found.centers, found.median, color=color, linewidth=1.0, label=series.label)
-            axes.plot(found.centers, found.p95, color=color, linewidth=1.0, linestyle="--")
+            width = line_width(style, 1.0)
+            axes.plot(found.centers, found.median, color=color, linewidth=width, label=series.label)
+            axes.plot(found.centers, found.p95, color=color, linewidth=width, linestyle="--")
         axes.set_yscale("log")
         axes.set_title(panel.title, fontsize="small")
         axes.set_xlabel(f"true {panel.target}")
@@ -435,7 +440,12 @@ def error_figure(
             match variant:
                 case "scatter_profiles":
                     axes.scatter(
-                        series.y_true, series.errors, s=1, alpha=0.15, color=color, rasterized=True
+                        series.y_true,
+                        series.errors,
+                        s=mark_size(style, 1),
+                        alpha=mark_alpha(style, 0.15),
+                        color=color,
+                        rasterized=True,
                     )
                 case "hexbin":
                     # An exact prediction has no logarithm: it is drawn at the floor.
@@ -451,8 +461,9 @@ def error_figure(
                 case _:
                     assert_never(variant)
             found = profile(series.y_true, series.errors, PROFILE_BINS)
-            axes.plot(found.centers, found.median, color="black", linewidth=1.0)
-            axes.plot(found.centers, found.p95, color="black", linewidth=1.0, linestyle="--")
+            width = line_width(style, 1.0)
+            axes.plot(found.centers, found.median, color="black", linewidth=width)
+            axes.plot(found.centers, found.p95, color="black", linewidth=width, linestyle="--")
             axes.set_yscale("log")
             axes.set_title(f"{panel.title}: {series.label}", fontsize="small")
             axes.set_xlabel(f"true {panel.target}")
@@ -489,8 +500,10 @@ def _scaling_marker_size(paths: Sequence[Trajectory], style: PlotStyle) -> Figur
         for path in (p for p in paths if (p.dataset, p.target) == (dataset, target)):
             color = palette[path.candidate.family]
             dashes = "--" if path.candidate.unit == "curve-wise" else "-"
-            axes.plot(path.rows, path.folds, color=color, linestyle=dashes, linewidth=0.8)
-            sizes = 6.0 * (1.0 + np.log10(np.maximum(np.array(path.seconds), 1e-3) / 1e-3))
+            width = line_width(style, 0.8)
+            axes.plot(path.rows, path.folds, color=color, linestyle=dashes, linewidth=width)
+            seconds = np.log10(np.maximum(np.array(path.seconds), 1e-3) / 1e-3)
+            sizes = mark_size(style, 6.0) * (1.0 + seconds)
             axes.scatter(path.rows, path.folds, s=sizes, color=color, zorder=3)
         axes.set_xscale("log")
         axes.set_title(f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}")
@@ -527,7 +540,7 @@ def _scaling_small_multiples(paths: Sequence[Trajectory], style: PlotStyle) -> F
                 color=palette[path.dataset, path.target],
                 linestyle="--" if path.candidate.unit == "curve-wise" else "-",
                 marker="o",
-                markersize=3,
+                markersize=mark_size(style, 3),
             )
         axes.set_xscale("log")
         axes.set_title(family, fontsize="small")
@@ -584,13 +597,17 @@ def scaling_figure(
                 "color": palette[path.candidate.family],
                 "linestyle": "--" if path.candidate.unit == "curve-wise" else "-",
                 "marker": "o",
-                "markersize": 3,
+                "markersize": mark_size(style, 3),
             }
             figures_axes.plot(path.rows, path.folds, **line)
             seconds_axes.plot(path.rows, path.seconds, **line)
             for rows in path.walls:
                 seconds_axes.plot(
-                    [rows], [wall_seconds], marker="x", markersize=7, color=line["color"]
+                    [rows],
+                    [wall_seconds],
+                    marker="x",
+                    markersize=mark_size(style, 7),
+                    color=line["color"],
                 )
         title = f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}"
         figures_axes.set_ylabel(f"{title}: folds' figures")

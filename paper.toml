@@ -15,6 +15,21 @@ univariate_grid_values = 60  # the same for the univariate histograms (rho_c's 2
 diagnostics_dpi = 150     # the baseline's run diagnostics, for the screen
 live_every = 5            # the live loss curve is redrawn every this many epochs
 live_dpi = 100            # at this resolution
+preset = "paper"          # the [plot.presets.<name>] the figures are drawn under: paper | light | large
+
+# Each preset scales every figure's font size, mark sizes, line widths and alphas (alpha capped
+# at 1); paper is the figures as drawn. make variants renders three figures under each (W-115).
+[plot.presets.paper]
+
+[plot.presets.light]
+mark_scale = 0.6
+line_scale = 0.7
+alpha_scale = 0.6
+
+[plot.presets.large]
+font_scale = 1.0909       # 12pt over the 11pt base
+mark_scale = 1.5
+line_scale = 1.5
 
 [plot.neutron_stars]      # cool colormaps: crest | mako | Blues | GnBu | PuBu
 lambda_cmap = "crest"
