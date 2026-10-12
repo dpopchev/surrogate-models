@@ -22,12 +22,13 @@
 - 2026-10-11 W-091: standing: --doctest-modules imports each conftest.py as conftest -> a per-folder conftest needs --ignore=conftest.py --ignore-glob=*/conftest.py supersedes: W-091#1
 - 2026-10-11 W-117: standing: every asset writer iterates in a fixed order -> local/assets-baseline.sha (50 files) is seed-independent since W-117 supersedes: W-117#1
 - 2026-10-12 E-009: standing: folder NN is paper Section N-1 (unnumbered abstract) -> code names the compiled number (T-116) supersedes: E-009#1
-- 2026-10-12 E-011: fact: T-278 to T-280 checks pass -q to make; a pick that removes a figure must not leave its ref dangling (developer, 2026-10-12: guard it) -> at W-116's activation they are re-filed with a Task that guards each pickable figure's ref supersedes: E-011#2, E-011#4
+- 2026-10-12 E-011: fact: T-279/T-280 re-filed as T-345/T-346 at the W-116 split -> the ref guard is T-344 supersedes: E-011#6
 - 2026-10-12 E-011: standing: the paper review is a consistency review (text against figures, tables and code) -> a prose pass is a new root if wanted (developer, 2026-10-10) supersedes: E-011#1
 - 2026-10-12 T-200: standing: BH p95 is its worst of 3 test curves (pointwise RBF: M flat 5e-5 vs 1e-7; D 1e-3 vs 1e-5); BH curve-wise error arcs between the 8 knots -> E-007 tunes the knots supersedes: T-200#1
 - 2026-10-12 W-068: standing: batch 01a11d49, folds/test vs ceiling: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure supersedes: W-068#3, T-135#2, T-135#3
 - 2026-10-12 W-076: standing: across-curve p95 ceilings: NS M 4.1 figures (1.36e-4 M_sun at the median 1.75, 1.70e-4 at M_max 2.19), NS D 2.4 (1.56e-3 dex); BH M 7.1 (3.05e-7 M_sun at 3.58), D 6.0 (4.40e-7 dex), at the existence edge -> the E-006 target per pair supersedes: W-064#1, W-076#1
-- 2026-10-12 W-128: T-340: fact: a LaTeX log never writes '<file>.tex: Overfull' (the box follows the file's open paren), so T-340's grep check prints 0 on main too -> the evidence is the Overfull count, 10 on main to 9, its 113.96pt box gone
+- 2026-10-12 W-128: fact: T-340's check could not fail (LaTeX logs no '<file>.tex: Overfull') -> its evidence is the Overfull count, 10 to 9 supersedes: W-128#1
+- 2026-10-12 W-131: T-349: fact: in the journal curve-wise k-NN's knots carry 0.04 of the variance (k 0.96), and 11 trials reach 250+ units (unwalled 282x5, 407x2) -> T-343 rewords 63_precision.tex's every-curve-wise and nine-of-ten claims
 - 2026-10-12 W-132: fact: 00_metadata/paper_knobs.py keeps a third family-tag map, SPACE_TAG, with the two networks as Net (T-348) -> W-132 moves it beside FAMILY_TAG too
 
 ## Open questions
