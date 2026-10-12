@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-011   | blocked: 0 | todo roots: 10 | done: 369 | pruned: 57
+open path: E-011 > W-116 > T-278   | blocked: 0 | todo roots: 10 | done: 369 | pruned: 60
 
 ## Tree
 
@@ -51,13 +51,14 @@ E-011         [doing]    Figures and tables picked from rendered variants, numbe
   W-113  issue  [done]     Section 4.1 and 5 figure variants -- T-268 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check], T-269 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check], T-270 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check], T-271 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check], T-315 [done], T-316 [done], T-317 [done], T-318 [done]
   W-114  issue  [done]     Table layouts rendered to page images -- T-272 [pruned]   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name the files it touches; the plan regenerated the table assets in build/assets with other layouts (they must stay the paper's) and a top-level [tables] block fails missing_section_folders; re-filed as T-321 to T-324 with a workable plan], T-273 [pruned]   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name the files it touches; the plan regenerated the table assets in build/assets with other layouts (they must stay the paper's) and a top-level [tables] block fails missing_section_folders; re-filed as T-321 to T-324 with a workable plan], T-274 [pruned]   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name the files it touches; the plan regenerated the table assets in build/assets with other layouts (they must stay the paper's) and a top-level [tables] block fails missing_section_folders; re-filed as T-321 to T-324 with a workable plan], T-275 [pruned]   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name every file it touches; re-filed as T-324], T-321 [done], T-322 [pruned]   [pruned: its check needs the aligned layout to compile, which fails on a T-321 defect: _aligned_line in shared/eda.py splits header cells on ' & ', so the representation header ' & & Test & ...' loses a cell and Test reaches an S column unbraced (siunitx: Invalid number 'e'); the small layout rendered all 13 tables; re-filed as T-325 (the fix) and T-326 (this brief, unchanged) (developer, 2026-10-12)], T-323 [pruned]   [pruned: moved to W-124 at W-114's split (V22: T-325 took its slot; developer, 2026-10-12)], T-324 [pruned]   [pruned: moved to W-124 at W-114's split (V22: T-325 took its slot; developer, 2026-10-12)], T-325 [done], T-328 [done]
   W-115  issue  [done]     Two or three style presets on three figures -- T-276 [pruned]   [pruned: its check passes -q to make, which runs no test (E-011 finding); a 7-field Marks model cannot keep the paper preset byte-identical over 66 literals of about 22 distinct values; the developer chose scale factors (2026-10-12); re-filed as T-333], T-277 [pruned]   [pruned: its Action named no entry script or test for the cross-preset sheet; re-filed as T-334 at W-115's activation], T-319 [done], T-333 [done], T-334 [done]
-  W-116  issue  [todo]     Every number the text cites is a macro -- T-278 [todo], T-279 [todo], T-280 [todo], T-281 [todo]
+  W-116  issue  [doing]    Every number the text cites is a macro -- T-278 [doing]   <- ACTIVE LEAF, T-279 [pruned]   [pruned: re-filed at the W-116 split (developer, 2026-10-12): its check passed -q to make, which runs nothing], T-280 [pruned]   [pruned: re-filed at the W-116 split (developer, 2026-10-12): its check passed -q to make, which runs nothing], T-281 [pruned]   [pruned: re-filed at the W-116 split (developer, 2026-10-12): the literals move to W-131], T-345 [todo], T-346 [todo]
   W-122  bug    [done]     make compile keeps a figure a pick removed in build/paper/article.pdf   (filed during T-237) -- T-306 [done], T-307 [pruned]   [pruned: its Output build/paper/article.pdf is an untracked build file no commit carries, so the scope gate cannot close it (a brief defect at filing); its check was run and exited 0 -- make -W paper.toml families compile with the shipped picks, no undefined references -- and the 62_families assets match local/assets-baseline.sha]
   W-124  issue  [done]     Per-table layouts rendered to page images   (filed during T-322) -- T-326 [pruned]   [pruned: five layouts over four modules plus a baseline rebuild and the per-table rendering in one Task; re-filed at W-124's activation as T-337 (representation), T-338 (families, tuning) and T-339 (baseline, rendering)], T-327 [done], T-337 [done], T-338 [done], T-339 [done]
   W-125  issue  [done]     Table page images cropped to the table   (filed during T-328) -- T-329 [done], T-330 [done]
   W-126  bug    [done]     The aligned table layout overflows the text width   (filed during T-328) -- T-331 [done], T-332 [done]
   W-127  bug    [done]     The aligned representation table mixes compact and subscript spreads   (filed during T-332) -- T-335 [done], T-336 [done]
   W-128  bug    [done]     The paper's baseline table is stale, written before its e-notation   (filed during T-339) -- T-340 [done]
+  W-131  issue  [todo]     The text cites only macros, and a pick never leaves a dangling figure reference -- T-343 [todo], T-344 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
 W-119  bug    [todo]     (standalone) The ranges figure crashes on a batch with no network job   (filed during T-294) -- T-295 [todo]
@@ -732,11 +733,13 @@ flowchart TD
   W115 --> T319["T-319 done: Move the variant sheet writer into shared/plots.py test-first -> shared/plots.py, shared/test_plots.py"]
   W115 --> T333["T-333 done: Scale the marks by the active PlotStyle preset test-first -> shared/plots.py, paper.toml, the figure modules"]
   W115 --> T334["T-334 done: Render three figures under each preset -> 00_metadata/presets_sheet.py, mk/paper.mk, build/variants/presets/presets_variants.png"]
-  E011 --> W116["W-116 issue todo: Every number the text cites is a macro"]
-  W116 --> T278["T-278 todo: Write the knobs macro file from paper.toml and the make knobs test-first -> 00_metadata/paper_knobs.py, mk/paper.mk, 00_metadata/article.tex"]
-  W116 --> T279["T-279 todo: Emit the representation and family result macros test-first -> 60_results/61_representation/screen_representation.py, 60_results/62_families/screen_families.py, 00_metadata/article.tex"]
-  W116 --> T280["T-280 todo: Emit the tuning result macros test-first -> 60_results/63_precision/tune_survivors.py, 00_metadata/article.tex"]
-  W116 --> T281["T-281 todo: Replace the literals in the text -> 51_algorithms.tex, 61_representation.tex, 62_families.tex, 63_precision.tex, 90_appendix.tex, preprocessing_numbers.py"]
+  E011 --> W116["W-116 issue doing: Every number the text cites is a macro"]
+  W116 --> T278["T-278 doing: Write the knobs macro file from paper.toml and the make knobs test-first -> 00_metadata/paper_knobs.py, mk/paper.mk, 00_metadata/article.tex -- ACTIVE LEAF"]
+  W116 --> T279["T-279 pruned: Emit the representation and family result macros test-first -> 60_results/61_representation/screen_representation.py, 60_results/62_families/screen_families.py, 00_metadata/article.tex"]
+  W116 --> T280["T-280 pruned: Emit the tuning result macros test-first -> 60_results/63_precision/tune_survivors.py, 00_metadata/article.tex"]
+  W116 --> T281["T-281 pruned: Replace the literals in the text -> 51_algorithms.tex, 61_representation.tex, 62_families.tex, 63_precision.tex, 90_appendix.tex, preprocessing_numbers.py"]
+  W116 --> T345["T-345 todo: Emit the representation and family result macros test-first -> 60_results/61_representation/screen_representation.py, 60_results/62_families/screen_families.py, 00_metadata/article.tex"]
+  W116 --> T346["T-346 todo: Emit the tuning result macros test-first -> 60_results/63_precision/tune_survivors.py, 00_metadata/article.tex"]
   E011 --> W122["W-122 bug done: make compile keeps a figure a pick removed in build/paper/article.pdf"]
   W122 --> T306["T-306 done: Rerun latexmk when the assembled sources change -> mk/paper.mk"]
   W122 --> T307["T-307 pruned: Recompile the paper with the shipped picks -> build/paper/article.pdf"]
@@ -757,6 +760,9 @@ flowchart TD
   W127 --> T336["T-336 done: Word the representation caption per table layout test-first -> 60_results/61_representation/screen_representation.py"]
   E011 --> W128["W-128 bug done: The paper's baseline table is stale, written before its e-notation"]
   W128 --> T340["T-340 done: Rewrite the baseline table from the ledger in make assets -> mk/paper.mk"]
+  E011 --> W131["W-131 issue todo: The text cites only macros, and a pick never leaves a dangling figure reference"]
+  W131 --> T343["T-343 todo: Replace the literals in the text -> 51_algorithms.tex, 61_representation.tex, 62_families.tex, 63_precision.tex, 90_appendix.tex, preprocessing_numbers.py"]
+  W131 --> T344["T-344 todo: Guard each pickable figure's reference -> 00_metadata/preamble.tex, 41_neutron_stars.tex, 42_black_holes.tex, 62_families.tex"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W088["W-088 issue todo, standalone: A running representation screen is followable -- progress, time left and each entry's representation"]
@@ -781,8 +787,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E011 doing
+  class E006,E009,E011,W116,T278 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,W111,T262,T308,T309,T310,W112,T311,T312,T313,T314,W113,T315,T316,T317,T318,W114,T321,T325,T328,W115,T319,T333,T334,W122,T306,W124,T327,T337,T338,T339,W125,T329,T330,W126,T331,T332,W127,T335,T336,W128,T340 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W116,T278,T279,T280,T281,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W130,T342 todo
-  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T260,T261,T263,T264,T265,T266,T267,T268,T269,T270,T271,T272,T273,T274,T275,T322,T323,T324,T276,T277,T307,T326 pruned
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,T345,T346,W131,T343,T344,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W130,T342 todo
+  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T260,T261,T263,T264,T265,T266,T267,T268,T269,T270,T271,T272,T273,T274,T275,T322,T323,T324,T276,T277,T279,T280,T281,T307,T326 pruned
 ```

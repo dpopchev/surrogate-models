@@ -44,6 +44,7 @@
 - 2026-10-12 W-115: presets scale the mark literals (font, mark, line, alpha), paper 1.0 (developer, 2026-10-12)
 
 ## Deviations
+- 2026-10-12 E-011: W-116 split (developer, 2026-10-12): AC7 narrowed to the macros (T-278 kept, T-279/T-280 re-filed as T-345/T-346); AC10 -> W-131, the literals (T-281 re-filed as T-343) and the figure-ref guard (T-344)
 - 2026-10-12 E-011: W-124 activated: T-326 re-filed as T-337 to T-339 (representation; families and tuning; baseline and rendering), T-327 kept
 - 2026-10-12 E-011: bug W-127 (aligned spreads mixed, caption) filed during T-332, queued after W-124
 - 2026-10-12 E-011: bug W-128 (the paper's baseline table stale since before W-097) filed during T-339, queued after W-127
