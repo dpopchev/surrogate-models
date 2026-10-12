@@ -48,5 +48,4 @@
 - 2026-10-12 E-011: W-124 activated: T-326 re-filed as T-337 to T-339 (representation; families and tuning; baseline and rendering), T-327 kept
 - 2026-10-12 E-011: bug W-127 (aligned spreads mixed, caption) filed during T-332, queued after W-124
 - 2026-10-12 E-011: bug W-128 (the paper's baseline table stale since before W-097) filed during T-339, queued after W-127
-- 2026-10-12 E-011: bug W-129 (a table caption touches its top rule, paper-wide, article.cls belowcaptionskip 0pt) filed standalone during T-336
-- 2026-10-12 E-011: bug W-130 (results tables reach the paper only via their own targets, so W-127's caption is not in make compile) filed standalone during T-340
+- 2026-10-12 E-011: standalone bugs W-129 (T-336) and W-130 (T-340) filed; W-130 moved under E-011 and W-116 blocked on it, the two branches side by side (developer, 2026-10-12) supersedes: E-011#v13, E-011#v14
