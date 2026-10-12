@@ -46,4 +46,4 @@
 ## Deviations
 - 2026-10-12 E-011: W-116 split (developer, 2026-10-12): AC7 narrowed to the macros (T-278 kept, T-279/T-280 re-filed as T-345/T-346); AC10 -> W-131, the literals (T-281 re-filed as T-343) and the figure-ref guard (T-344)
 - 2026-10-12 E-011: W-124 activated: T-326 re-filed as T-337 to T-339 (representation; families and tuning; baseline and rendering), T-327 kept
-- 2026-10-12 E-011: filed while working: bugs W-127 (T-332), W-128 (T-339), both done; standalone W-129 (captions on the top rule, T-336), W-130 (results tables only via own targets, T-340), W-132 (duplicated macro tags, T-346) supersedes: E-011#v10, E-011#v12, E-011#v13, E-011#v14
+- 2026-10-12 E-011: filed while working: W-127 (T-332), W-128 (T-339); standalone W-129 (T-336), W-132 (T-346); W-130 (T-340) moved under E-011, W-116 blocked on it until it landed (developer, 2026-10-12) supersedes: E-011#v10, E-011#v12, E-011#v13, E-011#v14
