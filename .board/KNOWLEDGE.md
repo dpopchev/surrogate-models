@@ -25,11 +25,11 @@
 - 2026-10-10 W-068: T-206: fact: batch 01a11d49, folds/test vs ceiling: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure
 - 2026-10-11 E-006: standing: E-002 speedup and posterior questions live in W-047 -> nothing else of E-002 is open supersedes: E-006#1
 - 2026-10-11 E-010: standing: the run times are spike W-121's question -> out of E-010 supersedes: E-010#1
-- 2026-10-11 E-011: fact: E-011 Task checks pass -q to make, which runs nothing: T-268 to T-272, T-274 to T-276, T-278 to T-280 too -> re-filed with a working check as their work item activates
 - 2026-10-11 W-073: standing: scored in D, the nearest curve beats the MLP on the test curves of all four pairs, the MLP leads only on NS folds -> no pair won by the baseline supersedes: W-073#3
 - 2026-10-11 W-091: standing: --doctest-modules imports each conftest.py as conftest -> a per-folder conftest needs --ignore=conftest.py --ignore-glob=*/conftest.py supersedes: W-091#1
 - 2026-10-11 W-117: standing: every asset writer iterates in a fixed order -> local/assets-baseline.sha (50 files) is seed-independent since W-117 supersedes: W-117#1
 - 2026-10-11 W-118: fact: its steps pass on main 9e2c60a (T-290) -> prune as fixed? (developer)
+- 2026-10-12 E-011: fact: T-278 to T-280 (W-116) checks pass -q to make, which runs nothing -> re-filed as W-116 activates supersedes: E-011#3
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
@@ -44,8 +44,7 @@
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
 - 2026-10-10 E-011: the picks live in paper.toml per figure and table (E-003 d1), W-102 and W-104 adopted (developer, 2026-10-10)
 - 2026-10-11 E-011: W-122 before W-104 at W-102's re-aim, so make compile shows the picks before more are added (developer, 2026-10-11)
+- 2026-10-12 W-115: presets scale the mark literals (font, mark, line, alpha), paper 1.0 (developer, 2026-10-12)
 
 ## Deviations
-- 2026-10-11 E-011: Tasks re-filed at activation (make -q checks): W-111 T-308-310, W-112 T-311-314, W-113 T-315-318, W-114 T-321-324 (tables variants in a work folder; aligned = siunitx on plain cells); W-112 re-recorded 2 ceilings hashes supersedes: E-011#v4
-- 2026-10-12 E-011: W-113 filed W-123 (standalone) and T-319 (W-115); T-322 hit a T-321 header defect, W-114 split at V22: T-325 fix + T-328 rasterize stay, T-323/324 -> W-124 (T-326/327); AC5 small+aligned, AC8 -> W-124 (developer, 2026-10-12) supersedes: E-011#v5
-- 2026-10-12 E-011: W-122 filed during T-237, done; W-125 (crop table images, AC9) and bug W-126 (aligned overflow) filed at W-114's landing, a scope exception (developer, 2026-10-12) supersedes: E-011#v1
+- none recorded
