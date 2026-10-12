@@ -324,6 +324,16 @@ $(TUNING_ASSETS): $(TUNING) paper.toml $(SHARED) $(STATE)/neutron_stars.parquet 
 tuning: $(TUNING_ASSETS) ## Run the tuning of the short list for Section 5.3
 	$(call log_done,tuning assets current in $(dir $(TUNING_ASSETS)))
 
+# The knobs the text cites (W-116): the baseline network's settings from paper.toml and the
+# screens' knobs above, which live here only -- so this file is a prerequisite too.
+KNOBS        := 00_metadata/paper_knobs.py
+KNOBS_ASSETS := $(ASSETS)/00_metadata/00_metadata_knobs_num.tex
+PAPER_ASSETS += $(KNOBS_ASSETS)
+
+$(KNOBS_ASSETS): $(KNOBS) paper.toml $(SHARED) mk/paper.mk
+	@$(RUN) python $(KNOBS) $@ --representation "$(REPRESENTATION_KNOBS)" --families "$(FAMILIES_KNOBS)" --tuning "$(TUNING_KNOBS)"
+	$(call log_done,knobs written to $@)
+
 .PHONY: assets
 assets: $(PAPER_ASSETS) ## Generate the section assets under build/assets/
 	$(call log_done,assets in $(ASSETS)/: $(sort $(notdir $(patsubst %/,%,$(dir $(PAPER_ASSETS))))))
