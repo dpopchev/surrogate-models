@@ -1,7 +1,9 @@
 """Facts about the stand-alone entry that sets every table of one layout on its own page."""
 
+from pathlib import Path
+
 import pytest
-from tables_entry import tables_entry
+from tables_entry import rasterize_commands, tables_entry
 
 ARTICLE = (
     "\\documentclass{article}\n"
@@ -19,3 +21,21 @@ def test_tables_entry_inputs_every_table_file() -> None:
     entry = tables_entry(ARTICLE, ("b_tab_y", "a_tab_x"))
     inputs = [line for line in entry.splitlines() if "_tab_" in line]
     assert inputs == ["\\input{a_tab_x}", "\\input{b_tab_y}"]
+
+
+@pytest.mark.view
+def test_rasterize_commands_crop_before_gs() -> None:
+    commands = rasterize_commands(Path("w/tables_small.pdf"), Path("w/page-%03d.png"))
+    assert commands == (
+        ["pdfcrop", "--margins", "10", "w/tables_small.pdf", "w/tables_small-crop.pdf"],
+        [
+            "gs",
+            "-q",
+            "-dNOPAUSE",
+            "-dBATCH",
+            "-sDEVICE=png16m",
+            "-r150",
+            "-sOutputFile=w/page-%03d.png",
+            "w/tables_small-crop.pdf",
+        ],
+    )
