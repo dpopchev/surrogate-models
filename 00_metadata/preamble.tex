@@ -8,10 +8,10 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
-% S columns of the aligned table layout (paper.toml [tables], W-114): a spread prints as
-% value +- spread, as the small layout writes it.
+% S columns of the aligned table layout (paper.toml [tables], W-114): a spread prints compact,
+% 1.96(2), so the representation table fits the text width (W-126).
 \usepackage{siunitx}
-\sisetup{separate-uncertainty = true}
+\sisetup{uncertainty-mode = compact}
 \usepackage{placeins} % \FloatBarrier keeps each insight's figures beside its text
 \usepackage{algorithm} % the numbered Algorithm float (Section 4.1's pipeline, W-062)
 \usepackage{algpseudocode}
