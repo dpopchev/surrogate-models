@@ -79,7 +79,7 @@ $(BH_EDA_ASSETS): $(BH_EDA) paper.toml $(SHARED) $(STATE)/black_holes.parquet
 VARIANTS := $(BUILD)/variants
 
 .PHONY: variants
-variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet table-variants ## Draw every figure variant and its contact sheet under build/variants/
+variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet table-variants preset-variants ## Draw every figure variant and its contact sheet under build/variants/
 	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) --variants $(VARIANTS)
 	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --variants $(VARIANTS)
 	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) --variants $(VARIANTS)
@@ -112,6 +112,30 @@ table-variants: assets
 	  $(RUN) python $(TABLES_ENTRY) $(PAPER_ENTRY) $$layout $$work/flat $(VARIANTS)/tables || exit 1; \
 	done
 	$(call log_done,every table in each layout ($(TABLE_LAYOUTS)) in $(VARIANTS)/tables/)
+
+# Three representative figures under each style preset of paper.toml [plot.presets], on one
+# contact sheet $(VARIANTS)/presets/presets_variants.png (W-115). Per preset, the NS EDA and the
+# family and tuning figures are redrawn with PAPER__PLOT__PRESET=<name> into
+# $(PRESETS_WORK)/<name>/ from their recorded batches, nothing fitted; the three figures are
+# copied to $(VARIANTS)/presets/<name>/. $(ASSETS) itself is never written.
+PRESETS_SHEET   := 00_metadata/presets_sheet.py
+PRESETS_WORK    := $(WORK)/presets
+PLOT_PRESETS    := paper light large
+PRESET_FIGURES  := 41_neutron_stars/41_neutron_stars_fig_mass_density 62_families/62_families_fig_errors 63_precision/63_precision_fig_history
+
+.PHONY: preset-variants
+preset-variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+	@for preset in $(PLOT_PRESETS); do \
+	  work=$(PRESETS_WORK)/$$preset; out=$(VARIANTS)/presets/$$preset; \
+	  rm -rf $$work $$out && mkdir -p $$work $$out && \
+	  export PAPER__PLOT__PRESET=$$preset && \
+	  $(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $$work --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) && \
+	  $(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) && \
+	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) && \
+	  for figure in $(PRESET_FIGURES); do cp $$work/$$figure.png $$out/ || exit 1; done || exit 1; \
+	done
+	@$(RUN) python $(PRESETS_SHEET) $(VARIANTS)/presets $(subst $() ,$(comma),$(PLOT_PRESETS)) $(subst $() ,$(comma),$(notdir $(PRESET_FIGURES)))
+	$(call log_done,three figures under each preset ($(PLOT_PRESETS)) in $(VARIANTS)/presets/presets_variants.png)
 
 # Section 3.3: the split numbers, from the split file.
 PREP_NUMBERS := 40_data_analysis/43_preprocessing/preprocessing_numbers.py
