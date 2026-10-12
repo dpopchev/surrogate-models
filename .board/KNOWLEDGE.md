@@ -39,7 +39,7 @@
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
 - 2026-10-10 E-011: the picks live in paper.toml per figure and table (E-003 d1), W-102 and W-104 adopted (developer, 2026-10-10)
 - 2026-10-11 E-011: W-122 before W-104 at W-102's re-aim, so make compile shows the picks before more are added (developer, 2026-10-11)
-- 2026-10-12 E-011: after W-115: W-126, W-125, W-124, then W-116 split in two (macros; literals and the ref guard) (developer, 2026-10-12)
+- 2026-10-12 E-011: after W-127: W-128, then W-116 split in two (macros; literals and the ref guard), ahead of the filing order (developer, 2026-10-12) supersedes: E-011#d3
 - 2026-10-12 W-115: presets scale the mark literals (font, mark, line, alpha), paper 1.0 (developer, 2026-10-12)
 
 ## Deviations
