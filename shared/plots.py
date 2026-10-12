@@ -4,8 +4,9 @@ NS figures use cool colormaps and BH figures warm ones (E-003 Decision), so a co
 tells which dataset is shown. The style is a PlotStyle, chosen in paper.toml's [plot] section.
 """
 
+import logging
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from pathlib import Path
 from typing import Literal, assert_never
 
@@ -14,6 +15,8 @@ import seaborn as sns
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from pydantic import BaseModel, ConfigDict, PositiveInt
+
+logger = logging.getLogger(__name__)
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
@@ -201,6 +204,23 @@ def contact_sheet(images: Mapping[str, Path]) -> Figure:
         axes.set_title(label)
         axes.set_axis_off()
     return figure
+
+
+def write_variant_sheet(
+    out: Path, stem: str, drawers: Mapping[str, Callable[[], Figure]], style: PlotStyle
+) -> None:
+    """Each variant drawn as <stem>_<variant>.png in out and their contact sheet as
+    <stem>_variants.png, at the screen's resolution."""
+    images: dict[str, Path] = {}
+    for variant, drawer in drawers.items():
+        figure = drawer()
+        images[variant] = out / f"{stem}_{variant}.png"
+        figure.savefig(images[variant], dpi=style.dpi)
+        plt.close(figure)
+    sheet = contact_sheet(images)
+    sheet.savefig(out / f"{stem}_variants.png", dpi=style.diagnostics_dpi)
+    plt.close(sheet)
+    logger.info("done: %s variants %s and their sheet -> %s", stem, tuple(images), out)
 
 
 def colormap(name: CoolCmap | WarmCmap) -> Colormap:

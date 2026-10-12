@@ -87,8 +87,8 @@ from shared.plots import (
     WarmCmap,
     apply_style,
     colormap,
-    contact_sheet,
     figure_size,
+    write_variant_sheet,
 )
 from shared.runs import RunMetadata, Setting, entry_from_json
 from shared.scorecard import relative_errors, significant_figures
@@ -1213,16 +1213,7 @@ def _write_variants(
         },
     }
     for stem, drawers in sheets.items():
-        images: dict[str, Path] = {}
-        for variant, drawer in drawers.items():
-            figure = drawer()
-            images[variant] = out / f"{stem}_{variant}.png"
-            figure.savefig(images[variant], dpi=style.dpi)
-            plt.close(figure)
-        sheet = contact_sheet(images)
-        sheet.savefig(out / f"{stem}_variants.png", dpi=style.diagnostics_dpi)
-        plt.close(sheet)
-        logger.info("done: %s variants %s and their sheet -> %s", stem, tuple(images), out)
+        write_variant_sheet(out, stem, drawers, style)
 
 
 if __name__ == "__main__":

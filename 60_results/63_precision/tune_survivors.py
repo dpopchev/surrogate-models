@@ -74,7 +74,14 @@ from shared.design import (
 )
 from shared.eda import booktabs
 from shared.harness import Run, harness
-from shared.plots import SYMBOLS, PlotStyle, apply_style, colormap, contact_sheet, figure_size
+from shared.plots import (
+    SYMBOLS,
+    PlotStyle,
+    apply_style,
+    colormap,
+    figure_size,
+    write_variant_sheet,
+)
 from shared.runs import LedgerEntry, RunMetadata, Setting
 from shared.scorecard import significant_figures
 from shared.search import (
@@ -1040,16 +1047,7 @@ def _write_variants(out: Path, points: Sequence[TrialPoint], style: PlotStyle) -
         },
     }
     for stem, drawers in sheets.items():
-        images: dict[str, Path] = {}
-        for variant, drawer in drawers.items():
-            figure = drawer()
-            images[variant] = out / f"{stem}_{variant}.png"
-            figure.savefig(images[variant], dpi=style.dpi)
-            plt.close(figure)
-        sheet = contact_sheet(images)
-        sheet.savefig(out / f"{stem}_variants.png", dpi=style.diagnostics_dpi)
-        plt.close(sheet)
-        logger.info("done: %s variants %s and their sheet -> %s", stem, tuple(images), out)
+        write_variant_sheet(out, stem, drawers, style)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,6 @@ become \\bhEda... macros; the dataset-agnostic machinery lives in shared/eda.py.
 import argparse
 import logging
 import sys
-from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
@@ -75,7 +74,7 @@ from shared.plots import (
     anchor_color,
     apply_style,
     colormap,
-    contact_sheet,
+    write_variant_sheet,
 )
 
 logger = logging.getLogger(__name__)
@@ -683,23 +682,6 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _write_sheet(
-    out: Path, stem: str, drawers: Mapping[str, Callable[[], Figure]], style: PlotStyle
-) -> None:
-    """Each variant drawn as <stem>_<variant>.png in out and their contact sheet as
-    <stem>_variants.png, at the screen's resolution."""
-    images: dict[str, Path] = {}
-    for variant, drawer in drawers.items():
-        fig = drawer()
-        images[variant] = out / f"{stem}_{variant}.png"
-        fig.savefig(images[variant], dpi=style.dpi)
-        plt.close(fig)
-    sheet = contact_sheet(images)
-    sheet.savefig(out / f"{stem}_variants.png", dpi=style.diagnostics_dpi)
-    plt.close(sheet)
-    logger.info("done: %s variants %s and their sheet -> %s", stem, tuple(images), out)
-
-
 def _write_variants(out: Path, table: pd.DataFrame, style: PlotStyle) -> None:
     """Every variant of each figure with variants, the ceilings figure's included, and per
     figure their contact sheet, into out."""
@@ -716,10 +698,10 @@ def _write_variants(out: Path, table: pd.DataFrame, style: PlotStyle) -> None:
             )
             for variant in get_args(field.annotation)
         }
-        _write_sheet(out, asset(figure), drawers, style)
+        write_variant_sheet(out, asset(figure), drawers, style)
     bounds = _bounds(table)
     ceilings = {v: partial(_ceilings, bounds, style, v) for v in get_args(CeilingsVariant)}
-    _write_sheet(out, f"{SECTION}_fig_ceilings", ceilings, style)
+    write_variant_sheet(out, f"{SECTION}_fig_ceilings", ceilings, style)
 
 
 def _bounds(table: pd.DataFrame) -> Ceilings:

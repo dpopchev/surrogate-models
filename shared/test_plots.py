@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 import seaborn as sns
 from matplotlib.colors import to_hex
+from matplotlib.figure import Figure
 from pydantic import ValidationError
 
 from shared.plots import (
@@ -23,6 +24,7 @@ from shared.plots import (
     contact_sheet,
     figure_size,
     make_symbols,
+    write_variant_sheet,
 )
 
 # A 2 in wide, 3 in tall text block.
@@ -42,6 +44,16 @@ def test_contact_sheet_places_one_labelled_panel_per_image(tmp_path: Path) -> No
         plt.imsave(path, np.zeros((4, 6)))
     sheet = contact_sheet(images)
     assert [axes.get_title() for axes in sheet.axes] == ["inset", "departure"]
+
+
+@pytest.mark.view
+def test_variant_sheet_writes_one_png_per_variant_and_the_sheet(tmp_path: Path) -> None:
+    def drawer() -> Figure:
+        return plt.figure(figsize=(1, 1))
+
+    write_variant_sheet(tmp_path, "toy", {"one": drawer, "two": drawer}, STYLE)
+    written = sorted(path.name for path in tmp_path.glob("*.png"))
+    assert written == ["toy_one.png", "toy_two.png", "toy_variants.png"]
 
 
 @pytest.mark.model

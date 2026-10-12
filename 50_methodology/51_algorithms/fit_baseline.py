@@ -71,7 +71,14 @@ from shared.diagnostics import curve_overlay, error_cdf, loss_curve
 from shared.eda import CurveSpace, booktabs, curve_ids, render_macros, sci_tex, text_width_size
 from shared.families import make_mean_reference, make_nearest_reference
 from shared.harness import FitRows, Fitter, Predictor, Run, Timing, harness
-from shared.plots import SYMBOLS, Dataset, PlotStyle, anchor_color, apply_style, contact_sheet
+from shared.plots import (
+    SYMBOLS,
+    Dataset,
+    PlotStyle,
+    anchor_color,
+    apply_style,
+    write_variant_sheet,
+)
 from shared.progress import duration_text
 from shared.runs import (
     Epochs,
@@ -812,16 +819,8 @@ def _write_variants(
     """Every parity variant as <stem>_<variant>.png in out and their contact sheet as
     <stem>_variants.png, at the screen's resolution."""
     out.mkdir(parents=True, exist_ok=True)
-    images: dict[str, Path] = {}
-    for variant in get_args(AlgParityVariant):
-        figure = parity_figure(found, style, variant)
-        images[variant] = out / f"{PARITY}_{variant}.png"
-        figure.savefig(images[variant], dpi=style.dpi)
-        plt.close(figure)
-    sheet = contact_sheet(images)
-    sheet.savefig(out / f"{PARITY}_variants.png", dpi=style.diagnostics_dpi)
-    plt.close(sheet)
-    logger.info("done: parity variants %s and their sheet -> %s", tuple(images), out)
+    drawers = {v: partial(parity_figure, found, style, v) for v in get_args(AlgParityVariant)}
+    write_variant_sheet(out, PARITY, drawers, style)
 
 
 def write_diagnostics(
