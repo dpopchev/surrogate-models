@@ -30,6 +30,7 @@ from tune_survivors import (
     jobs,
     journal_points,
     main,
+    numbers,
     outcomes_from_json,
     outcomes_to_json,
     range_ends,
@@ -218,6 +219,24 @@ def test_tuning_table_delta_column_is_tuned_minus_screen() -> None:
     outcomes = [Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 2, 0, "entry")]
     table = tuning_table(outcomes, {NS_MASS_RBF: 3.28}, shape="delta")
     assert "$3.28$ & $3.40$ & $+0.12$ & $3.30$" in table
+
+
+@pytest.mark.view
+def test_tuning_numbers_name_each_candidate() -> None:
+    outcomes = [Tuned(NS_MASS_RBF, {"neighbours": 80, "weights": "uniform"}, 3.4, 3.3, 2, 1, "e")]
+    points = [
+        TrialPoint(NS_MASS_RBF, 0, 3.1, {"neighbours": 60}),
+        TrialPoint(NS_MASS_RBF, 1, 3.4, {"neighbours": 80}),
+    ]
+    assert numbers(outcomes, points, {NS_MASS_RBF: 3.28}) == {
+        "tunNsMassRbfPointwiseScreen": "3.28",
+        "tunNsMassRbfPointwiseFolds": "3.40",
+        "tunNsMassRbfPointwiseTest": "3.30",
+        "tunNsMassRbfPointwiseTrials": "2",
+        "tunNsMassRbfPointwiseWalls": "1",
+        "tunNsMassRbfPointwiseBestTrial": "1",
+        "tunNsMassRbfPointwiseNeighbours": "80",
+    }
 
 
 @pytest.mark.edge

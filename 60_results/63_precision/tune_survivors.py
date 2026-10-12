@@ -73,7 +73,7 @@ from shared.design import (
     pairs,
     target_symbol,
 )
-from shared.eda import booktabs
+from shared.eda import booktabs, number_tex, render_macros
 from shared.harness import Run, harness
 from shared.plots import (
     SYMBOLS,
@@ -433,6 +433,61 @@ def tuning_table(
         rows,
         layout,
     )
+
+
+# Macro tags of the families and units, as in screen_families.py: \tunNsMassRbfPointwiseFolds.
+FAMILY_TAG = {
+    "k-NN": "Knn",
+    "local RBF": "Rbf",
+    "GPR": "Gpr",
+    "XGBoost": "Xgboost",
+    "MLP": "Mlp",
+    "ResNet": "Resnet",
+}
+UNIT_TAG = {"pointwise": "Pointwise", "curve-wise": "Curvewise"}
+# The best trial's params the text cites, where the candidate's space holds them.
+CITED_PARAMS = ("knots", "neighbours", "width", "depth", "lr")
+
+
+def numbers(
+    outcomes: Sequence[Outcome], points: Sequence[TrialPoint], screen: Mapping[Job, float]
+) -> dict[str, str]:
+    """Every figure Section 5.3 cites, per pair and candidate (\\tun<Pair><Family><Unit>...):
+    its screen figures (Screen); once tuned, its fold and test figures (Folds, Test), the
+    trials run and those that met the wall (Trials, Walls), the number of its best trial
+    (BestTrial) and the best params the text cites (Knots, Neighbours, Width, Depth, Lr)."""
+    macros: dict[str, str] = {}
+    for outcome in outcomes:
+        job = outcome.job
+        pair = f"{DATASET_TEX[job.dataset].capitalize()}{job.target.capitalize()}"
+        name = f"tun{pair}{FAMILY_TAG[job.candidate.family]}{UNIT_TAG[job.candidate.unit]}"
+        if job in screen:
+            macros[f"{name}Screen"] = f"{screen[job]:.2f}"
+        match outcome:
+            case Tuned():
+                # The earliest trial at the best figures: (figures, -number) ranks it first.
+                ran = [
+                    (p.figures, -p.number) for p in points if p.job == job and p.figures is not None
+                ]
+                macros |= {
+                    f"{name}Folds": f"{outcome.folds:.2f}",
+                    f"{name}Test": f"{outcome.test:.2f}",
+                    f"{name}Trials": f"{outcome.trials}",
+                    f"{name}Walls": f"{outcome.walls}",
+                }
+                if ran:
+                    macros[f"{name}BestTrial"] = f"{-max(ran)[1]}"
+                for param in CITED_PARAMS:
+                    value = outcome.params.get(param)
+                    if isinstance(value, int):
+                        macros[f"{name}{param.capitalize()}"] = f"{value}"
+                    elif isinstance(value, float):
+                        macros[f"{name}{param.capitalize()}"] = number_tex(value)
+            case Walled():
+                pass
+            case _:
+                assert_never(outcome)
+    return macros
 
 
 def trial_points(study: optuna.Study, job: Job) -> tuple[TrialPoint, ...]:
@@ -857,6 +912,9 @@ def main(
         # A batch's figures show its own jobs, in the order it ran them.
         ran = tuple(outcome.job for outcome in outcomes)
         points = journal_points(saved.with_suffix(".journal"), batch, ran)
+        numbers_tex = out / f"{SECTION}_num.tex"
+        write_checked(numbers_tex, render_macros(numbers(outcomes, points, screen)))
+        logger.info("done: tuning numbers of batch %s -> %s", batch, numbers_tex)
         apply_style(config.plot, NOTATION_TEX.read_text())
         picks = config.results.precision.variants
         drawn = (
