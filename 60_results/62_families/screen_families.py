@@ -61,6 +61,7 @@ from shared.config import (
     FamiliesFigure,
     FamiliesParityVariant,
     FamiliesScalingVariant,
+    FamiliesTableLayout,
     PaperConfig,
     TableLayout,
     load_config,
@@ -266,10 +267,15 @@ def next_jobs(
     return tuple(jobs)
 
 
-def family_table(outcomes: Sequence[Outcome], layout: TableLayout = "small") -> str:
+def family_table(
+    outcomes: Sequence[Outcome],
+    layout: TableLayout = "small",
+    shape: FamiliesTableLayout = "subscripts",
+) -> str:
     """The Section 5.2 table: one row per candidate, one column per pair, each cell the
     candidate's folds' p95 significant figures at the most rows it ran on (or its wall there),
-    the pair's leader at the most rows in bold."""
+    the pair's leader at the most rows in bold; the rows a subscript (subscripts) or a column
+    of their own beside each pair's figures (rows_column)."""
     last: dict[tuple[str, Target, Candidate], Outcome] = {}
     for outcome in sorted(outcomes, key=lambda found: found.job.rows):
         job = outcome.job
@@ -282,10 +288,23 @@ def family_table(outcomes: Sequence[Outcome], layout: TableLayout = "small") -> 
         for dataset, target in keys
         for leader in survivors(_at_most_rows(outcomes, dataset, target), keep=1)
     }
+    match shape:
+        case "subscripts":
+            cell, spec, where = _cell, "@{}ll*{4}{r}@{}", "the subscript"
+            header = " & ".join(pair_tex(dataset, target) for dataset, target in keys)
+        case "rows_column":
+            cell, spec, where = _rows_cell, "@{}ll*{4}{rr}@{}", "the rows column"
+            header = (
+                " & ".join(f"\\multicolumn{{2}}{{c}}{{{pair_tex(d, t)}}}" for d, t in keys)
+                + " \\\\\n & & "
+                + " & ".join("figures & rows" for _ in keys)
+            )
+        case _:
+            assert_never(shape)
     rows = [
         f"{FAMILY_TEX[candidate.family]} & {candidate.unit} & "
         + " & ".join(
-            _cell(
+            cell(
                 last.get((dataset, target, candidate)),
                 (dataset, target, candidate) in leaders,
             )
@@ -293,15 +312,14 @@ def family_table(outcomes: Sequence[Outcome], layout: TableLayout = "small") -> 
         )
         for candidate in candidates()
     ]
-    header = " & ".join(pair_tex(dataset, target) for dataset, target in keys)
     return booktabs(
         "families",
         "Each family in each unit of prediction, eliminated by successive halving over the "
         "training rows: the significant figures kept at the 95th percentile of the error "
         "($-\\log_{10}$) on the frozen folds, at the most training rows the candidate ran on "
-        "(the subscript); a wall is a fit past the time or the memory budget there. The pair's "
+        f"({where}); a wall is a fit past the time or the memory budget there. The pair's "
         "best at the most rows is in bold. The errors are measured in $M$ or $\\Dch$.",
-        "@{}ll*{4}{r}@{}",
+        spec,
         f"Family & Unit & {header}",
         rows,
         layout,
@@ -817,6 +835,22 @@ def _cell(outcome: Outcome | None, bold: bool) -> str:
             assert_never(outcome)
 
 
+def _rows_cell(outcome: Outcome | None, bold: bool) -> str:
+    """One candidate's two cells on one pair: its folds' figures, in bold for the pair's
+    leader, then its rows; dashes for a candidate the pair never ran."""
+    if outcome is None:
+        return "-- & --"
+    rows = f"$10^{{{round(np.log10(outcome.job.rows))}}}$"
+    match outcome:
+        case Scored():
+            figures = f"\\mathbf{{{outcome.folds:.2f}}}" if bold else f"{outcome.folds:.2f}"
+            return f"${figures}$ & {rows}"
+        case Wall():
+            return f"wall & {rows}"
+        case _:
+            assert_never(outcome)
+
+
 def outcomes_to_json(outcomes: Sequence[Outcome]) -> str:
     """The outcomes as indented JSON, each tagged scored or wall."""
     tagged = []
@@ -986,7 +1020,7 @@ def main(
         for stale in out.iterdir():  # a deselected figure's wrapper of an earlier run (W-102)
             stale.unlink()
         path = out / f"{SECTION}_tab_families.tex"
-        write_checked(path, family_table(outcomes, config.tables.layout))
+        write_checked(path, family_table(outcomes, config.tables.layout, config.tables.families))
         logger.info("done: family table of batch %s, %d outcomes -> %s", batch, len(outcomes), path)
         # The panels' titles read the symbols, which expand the notation the style hands on.
         apply_style(config.plot, NOTATION_TEX.read_text())

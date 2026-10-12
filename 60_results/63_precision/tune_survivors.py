@@ -57,6 +57,7 @@ from shared.config import (
     PrecisionHistoryVariant,
     PrecisionRangesVariant,
     TableLayout,
+    TuningTableLayout,
     load_config,
 )
 from shared.design import (
@@ -382,27 +383,44 @@ def outcomes_from_json(text: str) -> tuple[Outcome, ...]:
 
 
 def tuning_table(
-    outcomes: Sequence[Outcome], screen: Mapping[Job, float], layout: TableLayout = "small"
+    outcomes: Sequence[Outcome],
+    screen: Mapping[Job, float],
+    layout: TableLayout = "small",
+    shape: TuningTableLayout = "screen_tuned_test",
 ) -> str:
     """The tuning table: per pair and candidate the screen's figures, the tuned fold and test
-    figures, and the pair's data ceiling."""
+    figures, and the pair's data ceiling; without the screen (no_screen), or with the tuned
+    minus the screen figures beside the tuned ones (delta)."""
     rows = []
     for outcome in outcomes:
         job = outcome.job
         before = screen.get(job)
         match outcome:
             case Tuned():
-                tuned = f"${outcome.folds:.2f}$ & ${outcome.test:.2f}$"
+                gain = "--" if before is None else f"${outcome.folds - before:+.2f}$"
+                folds, test = f"${outcome.folds:.2f}$", f"${outcome.test:.2f}$"
+                tuned = f"{folds} & {gain} & {test}" if shape == "delta" else f"{folds} & {test}"
             case Walled():
-                tuned = "\\multicolumn{2}{c}{wall}"
+                tuned = f"\\multicolumn{{{3 if shape == 'delta' else 2}}}{{c}}{{wall}}"
             case _:
                 assert_never(outcome)
+        screen_cell = "--" if before is None else f"${before:.2f}$"
+        screened = "" if shape == "no_screen" else f"{screen_cell} & "
         rows.append(
             f"{pair_tex(job.dataset, job.target)} & "
             f"{job.candidate.family} & {job.candidate.unit} & "
-            f"{'--' if before is None else f'${before:.2f}$'} & {tuned} & "
+            f"{screened}{tuned} & "
             f"${CEILING_TEX[(job.dataset, job.target)]}$"
         )
+    match shape:
+        case "screen_tuned_test":
+            spec, header = "@{}lll*{4}{r}@{}", "Screen & Tuned & Test"
+        case "no_screen":
+            spec, header = "@{}lll*{3}{r}@{}", "Tuned & Test"
+        case "delta":
+            spec, header = "@{}lll*{5}{r}@{}", "Screen & Tuned & $\\Delta$ & Test"
+        case _:
+            assert_never(shape)
     return booktabs(
         "tuning",
         "Each short-listed candidate of \\cref{tab:families} after the same budget of trials "
@@ -410,8 +428,8 @@ def tuning_table(
         "the error ($-\\log_{10}$), on the frozen folds at the screen and after the tuning, on "
         "the test curves for the best trial refitted, against the pair's data ceiling. A wall: "
         "every trial ran past the time budget. The errors are measured in $M$ or $\\Dch$.",
-        "@{}lll*{4}{r}@{}",
-        "Pair & Family & Unit & Screen & Tuned & Test & Ceiling",
+        spec,
+        f"Pair & Family & Unit & {header} & Ceiling",
         rows,
         layout,
     )
@@ -832,7 +850,9 @@ def main(
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
         path = out / f"{SECTION}_tab_tuning.tex"
-        write_checked(path, tuning_table(outcomes, screen, config.tables.layout))
+        write_checked(
+            path, tuning_table(outcomes, screen, config.tables.layout, config.tables.tuning)
+        )
         logger.info("done: tuning table of batch %s, %d jobs -> %s", batch, len(outcomes), path)
         # A batch's figures show its own jobs, in the order it ran them.
         ran = tuple(outcome.job for outcome in outcomes)

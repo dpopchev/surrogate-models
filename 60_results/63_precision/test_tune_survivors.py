@@ -206,6 +206,20 @@ def test_the_tuning_table_holds_one_row_per_job() -> None:
     assert body.count("\\\\\n") == 2
 
 
+@pytest.mark.view
+def test_tuning_table_no_screen_drops_the_screen_column() -> None:
+    outcomes = [Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 2, 0, "entry")]
+    table = tuning_table(outcomes, {NS_MASS_RBF: 3.28}, shape="no_screen")
+    assert "Pair & Family & Unit & Tuned & Test & Ceiling" in table
+
+
+@pytest.mark.view
+def test_tuning_table_delta_column_is_tuned_minus_screen() -> None:
+    outcomes = [Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 2, 0, "entry")]
+    table = tuning_table(outcomes, {NS_MASS_RBF: 3.28}, shape="delta")
+    assert "$3.28$ & $3.40$ & $+0.12$ & $3.30$" in table
+
+
 @pytest.mark.edge
 def test_a_saved_batch_reads_back_as_its_outcomes() -> None:
     outcomes = (

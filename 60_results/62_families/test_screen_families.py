@@ -383,6 +383,13 @@ def test_the_pair_s_best_at_the_most_rows_is_bold() -> None:
     assert table_rows(table)[2].split(" & ")[2] == "$\\mathbf{3.00}_{10^{4}}$"
 
 
+@pytest.mark.view
+def test_family_table_rows_column_has_no_subscript() -> None:
+    found = [on_ns_mass(KNN, 10_000, 2.5), on_ns_mass(RBF, 10_000, 3.0)]
+    table = family_table(found, shape="rows_column")
+    assert table_rows(table)[0].split(" & ")[2:4] == ["$2.50$", "$10^{4}$"]
+
+
 @pytest.mark.model
 def test_the_parity_plot_shows_each_unit_s_best_at_the_pair_s_most_rows() -> None:
     picks = parity_picks(
