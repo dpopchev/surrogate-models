@@ -157,6 +157,13 @@ def test_booktabs_aligned_uses_s_columns() -> None:
 
 
 @pytest.mark.view
+def test_aligned_header_keeps_empty_cells() -> None:
+    header = "A & B & \\multicolumn{2}{c}{C} \\\\\n & & Test & Folds"
+    table = booktabs("x", "A table.", "llrr", header, ["x & y & 1.5 & 2.5"], "aligned")
+    assert " &  & {Test} & {Folds} \\\\" in table.splitlines()
+
+
+@pytest.mark.view
 def test_macros_render_one_newcommand_per_number() -> None:
     assert render_macros({"nsEdaX": "1.5"}) == "\\newcommand{\\nsEdaX}{1.5}\n"
 

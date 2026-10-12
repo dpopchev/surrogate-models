@@ -281,6 +281,7 @@ _PLAIN = re.compile(r"^\$?(-?\d+(?:\.\d+)?)\$?$")
 _POWER = re.compile(r"^\$(-?\d+(?:\.\d+)?)\\times 10\^\{(-?\d+)\}\$$")
 _PLUS_MINUS = re.compile(r"^\$(-?\d+(?:\.\d+)?)_\{\\pm (\d+(?:\.\d+)?)\}\$$")
 _MULTICOLUMN = re.compile(r"^\\multicolumn\{(\d+)\}")
+_CELL_SEPARATOR = re.compile(r"(?<!\\)&")
 
 
 def _group(spec: str, at: int) -> tuple[str, int]:
@@ -378,16 +379,16 @@ def _aligned_spec(spec: str) -> str:
 
 def _aligned_line(line: str, columns: str, body: bool) -> str:
     """One header or body line for S columns: a body cell of an S column read as a number, a
-    header cell braced as text; a multicolumn cell spans its columns untouched."""
+    header cell braced as text; a multicolumn cell spans its columns untouched. Cells split on
+    every unescaped &, so an empty cell between two ampersands keeps its column."""
     cells, at = [], 0
-    for cell in line.split(" & "):
-        if spanned := _MULTICOLUMN.match(cell.strip()):
+    for cell in (part.strip() for part in _CELL_SEPARATOR.split(line)):
+        if spanned := _MULTICOLUMN.match(cell):
             cells.append(cell)
             at += int(spanned[1])
             continue
         if at < len(columns) and columns[at] == "S":
-            text = cell.strip()
-            cells.append(si_cell(text) if body else (f"{{{text}}}" if text else ""))
+            cells.append(si_cell(cell) if body else (f"{{{cell}}}" if cell else ""))
         else:
             cells.append(cell)
         at += 1
