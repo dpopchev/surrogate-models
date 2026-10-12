@@ -19,6 +19,14 @@
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage[hidelinks]{hyperref}
 \usepackage{cleveref}
+% A reference to a figure a paper.toml pick can drop (W-131): \pickref{<label>}{<before>}{<after>}
+% sets <before>\cref{<label>}<after> (\Pickref: \Cref, to open a sentence) only when the label is
+% defined -- the figure was placed -- so a dropped figure leaves no "??" and no stray
+% punctuation (latexmk reruns until the aux settles).
+\makeatletter
+\newcommand{\pickref}[3]{\@ifundefined{r@#1}{}{#2\cref{#1}#3}}
+\newcommand{\Pickref}[3]{\@ifundefined{r@#1}{}{#2\Cref{#1}#3}}
+\makeatother
 
 % Physics notation used across chapters and figures: notation.tex, shared with matplotlib.
 \input{notation}

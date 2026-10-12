@@ -12,27 +12,27 @@ The black-hole table holds $\bhEdaRows$ configurations on $\bhEdaCurves$ curves,
 \end{enumerate}
 
 \paragraph{1.\ The horizon radius enters linearly, standardized.}
-$\rh$ spans only $\bhEdaRhOrders$ orders of magnitude, from $\bhEdaRhMin$ to $\bhEdaRhMax$, on a uniform grid of step $\bhEdaRhStep$, and its distribution is flat with a skew of $\bhEdaRhRawSkew$ (\cref{fig:bh-univariate-continuous}, \cref{tab:bh-univariate}). A logarithm would only make it skewed, so $\rh$ enters as it is and is standardized on the training folds.
+$\rh$ spans only $\bhEdaRhOrders$ orders of magnitude, from $\bhEdaRhMin$ to $\bhEdaRhMax$, on a uniform grid of step $\bhEdaRhStep$, and its distribution is flat with a skew of $\bhEdaRhRawSkew$ (\pickref{fig:bh-univariate-continuous}{}{, }\cref{tab:bh-univariate}). A logarithm would only make it skewed, so $\rh$ enters as it is and is standardized on the training folds.
 
 \InputIfFileExists{42_black_holes_fig_univariate_continuous}{}{}
 \InputIfFileExists{42_black_holes_tab_univariate}{}{}
 \FloatBarrier
 
 \paragraph{2.\ The mass target is $M$, in solar masses.}
-The mass ranges from $\bhEdaMMin$ to $\bhEdaMMax\,\Msun$ and follows the horizon radius almost exactly, with Pearson $r = \bhEdaPearsonMRh$, one nearly straight line per $\beta$ curve (\cref{fig:bh-mass-radius}). It is bounded and of order one, so it enters as it is, like the neutron-star mass. The dilaton shows only near the existence edge: there the curves leave the general-relativistic relation $M = \rh/2$ and fan out by $\beta$ (\cref{fig:bh-mass-radius}, inset), while for larger $\rh$ they merge into one line.
+The mass ranges from $\bhEdaMMin$ to $\bhEdaMMax\,\Msun$ and follows the horizon radius almost exactly, with Pearson $r = \bhEdaPearsonMRh$, one nearly straight line per $\beta$ curve\pickref{fig:bh-mass-radius}{ (}{)}. It is bounded and of order one, so it enters as it is, like the neutron-star mass. The dilaton shows only near the existence edge: there the curves leave the general-relativistic relation $M = \rh/2$ and fan out by $\beta$\pickref{fig:bh-mass-radius}{ (}{, inset)}, while for larger $\rh$ they merge into one line.
 
 \InputIfFileExists{42_black_holes_fig_mass_radius}{}{}
 \FloatBarrier
 
 \paragraph{3.\ Dividing the charge by the mass brings no improvement.}
-For neutron stars, $\log_{10}(\Dch/M)$ separated the charge from the mass (Section~\ref{sec:eda-ns}); for black holes it does not. The charge is already almost a function of the mass alone: the Spearman correlation with $M$ is $\bhEdaSpearmanMLogD$ for $\log_{10}\Dch$ and stays at $\bhEdaSpearmanMLogDM$ for $\log_{10}(\Dch/M)$ (\cref{tab:bh-charge-correlation}, \cref{fig:bh-charge-target}). The range is also narrow, $\bhEdaDOrders$ orders of magnitude for $\Dch$ and $\bhEdaDMOrders$ for $\Dch/M$, so a logarithm serves to reduce skew rather than to span a range; the target is fixed with the decisions in Section~\ref{sec:preprocessing}.
+For neutron stars, $\log_{10}(\Dch/M)$ separated the charge from the mass (Section~\ref{sec:eda-ns}); for black holes it does not. The charge is already almost a function of the mass alone: the Spearman correlation with $M$ is $\bhEdaSpearmanMLogD$ for $\log_{10}\Dch$ and stays at $\bhEdaSpearmanMLogDM$ for $\log_{10}(\Dch/M)$ (\cref{tab:bh-charge-correlation}\pickref{fig:bh-charge-target}{, }{}). The range is also narrow, $\bhEdaDOrders$ orders of magnitude for $\Dch$ and $\bhEdaDMOrders$ for $\Dch/M$, so a logarithm serves to reduce skew rather than to span a range; the target is fixed with the decisions in Section~\ref{sec:preprocessing}.
 
 \InputIfFileExists{42_black_holes_tab_charge_correlation}{}{}
 \InputIfFileExists{42_black_holes_fig_charge_target}{}{}
 \FloatBarrier
 
 \paragraph{4.\ $\beta$ sets where each curve starts, not what it holds.}
-At fixed $\rh$, changing $\beta$ moves the mass by only $\bhEdaBetaEffectPercentM\%$ of its spread and $\log_{10}\Dch$ by $\bhEdaBetaEffectPercentLD\%$. Its role is the existence edge: the smallest horizon radius rises from $\bhEdaEdgeRhMinLow$ at $\beta = \bhEdaEdgeBetaLow$ to $\bhEdaEdgeRhMinHigh$ at $\beta = \bhEdaEdgeBetaHigh$ (\cref{fig:bh-existence-edge}). $\beta$ therefore stays an input, and the domain of validity is the region above the edge.
+At fixed $\rh$, changing $\beta$ moves the mass by only $\bhEdaBetaEffectPercentM\%$ of its spread and $\log_{10}\Dch$ by $\bhEdaBetaEffectPercentLD\%$. Its role is the existence edge: the smallest horizon radius rises from $\bhEdaEdgeRhMinLow$ at $\beta = \bhEdaEdgeBetaLow$ to $\bhEdaEdgeRhMinHigh$ at $\beta = \bhEdaEdgeBetaHigh$\pickref{fig:bh-existence-edge}{ (}{)}. $\beta$ therefore stays an input, and the domain of validity is the region above the edge.
 \review{whether the black-hole and neutron-star datasets come from the same theory; $\beta$ spans $\bhEdaEdgeBetaLow$ to $\bhEdaEdgeBetaHigh$ here and $0.4$ to $49.4$ for neutron stars, and matters far less here.}
 
 \InputIfFileExists{42_black_holes_fig_existence_edge}{}{}
