@@ -1,6 +1,6 @@
-# Board -- W-130-results-tables-assets
+# Board -- surrogate-models
 record: local
-open path: E-011 > W-130   | blocked: 1 | todo roots: 9 | done: 370 | pruned: 60
+open path: E-011   | blocked: 1 | todo roots: 9 | done: 371 | pruned: 60
 
 ## Tree
 
@@ -58,7 +58,7 @@ E-011         [doing]    Figures and tables picked from rendered variants, numbe
   W-126  bug    [done]     The aligned table layout overflows the text width   (filed during T-328) -- T-331 [done], T-332 [done]
   W-127  bug    [done]     The aligned representation table mixes compact and subscript spreads   (filed during T-332) -- T-335 [done], T-336 [done]
   W-128  bug    [done]     The paper's baseline table is stale, written before its e-notation   (filed during T-339) -- T-340 [done]
-  W-130  bug    [doing]    The results tables reach the paper only through their own make targets   (filed during T-340) -- T-342 [done]
+  W-130  bug    [done]     The results tables reach the paper only through their own make targets   (filed during T-340) -- T-342 [done]
   W-131  issue  [todo]     The text cites only macros, and a pick never leaves a dangling figure reference -- T-343 [todo], T-344 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
@@ -760,7 +760,7 @@ flowchart TD
   W127 --> T336["T-336 done: Word the representation caption per table layout test-first -> 60_results/61_representation/screen_representation.py"]
   E011 --> W128["W-128 bug done: The paper's baseline table is stale, written before its e-notation"]
   W128 --> T340["T-340 done: Rewrite the baseline table from the ledger in make assets -> mk/paper.mk"]
-  E011 --> W130["W-130 bug doing: The results tables reach the paper only through their own make targets"]
+  E011 --> W130["W-130 bug done: The results tables reach the paper only through their own make targets"]
   W130 --> T342["T-342 done: Add the results tables with a recorded batch to the paper assets -> mk/paper.mk"]
   E011 --> W131["W-131 issue todo: The text cites only macros, and a pick never leaves a dangling figure reference"]
   W131 --> T343["T-343 todo: Replace the literals in the text -> 51_algorithms.tex, 61_representation.tex, 62_families.tex, 63_precision.tex, 90_appendix.tex, preprocessing_numbers.py"]
@@ -787,9 +787,9 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E011,T278,W130 doing
+  class E006,E009,E011,T278 doing
   class W116 blocked
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,W111,T262,T308,T309,T310,W112,T311,T312,T313,T314,W113,T315,T316,T317,T318,W114,T321,T325,T328,W115,T319,T333,T334,W122,T306,W124,T327,T337,T338,T339,W125,T329,T330,W126,T331,T332,W127,T335,T336,W128,T340,T342 done
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,W111,T262,T308,T309,T310,W112,T311,T312,T313,T314,W113,T315,T316,T317,T318,W114,T321,T325,T328,W115,T319,T333,T334,W122,T306,W124,T327,T337,T338,T339,W125,T329,T330,W126,T331,T332,W127,T335,T336,W128,T340,W130,T342 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,T345,T346,W131,T343,T344,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T260,T261,T263,T264,T265,T266,T267,T268,T269,T270,T271,T272,T273,T274,T275,T322,T323,T324,T276,T277,T279,T280,T281,T307,T326 pruned
 ```
