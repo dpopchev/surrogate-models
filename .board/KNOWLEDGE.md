@@ -43,4 +43,4 @@
 - 2026-10-12 W-115: presets scale the mark literals (font, mark, line, alpha), paper 1.0 (developer, 2026-10-12)
 
 ## Deviations
-- none recorded
+- 2026-10-12 E-011: bug W-127 (aligned spreads mixed, caption) filed during T-332, queued after W-124
