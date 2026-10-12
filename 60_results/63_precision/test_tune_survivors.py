@@ -3,9 +3,9 @@
 import shutil
 import time
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,6 +26,7 @@ from tune_survivors import (
     Tuned,
     Walled,
     Work,
+    analysis,
     history_figure,
     jobs,
     journal_points,
@@ -399,6 +400,39 @@ TOY_POINTS = (
     TrialPoint(RESNET, 0, 0.5, NET),
     TrialPoint(RESNET, 1, None, {**NET, "width": 400}),
 )
+
+
+@pytest.mark.view
+def test_tuning_analysis_macros_name_each_statistic() -> None:
+    def at(number: int, figures: float | None, **params: Any) -> TrialPoint:
+        start = datetime(2026, 10, 10, tzinfo=UTC) + timedelta(minutes=30 * number)
+        return TrialPoint(
+            RESNET, number, figures, {**NET, **params}, start, start + timedelta(minutes=30)
+        )
+
+    points = [
+        at(0, 1.0, width=40, depth=5, lr=3e-4),
+        at(1, 1.1, width=60, depth=6, lr=2e-4, activation="gelu", loss="huber"),
+        at(2, -0.1, width=300, depth=2, lr=1e-3),
+        at(3, None, width=400, lr=2e-3, activation="gelu"),
+        at(4, None, width=50, lr=1e-4, loss="huber"),
+        at(5, 0.9, width=80, lr=5e-4, activation="gelu", loss="huber"),
+    ]
+    outcomes = [Tuned(RESNET, points[1].params, 1.1, 1.0, 6, 2, "e")]
+    job = "tunNsChargeResnetPointwise"
+    per_job = ["Gain", "NearBestTrial", "SearchHours", "SearchMinutes", "TrialMinutes"]
+    per_job += ["WalledHours", "Wide", "WalledWide", "WalledNarrow", "WalledNarrowLrHigh"]
+    per_job += [f"Importance{p}" for p in ("Width", "Depth", "Activation", "Loss", "Lr")]
+    per_job += [f"Top{p}{end}" for p in ("Width", "Depth", "Lr") for end in ("Low", "High")]
+    per_job += [f"UnwalledWide{part}" for part in ("Width", "Depth", "Figures")]
+    assert set(analysis(outcomes, points, {RESNET: 0.72}, seed=0)) == {
+        "tunNear",
+        "tunEarly",
+        "tunWide",
+        "tunSearches",
+        "tunSearchesNearEarly",
+        *(f"{job}{name}" for name in per_job),
+    }
 
 
 @pytest.mark.view

@@ -13,7 +13,7 @@ import logging
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from functools import partial
 from itertools import product
@@ -73,7 +73,7 @@ from shared.design import (
     pairs,
     target_symbol,
 )
-from shared.eda import booktabs, number_tex, render_macros
+from shared.eda import booktabs, camel, number_tex, render_macros
 from shared.harness import Run, harness
 from shared.plots import (
     SYMBOLS,
@@ -158,12 +158,15 @@ ShortList = Mapping[tuple[str, Target], tuple[Candidate, ...]]
 @dataclass(frozen=True)
 class TrialPoint:
     """One trial of a job's search: its number, its fold figures (None for a walled or failed
-    trial) and its params."""
+    trial), its params, and when it started and ended (None when the journal has no time) --
+    when it ran, not what it is, so the times take no part in equality."""
 
     job: Job
     number: int
     figures: float | None
     params: Mapping[str, Setting]
+    started: datetime | None = field(default=None, compare=False)
+    ended: datetime | None = field(default=None, compare=False)
 
 
 # --- pure functions ---------------------------------------------------------------------------
@@ -490,6 +493,142 @@ def numbers(
     return macros
 
 
+# Section 5.3's yardsticks on the searches: a trial within NEAR figures of its search's best is
+# near it, a search near its best before trial EARLY settles early, and a network of WIDE
+# units or more is wide.
+NEAR = 0.02
+EARLY = 12
+WIDE = 250
+# The params whose ranges over a search's five best trials the text cites.
+TOP_PARAMS = ("width", "depth", "lr")
+
+
+def _number_tex(value: int | float) -> str:
+    """A param value as the text cites it: an integer plain, a float through number_tex."""
+    return f"{value}" if isinstance(value, int) else number_tex(value)
+
+
+def _numeric(point: TrialPoint, param: str) -> int | float | None:
+    """The trial's value of a numeric param; None when it has none or a categorical one."""
+    value = point.params.get(param)
+    return None if isinstance(value, bool) or not isinstance(value, int | float) else value
+
+
+def _importances(
+    job: Job, scored: Sequence[tuple[TrialPoint, float]], seed: int
+) -> dict[str, float]:
+    """The fANOVA importance of each param a search varies, over its scored trials; none for a
+    space of one param."""
+    space = space_of(job.candidate.family, job.candidate.unit)
+    if len(space) < 2 or len(scored) < 2:
+        return {}
+    study = optuna.create_study(direction="maximize")
+    for point, figures in scored:
+        study.add_trial(
+            optuna.trial.create_trial(
+                params=dict(point.params),
+                distributions={name: space[name] for name in point.params if name in space},
+                value=figures,
+            )
+        )
+    evaluator = optuna.importance.FanovaImportanceEvaluator(seed=seed)
+    return dict(optuna.importance.get_param_importances(study, evaluator=evaluator))
+
+
+def _wall_numbers(name: str, mine: Sequence[TrialPoint]) -> dict[str, str]:
+    """For a search the wall cut, by the width of its networks: its trials of WIDE units or
+    more, its walled trials wide and narrow with the narrow ones' largest learning rate, and
+    its widest unwalled wide trial."""
+    sized = [(p, w) for p in mine if isinstance(w := _numeric(p, "width"), int)]
+    walled = [(p, w) for p, w in sized if p.figures is None]
+    if not walled:
+        return {}
+    narrow = [p for p, w in walled if w < WIDE]
+    found = {
+        f"{name}Wide": f"{sum(w >= WIDE for _, w in sized)}",
+        f"{name}WalledWide": f"{len(walled) - len(narrow)}",
+        f"{name}WalledNarrow": f"{len(narrow)}",
+    }
+    rates = [r for p in narrow if (r := _numeric(p, "lr")) is not None]
+    if rates:
+        found[f"{name}WalledNarrowLrHigh"] = _number_tex(max(rates))
+    unwalled = [(p, w, f) for p, w in sized if (f := p.figures) is not None and w >= WIDE]
+    if unwalled:
+        widest, width, figures = max(unwalled, key=lambda found: found[1])
+        depth = _numeric(widest, "depth")
+        found |= {
+            f"{name}UnwalledWideWidth": f"{width}",
+            f"{name}UnwalledWideDepth": "--" if depth is None else _number_tex(depth),
+            f"{name}UnwalledWideFigures": f"{figures:.2f}",
+        }
+    return found
+
+
+def analysis(
+    outcomes: Sequence[Outcome],
+    points: Sequence[TrialPoint],
+    screen: Mapping[Job, float],
+    seed: int,
+) -> dict[str, str]:
+    """What Section 5.3 reads off the searches' journals, per job (\\tun<Pair><Family><Unit>...):
+    its gain on the screen (Gain, the difference of the printed entries), the first trial near
+    its best (NearBestTrial), each varied param's fANOVA importance (Importance<Param>), the
+    ranges of TOP_PARAMS over its five best trials (Top<Param>Low/High), its fit time
+    (SearchHours, SearchMinutes, mean TrialMinutes, WalledHours) and its wall cut
+    (_wall_numbers); then the yardsticks, how many searches settle early
+    (\\tunSearchesNearEarly of \\tunSearches) and how long the last search ran alone
+    (\\tunTailHours)."""
+    macros = {"tunNear": f"{NEAR}", "tunEarly": f"{EARLY}", "tunWide": f"{WIDE}"}
+    near_trials: list[int] = []
+    ends: list[datetime] = []
+    for outcome in outcomes:
+        job = outcome.job
+        pair = f"{DATASET_TEX[job.dataset].capitalize()}{job.target.capitalize()}"
+        name = f"tun{pair}{FAMILY_TAG[job.candidate.family]}{UNIT_TAG[job.candidate.unit]}"
+        if isinstance(outcome, Tuned) and job in screen:
+            gain = round(outcome.folds, 2) - round(screen[job], 2)
+            macros[f"{name}Gain"] = f"{gain:.2f}"
+        mine = [p for p in points if p.job == job]
+        scored = [(p, f) for p in mine if (f := p.figures) is not None]
+        if scored:
+            best = max(f for _, f in scored)
+            near = min(p.number for p, f in scored if f >= best - NEAR)
+            near_trials.append(near)
+            macros[f"{name}NearBestTrial"] = f"{near}"
+            for param, share in _importances(job, scored, seed).items():
+                macros[f"{name}Importance{camel(param)}"] = f"{share:.2f}"
+            top = [p for p, _ in sorted(scored, key=lambda found: -found[1])[:5]]
+            for param in TOP_PARAMS:
+                values = [v for p in top if (v := _numeric(p, param)) is not None]
+                if values:
+                    macros[f"{name}Top{camel(param)}Low"] = _number_tex(min(values))
+                    macros[f"{name}Top{camel(param)}High"] = _number_tex(max(values))
+        timed = [
+            (p, (b - a).total_seconds())
+            for p in mine
+            if (a := p.started) is not None and (b := p.ended) is not None
+        ]
+        if timed:
+            seconds = [s for _, s in timed]
+            walled = sum(s for p, s in timed if p.figures is None)
+            macros |= {
+                f"{name}SearchHours": f"{sum(seconds) / 3600:.0f}",
+                f"{name}SearchMinutes": f"{sum(seconds) / 60:.0f}",
+                f"{name}TrialMinutes": f"{np.mean(seconds) / 60:.0f}",
+                f"{name}WalledHours": f"{walled / 3600:.0f}",
+            }
+            ends.append(max(b for p in mine if (b := p.ended) is not None))
+        macros |= _wall_numbers(name, mine)
+    macros |= {
+        "tunSearches": f"{len(near_trials)}",
+        "tunSearchesNearEarly": f"{sum(n < EARLY for n in near_trials)}",
+    }
+    if len(ends) > 1:
+        last, before = sorted(ends)[-1], sorted(ends)[-2]
+        macros["tunTailHours"] = f"{(last - before).total_seconds() / 3600:.0f}"
+    return macros
+
+
 def trial_points(study: optuna.Study, job: Job) -> tuple[TrialPoint, ...]:
     """The finished trials of a job's study as points, a failed one without figures."""
     finished = (TrialState.COMPLETE, TrialState.FAIL)
@@ -499,6 +638,8 @@ def trial_points(study: optuna.Study, job: Job) -> tuple[TrialPoint, ...]:
             trial.number,
             trial.value if trial.state == TrialState.COMPLETE else None,
             trial.params,
+            trial.datetime_start,
+            trial.datetime_complete,
         )
         for trial in study.get_trials(deepcopy=False, states=finished)
     )
@@ -913,7 +1054,9 @@ def main(
         ran = tuple(outcome.job for outcome in outcomes)
         points = journal_points(saved.with_suffix(".journal"), batch, ran)
         numbers_tex = out / f"{SECTION}_num.tex"
-        write_checked(numbers_tex, render_macros(numbers(outcomes, points, screen)))
+        found = numbers(outcomes, points, screen)
+        found |= analysis(outcomes, points, screen, settings.seed)
+        write_checked(numbers_tex, render_macros(found))
         logger.info("done: tuning numbers of batch %s -> %s", batch, numbers_tex)
         apply_style(config.plot, NOTATION_TEX.read_text())
         picks = config.results.precision.variants
