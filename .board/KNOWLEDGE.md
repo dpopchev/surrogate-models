@@ -28,7 +28,7 @@
 - 2026-10-12 W-068: standing: batch 01a11d49, folds/test vs ceiling: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure supersedes: W-068#3, T-135#2, T-135#3
 - 2026-10-12 W-076: standing: across-curve p95 ceilings: NS M 4.1 figures (1.36e-4 M_sun at the median 1.75, 1.70e-4 at M_max 2.19), NS D 2.4 (1.56e-3 dex); BH M 7.1 (3.05e-7 M_sun at 3.58), D 6.0 (4.40e-7 dex), at the existence edge -> the E-006 target per pair supersedes: W-064#1, W-076#1
 - 2026-10-12 W-128: fact: T-340's check could not fail (LaTeX logs no '<file>.tex: Overfull') -> its evidence is the Overfull count, 10 to 9 supersedes: W-128#1
-- 2026-10-12 W-131: T-349: fact: in the journal curve-wise k-NN's knots carry 0.04 of the variance (k 0.96), and 11 trials reach 250+ units (unwalled 282x5, 407x2) -> T-343 rewords 63_precision.tex's every-curve-wise and nine-of-ten claims
+- 2026-10-12 W-131: T-343: fact: the text's drifted 1371, 21, three folds, nine-of-ten and every-curve-wise claims now follow the macros; still typed: about ten/seventy rows per curve, ripple thirty/five times, error-figure readings, GP memory arithmetic -> no macro carries them supersedes: W-131#1
 - 2026-10-12 W-132: fact: 00_metadata/paper_knobs.py keeps a third family-tag map, SPACE_TAG, with the two networks as Net (T-348) -> W-132 moves it beside FAMILY_TAG too
 
 ## Open questions
@@ -46,7 +46,6 @@
 - 2026-10-12 W-115: presets scale the mark literals (font, mark, line, alpha), paper 1.0 (developer, 2026-10-12)
 
 ## Deviations
-- 2026-10-12 E-011: W-116 split (developer, 2026-10-12): AC7 narrowed to the macros (T-278 kept, T-279/T-280 re-filed as T-345/T-346); AC10 -> W-131, the literals (T-281 re-filed as T-343) and the figure-ref guard (T-344)
+- 2026-10-12 E-011: W-116 split: AC7 the macros (T-278, T-345, T-346); AC10 -> W-131, the literals T-343 and ref guard T-344, extended by T-348 ranges and T-349 journal statistics (developer, 2026-10-12) supersedes: E-011#v15, E-011#v17
 - 2026-10-12 E-011: W-124 activated: T-326 re-filed as T-337 to T-339 (representation; families and tuning; baseline and rendering), T-327 kept
-- 2026-10-12 E-011: W-131 extended (developer, 2026-10-12): T-348 search-space bounds and T-349 tuning-journal statistics as macros, T-343 blocked on them
 - 2026-10-12 E-011: filed while working: W-127 (T-332), W-128 (T-339); standalone W-129 (T-336), W-132 (T-346); W-130 (T-340) moved under E-011, W-116 blocked on it until it landed (developer, 2026-10-12) supersedes: E-011#v10, E-011#v12, E-011#v13, E-011#v14
