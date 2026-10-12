@@ -79,7 +79,7 @@ from shared.design import (
     pairs,
     target_symbol,
 )
-from shared.eda import booktabs
+from shared.eda import booktabs, number_tex, render_macros
 from shared.harness import Fitter, Run, harness
 from shared.plots import (
     SYMBOLS,
@@ -324,6 +324,58 @@ def family_table(
         rows,
         layout,
     )
+
+
+# Macro tags of the families and units: \famNsMassRbfCurvewiseFigures.
+FAMILY_TAG = {
+    "k-NN": "Knn",
+    "local RBF": "Rbf",
+    "GPR": "Gpr",
+    "XGBoost": "Xgboost",
+    "MLP": "Mlp",
+    "ResNet": "Resnet",
+}
+UNIT_TAG = {"pointwise": "Pointwise", "curve-wise": "Curvewise"}
+
+
+def numbers(outcomes: Sequence[Outcome]) -> dict[str, str]:
+    """Every figure Section 5.2 cites. Per pair, at the most rows it ran on, the leader as the
+    table names it (\\fam<Pair>Leader, \\fam<Pair>LeaderUnit) and how many families stay within
+    one figure of it (\\fam<Pair>WithinOne). Per candidate, at the most rows it reached
+    (\\fam<Pair><Family><Unit>Rows), its folds' figures and final fit's seconds (Figures,
+    Seconds), or the rows of its wall there (WallRows)."""
+    macros: dict[str, str] = {}
+    pairs: dict[tuple[str, Target], None] = dict.fromkeys(
+        (o.job.dataset, o.job.target) for o in outcomes
+    )
+    for dataset, target in pairs:
+        pair = f"{DATASET_TEX[dataset].capitalize()}{target.capitalize()}"
+        ranked = _ranked(_at_most_rows(outcomes, dataset, target))
+        if ranked:
+            leader = ranked[0]
+            near = {o.job.candidate.family for o in ranked if o.folds >= leader.folds - 1.0}
+            macros |= {
+                f"fam{pair}Leader": FAMILY_TEX[leader.job.candidate.family],
+                f"fam{pair}LeaderUnit": leader.job.candidate.unit,
+                f"fam{pair}WithinOne": f"{len(near)}",
+            }
+        mine = [o for o in outcomes if (o.job.dataset, o.job.target) == (dataset, target)]
+        last = {o.job.candidate: o for o in sorted(mine, key=lambda o: o.job.rows)}
+        for candidate, outcome in last.items():
+            name = f"fam{pair}{FAMILY_TAG[candidate.family]}{UNIT_TAG[candidate.unit]}"
+            rows = f"10^{{{round(np.log10(outcome.job.rows))}}}"
+            match outcome:
+                case Scored():
+                    macros |= {
+                        f"{name}Rows": rows,
+                        f"{name}Figures": f"{outcome.folds:.2f}",
+                        f"{name}Seconds": number_tex(outcome.fit_seconds),
+                    }
+                case Wall():
+                    macros[f"{name}WallRows"] = rows
+                case _:
+                    assert_never(outcome)
+    return macros
 
 
 def parity_picks(outcomes: Sequence[Outcome]) -> tuple[Scored, ...]:
@@ -1021,7 +1073,13 @@ def main(
             stale.unlink()
         path = out / f"{SECTION}_tab_families.tex"
         write_checked(path, family_table(outcomes, config.tables.layout, config.tables.families))
-        logger.info("done: family table of batch %s, %d outcomes -> %s", batch, len(outcomes), path)
+        write_checked(out / f"{SECTION}_num.tex", render_macros(numbers(outcomes)))
+        logger.info(
+            "done: family table and numbers of batch %s, %d outcomes -> %s",
+            batch,
+            len(outcomes),
+            path,
+        )
         # The panels' titles read the symbols, which expand the notation the style hands on.
         apply_style(config.plot, NOTATION_TEX.read_text())
         panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")

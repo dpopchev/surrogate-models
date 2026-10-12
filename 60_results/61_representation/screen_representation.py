@@ -40,6 +40,7 @@ from shared.config import PaperConfig, RepresentationTableLayout, TableLayout, l
 from shared.curvewise import curvewise_fitter
 from shared.design import (
     BLACK_HOLES,
+    DATASET_TEX,
     NEUTRON_STARS,
     SPECS,
     TARGETS,
@@ -50,7 +51,7 @@ from shared.design import (
     design,
     pair_tex,
 )
-from shared.eda import booktabs, make_curve_space
+from shared.eda import booktabs, make_curve_space, render_macros
 from shared.families import make_knn, make_rbf
 from shared.harness import Fitter, Run, harness
 from shared.runs import LedgerEntry, RunMetadata, Setting
@@ -262,6 +263,37 @@ def beats(score: Score, baseline: Score) -> bool:
     """Whether a representation's fold figures gain on the baseline's, at the same model, by
     more than the larger of their spreads over folds and seeds."""
     return score.folds - baseline.folds > max(score.spread, baseline.spread)
+
+
+# Macro tags of the representations and models: \reprNsMassRawRhoMlpFolds.
+REPRESENTATION_TAG = {
+    "baseline": "Baseline",
+    "raw rho_c": "RawRho",
+    "log10 M": "LogMass",
+    "linear D": "LinearCharge",
+    "curve-wise": "Curvewise",
+}
+MODEL_TAG = {"k-NN": "Knn", "local RBF": "Rbf", "MLP": "Mlp"}
+
+
+def numbers(found: Sequence[Score]) -> dict[str, str]:
+    """Every score Section 5.1 cites, as the table prints it: \\repr<Pair><Representation>
+    <Model><Test|Folds>; then per model the fold figures raw rho_c loses on the NS mass,
+    \\reprNsMassRawRhoLoss<Model>, the difference of the printed entries so a reader's check
+    against the table holds."""
+    macros: dict[str, str] = {}
+    by_key = {(s.dataset, s.target, s.representation, s.model): s for s in found}
+    for s in found:
+        pair = f"{DATASET_TEX[s.dataset].capitalize()}{s.target.capitalize()}"
+        name = f"repr{pair}{REPRESENTATION_TAG[s.representation]}{MODEL_TAG[s.model]}"
+        macros |= {f"{name}Test": f"{s.test:.2f}", f"{name}Folds": f"{s.folds:.2f}"}
+    for model in MODELS:
+        base = by_key.get((NEUTRON_STARS.dataset, "mass", "baseline", model))
+        raw = by_key.get((NEUTRON_STARS.dataset, "mass", "raw rho_c", model))
+        if base is not None and raw is not None:
+            loss = round(base.folds, 2) - round(raw.folds, 2)
+            macros[f"reprNsMassRawRhoLoss{MODEL_TAG[model]}"] = f"{loss:.2f}"
+    return macros
 
 
 REPRESENTATION_CAPTION = (
@@ -547,11 +579,11 @@ def main(
             logger.info("rebuilding the table from batch %s; nothing is fitted", batch)
         entries = [entry for entry in read_ledger(ledger) if entry.meta.batch == batch]
         assert len(entries) == jobs, f"batch {batch}: {len(entries)} ledger entries for {jobs} jobs"
-        table = representation_table(
-            scores(entries), config.tables.layout, config.tables.representation
-        )
+        found = scores(entries)
+        table = representation_table(found, config.tables.layout, config.tables.representation)
         path = _write_table(args.assets / SECTION, table)
-        logger.info("done: representation table of batch %s -> %s", batch, path)
+        write_checked(path.with_name(f"{SECTION}_num.tex"), render_macros(numbers(found)))
+        logger.info("done: representation table and numbers of batch %s -> %s", batch, path)
 
 
 if __name__ == "__main__":

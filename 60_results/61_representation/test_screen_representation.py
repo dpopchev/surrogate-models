@@ -25,6 +25,7 @@ from screen_representation import (
     beats,
     cells,
     main,
+    numbers,
     plan,
     representation_table,
     run_job,
@@ -227,6 +228,18 @@ def test_the_table_has_one_row_per_pair_and_representation() -> None:
 def test_a_fold_entry_that_beats_the_baseline_is_bold() -> None:
     found = [ns_mass("baseline", "MLP", 2.0, 0.1), ns_mass("log10 M", "MLP", 3.0, 0.1)]
     assert "\\mathbf{3.00_{\\pm 0.10}}" in table_rows(representation_table(found))[1]
+
+
+@pytest.mark.view
+def test_representation_numbers_name_each_score() -> None:
+    found = [ns_mass("baseline", "MLP", 2.0, 0.1), ns_mass("raw rho_c", "MLP", 1.8, 0.1)]
+    assert numbers(found) == {
+        "reprNsMassBaselineMlpTest": "2.00",
+        "reprNsMassBaselineMlpFolds": "2.00",
+        "reprNsMassRawRhoMlpTest": "1.80",
+        "reprNsMassRawRhoMlpFolds": "1.80",
+        "reprNsMassRawRhoLossMlp": "0.20",
+    }
 
 
 @pytest.mark.view

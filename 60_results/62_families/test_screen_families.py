@@ -26,6 +26,7 @@ from screen_families import (
     job_line,
     main,
     next_jobs,
+    numbers,
     outcomes_from_json,
     outcomes_to_json,
     over_memory,
@@ -108,6 +109,23 @@ def test_the_best_candidates_on_the_folds_survive() -> None:
 @pytest.mark.model
 def test_a_wall_never_survives() -> None:
     assert survivors([scored(KNN, 1.0), walled(GPR)], keep=2) == (KNN,)
+
+
+@pytest.mark.view
+def test_family_numbers_name_each_leader() -> None:
+    def on(dataset: str, target: Target, candidate: Candidate, folds: float) -> Scored:
+        return replace(scored(candidate, folds), job=Job(dataset, target, candidate, 1000, 0))
+
+    outcomes = [
+        on("neutron_stars", "mass", KNN, 1.0),
+        on("neutron_stars", "mass", RBF, 3.0),
+        on("black_holes", "charge", MLP, 2.0),
+    ]
+    found = numbers(outcomes)
+    assert {name: found[name] for name in found if name.endswith("Leader")} == {
+        "famNsMassLeader": "local RBF",
+        "famBhChargeLeader": "MLP",
+    }
 
 
 @pytest.mark.model
