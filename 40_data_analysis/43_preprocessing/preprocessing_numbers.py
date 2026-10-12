@@ -2,7 +2,8 @@
 
 Reads the frozen split (local/state/split.parquet); writes \\prep... LaTeX macros: per dataset
 the curves in the test set and in each GroupKFold fold, and the curves the extrapolation ablation
-flags. The charge floor these numbers once carried is gone (W-063).
+flags. The charge floor these numbers once carried is gone (W-063). \\prepDecisionsLayout names
+the decisions tables' layout of paper.toml [tables] decisions, the file the text inputs (W-124).
 
 Run as `uv run python <this file> <split> <asset dir> --seed <n>` (mk/paper.mk does).
 """
@@ -15,6 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from shared.config import DecisionsTableLayout, load_config
 from shared.eda import render_macros
 
 logger = logging.getLogger(__name__)
@@ -62,9 +64,12 @@ def split_summary(split: pd.DataFrame, dataset: str) -> SplitSummary:
 TAGS = {"neutron_stars": "Ns", "black_holes": "Bh"}
 
 
-def numbers(splits: tuple[SplitSummary, ...], seed: int) -> dict[str, str]:
-    """Every number Section 3.3 cites, keyed by its \\prep macro name."""
-    found = {"prepSeed": f"{seed}"}
+def numbers(
+    splits: tuple[SplitSummary, ...], seed: int, decisions: DecisionsTableLayout = "wide"
+) -> dict[str, str]:
+    """Every number Section 3.3 cites, keyed by its \\prep macro name, and the decisions
+    tables' layout."""
+    found = {"prepSeed": f"{seed}", "prepDecisionsLayout": decisions}
     for s in splits:
         tag = TAGS[s.dataset]
         found |= {
@@ -106,7 +111,8 @@ def main(argv: list[str]) -> None:
     for stale in out.iterdir():
         stale.unlink()
     numbers_tex = out / f"{SECTION}_num.tex"
-    numbers_tex.write_text(render_macros(numbers(splits, args.seed)))
+    decisions = load_config().tables.decisions
+    numbers_tex.write_text(render_macros(numbers(splits, args.seed, decisions)))
     logger.info("done: Section 3.3 numbers -> %s", numbers_tex)
 
 

@@ -1,0 +1,27 @@
+\begin{table}[!htb]
+\centering
+\caption{Neutron stars: preprocessing and feature decisions with their grounds.}
+\label{tab:decisions-ns}
+\renewcommand{\arraystretch}{1.2}
+\small
+\begin{tabular}{p{2.4cm} p{3.6cm} p{5.3cm}}
+\toprule
+Item & Decision & Grounds \\
+\midrule
+$\rhoc$ input & $\log_{10}\rhoc$, standardized &
+Positive and multiplicative; $M$ follows $\log_{10}\rhoc$ as one smooth curve per $(\beta, \lambda)$ pair; skew $\nsEdaRhocRawSkew \to \nsEdaRhocLogSkew$, supporting only (the grid is about even in $\rhoc$). \\
+$\beta, \lambda$ inputs & Linear, standardized; \emph{both retained} &
+A straight line in $\lambda$ explains $\nsEdaLambdaLinearPercentLogDM\%$ of the charge target's variance; at fixed $\lambda$, $\beta$ explains $\nsEdaBetaSharePercent\%$: they interact. \\
+Charge target & $\log_{10}(\Dch/M)$ &
+$\Dch$ spans $\nsEdaDOrders$ orders of magnitude, every value positive; dividing by $M$ lowers the Spearman correlation with $M$ from $\nsEdaCorrMLogD$ to $\nsEdaCorrMLogDM$ and raises the Pearson correlation with $\lambda$ from $\nsEdaCorrLambdaLogD$ to $\nsEdaCorrLambdaLogDM$. \\
+Mass target & $M$, in $\Msun$ &
+Bounded and of order one (up to $\nsEdaMassMax\,\Msun$); $\nsEdaPileUpPercent\%$ of rows lie within $\nsEdaPileUpWindow\,\Msun$ of their curve's maximum, a sampling artefact, disclosed. \\
+Input scaling & Standardization fitted on the training folds only &
+The inputs differ in scale by orders of magnitude; fitting on training folds only keeps held-out curves out of the model. \\
+Split & $\prepNsTestPercent\%$ of curves frozen as test; GroupKFold ($\prepNsFolds$ folds) over $(\beta, \lambda)$ curves &
+$\nsEdaSameCurvePercent\%$ of rows have their nearest neighbour on their own curve; a row-random split scores $\nsEdaSplitRandomRowsDM$ against $\nsEdaSplitCurvesDM$ for whole curves. \\
+Domain of validity & The filled $(\beta, \lambda)$ triangle and the sampled $\rhoc$ range; no extrapolation claimed &
+$\nsEdaGridFillPercent\%$ grid fill; predicting the rim from the interior scores $\nsEdaSplitRimDM$ (ablation). \\
+\bottomrule
+\end{tabular}
+\end{table}

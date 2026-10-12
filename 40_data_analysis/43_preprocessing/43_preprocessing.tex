@@ -12,62 +12,11 @@ Rows of one curve are each other's nearest neighbours ($\nsEdaSameCurvePercent\%
 \paragraph{Extrapolation is measured in a separate ablation, not claimed.}
 The final model is trained on all curves outside the test set, so it covers the whole sampled domain, and its validity is claimed only there. How it degrades beyond the domain is measured apart: an ablation trains without the curves on the rim of the domain ($\prepNsAblationCurves$ neutron-star curves on the edges of the $(\beta, \lambda)$ grid and along its empty corner; the $\prepBhAblationCurves$ outermost black-hole curves) and tests on them. The data already indicate the outcome: for neutron stars, predicting the rim from the interior costs about six times the error of predicting an interior curve ($\nsEdaSplitRimDM$ against $\nsEdaSplitCurvesDM$), while for black holes the outermost curves cost no more than any other ($\bhEdaSplitOuterCurvesLD$ against $\bhEdaSplitCurvesLD$).
 
-\begin{table}[!htb]
-\centering
-\caption{Neutron stars: preprocessing and feature decisions with their grounds.}
-\label{tab:decisions-ns}
-\renewcommand{\arraystretch}{1.2}
-\small
-\begin{tabular}{p{2.4cm} p{3.6cm} p{5.3cm}}
-\toprule
-Item & Decision & Grounds \\
-\midrule
-$\rhoc$ input & $\log_{10}\rhoc$, standardized &
-Positive and multiplicative; $M$ follows $\log_{10}\rhoc$ as one smooth curve per $(\beta, \lambda)$ pair; skew $\nsEdaRhocRawSkew \to \nsEdaRhocLogSkew$, supporting only (the grid is about even in $\rhoc$). \\
-$\beta, \lambda$ inputs & Linear, standardized; \emph{both retained} &
-A straight line in $\lambda$ explains $\nsEdaLambdaLinearPercentLogDM\%$ of the charge target's variance; at fixed $\lambda$, $\beta$ explains $\nsEdaBetaSharePercent\%$: they interact. \\
-Charge target & $\log_{10}(\Dch/M)$ &
-$\Dch$ spans $\nsEdaDOrders$ orders of magnitude, every value positive; dividing by $M$ lowers the Spearman correlation with $M$ from $\nsEdaCorrMLogD$ to $\nsEdaCorrMLogDM$ and raises the Pearson correlation with $\lambda$ from $\nsEdaCorrLambdaLogD$ to $\nsEdaCorrLambdaLogDM$. \\
-Mass target & $M$, in $\Msun$ &
-Bounded and of order one (up to $\nsEdaMassMax\,\Msun$); $\nsEdaPileUpPercent\%$ of rows lie within $\nsEdaPileUpWindow\,\Msun$ of their curve's maximum, a sampling artefact, disclosed. \\
-Input scaling & Standardization fitted on the training folds only &
-The inputs differ in scale by orders of magnitude; fitting on training folds only keeps held-out curves out of the model. \\
-Split & $\prepNsTestPercent\%$ of curves frozen as test; GroupKFold ($\prepNsFolds$ folds) over $(\beta, \lambda)$ curves &
-$\nsEdaSameCurvePercent\%$ of rows have their nearest neighbour on their own curve; a row-random split scores $\nsEdaSplitRandomRowsDM$ against $\nsEdaSplitCurvesDM$ for whole curves. \\
-Domain of validity & The filled $(\beta, \lambda)$ triangle and the sampled $\rhoc$ range; no extrapolation claimed &
-$\nsEdaGridFillPercent\%$ grid fill; predicting the rim from the interior scores $\nsEdaSplitRimDM$ (ablation). \\
-\bottomrule
-\end{tabular}
-\end{table}
+% The decisions tables' layout is paper.toml [tables] decisions (W-124): wide or narrow.
+\input{43_preprocessing_tab_decisions_ns_\prepDecisionsLayout}
 \FloatBarrier
 
 The black-hole decisions (\cref{tab:decisions-bh}) differ from the neutron-star ones in three rows: the horizon radius enters linearly, because it is uniform and spans only $\bhEdaRhOrders$ orders of magnitude; the charge target keeps the neutron-star definition although dividing by the mass gains nothing here, so that both datasets share one target; and the domain is bounded by the existence edge instead of a triangle.
 
-\begin{table}[!htb]
-\centering
-\caption{Black holes: preprocessing and feature decisions with their grounds.}
-\label{tab:decisions-bh}
-\renewcommand{\arraystretch}{1.2}
-\small
-\begin{tabular}{p{2.4cm} p{3.6cm} p{5.3cm}}
-\toprule
-Item & Decision & Grounds \\
-\midrule
-$\rh$ input & $\rh$, linear, standardized &
-Uniform grid of step $\bhEdaRhStep$ over $\bhEdaRhOrders$ orders of magnitude, skew $\bhEdaRhRawSkew$; a logarithm would only add skew. \\
-$\beta$ input & Linear, standardized; retained &
-At fixed $\rh$ it moves $M$ by $\bhEdaBetaEffectPercentM\%$ and $\log_{10}\Dch$ by $\bhEdaBetaEffectPercentLD\%$ of their spread, but it sets the existence edge, $\rh^{\min}$ from $\bhEdaEdgeRhMinLow$ to $\bhEdaEdgeRhMinHigh$. \\
-Charge target & $\log_{10}(\Dch/M)$, as for neutron stars &
-Dividing by $M$ brings no gain here (Spearman with $M$: $\bhEdaSpearmanMLogD$ against $\bhEdaSpearmanMLogDM$); kept for one definition across both datasets; smallest $\Dch$ $\bhEdaDMin$. \\
-Mass target & $M$, in $\Msun$ &
-Bounded and of order one ($\bhEdaMMin$ to $\bhEdaMMax\,\Msun$); follows $\rh$ with Pearson $r = \bhEdaPearsonMRh$; $\beta$ moves it by $\bhEdaBetaEffectPercentM\%$ at fixed $\rh$. \\
-Input scaling & Standardization fitted on the training folds only &
-As for neutron stars. \\
-Split & $\prepBhTestCurves$ of $\prepBhCurves$ curves frozen as test; GroupKFold ($\prepBhFolds$ folds) over $\beta$ curves &
-$\bhEdaSameCurvePercent\%$ of rows have their nearest neighbour on their own curve; for $\log_{10}\Dch$ a row-random split scores $\bhEdaSplitRandomRowsLD$ against $\bhEdaSplitCurvesLD$ for whole curves. \\
-Domain of validity & $\beta$ from $\bhEdaEdgeBetaLow$ to $\bhEdaEdgeBetaHigh$, $\rh$ from the existence edge to $\bhEdaRhMax$ &
-The outermost curves score as any other ($\bhEdaSplitOuterCurvesLD$, ablation). \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{43_preprocessing_tab_decisions_bh_\prepDecisionsLayout}
 \FloatBarrier

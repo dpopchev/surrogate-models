@@ -168,7 +168,7 @@ PREP_NUMBERS := 40_data_analysis/43_preprocessing/preprocessing_numbers.py
 PREP_ASSETS  := $(ASSETS)/43_preprocessing/43_preprocessing_num.tex
 PAPER_ASSETS += $(PREP_ASSETS)
 
-$(PREP_ASSETS): $(PREP_NUMBERS) $(STATE)/split.parquet
+$(PREP_ASSETS): $(PREP_NUMBERS) $(STATE)/split.parquet paper.toml
 	@$(RUN) python $(PREP_NUMBERS) $(STATE)/split.parquet $(ASSETS) --seed $(SPLIT_SEED)
 	$(call log_done,Section 3.3 numbers written to $@)
 
