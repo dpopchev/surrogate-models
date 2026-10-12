@@ -75,6 +75,7 @@ def numbers(
         found |= {
             f"prep{tag}Curves": f"{s.curves}",
             f"prep{tag}TestCurves": f"{s.test}",
+            f"prep{tag}TrainCurves": f"{s.curves - s.test}",
             f"prep{tag}TestPercent": f"{s.test_percent:.1f}",
             f"prep{tag}FoldMin": f"{s.fold_min}",
             f"prep{tag}FoldMax": f"{s.fold_max}",

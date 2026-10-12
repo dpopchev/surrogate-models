@@ -11,7 +11,7 @@ This appendix describes each candidate of the family screen of Section~\ref{sec:
 
 \paragraph{Curve-wise.} Each training curve is first fitted once along its own normalized coordinate $s \in [0, 1]$ as a least-squares cubic B-spline on eight knots, ends included: ten coefficients. With the curve's start and end along its coordinate these make twelve numbers per curve, and the model learns them from the curve parameters alone, $(\beta, \lambda)$ or $\beta$. A row is predicted by rebuilding its curve from its parameters and evaluating the spline at the row's $s$. The data are dense along each curve and sparse across curves, so this unit puts the dense direction into the spline and leaves the model the sparse one.
 
-\paragraph{What to look for.} A curve-wise model is smooth along each curve by construction, and its error is set by the number of curves, not of rows: $1371$ neutron-star training curves against $18$ for black holes. When the curves are few, as in the neutron-star design thinned to $10^3$ rows, the predicted start and end of a curve miss, the spline is evaluated outside $[0, 1]$, and the error grows past the value itself, a negative number of figures. The screen therefore ranks each unit apart. A pointwise model gains from every row, along a curve or across curves.
+\paragraph{What to look for.} A curve-wise model is smooth along each curve by construction, and its error is set by the number of curves, not of rows: $\prepNsTrainCurves$ neutron-star training curves against $\prepBhTrainCurves$ for black holes. When the curves are few, as in the neutron-star design thinned to $\knobFamiliesBudgetsFirst$ rows, the predicted start and end of a curve miss, the spline is evaluated outside $[0, 1]$, and the error grows past the value itself, a negative number of figures. The screen therefore ranks each unit apart. A pointwise model gains from every row, along a curve or across curves.
 
 \subsection{Weighted $k$-Nearest Neighbours}
 
@@ -23,7 +23,7 @@ This appendix describes each candidate of the family screen of Section~\ref{sec:
 
 \subsection{Local Thin-Plate Radial Basis Functions}
 
-\paragraph{What it is.} Around each query, the $100$ nearest training points are interpolated exactly by a thin-plate spline, $\phi(r) = r^2 \log r$, plus a linear polynomial~\citep{SciPy2020}. Where the neighbours lie on one plane the linear part cannot be fitted, and a constant part on the same neighbours is used instead. A global interpolant through all rows would cost the cube of the rows; the neighbourhood keeps it local.
+\paragraph{What it is.} Around each query, the $\knobFamiliesNeighbours$ nearest training points are interpolated exactly by a thin-plate spline, $\phi(r) = r^2 \log r$, plus a linear polynomial~\citep{SciPy2020}. Where the neighbours lie on one plane the linear part cannot be fitted, and a constant part on the same neighbours is used instead. A global interpolant through all rows would cost the cube of the rows; the neighbourhood keeps it local.
 
 \paragraph{Cost.} Each query solves one system of about a hundred unknowns, so the cost grows with the number of queries, not with $N$, beyond the neighbour search.
 
@@ -33,7 +33,7 @@ This appendix describes each candidate of the family screen of Section~\ref{sec:
 
 \paragraph{What it is.} The target is modelled as a draw from a Gaussian process with a scaled squared-exponential kernel plus white noise, $k(x, x') = \sigma^2 \exp(-\lVert x - x' \rVert^2 / 2\ell^2) + \sigma_n^2 \delta_{xx'}$, on standardized inputs and target~\citep{Rasmussen2005_GP,ScikitLearn2011}. The amplitude $\sigma$, the length scale $\ell$ and the noise $\sigma_n$ are set by maximizing the marginal likelihood. The prediction is the posterior mean, and the posterior variance comes with it.
 
-\paragraph{Cost.} Fitting factorizes the $N \times N$ kernel matrix, about $N^3$ operations for each step of the optimizer and $8 N^2$ bytes. At $10^4$ rows the matrix takes $0.8$\,GB; past about $2.2 \times 10^4$ rows it passes the $4$\,GB budget, and the pointwise Gaussian process is recorded as a wall without being run. Curve-wise it is fitted on one row per curve, so it never meets the wall.
+\paragraph{Cost.} Fitting factorizes the $N \times N$ kernel matrix, about $N^3$ operations for each step of the optimizer and $8 N^2$ bytes. At $\knobFamiliesBudgetsSecond$ rows the matrix takes $8 \times 10^8$ bytes; past about $2.2 \times 10^4$ rows it passes the $\knobFamiliesMemoryGb$\,GB budget, and the pointwise Gaussian process is recorded as a wall without being run. Curve-wise it is fitted on one row per curve, so it never meets the wall.
 
 \paragraph{What to look for.} It is smooth everywhere and was the strongest pointwise model on $10^3$ rows; the question is whether it keeps its lead as $N$ grows, or meets its wall first. A noise level fitted at its lower bound means the data are smoother than any noise the kernel allows: the model interpolates. Its posterior variance is a ready error bar for the sampler of Section~\ref{sec:mcmc}, which no other family gives for free.
 
@@ -47,7 +47,7 @@ This appendix describes each candidate of the family screen of Section~\ref{sec:
 
 \subsection{The Multilayer Perceptron}
 
-\paragraph{What it is.} The baseline network of Section~\ref{sec:algorithms}: three hidden layers of $64$ units with ReLU activations, trained by AdamW~\citep{Loshchilov2017_AdamW} at a learning rate of $10^{-3}$ on a cosine schedule, batches of $1024$ rows and the mean squared error of the standardized target. It stops early when the loss on a fifth of the training curves has not improved for $20$ epochs, at most $500$, and keeps its best epoch~\citep{PyTorch2019}. Curve-wise, its output layer has one unit per output of a curve.
+\paragraph{What it is.} The baseline network of Section~\ref{sec:algorithms}: $\knobNetDepth$ hidden layers of $\knobNetWidth$ units with ReLU activations, trained by AdamW~\citep{Loshchilov2017_AdamW} at a learning rate of $\knobNetLr$ on a cosine schedule, batches of $\knobNetBatchSize$ rows and the mean squared error of the standardized target. It stops early when the loss on a share of $\knobNetValidFraction$ of the training curves has not improved for $\knobNetPatience$ epochs, at most $\knobNetMaxEpochs$, and keeps its best epoch~\citep{PyTorch2019}. Curve-wise, its output layer has one unit per output of a curve.
 
 \paragraph{Cost.} An epoch costs about $N$ operations, so its time grows linearly with $N$; it never meets the memory wall, but at $10^5$ rows a fit takes minutes.
 
@@ -63,10 +63,10 @@ This appendix describes each candidate of the family screen of Section~\ref{sec:
 
 \subsection{Reading the Family Table}
 
-\paragraph{Significant figures.} Each entry is $-\log_{10}$ of the relative error at its 95th percentile, of $M$ or of $\Dch$ rebuilt from $Y$: $2$ figures is an error of $1\%$ on all but the worst $5\%$ of the rows, and a negative entry is an error larger than the value itself. The data ceilings of Section~\ref{sec:data-analysis} bound what any model can reach.
+\paragraph{Significant figures.} Each entry is $-\log_{10}$ of the relative error at its 95th percentile, of $M$ or of $\Dch$ rebuilt from $Y$: two figures is an error of one percent on all but the worst five percent of the rows, and a negative entry is an error larger than the value itself. The data ceilings of Section~\ref{sec:data-analysis} bound what any model can reach.
 
 \paragraph{Folds and test.} The table reports the frozen folds, whole training curves held out in turn, on which the halving ranks; the test curves are scored too and stay held out from every choice. A candidate far better on the folds than on the test curves has been chosen by the folds' noise.
 
-\paragraph{Rows and walls.} The subscript is the number of training rows of the last round the candidate reached: a candidate eliminated on $10^3$ rows keeps its $10^3$ entry. A wall is a fit past $30$ minutes or $4$\,GB at that number of rows.
+\paragraph{Rows and walls.} The subscript is the number of training rows of the last round the candidate reached: a candidate eliminated on $\knobFamiliesBudgetsFirst$ rows keeps its $\knobFamiliesBudgetsFirst$ entry. A wall is a fit past $\knobFamiliesMinutes$ minutes or $\knobFamiliesMemoryGb$\,GB at that number of rows.
 
 \paragraph{Ripple.} Every run also records the ripple of its residual: the root mean square of its second divided difference across each curve parameter, at fixed points along the curves. A smooth model keeps it near zero; a model that jumps between neighbouring curves does not, even when its figures are high. It is reported with the scaling of each family.

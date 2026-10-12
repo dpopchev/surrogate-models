@@ -56,6 +56,9 @@ class TestNumbers:
     def test_names_the_seed(self, found) -> None:
         assert found["prepSeed"] == "7"
 
+    def test_numbers_name_the_training_curves(self, found) -> None:
+        assert (found["prepNsTrainCurves"], found["prepBhTrainCurves"]) == ("3", "1")
+
     def test_numbers_name_the_decisions_layout(self) -> None:
         found = numbers((split_summary(SPLIT, NS),), seed=7, decisions="narrow")
         assert found["prepDecisionsLayout"] == "narrow"
