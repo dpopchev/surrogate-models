@@ -153,7 +153,7 @@ def test_a_generated_table_is_set_in_the_small_font() -> None:
 @pytest.mark.view
 def test_booktabs_aligned_uses_s_columns() -> None:
     table = booktabs("x", "A table.", "lrr", "a & b & c", ["1 & 2 & 3"], "aligned")
-    assert "\\begin{tabular}{lSS}" in table
+    assert "\\begin{tabular}{lS[table-format=1]S[table-format=1]}" in table
 
 
 @pytest.mark.view
@@ -161,6 +161,13 @@ def test_aligned_header_keeps_empty_cells() -> None:
     header = "A & B & \\multicolumn{2}{c}{C} \\\\\n & & Test & Folds"
     table = booktabs("x", "A table.", "llrr", header, ["x & y & 1.5 & 2.5"], "aligned")
     assert " &  & {Test} & {Folds} \\\\" in table.splitlines()
+
+
+@pytest.mark.view
+def test_aligned_spec_sets_table_format_per_column() -> None:
+    rows = ["p & $5.89\\times 10^{14}$ & 0.57", "q & $2.79\\times 10^{15}$ & -0.03"]
+    table = booktabs("x", "A table.", "lrr", "a & b & c", rows, "aligned")
+    assert "\\begin{tabular}{lS[table-format=1.2e2]S[table-format=-1.2]}" in table
 
 
 @pytest.mark.view

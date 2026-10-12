@@ -395,6 +395,78 @@ def _aligned_line(line: str, columns: str, body: bool) -> str:
     return " & ".join(cells)
 
 
+_SI_NUMBER = re.compile(r"^(-?)(\d+)(?:\.(\d+))?(?:e(-?)(\d+))?(?: \+- (\d+(?:\.\d+)?))?$")
+
+
+def _table_format(cells: list[str]) -> str:
+    """The siunitx table-format reserving the widest sign, integer, decimal, uncertainty and
+    exponent parts of an S column's si_cell forms; braced text cells and blanks are skipped,
+    and a column without a number gets none.
+
+    >>> _table_format(["5.89e14", "3.82e-8", "{--}"])
+    '1.2e-2'
+    >>> _table_format(["1.96 +- 0.02", "0.4 +- 0.13"])
+    '1.2(2)'
+    >>> _table_format(["{--}", ""])
+    ''
+    """
+    found = [m for m in map(_SI_NUMBER.match, cells) if m]
+    if not found:
+        return ""
+    sign = "-" if any(m[1] for m in found) else ""
+    integer = max(len(m[2]) for m in found)
+    decimals = max(len(m[3] or "") for m in found)
+    shape = f"{sign}{integer}" + (f".{decimals}" if decimals else "")
+    spreads = [round(float(m[6]) * 10**decimals) for m in found if m[6]]
+    if spreads:
+        shape += f"({max(len(str(s)) for s in spreads)})"
+    exponents = [m for m in found if m[5]]
+    if exponents:
+        exponent_sign = "-" if any(m[4] for m in exponents) else ""
+        shape += f"e{exponent_sign}{max(len(m[5]) for m in exponents)}"
+    return shape
+
+
+def _column_cells(rows: list[str], columns: str) -> list[list[str]]:
+    """Each column's cells over the body rows, a multicolumn cell skipped."""
+    found: list[list[str]] = [[] for _ in columns]
+    for row in rows:
+        at = 0
+        for cell in (part.strip() for part in _CELL_SEPARATOR.split(row)):
+            if spanned := _MULTICOLUMN.match(cell):
+                at += int(spanned[1])
+                continue
+            if at < len(columns):
+                found[at].append(cell)
+            at += 1
+    return found
+
+
+def _formatted_spec(spec: str, formats: list[str]) -> str:
+    """The spec with every repeat expanded and the k-th S column given formats[k] as its
+    table-format (a plain S for an empty one).
+
+    >>> _formatted_spec("l*{2}{@{}S}", ["1.2", ""])
+    'l@{}S[table-format=1.2]@{}S'
+    """
+    parts, pending = [], iter(formats)
+
+    def expand(text: str) -> None:
+        for kind, token in _spec_tokens(text):
+            if kind == "*":
+                count, body = token.split(":", 1)
+                for _ in range(int(count)):
+                    expand(body)
+            elif kind == "S":
+                shape = next(pending)
+                parts.append(f"S[table-format={shape}]" if shape else "S")
+            else:
+                parts.append(token)
+
+    expand(spec)
+    return "".join(parts)
+
+
 def booktabs(
     label: str,
     caption: str,
@@ -416,6 +488,8 @@ def booktabs(
                 _aligned_line(line, columns, body=False) for line in header.split(" \\\\\n")
             )
             rows = [_aligned_line(row, columns, body=True) for row in rows]
+            cells = zip(_column_cells(rows, columns), columns, strict=True)
+            spec = _formatted_spec(spec, [_table_format(c) for c, kind in cells if kind == "S"])
         case _:
             assert_never(layout)
     body = "".join(f"{row} \\\\\n" for row in rows)
