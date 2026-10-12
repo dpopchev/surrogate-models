@@ -79,13 +79,39 @@ $(BH_EDA_ASSETS): $(BH_EDA) paper.toml $(SHARED) $(STATE)/black_holes.parquet
 VARIANTS := $(BUILD)/variants
 
 .PHONY: variants
-variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every figure variant and its contact sheet under build/variants/
+variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet table-variants ## Draw every figure variant and its contact sheet under build/variants/
 	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) --variants $(VARIANTS)
 	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --variants $(VARIANTS)
 	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) --variants $(VARIANTS)
 	@$(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) --variants $(VARIANTS)
 	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --variants $(VARIANTS)
 	$(call log_done,figure variants and contact sheets in $(VARIANTS)/)
+
+# Every table in each layout of paper.toml [tables], one page image per table and layout under
+# $(VARIANTS)/tables/ (W-114). Per layout, a copy of the assets in $(TABLES_WORK)/<layout>/ gets
+# its tables rewritten with PAPER__TABLES__LAYOUT=<layout> -- the EDA, and the results tables
+# from their recorded batches, nothing fitted; the baseline table stays as make baseline wrote
+# it -- then the paper's sources and those assets, flat, compile one table a page; gs
+# rasterizes the pages. $(ASSETS) itself is never written.
+TABLES_ENTRY  := 00_metadata/tables_entry.py
+TABLES_WORK   := $(WORK)/tables
+TABLE_LAYOUTS := small aligned
+
+.PHONY: table-variants
+table-variants: assets
+	@for layout in $(TABLE_LAYOUTS); do \
+	  work=$(TABLES_WORK)/$$layout; \
+	  rm -rf $$work && mkdir -p $$work/assets $$work/flat && cp -R $(ASSETS)/. $$work/assets/ && \
+	  export PAPER__TABLES__LAYOUT=$$layout && \
+	  $(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $$work/assets --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) && \
+	  $(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $$work/assets --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) && \
+	  $(RUN) python $(REPRESENTATION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $(STATE) $(REPRESENTATION_KNOBS) --batch $(REPRESENTATION_BATCH) && \
+	  $(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) && \
+	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) && \
+	  cp $(PAPER_SRC) $$work/flat/ && find $$work/assets -type f -exec cp {} $$work/flat/ \; && \
+	  $(RUN) python $(TABLES_ENTRY) $(PAPER_ENTRY) $$layout $$work/flat $(VARIANTS)/tables || exit 1; \
+	done
+	$(call log_done,every table in each layout ($(TABLE_LAYOUTS)) in $(VARIANTS)/tables/)
 
 # Section 3.3: the split numbers, from the split file.
 PREP_NUMBERS := 40_data_analysis/43_preprocessing/preprocessing_numbers.py
