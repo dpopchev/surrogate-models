@@ -254,7 +254,7 @@ dashboard: ## Follow the fits live in optuna-dashboard -- the newest study journ
 
 # Section 5.1: the representation screen (W-066), one factor at a time from the baseline at
 # equal model -- about 60 harness jobs, hours on the workers, so like the baseline it is its own
-# target and not in PAPER_ASSETS. Its knobs are written here only (Decision on W-066): the
+# target; make assets only rebuilds the table from the recorded batch (W-130). Its knobs are written here only (Decision on W-066): the
 # k-NN's k, the local RBF's neighbours, the curve-wise spline's knots, the MLP seeds counted
 # from paper.toml's seed. The table is read back from the run's ledger batch.
 REPRESENTATION        := 60_results/61_representation/screen_representation.py
@@ -271,6 +271,9 @@ $(REPRESENTATION_ASSETS): $(REPRESENTATION) paper.toml $(SHARED) $(STATE)/neutro
 	@$(RUN) python $(REPRESENTATION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(REPRESENTATION_KNOBS) $(if $(REPRESENTATION_BATCH),--batch $(REPRESENTATION_BATCH))
 	$(call log_done,representation table written to $@)
 
+# A paper asset while its batch is recorded: make assets rebuilds it in seconds, never a screen.
+PAPER_ASSETS += $(if $(REPRESENTATION_BATCH),$(REPRESENTATION_ASSETS))
+
 .PHONY: representation
 representation: $(REPRESENTATION_ASSETS) ## Run the representation screen for Section 5.1
 	$(call log_done,representation assets current in $(dir $(REPRESENTATION_ASSETS)))
@@ -279,9 +282,9 @@ representation: $(REPRESENTATION_ASSETS) ## Run the representation screen for Se
 # family pointwise and curve-wise at the first budget, the top 3 of each unit per pair at the
 # second, the top 2 of each at the third, each unit ranked apart because a thinned NS design
 # keeps few curves (Decisions on W-067); a fit past 30 min or 4 GB is the family's wall there
-# (Decision on W-067), on 3 workers. Hours, so its own target, not in PAPER_ASSETS; one line
-# per finished job in the log. Its knobs are written here only. The k-NN, RBF and spline knobs
-# are the representation screen's.
+# (Decision on W-067), on 3 workers. Hours, so its own target, in make assets only from its
+# recorded batch (W-130); one line per finished job in the log. Its knobs are written here
+# only. The k-NN, RBF and spline knobs are the representation screen's.
 FAMILIES        := 60_results/62_families/screen_families.py
 FAMILIES_ASSETS := $(ASSETS)/62_families/62_families_tab_families.tex
 FAMILIES_KNOBS  := --k 8 --neighbours 100 --knots 8 --per-curve 10 \
@@ -296,18 +299,21 @@ $(FAMILIES_ASSETS): $(FAMILIES) paper.toml $(SHARED) $(STATE)/neutron_stars.parq
 	@$(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(FAMILIES_KNOBS) $(if $(FAMILIES_BATCH),--batch $(FAMILIES_BATCH))
 	$(call log_done,family table written to $@)
 
+# A paper asset while its batch is recorded: make assets rebuilds it in seconds, never a screen.
+PAPER_ASSETS += $(if $(FAMILIES_BATCH),$(FAMILIES_ASSETS))
+
 .PHONY: families
 families: $(FAMILIES_ASSETS) ## Run the family screen for Section 5.2
 	$(call log_done,family assets current in $(dir $(FAMILIES_ASSETS)))
 
 # Section 5.3's tuning (W-068): every candidate on the family screen's short list searched with
 # the same Optuna trials over its own hyperparameters, scored on the frozen folds; a fit past the
-# wall fails its trial. Hours, so its own target, not in PAPER_ASSETS; one line per finished job
-# in the log, the trials live in optuna-dashboard on the batch's journal under
-# $(STATE)/63_precision/. Its knobs are written here only; k, neighbours and knots are the
-# screen's, each overridden by a trial that searches it. The short list and the screen's figures
-# come from its recorded batch in the ledger: per pair, the candidates within --within figures
-# of the best on the most rows (Section 5.2).
+# wall fails its trial. Hours, so its own target, in make assets only from its recorded batch
+# (W-130); one line per finished job in the log, the trials live in optuna-dashboard on the
+# batch's journal under $(STATE)/63_precision/. Its knobs are written here only; k, neighbours
+# and knots are the screen's, each overridden by a trial that searches it. The short list and
+# the screen's figures come from its recorded batch in the ledger: per pair, the candidates
+# within --within figures of the best on the most rows (Section 5.2).
 TUNING        := 60_results/63_precision/tune_survivors.py
 TUNING_ASSETS := $(ASSETS)/63_precision/63_precision_tab_tuning.tex
 TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --workers 3 --within 1.0
@@ -319,6 +325,9 @@ $(TUNING_ASSETS): $(TUNING) paper.toml $(SHARED) $(STATE)/neutron_stars.parquet 
 	$(call log_info,$(if $(TUNING_BATCH),rebuilding the tuning table from batch $(TUNING_BATCH),tuning the short list ($(TUNING_KNOBS)) -- one line per finished job))
 	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) $(if $(TUNING_BATCH),--batch $(TUNING_BATCH))
 	$(call log_done,tuning table written to $@)
+
+# A paper asset while its batch is recorded: make assets rebuilds it in seconds, never a tuning.
+PAPER_ASSETS += $(if $(TUNING_BATCH),$(TUNING_ASSETS))
 
 .PHONY: tuning
 tuning: $(TUNING_ASSETS) ## Run the tuning of the short list for Section 5.3
