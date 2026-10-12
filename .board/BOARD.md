@@ -1,6 +1,6 @@
 # Board -- W-127-aligned-spreads
 record: local
-open path: E-011 > W-127 > T-336   | blocked: 0 | todo roots: 8 | done: 365 | pruned: 57
+open path: E-011 > W-127   | blocked: 0 | todo roots: 9 | done: 366 | pruned: 57
 
 ## Tree
 
@@ -56,7 +56,7 @@ E-011         [doing]    Figures and tables picked from rendered variants, numbe
   W-124  issue  [done]     Per-table layouts rendered to page images   (filed during T-322) -- T-326 [pruned]   [pruned: five layouts over four modules plus a baseline rebuild and the per-table rendering in one Task; re-filed at W-124's activation as T-337 (representation), T-338 (families, tuning) and T-339 (baseline, rendering)], T-327 [done], T-337 [done], T-338 [done], T-339 [done]
   W-125  issue  [done]     Table page images cropped to the table   (filed during T-328) -- T-329 [done], T-330 [done]
   W-126  bug    [done]     The aligned table layout overflows the text width   (filed during T-328) -- T-331 [done], T-332 [done]
-  W-127  bug    [doing]    The aligned representation table mixes compact and subscript spreads   (filed during T-332) -- T-335 [done], T-336 [doing]   <- ACTIVE LEAF
+  W-127  bug    [doing]    The aligned representation table mixes compact and subscript spreads   (filed during T-332) -- T-335 [done], T-336 [done]
   W-128  bug    [todo]     The paper's baseline table is stale, written before its e-notation   (filed during T-339) -- T-340 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
@@ -64,6 +64,7 @@ W-119  bug    [todo]     (standalone) The ranges figure crashes on a batch with 
 W-120  bug    [todo]     (standalone) The tuning figure tests pass only after main styled the plots   (filed during T-294) -- T-296 [todo]
 W-121  spike  [todo]     (standalone) Where the run time of the screens and the tuning goes   (filed during T-259) -- T-303 [todo], T-304 [todo], T-305 [todo]
 W-123  bug    [todo]     (standalone) Three 5.2 scaling tests fail when run alone   (filed during T-317) -- T-320 [todo]
+W-129  bug    [todo]     (standalone) A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
 ```
 
 ## Closed
@@ -752,7 +753,7 @@ flowchart TD
   W126 --> T332["T-332 done: Confirm the aligned tables fit the text width -> build/.work/tables/aligned/flat/tables_aligned.log"]
   E011 --> W127["W-127 bug doing: The aligned representation table mixes compact and subscript spreads"]
   W127 --> T335["T-335 done: Read a bold spread cell as a bold siunitx number test-first -> shared/eda.py, 00_metadata/preamble.tex"]
-  W127 --> T336["T-336 doing: Word the representation caption per table layout test-first -> 60_results/61_representation/screen_representation.py -- ACTIVE LEAF"]
+  W127 --> T336["T-336 done: Word the representation caption per table layout test-first -> 60_results/61_representation/screen_representation.py"]
   E011 --> W128["W-128 bug todo: The paper's baseline table is stale, written before its e-notation"]
   W128 --> T340["T-340 todo: Rewrite the baseline table from the ledger in make assets -> mk/paper.mk"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
@@ -770,13 +771,15 @@ flowchart TD
   W121 --> T305["T-305 todo: Record the run-time decision -> W-121 spike.decision"]
   W123["W-123 bug todo, standalone: Three 5.2 scaling tests fail when run alone"]
   W123 --> T320["T-320 todo: Apply the notation to every 5.2 view test -> 60_results/62_families/test_screen_families.py"]
+  W129["W-129 bug todo, standalone: A table caption above its table touches the top rule"]
+  W129 --> T341["T-341 todo: Give a table caption its skip above the top rule -> 00_metadata/preamble.tex"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E011,W127,T336 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,W111,T262,T308,T309,T310,W112,T311,T312,T313,T314,W113,T315,T316,T317,T318,W114,T321,T325,T328,W115,T319,T333,T334,W122,T306,W124,T327,T337,T338,T339,W125,T329,T330,W126,T331,T332,T335 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W116,T278,T279,T280,T281,W128,T340,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320 todo
+  class E006,E009,E011,W127 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,W111,T262,T308,T309,T310,W112,T311,T312,T313,T314,W113,T315,T316,T317,T318,W114,T321,T325,T328,W115,T319,T333,T334,W122,T306,W124,T327,T337,T338,T339,W125,T329,T330,W126,T331,T332,T335,T336 done
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W116,T278,T279,T280,T281,W128,T340,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T260,T261,T263,T264,T265,T266,T267,T268,T269,T270,T271,T272,T273,T274,T275,T322,T323,T324,T276,T277,T307,T326 pruned
 ```
