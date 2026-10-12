@@ -22,13 +22,12 @@
 - 2026-10-11 W-091: standing: --doctest-modules imports each conftest.py as conftest -> a per-folder conftest needs --ignore=conftest.py --ignore-glob=*/conftest.py supersedes: W-091#1
 - 2026-10-11 W-117: standing: every asset writer iterates in a fixed order -> local/assets-baseline.sha (50 files) is seed-independent since W-117 supersedes: W-117#1
 - 2026-10-12 E-009: standing: folder NN is paper Section N-1 (unnumbered abstract) -> code names the compiled number (T-116) supersedes: E-009#1
-- 2026-10-12 E-011: fact: T-279/T-280 re-filed as T-345/T-346 at the W-116 split -> the ref guard is T-344 supersedes: E-011#6
 - 2026-10-12 E-011: standing: the paper review is a consistency review (text against figures, tables and code) -> a prose pass is a new root if wanted (developer, 2026-10-10) supersedes: E-011#1
 - 2026-10-12 T-200: standing: BH p95 is its worst of 3 test curves (pointwise RBF: M flat 5e-5 vs 1e-7; D 1e-3 vs 1e-5); BH curve-wise error arcs between the 8 knots -> E-007 tunes the knots supersedes: T-200#1
 - 2026-10-12 W-068: standing: batch 01a11d49, folds/test vs ceiling: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure supersedes: W-068#3, T-135#2, T-135#3
 - 2026-10-12 W-076: standing: across-curve p95 ceilings: NS M 4.1 figures (1.36e-4 M_sun at the median 1.75, 1.70e-4 at M_max 2.19), NS D 2.4 (1.56e-3 dex); BH M 7.1 (3.05e-7 M_sun at 3.58), D 6.0 (4.40e-7 dex), at the existence edge -> the E-006 target per pair supersedes: W-064#1, W-076#1
-- 2026-10-12 W-128: fact: T-340's check could not fail (LaTeX logs no '<file>.tex: Overfull') -> its evidence is the Overfull count, 10 to 9 supersedes: W-128#1
-- 2026-10-12 W-131: T-343: fact: the text's drifted 1371, 21, three folds, nine-of-ten and every-curve-wise claims now follow the macros; still typed: about ten/seventy rows per curve, ripple thirty/five times, error-figure readings, GP memory arithmetic -> no macro carries them supersedes: W-131#1
+- 2026-10-12 W-128: standing: a LaTeX log never writes '<file>.tex: Overfull' (the box follows the file's open paren) -> a check on a table's fit counts the Overfull boxes supersedes: W-128#2
+- 2026-10-12 W-131: standing: still typed in Sections 5.2 to the appendix: about ten/seventy rows per curve, ripple thirty/five times, error-figure readings, GP memory arithmetic -> no macro carries them (W-131) supersedes: W-131#2
 - 2026-10-12 W-132: fact: 00_metadata/paper_knobs.py keeps a third family-tag map, SPACE_TAG, with the two networks as Net (T-348) -> W-132 moves it beside FAMILY_TAG too
 
 ## Open questions
@@ -40,12 +39,6 @@
 - 2026-10-06 E-009: parked -- 4 decisions, 4 deviations -> ledgers/E-009.md
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
-- 2026-10-10 E-011: the picks live in paper.toml per figure and table (E-003 d1), W-102 and W-104 adopted (developer, 2026-10-10)
-- 2026-10-11 E-011: W-122 before W-104 at W-102's re-aim, so make compile shows the picks before more are added (developer, 2026-10-11)
-- 2026-10-12 E-011: after W-127: W-128, then W-116 split in two (macros; literals and the ref guard), ahead of the filing order (developer, 2026-10-12) supersedes: E-011#d3
-- 2026-10-12 W-115: presets scale the mark literals (font, mark, line, alpha), paper 1.0 (developer, 2026-10-12)
 
 ## Deviations
-- 2026-10-12 E-011: W-116 split: AC7 the macros (T-278, T-345, T-346); AC10 -> W-131, the literals T-343 and ref guard T-344, extended by T-348 ranges and T-349 journal statistics (developer, 2026-10-12) supersedes: E-011#v15, E-011#v17
-- 2026-10-12 E-011: W-124 activated: T-326 re-filed as T-337 to T-339 (representation; families and tuning; baseline and rendering), T-327 kept
-- 2026-10-12 E-011: filed while working: W-127 (T-332), W-128 (T-339), W-133 (T-344); standalone W-129 (T-336), W-132 (T-346); W-130 (T-340) moved under E-011, W-116 blocked on it until it landed (developer, 2026-10-12) supersedes: E-011#v16
+- none recorded

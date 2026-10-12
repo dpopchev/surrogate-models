@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-011   | blocked: 0 | todo roots: 10 | done: 382 | pruned: 60
+open path: none   | blocked: 0 | todo roots: 10 | done: 383 | pruned: 60
 
 ## Tree
 
@@ -43,24 +43,6 @@ E-009         [doing]    The paper follows the revised structure, and the releas
   W-059  spike  [done]     Which refs.bib keys the revised structure's citations name -- T-107 [done], T-108 [pruned]   [pruned: superseded: the real references move to the standalone spike W-061 (T-118); W-059 closes on placeholder keys (T-117)], T-117 [done]
   W-060  issue  [done]     Title and outline bullets aligned to the revised structure -- T-114 [done], T-115 [done], T-116 [done]
   W-100  spike  [todo]     What the paper claims once the search names its winners   (filed during T-206) -- T-233 [todo], T-234 [todo]
-E-011         [doing]    Figures and tables picked from rendered variants, numbers from macros
-  W-102  issue  [done]     Every section's figures are selected in paper.toml   (filed during T-206) -- T-237 [done]
-  W-104  bug    [done]     Section 5.2's error and scaling figures float past Section 5.3's text   (filed during T-240) -- T-241 [done]   (filed during T-240)
-  W-111  issue  [done]     The variant mechanism on one figure -- T-260 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1 (tried 2026-10-11), so it can never print 2 passed; re-filed with the same action and a working check], T-261 [pruned]   [pruned: its check passes -q to make (question mode, runs nothing, exits 1), so it can never print 2 passed; re-filed with the same action and a working check], T-262 [done], T-263 [pruned]   [pruned: an environment override leaves the BH assets current, so make assets does not rerun and the check's grep finds nothing; its Output is an untracked build file the scope gate cannot close; re-filed as a test of main writing the picked variant], T-308 [done], T-309 [done], T-310 [done]
-  W-112  issue  [done]     Section 3 figure variants -- T-264 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file of its title; re-filed with the same Action, a file list and a working check], T-265 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file of its title; re-filed with the same Action, a file list and a working check], T-266 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file of its title; re-filed with the same Action, a file list and a working check], T-267 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file of its title; re-filed with the same Action, a file list and a working check], T-311 [done], T-312 [done], T-313 [done], T-314 [done]
-  W-113  issue  [done]     Section 4.1 and 5 figure variants -- T-268 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check], T-269 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check], T-270 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check], T-271 [pruned]   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check], T-315 [done], T-316 [done], T-317 [done], T-318 [done]
-  W-114  issue  [done]     Table layouts rendered to page images -- T-272 [pruned]   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name the files it touches; the plan regenerated the table assets in build/assets with other layouts (they must stay the paper's) and a top-level [tables] block fails missing_section_folders; re-filed as T-321 to T-324 with a workable plan], T-273 [pruned]   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name the files it touches; the plan regenerated the table assets in build/assets with other layouts (they must stay the paper's) and a top-level [tables] block fails missing_section_folders; re-filed as T-321 to T-324 with a workable plan], T-274 [pruned]   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name the files it touches; the plan regenerated the table assets in build/assets with other layouts (they must stay the paper's) and a top-level [tables] block fails missing_section_folders; re-filed as T-321 to T-324 with a workable plan], T-275 [pruned]   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name every file it touches; re-filed as T-324], T-321 [done], T-322 [pruned]   [pruned: its check needs the aligned layout to compile, which fails on a T-321 defect: _aligned_line in shared/eda.py splits header cells on ' & ', so the representation header ' & & Test & ...' loses a cell and Test reaches an S column unbraced (siunitx: Invalid number 'e'); the small layout rendered all 13 tables; re-filed as T-325 (the fix) and T-326 (this brief, unchanged) (developer, 2026-10-12)], T-323 [pruned]   [pruned: moved to W-124 at W-114's split (V22: T-325 took its slot; developer, 2026-10-12)], T-324 [pruned]   [pruned: moved to W-124 at W-114's split (V22: T-325 took its slot; developer, 2026-10-12)], T-325 [done], T-328 [done]
-  W-115  issue  [done]     Two or three style presets on three figures -- T-276 [pruned]   [pruned: its check passes -q to make, which runs no test (E-011 finding); a 7-field Marks model cannot keep the paper preset byte-identical over 66 literals of about 22 distinct values; the developer chose scale factors (2026-10-12); re-filed as T-333], T-277 [pruned]   [pruned: its Action named no entry script or test for the cross-preset sheet; re-filed as T-334 at W-115's activation], T-319 [done], T-333 [done], T-334 [done]
-  W-116  issue  [done]     Every result and knob the text cites has a generated macro -- T-278 [done], T-279 [pruned]   [pruned: re-filed at the W-116 split (developer, 2026-10-12): its check passed -q to make, which runs nothing], T-280 [pruned]   [pruned: re-filed at the W-116 split (developer, 2026-10-12): its check passed -q to make, which runs nothing], T-281 [pruned]   [pruned: re-filed at the W-116 split (developer, 2026-10-12): the literals move to W-131], T-345 [done], T-346 [done]
-  W-122  bug    [done]     make compile keeps a figure a pick removed in build/paper/article.pdf   (filed during T-237) -- T-306 [done], T-307 [pruned]   [pruned: its Output build/paper/article.pdf is an untracked build file no commit carries, so the scope gate cannot close it (a brief defect at filing); its check was run and exited 0 -- make -W paper.toml families compile with the shipped picks, no undefined references -- and the 62_families assets match local/assets-baseline.sha]
-  W-124  issue  [done]     Per-table layouts rendered to page images   (filed during T-322) -- T-326 [pruned]   [pruned: five layouts over four modules plus a baseline rebuild and the per-table rendering in one Task; re-filed at W-124's activation as T-337 (representation), T-338 (families, tuning) and T-339 (baseline, rendering)], T-327 [done], T-337 [done], T-338 [done], T-339 [done]
-  W-125  issue  [done]     Table page images cropped to the table   (filed during T-328) -- T-329 [done], T-330 [done]
-  W-126  bug    [done]     The aligned table layout overflows the text width   (filed during T-328) -- T-331 [done], T-332 [done]
-  W-127  bug    [done]     The aligned representation table mixes compact and subscript spreads   (filed during T-332) -- T-335 [done], T-336 [done]
-  W-128  bug    [done]     The paper's baseline table is stale, written before its e-notation   (filed during T-339) -- T-340 [done]
-  W-130  bug    [done]     The results tables reach the paper only through their own make targets   (filed during T-340) -- T-342 [done]
-  W-131  issue  [done]     The text cites only macros, and a pick never leaves a dangling figure reference -- T-343 [done], T-344 [done], T-348 [done], T-349 [done]
-  W-133  bug    [done]     The 5.2 parity and error captions cite each other unguarded   (filed during T-344) -- T-350 [done]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
 W-119  bug    [todo]     (standalone) The ranges figure crashes on a batch with no network job   (filed during T-294) -- T-295 [todo]
@@ -387,6 +369,127 @@ closed 2026-10-11 -- outcome: make check passes with the audit gates closed and 
 - T-284 [pruned] Write the Figures macros in target order test-first -> shared/ceilings.py   [pruned: its check passes -q to make, which make reads as question mode: it prints nothing and exits 1 whatever the test does; superseded by T-285 with the same brief and a working check]
 - T-285 [done] Write the Figures macros in target order test-first -> shared/ceilings.py (T-284 with a working check)
 
+### E-011 [done] Figures and tables picked from rendered variants, numbers from macros
+
+closed 2026-10-12 -- outcome: make variants writes every variant of every figure and table under build/variants/<section>/ with one contact sheet per asset, paper.toml records the pick per figure and table, make compile renders the picks, and Sections 4.1 to 5.3 and the appendix cite their numbers through macros. -- ledger: ledgers/E-011.md
+
+#### W-102 issue [done] Every section's figures are selected in paper.toml   (filed during T-206)
+
+- T-237 [done] Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py
+
+#### W-104 bug [done] Section 5.2's error and scaling figures float past Section 5.3's text   (filed during T-240)
+
+- T-241 [done] Keep Section 5.2's figures beside its text -> 60_results/62_families/62_families.tex   (filed during T-240)
+
+#### W-111 issue [done] The variant mechanism on one figure
+
+- T-260 [pruned] Add the mass_radius variant choice test-first -> shared/config.py, paper.toml   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1 (tried 2026-10-11), so it can never print 2 passed; re-filed with the same action and a working check]
+- T-261 [pruned] Draw the departure and two-panel variants test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py   [pruned: its check passes -q to make (question mode, runs nothing, exits 1), so it can never print 2 passed; re-filed with the same action and a working check]
+- T-262 [done] Write the contact sheet and make variants test-first -> shared/plots.py, 40_data_analysis/42_black_holes/eda_black_holes.py, mk/paper.mk
+- T-263 [pruned] Compile with the pick -> paper.toml, build/assets/42_black_holes/42_black_holes_fig_mass_radius.tex   [pruned: an environment override leaves the BH assets current, so make assets does not rerun and the check's grep finds nothing; its Output is an untracked build file the scope gate cannot close; re-filed as a test of main writing the picked variant]
+- T-308 [done] Add the mass_radius variant choice test-first -> shared/config.py, paper.toml
+- T-309 [done] Draw the departure and two-panel variants test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py
+- T-310 [done] Write the picked mass_radius variant into its wrapper test-first -> 40_data_analysis/42_black_holes/test_eda_black_holes.py, 40_data_analysis/42_black_holes/eda_black_holes.py
+
+#### W-112 issue [done] Section 3 figure variants
+
+- T-264 [pruned] Draw the NS charge_target and mass_density variants test-first -> eda_neutron_stars.py, shared/config.py, paper.toml, mk/paper.mk   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file of its title; re-filed with the same Action, a file list and a working check]
+- T-265 [pruned] Draw the univariate and mass_max variants test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py, shared/config.py, paper.toml   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file of its title; re-filed with the same Action, a file list and a working check]
+- T-266 [pruned] Draw the BH charge_target and existence_edge variants test-first -> eda_black_holes.py, shared/config.py, paper.toml   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file of its title; re-filed with the same Action, a file list and a working check]
+- T-267 [pruned] Draw the ceilings figure variants test-first -> shared/ceilings.py, eda_neutron_stars.py, eda_black_holes.py, shared/config.py, paper.toml   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file of its title; re-filed with the same Action, a file list and a working check]
+- T-311 [done] Draw the NS charge_target and mass_density variants test-first -> eda_neutron_stars.py, shared/config.py, paper.toml, mk/paper.mk
+- T-312 [done] Draw the univariate and mass_max variants test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py, shared/config.py, paper.toml
+- T-313 [done] Draw the BH charge_target and existence_edge variants test-first -> eda_black_holes.py, shared/config.py, paper.toml
+- T-314 [done] Draw the ceilings figure variants test-first -> shared/ceilings.py, eda_neutron_stars.py, eda_black_holes.py, shared/config.py, paper.toml
+
+#### W-113 issue [done] Section 4.1 and 5 figure variants
+
+- T-268 [pruned] Draw the 4.1 parity variants test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/config.py, paper.toml, mk/paper.mk   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check]
+- T-269 [pruned] Draw the 5.2 errors and parity variants test-first -> 60_results/62_families/screen_families.py, shared/config.py, paper.toml, mk/paper.mk   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check]
+- T-270 [pruned] Draw the 5.2 scaling variants test-first -> 60_results/62_families/screen_families.py, shared/config.py, paper.toml   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check]
+- T-271 [pruned] Draw the 5.3 history and ranges variants test-first -> 60_results/63_precision/tune_survivors.py, shared/config.py, paper.toml, mk/paper.mk   [pruned: its check passes -q to make, which is make's question mode: it runs no test and exits 1, so it can never print its count (as T-260, 2026-10-11); its Action does not name every file it touches; re-filed with the same Action, a file list and a working check]
+- T-315 [done] Draw the 4.1 parity variants test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/config.py, paper.toml, mk/paper.mk
+- T-316 [done] Draw the 5.2 errors and parity variants test-first -> 60_results/62_families/screen_families.py, shared/config.py, paper.toml, mk/paper.mk
+- T-317 [done] Draw the 5.2 scaling variants test-first -> 60_results/62_families/screen_families.py, shared/config.py, paper.toml
+- T-318 [done] Draw the 5.3 history and ranges variants test-first -> 60_results/63_precision/tune_survivors.py, shared/config.py, paper.toml, mk/paper.mk
+
+#### W-114 issue [done] Table layouts rendered to page images
+
+- T-272 [pruned] Add the table layout choices and the aligned columns test-first -> shared/config.py, shared/eda.py, paper.toml, 00_metadata/preamble.tex   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name the files it touches; the plan regenerated the table assets in build/assets with other layouts (they must stay the paper's) and a top-level [tables] block fails missing_section_folders; re-filed as T-321 to T-324 with a workable plan]
+- T-273 [pruned] Rasterize each table layout through gs test-first -> 00_metadata/tables_entry.py, mk/paper.mk   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name the files it touches; the plan regenerated the table assets in build/assets with other layouts (they must stay the paper's) and a top-level [tables] block fails missing_section_folders; re-filed as T-321 to T-324 with a workable plan]
+- T-274 [pruned] Write the split and transposed results tables test-first -> screen_representation.py, screen_families.py, tune_survivors.py, fit_baseline.py   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name the files it touches; the plan regenerated the table assets in build/assets with other layouts (they must stay the paper's) and a top-level [tables] block fails missing_section_folders; re-filed as T-321 to T-324 with a workable plan]
+- T-275 [pruned] Select the decisions tables layout by macro test-first -> 40_data_analysis/43_preprocessing/43_preprocessing.tex, preprocessing_numbers.py, paper.toml   [pruned: its check passes -q to make, which runs no test (as T-260); its Action did not name every file it touches; re-filed as T-324]
+- T-321 [done] Add the table layout choices and the aligned booktabs test-first -> shared/config.py, shared/eda.py, paper.toml, 00_metadata/preamble.tex
+- T-322 [pruned] Rasterize every table in both layouts through gs test-first -> 00_metadata/tables_entry.py, mk/paper.mk   [pruned: its check needs the aligned layout to compile, which fails on a T-321 defect: _aligned_line in shared/eda.py splits header cells on ' & ', so the representation header ' & & Test & ...' loses a cell and Test reaches an S column unbraced (siunitx: Invalid number 'e'); the small layout rendered all 13 tables; re-filed as T-325 (the fix) and T-326 (this brief, unchanged) (developer, 2026-10-12)]
+- T-323 [pruned] Write the split and transposed results tables test-first -> screen_representation.py, screen_families.py, tune_survivors.py, fit_baseline.py   [pruned: moved to W-124 at W-114's split (V22: T-325 took its slot; developer, 2026-10-12)]
+- T-324 [pruned] Select the decisions tables layout by macro test-first -> 40_data_analysis/43_preprocessing/43_preprocessing.tex, preprocessing_numbers.py, paper.toml   [pruned: moved to W-124 at W-114's split (V22: T-325 took its slot; developer, 2026-10-12)]
+- T-325 [done] Split the aligned table cells on every unescaped ampersand test-first -> shared/eda.py
+- T-328 [done] Rasterize every table in both layouts through gs test-first -> 00_metadata/tables_entry.py, mk/paper.mk
+
+#### W-115 issue [done] Two or three style presets on three figures
+
+- T-276 [pruned] Read the marks from PlotStyle presets test-first -> shared/plots.py, paper.toml, the figure modules   [pruned: its check passes -q to make, which runs no test (E-011 finding); a 7-field Marks model cannot keep the paper preset byte-identical over 66 literals of about 22 distinct values; the developer chose scale factors (2026-10-12); re-filed as T-333]
+- T-277 [pruned] Render three figures under each preset -> mk/paper.mk, build/variants/presets/presets_variants.png   [pruned: its Action named no entry script or test for the cross-preset sheet; re-filed as T-334 at W-115's activation]
+- T-319 [done] Move the variant sheet writer into shared/plots.py test-first -> shared/plots.py, shared/test_plots.py
+- T-333 [done] Scale the marks by the active PlotStyle preset test-first -> shared/plots.py, paper.toml, the figure modules
+- T-334 [done] Render three figures under each preset -> 00_metadata/presets_sheet.py, mk/paper.mk, build/variants/presets/presets_variants.png
+
+#### W-116 issue [done] Every result and knob the text cites has a generated macro
+
+- T-278 [done] Write the knobs macro file from paper.toml and the make knobs test-first -> 00_metadata/paper_knobs.py, mk/paper.mk, 00_metadata/article.tex
+- T-279 [pruned] Emit the representation and family result macros test-first -> 60_results/61_representation/screen_representation.py, 60_results/62_families/screen_families.py, 00_metadata/article.tex   [pruned: re-filed at the W-116 split (developer, 2026-10-12): its check passed -q to make, which runs nothing]
+- T-280 [pruned] Emit the tuning result macros test-first -> 60_results/63_precision/tune_survivors.py, 00_metadata/article.tex   [pruned: re-filed at the W-116 split (developer, 2026-10-12): its check passed -q to make, which runs nothing]
+- T-281 [pruned] Replace the literals in the text -> 51_algorithms.tex, 61_representation.tex, 62_families.tex, 63_precision.tex, 90_appendix.tex, preprocessing_numbers.py   [pruned: re-filed at the W-116 split (developer, 2026-10-12): the literals move to W-131]
+- T-345 [done] Emit the representation and family result macros test-first -> 60_results/61_representation/screen_representation.py, 60_results/62_families/screen_families.py, 00_metadata/article.tex
+- T-346 [done] Emit the tuning result macros test-first -> 60_results/63_precision/tune_survivors.py, 00_metadata/article.tex
+
+#### W-122 bug [done] make compile keeps a figure a pick removed in build/paper/article.pdf   (filed during T-237)
+
+- T-306 [done] Rerun latexmk when the assembled sources change -> mk/paper.mk
+- T-307 [pruned] Recompile the paper with the shipped picks -> build/paper/article.pdf   [pruned: its Output build/paper/article.pdf is an untracked build file no commit carries, so the scope gate cannot close it (a brief defect at filing); its check was run and exited 0 -- make -W paper.toml families compile with the shipped picks, no undefined references -- and the 62_families assets match local/assets-baseline.sha]
+
+#### W-124 issue [done] Per-table layouts rendered to page images   (filed during T-322)
+
+- T-326 [pruned] Write the split and transposed results tables test-first -> screen_representation.py, screen_families.py, tune_survivors.py, fit_baseline.py   [pruned: five layouts over four modules plus a baseline rebuild and the per-table rendering in one Task; re-filed at W-124's activation as T-337 (representation), T-338 (families, tuning) and T-339 (baseline, rendering)]
+- T-327 [done] Select the decisions tables layout by macro test-first -> 40_data_analysis/43_preprocessing/43_preprocessing.tex, preprocessing_numbers.py, paper.toml
+- T-337 [done] Write the split and transposed representation tables test-first -> 60_results/61_representation/screen_representation.py
+- T-338 [done] Write the rows-column family table and the no-screen and delta tuning tables test-first -> screen_families.py, tune_survivors.py
+- T-339 [done] Rebuild the baseline tables without a fit and render every per-table layout -> fit_baseline.py, 00_metadata/tables_entry.py, mk/paper.mk
+
+#### W-125 issue [done] Table page images cropped to the table   (filed during T-328)
+
+- T-329 [done] Build the crop and rasterize commands test-first -> 00_metadata/tables_entry.py
+- T-330 [done] Render the cropped table images -> build/variants/tables/
+
+#### W-126 bug [done] The aligned table layout overflows the text width   (filed during T-328)
+
+- T-331 [done] Set a table-format per aligned column test-first -> shared/eda.py
+- T-332 [done] Confirm the aligned tables fit the text width -> build/.work/tables/aligned/flat/tables_aligned.log
+
+#### W-127 bug [done] The aligned representation table mixes compact and subscript spreads   (filed during T-332)
+
+- T-335 [done] Read a bold spread cell as a bold siunitx number test-first -> shared/eda.py, 00_metadata/preamble.tex
+- T-336 [done] Word the representation caption per table layout test-first -> 60_results/61_representation/screen_representation.py
+
+#### W-128 bug [done] The paper's baseline table is stale, written before its e-notation   (filed during T-339)
+
+- T-340 [done] Rewrite the baseline table from the ledger in make assets -> mk/paper.mk
+
+#### W-130 bug [done] The results tables reach the paper only through their own make targets   (filed during T-340)
+
+- T-342 [done] Add the results tables with a recorded batch to the paper assets -> mk/paper.mk
+
+#### W-131 issue [done] The text cites only macros, and a pick never leaves a dangling figure reference
+
+- T-343 [done] Replace the literals in the text -> 51_algorithms.tex, 61_representation.tex, 62_families.tex, 63_precision.tex, 90_appendix.tex, preprocessing_numbers.py
+- T-344 [done] Guard each pickable figure's reference -> 00_metadata/preamble.tex, 41_neutron_stars.tex, 42_black_holes.tex, 62_families.tex
+- T-348 [done] Write the search-space bounds into the knobs macro file test-first -> 00_metadata/paper_knobs.py, 00_metadata/test_paper_knobs.py
+- T-349 [done] Emit the tuning-journal analysis macros test-first -> 60_results/63_precision/tune_survivors.py, 60_results/63_precision/test_tune_survivors.py
+
+#### W-133 bug [done] The 5.2 parity and error captions cite each other unguarded   (filed during T-344)
+
+- T-350 [done] Guard the 5.2 captions' cross-references test-first -> 60_results/62_families/screen_families.py
+
 ### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
 
 closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/python.md, When make check runs, Then it passes with the repository root on pytest pythonpath and the python files matching the add-python COLOCATED templates. -- ledger: ledgers/W-005.md
@@ -687,90 +790,6 @@ flowchart TD
   E009 --> W100["W-100 spike todo: What the paper claims once the search names its winners"]
   W100 --> T233["T-233 todo: List every claim of the title block, abstract, introduction, Section 3.4 and Section 7 against Section 5 -> Findings on W-100"]
   W100 --> T234["T-234 todo: Decide the thesis with the developer and the supervisors -> the W-100 spike decision"]
-  E011["E-011 doing: Figures and tables picked from rendered variants, numbers from macros"]
-  E011 --> W102["W-102 issue done: Every section's figures are selected in paper.toml"]
-  W102 --> T237["T-237 done: Select the Section 5.2 figures in paper.toml -> shared/config.py, paper.toml, screen_families.py"]
-  E011 --> W104["W-104 bug done: Section 5.2's error and scaling figures float past Section 5.3's text"]
-  W104 --> T241["T-241 done: Keep Section 5.2's figures beside its text -> 60_results/62_families/62_families.tex"]
-  E011 --> W111["W-111 issue done: The variant mechanism on one figure"]
-  W111 --> T260["T-260 pruned: Add the mass_radius variant choice test-first -> shared/config.py, paper.toml"]
-  W111 --> T261["T-261 pruned: Draw the departure and two-panel variants test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py"]
-  W111 --> T262["T-262 done: Write the contact sheet and make variants test-first -> shared/plots.py, 40_data_analysis/42_black_holes/eda_black_holes.py, mk/paper.mk"]
-  W111 --> T263["T-263 pruned: Compile with the pick -> paper.toml, build/assets/42_black_holes/42_black_holes_fig_mass_radius.tex"]
-  W111 --> T308["T-308 done: Add the mass_radius variant choice test-first -> shared/config.py, paper.toml"]
-  W111 --> T309["T-309 done: Draw the departure and two-panel variants test-first -> 40_data_analysis/42_black_holes/eda_black_holes.py"]
-  W111 --> T310["T-310 done: Write the picked mass_radius variant into its wrapper test-first -> 40_data_analysis/42_black_holes/test_eda_black_holes.py, 40_data_analysis/42_black_holes/eda_black_holes.py"]
-  E011 --> W112["W-112 issue done: Section 3 figure variants"]
-  W112 --> T264["T-264 pruned: Draw the NS charge_target and mass_density variants test-first -> eda_neutron_stars.py, shared/config.py, paper.toml, mk/paper.mk"]
-  W112 --> T265["T-265 pruned: Draw the univariate and mass_max variants test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py, shared/config.py, paper.toml"]
-  W112 --> T266["T-266 pruned: Draw the BH charge_target and existence_edge variants test-first -> eda_black_holes.py, shared/config.py, paper.toml"]
-  W112 --> T267["T-267 pruned: Draw the ceilings figure variants test-first -> shared/ceilings.py, eda_neutron_stars.py, eda_black_holes.py, shared/config.py, paper.toml"]
-  W112 --> T311["T-311 done: Draw the NS charge_target and mass_density variants test-first -> eda_neutron_stars.py, shared/config.py, paper.toml, mk/paper.mk"]
-  W112 --> T312["T-312 done: Draw the univariate and mass_max variants test-first -> eda_neutron_stars.py, eda_black_holes.py, shared/eda.py, shared/config.py, paper.toml"]
-  W112 --> T313["T-313 done: Draw the BH charge_target and existence_edge variants test-first -> eda_black_holes.py, shared/config.py, paper.toml"]
-  W112 --> T314["T-314 done: Draw the ceilings figure variants test-first -> shared/ceilings.py, eda_neutron_stars.py, eda_black_holes.py, shared/config.py, paper.toml"]
-  E011 --> W113["W-113 issue done: Section 4.1 and 5 figure variants"]
-  W113 --> T268["T-268 pruned: Draw the 4.1 parity variants test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/config.py, paper.toml, mk/paper.mk"]
-  W113 --> T269["T-269 pruned: Draw the 5.2 errors and parity variants test-first -> 60_results/62_families/screen_families.py, shared/config.py, paper.toml, mk/paper.mk"]
-  W113 --> T270["T-270 pruned: Draw the 5.2 scaling variants test-first -> 60_results/62_families/screen_families.py, shared/config.py, paper.toml"]
-  W113 --> T271["T-271 pruned: Draw the 5.3 history and ranges variants test-first -> 60_results/63_precision/tune_survivors.py, shared/config.py, paper.toml, mk/paper.mk"]
-  W113 --> T315["T-315 done: Draw the 4.1 parity variants test-first -> 50_methodology/51_algorithms/fit_baseline.py, shared/config.py, paper.toml, mk/paper.mk"]
-  W113 --> T316["T-316 done: Draw the 5.2 errors and parity variants test-first -> 60_results/62_families/screen_families.py, shared/config.py, paper.toml, mk/paper.mk"]
-  W113 --> T317["T-317 done: Draw the 5.2 scaling variants test-first -> 60_results/62_families/screen_families.py, shared/config.py, paper.toml"]
-  W113 --> T318["T-318 done: Draw the 5.3 history and ranges variants test-first -> 60_results/63_precision/tune_survivors.py, shared/config.py, paper.toml, mk/paper.mk"]
-  E011 --> W114["W-114 issue done: Table layouts rendered to page images"]
-  W114 --> T272["T-272 pruned: Add the table layout choices and the aligned columns test-first -> shared/config.py, shared/eda.py, paper.toml, 00_metadata/preamble.tex"]
-  W114 --> T273["T-273 pruned: Rasterize each table layout through gs test-first -> 00_metadata/tables_entry.py, mk/paper.mk"]
-  W114 --> T274["T-274 pruned: Write the split and transposed results tables test-first -> screen_representation.py, screen_families.py, tune_survivors.py, fit_baseline.py"]
-  W114 --> T275["T-275 pruned: Select the decisions tables layout by macro test-first -> 40_data_analysis/43_preprocessing/43_preprocessing.tex, preprocessing_numbers.py, paper.toml"]
-  W114 --> T321["T-321 done: Add the table layout choices and the aligned booktabs test-first -> shared/config.py, shared/eda.py, paper.toml, 00_metadata/preamble.tex"]
-  W114 --> T322["T-322 pruned: Rasterize every table in both layouts through gs test-first -> 00_metadata/tables_entry.py, mk/paper.mk"]
-  W114 --> T323["T-323 pruned: Write the split and transposed results tables test-first -> screen_representation.py, screen_families.py, tune_survivors.py, fit_baseline.py"]
-  W114 --> T324["T-324 pruned: Select the decisions tables layout by macro test-first -> 40_data_analysis/43_preprocessing/43_preprocessing.tex, preprocessing_numbers.py, paper.toml"]
-  W114 --> T325["T-325 done: Split the aligned table cells on every unescaped ampersand test-first -> shared/eda.py"]
-  W114 --> T328["T-328 done: Rasterize every table in both layouts through gs test-first -> 00_metadata/tables_entry.py, mk/paper.mk"]
-  E011 --> W115["W-115 issue done: Two or three style presets on three figures"]
-  W115 --> T276["T-276 pruned: Read the marks from PlotStyle presets test-first -> shared/plots.py, paper.toml, the figure modules"]
-  W115 --> T277["T-277 pruned: Render three figures under each preset -> mk/paper.mk, build/variants/presets/presets_variants.png"]
-  W115 --> T319["T-319 done: Move the variant sheet writer into shared/plots.py test-first -> shared/plots.py, shared/test_plots.py"]
-  W115 --> T333["T-333 done: Scale the marks by the active PlotStyle preset test-first -> shared/plots.py, paper.toml, the figure modules"]
-  W115 --> T334["T-334 done: Render three figures under each preset -> 00_metadata/presets_sheet.py, mk/paper.mk, build/variants/presets/presets_variants.png"]
-  E011 --> W116["W-116 issue done: Every result and knob the text cites has a generated macro"]
-  W116 --> T278["T-278 done: Write the knobs macro file from paper.toml and the make knobs test-first -> 00_metadata/paper_knobs.py, mk/paper.mk, 00_metadata/article.tex"]
-  W116 --> T279["T-279 pruned: Emit the representation and family result macros test-first -> 60_results/61_representation/screen_representation.py, 60_results/62_families/screen_families.py, 00_metadata/article.tex"]
-  W116 --> T280["T-280 pruned: Emit the tuning result macros test-first -> 60_results/63_precision/tune_survivors.py, 00_metadata/article.tex"]
-  W116 --> T281["T-281 pruned: Replace the literals in the text -> 51_algorithms.tex, 61_representation.tex, 62_families.tex, 63_precision.tex, 90_appendix.tex, preprocessing_numbers.py"]
-  W116 --> T345["T-345 done: Emit the representation and family result macros test-first -> 60_results/61_representation/screen_representation.py, 60_results/62_families/screen_families.py, 00_metadata/article.tex"]
-  W116 --> T346["T-346 done: Emit the tuning result macros test-first -> 60_results/63_precision/tune_survivors.py, 00_metadata/article.tex"]
-  E011 --> W122["W-122 bug done: make compile keeps a figure a pick removed in build/paper/article.pdf"]
-  W122 --> T306["T-306 done: Rerun latexmk when the assembled sources change -> mk/paper.mk"]
-  W122 --> T307["T-307 pruned: Recompile the paper with the shipped picks -> build/paper/article.pdf"]
-  E011 --> W124["W-124 issue done: Per-table layouts rendered to page images"]
-  W124 --> T326["T-326 pruned: Write the split and transposed results tables test-first -> screen_representation.py, screen_families.py, tune_survivors.py, fit_baseline.py"]
-  W124 --> T327["T-327 done: Select the decisions tables layout by macro test-first -> 40_data_analysis/43_preprocessing/43_preprocessing.tex, preprocessing_numbers.py, paper.toml"]
-  W124 --> T337["T-337 done: Write the split and transposed representation tables test-first -> 60_results/61_representation/screen_representation.py"]
-  W124 --> T338["T-338 done: Write the rows-column family table and the no-screen and delta tuning tables test-first -> screen_families.py, tune_survivors.py"]
-  W124 --> T339["T-339 done: Rebuild the baseline tables without a fit and render every per-table layout -> fit_baseline.py, 00_metadata/tables_entry.py, mk/paper.mk"]
-  E011 --> W125["W-125 issue done: Table page images cropped to the table"]
-  W125 --> T329["T-329 done: Build the crop and rasterize commands test-first -> 00_metadata/tables_entry.py"]
-  W125 --> T330["T-330 done: Render the cropped table images -> build/variants/tables/"]
-  E011 --> W126["W-126 bug done: The aligned table layout overflows the text width"]
-  W126 --> T331["T-331 done: Set a table-format per aligned column test-first -> shared/eda.py"]
-  W126 --> T332["T-332 done: Confirm the aligned tables fit the text width -> build/.work/tables/aligned/flat/tables_aligned.log"]
-  E011 --> W127["W-127 bug done: The aligned representation table mixes compact and subscript spreads"]
-  W127 --> T335["T-335 done: Read a bold spread cell as a bold siunitx number test-first -> shared/eda.py, 00_metadata/preamble.tex"]
-  W127 --> T336["T-336 done: Word the representation caption per table layout test-first -> 60_results/61_representation/screen_representation.py"]
-  E011 --> W128["W-128 bug done: The paper's baseline table is stale, written before its e-notation"]
-  W128 --> T340["T-340 done: Rewrite the baseline table from the ledger in make assets -> mk/paper.mk"]
-  E011 --> W130["W-130 bug done: The results tables reach the paper only through their own make targets"]
-  W130 --> T342["T-342 done: Add the results tables with a recorded batch to the paper assets -> mk/paper.mk"]
-  E011 --> W131["W-131 issue done: The text cites only macros, and a pick never leaves a dangling figure reference"]
-  W131 --> T343["T-343 done: Replace the literals in the text -> 51_algorithms.tex, 61_representation.tex, 62_families.tex, 63_precision.tex, 90_appendix.tex, preprocessing_numbers.py"]
-  W131 --> T344["T-344 done: Guard each pickable figure's reference -> 00_metadata/preamble.tex, 41_neutron_stars.tex, 42_black_holes.tex, 62_families.tex"]
-  W131 --> T348["T-348 done: Write the search-space bounds into the knobs macro file test-first -> 00_metadata/paper_knobs.py, 00_metadata/test_paper_knobs.py"]
-  W131 --> T349["T-349 done: Emit the tuning-journal analysis macros test-first -> 60_results/63_precision/tune_survivors.py, 60_results/63_precision/test_tune_survivors.py"]
-  E011 --> W133["W-133 bug done: The 5.2 parity and error captions cite each other unguarded"]
-  W133 --> T350["T-350 done: Guard the 5.2 captions' cross-references test-first -> 60_results/62_families/screen_families.py"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W088["W-088 issue todo, standalone: A running representation screen is followable -- progress, time left and each entry's representation"]
@@ -795,8 +814,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E011 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W102,T237,W104,T241,W111,T262,T308,T309,T310,W112,T311,T312,T313,T314,W113,T315,T316,T317,T318,W114,T321,T325,T328,W115,T319,T333,T334,W116,T278,T345,T346,W122,T306,W124,T327,T337,T338,T339,W125,T329,T330,W126,T331,T332,W127,T335,T336,W128,T340,W130,T342,W131,T343,T344,T348,T349,W133,T350 done
+  class E006,E009 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347 todo
-  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T260,T261,T263,T264,T265,T266,T267,T268,T269,T270,T271,T272,T273,T274,T275,T322,T323,T324,T276,T277,T279,T280,T281,T307,T326 pruned
+  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
