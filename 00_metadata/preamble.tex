@@ -9,9 +9,10 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 % S columns of the aligned table layout (paper.toml [tables], W-114): a spread prints compact,
-% 1.96(2), so the representation table fits the text width (W-126).
+% 1.96(2), so the representation table fits the text width (W-126); a cell led by \bfseries
+% prints its number bold (siunitx v3's form of detect-weight, W-127).
 \usepackage{siunitx}
-\sisetup{uncertainty-mode = compact}
+\sisetup{uncertainty-mode = compact, reset-text-series = false, text-series-to-math = true}
 \usepackage{placeins} % \FloatBarrier keeps each insight's figures beside its text
 \usepackage{algorithm} % the numbered Algorithm float (Section 4.1's pipeline, W-062)
 \usepackage{algpseudocode}

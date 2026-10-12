@@ -17,6 +17,7 @@ from shared.eda import (
     render_macros,
     rim_mask,
     row_splitter,
+    si_cell,
     summarize,
     with_charge_targets,
 )
@@ -168,6 +169,11 @@ def test_aligned_spec_sets_table_format_per_column() -> None:
     rows = ["p & $5.89\\times 10^{14}$ & 0.57", "q & $2.79\\times 10^{15}$ & -0.03"]
     table = booktabs("x", "A table.", "lrr", "a & b & c", rows, "aligned")
     assert "\\begin{tabular}{lS[table-format=1.2e2]S[table-format=-1.2]}" in table
+
+
+@pytest.mark.view
+def test_si_cell_reads_a_bold_spread() -> None:
+    assert si_cell("$\\mathbf{2.36_{\\pm 0.04}}$") == "\\bfseries 2.36 +- 0.04"
 
 
 @pytest.mark.view

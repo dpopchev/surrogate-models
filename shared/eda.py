@@ -280,6 +280,7 @@ def camel(name: str) -> str:
 _PLAIN = re.compile(r"^\$?(-?\d+(?:\.\d+)?)\$?$")
 _POWER = re.compile(r"^\$(-?\d+(?:\.\d+)?)\\times 10\^\{(-?\d+)\}\$$")
 _PLUS_MINUS = re.compile(r"^\$(-?\d+(?:\.\d+)?)_\{\\pm (\d+(?:\.\d+)?)\}\$$")
+_BOLD = re.compile(r"^\$\\mathbf\{(.*)\}\$$")
 _MULTICOLUMN = re.compile(r"^\\multicolumn\{(\d+)\}")
 _CELL_SEPARATOR = re.compile(r"(?<!\\)&")
 
@@ -342,7 +343,8 @@ def _columns(spec: str) -> str:
 
 def si_cell(cell: str) -> str:
     """A cell as siunitx reads it in an S column: a plain number, a power of ten or a value
-    with its spread as numbers, anything else braced so it is set as text.
+    with its spread as numbers, a bold one of them led by \\bfseries, anything else braced so
+    it is set as text.
 
     >>> si_cell("$5.89\\\\times 10^{14}$"), si_cell("$1.96_{\\\\pm 0.02}$"), si_cell("0.57")
     ('5.89e14', '1.96 +- 0.02', '0.57')
@@ -350,6 +352,8 @@ def si_cell(cell: str) -> str:
     '{$1.02_{10^{3}}$}'
     """
     text = cell.strip()
+    if (found := _BOLD.match(text)) and not (inner := si_cell(f"${found[1]}$")).startswith("{"):
+        return f"\\bfseries {inner}"
     if found := _PLAIN.match(text):
         return found[1]
     if found := _POWER.match(text):
@@ -395,7 +399,9 @@ def _aligned_line(line: str, columns: str, body: bool) -> str:
     return " & ".join(cells)
 
 
-_SI_NUMBER = re.compile(r"^(-?)(\d+)(?:\.(\d+))?(?:e(-?)(\d+))?(?: \+- (\d+(?:\.\d+)?))?$")
+_SI_NUMBER = re.compile(
+    r"^(?:\\bfseries )?(-?)(\d+)(?:\.(\d+))?(?:e(-?)(\d+))?(?: \+- (\d+(?:\.\d+)?))?$"
+)
 
 
 def _table_format(cells: list[str]) -> str:
