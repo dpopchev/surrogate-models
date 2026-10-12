@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import get_args
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,6 +33,7 @@ from screen_families import (
     over_memory,
     parity_figure,
     parity_picks,
+    parity_tex,
     run_job,
     scaling_figure,
     survivors,
@@ -39,7 +41,7 @@ from screen_families import (
     trajectories,
 )
 
-from shared.config import PaperConfig
+from shared.config import FamiliesParityVariant, PaperConfig
 from shared.design import Design, Target
 from shared.plots import NOTATION_TEX, PlotStyle, apply_style
 
@@ -126,6 +128,15 @@ def test_family_numbers_name_each_leader() -> None:
         "famNsMassLeader": "local RBF",
         "famBhChargeLeader": "MLP",
     }
+
+
+@pytest.mark.view
+def test_parity_caption_guards_the_errors_reference() -> None:
+    captions = [parity_tex(variant) for variant in get_args(FamiliesParityVariant)]
+    assert [
+        ("\\cref{fig:families-errors}" in tex, "ickref{fig:families-errors}" in tex)
+        for tex in captions
+    ] == [(False, True)] * len(captions)
 
 
 @pytest.mark.model

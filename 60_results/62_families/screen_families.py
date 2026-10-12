@@ -701,6 +701,10 @@ def _colors(panel: Panel, style: PlotStyle) -> list[Any]:
 CHARGE_AS_Y = "The charge is shown as the target the models see, $Y = \\log_{10}(\\Dch/M)$."
 
 
+# Each caption names the other 5.2 figure only when paper.toml places it (\pickref, W-133).
+_ERRORS_REF = "\\pickref{{fig:families-errors}}{{; }}{{ shows {}}}"
+
+
 def _parity_caption(variant: FamiliesParityVariant) -> str:
     """The caption of the parity figure in one variant."""
     picks = (
@@ -711,14 +715,14 @@ def _parity_caption(variant: FamiliesParityVariant) -> str:
         case "parity":
             return (
                 f"Predicted against true target on the test curves, {picks}, and the dashed "
-                "line is $y = x$. At these precisions every candidate lies on the line; "
-                f"\\cref{{fig:families-errors}} shows where they differ. {CHARGE_AS_Y}"
+                "line is $y = x$. At these precisions every candidate lies on the line"
+                f"{_ERRORS_REF.format('where they differ')}. {CHARGE_AS_Y}"
             )
         case "residual":
             return (
                 f"The residual, predicted minus true target, on the test curves against the "
-                f"true target, {picks}, and the dashed line is zero; "
-                f"\\cref{{fig:families-errors}} shows the relative errors. {CHARGE_AS_Y}"
+                f"true target, {picks}, and the dashed line is zero"
+                f"{_ERRORS_REF.format('the relative errors')}. {CHARGE_AS_Y}"
             )
         case _:
             assert_never(variant)
@@ -738,7 +742,8 @@ def _errors_caption(variant: FamiliesErrorsVariant) -> str:
     """The caption of the error figure in one variant."""
     error = (
         "The relative error in $M$ or $\\Dch$ on the test curves against the true target, for "
-        "the candidates of \\cref{fig:families-parity}"
+        "the best candidate of each unit of prediction on the most training rows"
+        "\\pickref{fig:families-parity}{ (}{)}"
     )
     profiles = "95th percentile (dashed) in equal-count bins of the true target"
     match variant:
