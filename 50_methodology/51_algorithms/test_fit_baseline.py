@@ -209,6 +209,14 @@ class TestBaselineTable:
     def test_says_the_charge_rows_are_scored_in_d(self) -> None:
         assert "rebuilt with the true" in baseline_table([NS_MASS])
 
+    def test_baseline_tables_split_test_and_folds(self) -> None:
+        tables = baseline_table([NS_MASS], shape="two_tables")
+        labels = re.findall(r"\\label\{(.*?)\}", tables)
+        assert (labels, re.findall(r"toprule\n(.*?) \\\\", tables)) == (
+            ["tab:baseline", "tab:baseline-folds"],
+            ["Pair & Predictor & Test & Figures & Fit s & Call s", "Pair & Predictor & Folds"],
+        )
+
 
 class TestNumbers:
     pytestmark = pytest.mark.view

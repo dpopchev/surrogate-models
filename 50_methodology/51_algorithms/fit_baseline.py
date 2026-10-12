@@ -50,6 +50,7 @@ from shared.config import (
     NOTATION_TEX,
     AlgorithmsSection,
     AlgParityVariant,
+    BaselineTableLayout,
     PaperConfig,
     TableLayout,
     load_config,
@@ -400,21 +401,72 @@ def _row(pair: PairScores, scored: Scored) -> str:
     )
 
 
-def baseline_table(pairs: list[PairScores], layout: TableLayout = "small") -> str:
-    """The Section 4.1 table: every predictor on every dataset and target."""
-    return booktabs(
-        "baseline",
-        "The baseline MLP against the mean and nearest-curve references, every predictor "
-        "fitted on the same curves and timed on one thread: MARE on the test curves and on the "
-        "frozen folds (mean $\\pm$ standard deviation), the significant figures kept at the "
-        "95th percentile of the test error ($-\\log_{10}$), the fit time and the time of a "
-        "one-row call in seconds. The $\\Dch$ rows give the error of the charge rebuilt with "
-        "the true $M$ from the predicted $Y = \\log_{10}(\\Dch/M)$.",
-        "llrrrrr",
-        "Pair & Predictor & Test & Folds & Figures & Fit s & Call s",
-        [_row(pair, scored) for pair in pairs for scored in pair.scored],
-        layout,
+def _test_row(pair: PairScores, scored: Scored) -> str:
+    """One row of the test table: the pair, the predictor, its test MARE, the significant
+    figures at the 95th percentile, the fit seconds and the one-row call seconds."""
+    return (
+        f"{pair_tex(pair.dataset, pair.target)} & {scored.predictor} & "
+        f"{_enote(scored.test.mean)} & {significant_figures(scored.test.p95):.1f} & "
+        f"{scored.timing.fit:.0f} & {_enote(scored.timing.predict_one)}"
     )
+
+
+def _folds_row(pair: PairScores, scored: Scored) -> str:
+    """One row of the folds table: the pair, the predictor, its fold mean +/- std."""
+    folds = np.array([fold.mean for fold in scored.folds])
+    return (
+        f"{pair_tex(pair.dataset, pair.target)} & {scored.predictor} & "
+        f"{_enote(float(folds.mean()))} $\\pm$ {_enote(float(folds.std()))}"
+    )
+
+
+def baseline_table(
+    pairs: list[PairScores],
+    layout: TableLayout = "small",
+    shape: BaselineTableLayout = "one_table",
+) -> str:
+    """The Section 4.1 table: every predictor on every dataset and target, in one table or as
+    a test table and a folds table (two_tables)."""
+    scored = [(pair, one) for pair in pairs for one in pair.scored]
+    match shape:
+        case "one_table":
+            return booktabs(
+                "baseline",
+                "The baseline MLP against the mean and nearest-curve references, every predictor "
+                "fitted on the same curves and timed on one thread: MARE on the test curves and "
+                "on the frozen folds (mean $\\pm$ standard deviation), the significant figures "
+                "kept at the 95th percentile of the test error ($-\\log_{10}$), the fit time and "
+                "the time of a one-row call in seconds. The $\\Dch$ rows give the error of the "
+                "charge rebuilt with the true $M$ from the predicted $Y = \\log_{10}(\\Dch/M)$.",
+                "llrrrrr",
+                "Pair & Predictor & Test & Folds & Figures & Fit s & Call s",
+                [_row(pair, one) for pair, one in scored],
+                layout,
+            )
+        case "two_tables":
+            return booktabs(
+                "baseline",
+                "The baseline MLP against the mean and nearest-curve references, every predictor "
+                "fitted on the same curves and timed on one thread: MARE on the test curves, the "
+                "significant figures kept at the 95th percentile of the test error "
+                "($-\\log_{10}$), the fit time and the time of a one-row call in seconds. The "
+                "$\\Dch$ rows give the error of the charge rebuilt with the true $M$ from the "
+                "predicted $Y = \\log_{10}(\\Dch/M)$.",
+                "llrrrr",
+                "Pair & Predictor & Test & Figures & Fit s & Call s",
+                [_test_row(pair, one) for pair, one in scored],
+                layout,
+            ) + booktabs(
+                "baseline-folds",
+                "The predictors of \\cref{tab:baseline} on the frozen folds: MARE as the mean "
+                "$\\pm$ the standard deviation over the folds.",
+                "llr",
+                "Pair & Predictor & Folds",
+                [_folds_row(pair, one) for pair, one in scored],
+                layout,
+            )
+        case _:
+            assert_never(shape)
 
 
 def numbers(fit: Fit) -> dict[str, str]:
@@ -794,7 +846,8 @@ def _write_section(
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
-    (out / f"{SECTION}_tab_baseline.tex").write_text(baseline_table(pairs, config.tables.layout))
+    table = baseline_table(pairs, config.tables.layout, config.tables.baseline)
+    (out / f"{SECTION}_tab_baseline.tex").write_text(table)
     variant = config.methodology.algorithms.variants.parity
     figure = parity_figure(fits, config.plot, variant)
     figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)
@@ -804,18 +857,49 @@ def _write_section(
     (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
 
 
-def read_back(
-    entries: Sequence[LedgerEntry], designs: Mapping[tuple[str, str], Design]
-) -> dict[tuple[str, str], Predicted]:
-    """Each pair's MLP test predictions of the latest baseline batch -- the latest batch whose
-    entries hold every baseline candidate -- beside the pair's true test target."""
+def _latest_baseline(entries: Sequence[LedgerEntry]) -> str:
+    """The latest baseline batch: the latest batch whose entries hold every baseline
+    candidate."""
     batches: dict[str, set[str]] = {}
     for entry in entries:
         batches.setdefault(entry.meta.batch, set()).add(entry.meta.candidate)
     baseline = [batch for batch, held in batches.items() if set(CANDIDATES) <= held]
     if not baseline:
         raise ValueError("no baseline batch in the ledger -- run make baseline first")
-    latest = max(baseline)  # uuid7 batch ids sort by creation time
+    return max(baseline)  # uuid7 batch ids sort by creation time
+
+
+def pair_scores(
+    entries: Sequence[LedgerEntry], keys: Sequence[tuple[str, str]]
+) -> list[PairScores]:
+    """Each pair's scores of the latest baseline batch, the candidates in fitting order, as
+    make baseline scored them; nothing is fitted."""
+    latest = _latest_baseline(entries)
+    mine = {
+        (e.meta.dataset, e.meta.target, e.meta.candidate): e
+        for e in entries
+        if e.meta.batch == latest
+    }
+    return [
+        PairScores(
+            dataset,
+            target,
+            tuple(
+                Scored(name, entry.test.zones["test"], entry.folds, entry.timing)
+                for name in CANDIDATES
+                for entry in (mine[dataset, target, name],)
+            ),
+        )
+        for dataset, target in keys
+    ]
+
+
+def read_back(
+    entries: Sequence[LedgerEntry], designs: Mapping[tuple[str, str], Design]
+) -> dict[tuple[str, str], Predicted]:
+    """Each pair's MLP test predictions of the latest baseline batch beside the pair's true
+    test target."""
+    latest = _latest_baseline(entries)
     found: dict[tuple[str, str], Predicted] = {}
     for entry in entries:
         meta = entry.meta
@@ -888,14 +972,17 @@ def main(
     table, the NS mass numbers and parity figure into the section's folder of the asset dir,
     after emptying that folder of an earlier run; leave each pair's run record and diagnostics
     in a folder named after its run under the state dir. Given --variants <dir>, fit nothing:
-    draw every parity variant from the latest baseline batch's ledger entries into <dir>."""
+    draw every parity variant from the latest baseline batch's ledger entries into <dir>.
+    Given --tables, fit nothing: rewrite the baseline table alone from those entries."""
     variants_dir = None
     if "--variants" in argv:
         at = argv.index("--variants")
         variants_dir, argv = Path(argv[at + 1]), argv[:at] + argv[at + 2 :]
+    tables_only = "--tables" in argv
+    argv = [arg for arg in argv if arg != "--tables"]
     assert len(argv) == 5, (
         "usage: fit_baseline.py <ns.parquet> <bh.parquet> <split.parquet> <asset dir> "
-        f"<state dir> [--variants <dir>], got {argv}"
+        f"<state dir> [--variants <dir>] [--tables], got {argv}"
     )
     ns, bh, split_file = Path(argv[0]), Path(argv[1]), Path(argv[2])
     out, state = Path(argv[3]) / SECTION, Path(argv[4]) / SECTION
@@ -914,6 +1001,14 @@ def main(
         designs = {(p.dataset, p.target): p.design for p in found_pairs}
         found = read_back(read_ledger(Path(argv[4]) / "ledger"), designs)
         _write_variants(variants_dir / SECTION, found, config.plot)
+        return
+    if tables_only:
+        keys = [(p.dataset, p.target) for p in found_pairs]
+        scored = pair_scores(read_ledger(Path(argv[4]) / "ledger"), keys)
+        out.mkdir(parents=True, exist_ok=True)
+        table = out / f"{SECTION}_tab_baseline.tex"
+        table.write_text(baseline_table(scored, config.tables.layout, config.tables.baseline))
+        logger.info("done: baseline table rebuilt from the ledger, nothing fitted -> %s", table)
         return
     total = sum(len(set(p.design.fold[p.design.fold >= 0].tolist())) + 1 for p in found_pairs)
     first = time.time()

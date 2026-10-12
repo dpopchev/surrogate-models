@@ -89,13 +89,23 @@ variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/s
 
 # Every table in each layout of paper.toml [tables], one page image per table and layout under
 # $(VARIANTS)/tables/ (W-114). Per layout, a copy of the assets in $(TABLES_WORK)/<layout>/ gets
-# its tables rewritten with PAPER__TABLES__LAYOUT=<layout> -- the EDA, and the results tables
-# from their recorded batches, nothing fitted; the baseline table stays as make baseline wrote
-# it -- then the paper's sources and those assets, flat, compile one table a page; pdfcrop
-# trims each page to its table (W-125) and gs rasterizes it. $(ASSETS) itself is never written.
+# its tables rewritten with PAPER__TABLES__LAYOUT=<layout> -- the EDA, and the results and
+# baseline tables from their recorded batches and ledger, nothing fitted -- then the paper's
+# sources and those assets, flat, compile one table a page; pdfcrop trims each page to its table
+# (W-125) and gs rasterizes it. Then each results table in each of its other [tables] shapes
+# (W-124): the small flat copy with that one table rewritten under PAPER__TABLES__<FIELD>, as
+# <table stem>_<shape>.png. $(ASSETS) itself is never written.
 TABLES_ENTRY  := 00_metadata/tables_entry.py
 TABLES_WORK   := $(WORK)/tables
 TABLE_LAYOUTS := small aligned
+# field:shape:section/table stem, one per shape other than the current form.
+TABLE_SHAPES  := representation:split:61_representation/61_representation_tab_representation \
+                 representation:transposed:61_representation/61_representation_tab_representation \
+                 families:rows_column:62_families/62_families_tab_families \
+                 tuning:no_screen:63_precision/63_precision_tab_tuning \
+                 tuning:delta:63_precision/63_precision_tab_tuning \
+                 baseline:two_tables:51_algorithms/51_algorithms_tab_baseline
+TABLE_DATA    := $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 
 .PHONY: table-variants
 table-variants: assets
@@ -108,10 +118,26 @@ table-variants: assets
 	  $(RUN) python $(REPRESENTATION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $(STATE) $(REPRESENTATION_KNOBS) --batch $(REPRESENTATION_BATCH) && \
 	  $(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) && \
 	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) && \
+	  $(RUN) python $(BASELINE) $(TABLE_DATA) $$work/assets $(STATE) --tables && \
 	  cp $(PAPER_SRC) $$work/flat/ && find $$work/assets -type f -exec cp {} $$work/flat/ \; && \
 	  $(RUN) python $(TABLES_ENTRY) $(PAPER_ENTRY) $$layout $$work/flat $(VARIANTS)/tables || exit 1; \
 	done
-	$(call log_done,every table in each layout ($(TABLE_LAYOUTS)) in $(VARIANTS)/tables/)
+	@for item in $(TABLE_SHAPES); do \
+	  field=$${item%%:*}; rest=$${item#*:}; shape=$${rest%%:*}; table=$${rest#*:}; \
+	  work=$(TABLES_WORK)/$$field-$$shape; \
+	  rm -rf $$work && mkdir -p $$work/assets && cp -R $(TABLES_WORK)/small/flat $$work/flat && \
+	  rm -f $$work/flat/tables_small.* && \
+	  field_var=PAPER__TABLES__$$(echo $$field | tr a-z A-Z) && export $$field_var=$$shape && \
+	  case $$field in \
+	    representation) $(RUN) python $(REPRESENTATION) $(TABLE_DATA) $$work/assets $(STATE) $(REPRESENTATION_KNOBS) --batch $(REPRESENTATION_BATCH) ;; \
+	    families) $(RUN) python $(FAMILIES) $(TABLE_DATA) $$work/assets $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) ;; \
+	    tuning) $(RUN) python $(TUNING) $(TABLE_DATA) $$work/assets $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) ;; \
+	    baseline) $(RUN) python $(BASELINE) $(TABLE_DATA) $$work/assets $(STATE) --tables ;; \
+	  esac && unset $$field_var && \
+	  cp $$work/assets/$$table.tex $$work/flat/ && \
+	  $(RUN) python $(TABLES_ENTRY) $(PAPER_ENTRY) $$shape $$work/flat $(VARIANTS)/tables --only $$(basename $$table) || exit 1; \
+	done
+	$(call log_done,every table in each layout ($(TABLE_LAYOUTS)) and each results table in its other shapes in $(VARIANTS)/tables/)
 
 # Three representative figures under each style preset of paper.toml [plot.presets], on one
 # contact sheet $(VARIANTS)/presets/presets_variants.png (W-115). Per preset, the NS EDA and the

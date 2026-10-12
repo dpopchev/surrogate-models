@@ -35,6 +35,15 @@ def page_names(tables: Sequence[str], layout: str) -> tuple[str, ...]:
     return tuple(f"{table}_{layout}.png" for table in sorted(tables))
 
 
+def selected(tables: Sequence[str], only: str | None) -> tuple[str, ...]:
+    """The tables to render: every one, or the one named by only.
+
+    >>> selected(("a_tab_x", "b_tab_y"), None), selected(("a_tab_x", "b_tab_y"), "b_tab_y")
+    (('a_tab_x', 'b_tab_y'), ('b_tab_y',))
+    """
+    return tuple(tables) if only is None else tuple(t for t in tables if t == only)
+
+
 def rasterize_commands(pdf: Path, pages: Path) -> tuple[list[str], list[str]]:
     """pdfcrop trimming each page of pdf to its table with a 10 bp margin, then gs rasterizing
     the cropped pages at 150 dpi into the pages pattern."""
@@ -57,12 +66,19 @@ def rasterize_commands(pdf: Path, pages: Path) -> tuple[list[str], list[str]]:
 
 
 def main(argv: list[str]) -> None:
-    """Write, compile and rasterize the tables entry of one layout; name each page."""
-    assert len(argv) == 4, f"usage: tables_entry.py <article.tex> <layout> <work> <out>, {argv}"
+    """Write, compile and rasterize the tables entry of one layout, or of the one table named
+    by --only <table stem>; name each page."""
+    only = None
+    if "--only" in argv:
+        at = argv.index("--only")
+        only, argv = argv[at + 1], argv[:at] + argv[at + 2 :]
+    assert len(argv) == 4, (
+        f"usage: tables_entry.py <article.tex> <layout> <work> <out> [--only <stem>], {argv}"
+    )
     article, layout, work, out = Path(argv[0]), argv[1], Path(argv[2]), Path(argv[3])
     assert article.is_file(), f"article entry not found: {article}"
-    tables = tuple(path.stem for path in work.glob("*_tab_*.tex"))
-    assert tables, f"no table file (*_tab_*.tex) in {work}"
+    tables = selected([path.stem for path in work.glob("*_tab_*.tex")], only)
+    assert tables, f"no table file (*_tab_*.tex{f', {only}' if only else ''}) in {work}"
     entry = work / f"tables_{layout}.tex"
     entry.write_text(tables_entry(article.read_text(), tables))
     subprocess.run([*LATEXMK, "-cd", str(entry)], check=True)
