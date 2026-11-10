@@ -33,7 +33,7 @@ This appendix describes each candidate of the family screen of Section~\ref{sec:
 
 \paragraph{Cost.} Fitting factorizes the $N \times N$ kernel matrix, about $N^3$ operations for each step of the optimizer and $8 N^2$ bytes. At $\knobFamiliesBudgetsSecond$ rows the matrix takes $8 \times 10^8$ bytes; past about $2.2 \times 10^4$ rows it passes the $\knobFamiliesMemoryGb$\,GB budget, and the pointwise Gaussian process is recorded as a wall without being run. Curve-wise it is fitted on one row per curve, so it never meets the wall.
 
-\paragraph{What to look for.} It is smooth everywhere and was the strongest pointwise model on $10^3$ rows; the question is whether it keeps its lead as $N$ grows, or meets its wall first. A noise level fitted at its lower bound means the data are smoother than any noise the kernel allows: the model interpolates. Its posterior variance is a ready error bar for the sampler of Section~\ref{sec:mcmc}, which no other family gives for free.
+\paragraph{What to look for.} It is smooth everywhere and was the strongest pointwise model on $10^3$ rows; the question is whether it keeps its lead as $N$ grows, or meets its wall first. A noise level fitted at its lower bound means the data are smoother than any noise the kernel allows: the model interpolates. Its posterior variance is a ready error bar for the sampler of a future MCMC inference, which no other family gives for free.
 
 \subsubsection{Gradient-Boosted Trees (XGBoost)}
 
