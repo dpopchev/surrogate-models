@@ -19,6 +19,7 @@ from paperlib.tables import (
     number,
     power,
     render,
+    shape_files,
     to_json,
 )
 
@@ -145,6 +146,12 @@ def test_table_round_trips_through_json() -> None:
     rows = (*SAMPLE.rows, (Plain("1", True, True),))
     table = replace(SAMPLE, small_spec="@{}l*{3}{r}@{}", rows=rows)
     assert from_json(to_json(table)) == table
+
+
+@pytest.mark.functional
+def test_shape_files_name_a_shape_by_dot_and_each_of_several_tables_by_number() -> None:
+    shapes = {"one": lambda table: (table,), "two": lambda table: (table, table)}
+    assert list(shape_files("x", shapes, SAMPLE)) == ["x.one", "x.two.1", "x.two.2"]
 
 
 @pytest.mark.functional

@@ -2,7 +2,8 @@
 
 Run as `uv run python paperlib/tools/render_assets.py <state folder of a section> <assets>`: each
 <state>/tables/<name>.json becomes <assets>/<section>/<section>_tab_<name>.tex under the [tables]
-layout of paper.toml, and <state>/numbers.json (name -> LaTeX text) <section>_num.tex.
+layout of paper.toml, and <state>/numbers.json (name -> LaTeX text) <section>_num.tex. A file
+whose name holds a dot, <name>.<shape>.json, is a shape of a table, stored for its own page.
 """
 
 import json
@@ -41,7 +42,12 @@ def main(argv: list[str]) -> None:
     assert len(argv) == 2, f"usage: render_assets.py <state folder> <assets folder>, {argv}"
     state, assets = Path(argv[0]), Path(argv[1])
     assert state.is_dir(), f"state folder not found: {state}"
-    tables = {path.stem: path.read_text() for path in (state / "tables").glob("*.json")}
+    # A stored shape is <name>.<shape>.json: another table's file, not an asset of the paper.
+    tables = {
+        path.stem: path.read_text()
+        for path in (state / "tables").glob("*.json")
+        if "." not in path.stem
+    }
     numbers_file = state / "numbers.json"
     numbers = json.loads(numbers_file.read_text()) if numbers_file.is_file() else None
     found = assets_of(state.name, tables, numbers, load_config().tables.layout)

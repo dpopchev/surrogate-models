@@ -12,6 +12,8 @@ budget. One line per finished job tells how far the screen is and how long is le
 import argparse
 import json
 import logging
+import math
+import re
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -95,7 +97,17 @@ from paperlib.runs import RunMetadata, Setting, entry_from_json
 from paperlib.scorecard import relative_errors, significant_figures
 from paperlib.surrogate import Training, make_training
 from paperlib.tables import Cell as TableCell
-from paperlib.tables import Column, Plain, Span, Table, Text, render, to_json
+from paperlib.tables import (
+    Column,
+    Plain,
+    Shape,
+    Span,
+    Table,
+    Text,
+    render,
+    shape_files,
+    to_json,
+)
 from paperlib.workers import run_jobs
 
 logger = logging.getLogger(__name__)
@@ -308,10 +320,26 @@ def family_table(
 
 
 def family_object(outcomes: Sequence[Outcome], shape: FamiliesTableLayout = "subscripts") -> Table:
-    """The Section 5.2 table as an object, to store as JSON: one row per candidate, one column
-    per pair, each cell the candidate's folds' p95 significant figures at the most rows it ran
-    on (or its wall there), the pair's leader at the most rows in bold; the rows a subscript
-    (subscripts) or a column of their own beside each pair's figures (rows_column)."""
+    """The Section 5.2 table in its shape as an object, to store as JSON: the stored table
+    (subscripts), or a shape applied to it (rows_column)."""
+    table = _subscripts_table(outcomes)
+    return table if shape == "subscripts" else SHAPES[shape](table)[0]
+
+
+def families_stored(
+    outcomes: Sequence[Outcome], shape: FamiliesTableLayout = "subscripts"
+) -> dict[str, Table]:
+    """The tables to store as JSON: the paper's pick as families, and every shape of the table
+    beside it as families.<shape>."""
+    return {"families": family_object(outcomes, shape)} | shape_files(
+        "families", SHAPES, _subscripts_table(outcomes)
+    )
+
+
+def _subscripts_table(outcomes: Sequence[Outcome]) -> Table:
+    """One row per candidate, one column per pair, each cell the candidate's folds' p95
+    significant figures at the most rows it ran on (or its wall there), the pair's leader at
+    the most rows in bold, the rows a subscript."""
     last: dict[tuple[str, Target, Candidate], Outcome] = {}
     for outcome in sorted(outcomes, key=lambda found: found.job.rows):
         job = outcome.job
@@ -324,56 +352,101 @@ def family_object(outcomes: Sequence[Outcome], shape: FamiliesTableLayout = "sub
         for dataset, target in keys
         for leader in survivors(_at_most_rows(outcomes, dataset, target), keep=1)
     }
-    match shape:
-        case "subscripts":
-            cell, width, where, spec = _cell, 1, "the subscript", "@{}ll*{4}{r}@{}"
-            header = (
-                (
-                    Text("Family"),
-                    Text("Unit"),
-                    *(Text(pair_tex(dataset, target)) for dataset, target in keys),
-                ),
-            )
-        case "rows_column":
-            cell, width, where, spec = _rows_cell, 2, "the rows column", "@{}ll*{4}{rr}@{}"
-            header = (
-                (
-                    Text("Family"),
-                    Text("Unit"),
-                    *(Span(2, "c", pair_tex(d, t)) for d, t in keys),
-                ),
-                (Text(""), Text(""), *(Text(h) for _ in keys for h in ("figures", "rows"))),
-            )
-        case _:
-            assert_never(shape)
+    header = (
+        (
+            Text("Family"),
+            Text("Unit"),
+            *(Text(pair_tex(dataset, target)) for dataset, target in keys),
+        ),
+    )
     rows = tuple(
         (
             Text(FAMILY_TEX[candidate.family]),
             Text(candidate.unit),
             *(
-                one
-                for dataset, target in keys
-                for one in cell(
+                _cell(
                     last.get((dataset, target, candidate)),
                     (dataset, target, candidate) in leaders,
                 )
+                for dataset, target in keys
             ),
         )
         for candidate in candidates()
     )
-    fitted = [Column("l", before="@{}"), Column("l"), *(Column("r") for _ in keys * width)]
+    fitted = [Column("l", before="@{}"), Column("l"), *(Column("r") for _ in keys)]
     return Table(
         "families",
-        "Each family in each unit of prediction, eliminated by successive halving over the "
-        "training rows: the significant figures kept at the 95th percentile of the error "
-        "($-\\log_{10}$) on the frozen folds, at the most training rows the candidate ran on "
-        f"({where}); a wall is a fit past the time or the memory budget there. The pair's "
-        "best at the most rows is in bold. The errors are measured in $M$ or $\\Dch$.",
+        FAMILIES_CAPTION.format(where="the subscript"),
         (*fitted[:-1], replace(fitted[-1], after="@{}")),
         header,
         rows,
-        spec,
+        "@{}ll*{4}{r}@{}",
     )
+
+
+FAMILIES_CAPTION = (
+    "Each family in each unit of prediction, eliminated by successive halving over the "
+    "training rows: the significant figures kept at the 95th percentile of the error "
+    "($-\\log_{{10}}$) on the frozen folds, at the most training rows the candidate ran on "
+    "({where}); a wall is a fit past the time or the memory budget there. The pair's "
+    "best at the most rows is in bold. The errors are measured in $M$ or $\\Dch$."
+)
+# A subscripts cell: the figures, bold for the pair's leader, and the rows as the subscript.
+_SCORED_CELL = re.compile(
+    r"^\$(?:\\mathbf\{(?P<bold>.+)\}|(?P<plain>.+))_\{10\^\{(?P<rows>-?\d+)\}\}\$$"
+)
+_WALL_CELL = re.compile(r"^wall\$_\{10\^\{(?P<rows>-?\d+)\}\}\$$")
+
+
+def _rows_cells(cell: TableCell) -> tuple[TableCell, TableCell]:
+    """A subscripts cell as the figures and the rows apart, as a rows column writes them."""
+    assert isinstance(cell, Text), f"a subscripts cell is text: {cell}"
+    if cell.tex == "--":
+        return Text("--"), Text("--")
+    if wall := _WALL_CELL.match(cell.tex):
+        return Text("wall"), Text(f"$10^{{{wall['rows']}}}$")
+    scored = _SCORED_CELL.match(cell.tex)
+    assert scored, f"a cell of neither a score nor a wall: {cell.tex}"
+    figures = scored["bold"] or scored["plain"]
+    rows = Text(f"$10^{{{scored['rows']}}}$")
+    if not math.isfinite(float(figures)):
+        return Text(f"$\\mathbf{{{figures}}}$" if scored["bold"] else f"${figures}$"), rows
+    return Plain(figures, bool(scored["bold"]), math=True), rows
+
+
+def rows_column(table: Table) -> tuple[Table, ...]:
+    """The table with the rows of each cell in a column of their own beside the pair's
+    figures, in place of the subscript."""
+    pairs = table.header[0][2:]
+    header = (
+        (table.header[0][0], table.header[0][1], *(Span(2, "c", _tex(pair)) for pair in pairs)),
+        (Text(""), Text(""), *(Text(h) for _ in pairs for h in ("figures", "rows"))),
+    )
+    rows = tuple(
+        (*row[:2], *(one for cell in row[2:] for one in _rows_cells(cell))) for row in table.rows
+    )
+    fitted = [Column("l", before="@{}"), Column("l"), *(Column("r") for _ in pairs * 2)]
+    return (
+        replace(
+            table,
+            caption=FAMILIES_CAPTION.format(where="the rows column"),
+            columns=(*fitted[:-1], replace(fitted[-1], after="@{}")),
+            header=header,
+            rows=rows,
+            small_spec="@{}ll*{4}{rr}@{}",
+        ),
+    )
+
+
+def _tex(cell: TableCell) -> str:
+    """The text of a text cell."""
+    assert isinstance(cell, Text), f"a text cell: {cell}"
+    return cell.tex
+
+
+# The shapes of the families table besides the subscripts, by the name the pick of paper.toml
+# gives them; each is applied to the stored table.
+SHAPES: Mapping[str, Shape] = {"rows_column": rows_column}
 
 
 def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
@@ -938,36 +1011,18 @@ def _at_most_rows(outcomes: Sequence[Outcome], dataset: str, target: Target) -> 
     return [o for o in mine if o.job.rows == most]
 
 
-def _cell(outcome: Outcome | None, bold: bool) -> tuple[TableCell, ...]:
+def _cell(outcome: Outcome | None, bold: bool) -> TableCell:
     """One candidate's table cell on one pair: its folds' figures with its rows as the
     subscript, in bold for the pair's leader; dashes for a candidate the pair never ran."""
     if outcome is None:
-        return (Text("--"),)
+        return Text("--")
     rows = f"_{{10^{{{round(np.log10(outcome.job.rows))}}}}}"
     match outcome:
         case Scored():
             figures = f"\\mathbf{{{outcome.folds:.2f}}}" if bold else f"{outcome.folds:.2f}"
-            return (Text(f"${figures}{rows}$"),)
+            return Text(f"${figures}{rows}$")
         case Wall():
-            return (Text(f"wall${rows}$"),)
-        case _:
-            assert_never(outcome)
-
-
-def _rows_cell(outcome: Outcome | None, bold: bool) -> tuple[TableCell, ...]:
-    """One candidate's two cells on one pair: its folds' figures, in bold for the pair's
-    leader, then its rows; dashes for a candidate the pair never ran."""
-    if outcome is None:
-        return Text("--"), Text("--")
-    rows = Text(f"$10^{{{round(np.log10(outcome.job.rows))}}}$")
-    match outcome:
-        case Scored():
-            text = f"{outcome.folds:.2f}"
-            if not np.isfinite(outcome.folds):
-                return Text(f"$\\mathbf{{{text}}}$" if bold else f"${text}$"), rows
-            return Plain(text, bold, math=True), rows
-        case Wall():
-            return Text("wall"), rows
+            return Text(f"wall${rows}$")
         case _:
             assert_never(outcome)
 
@@ -1142,8 +1197,7 @@ def main(
         out.mkdir(parents=True, exist_ok=True)
         for stale in out.iterdir():  # a deselected figure's wrapper of an earlier run (W-102)
             stale.unlink()
-        table = family_object(outcomes, config.tables.families)
-        _store(args.state, {"families": table}, numbers(outcomes))
+        _store(args.state, families_stored(outcomes, config.tables.families), numbers(outcomes))
         logger.info(
             "done: family table and numbers of batch %s, %d outcomes -> %s",
             batch,

@@ -16,6 +16,7 @@ from optuna.storages.journal import JournalFileBackend
 from optuna.trial import TrialState
 from screen_representation import (
     SECTION,
+    SHAPES,
     Cell,
     Context,
     Job,
@@ -27,6 +28,7 @@ from screen_representation import (
     main,
     numbers,
     plan,
+    representation_objects,
     representation_table,
     run_job,
     scores,
@@ -264,6 +266,16 @@ def test_representation_table_transposed_lists_the_models_as_rows() -> None:
 
 
 @pytest.mark.view
+@pytest.mark.parametrize("shape", sorted(SHAPES))
+def test_every_table_shape_renders(shape: str) -> None:
+    bh = Score("black_holes", "mass", "baseline", "MLP", 3.0, 3.0, 0.1)
+    found = [ns_mass("baseline", "k-NN", 2.0, 0.1), ns_mass("log10 M", "MLP", 3.0, 0.1), bh]
+    tables = SHAPES[shape](representation_objects(found)["representation"])
+    texts = [render(table, layout) for table in tables for layout in ("small", "aligned")]
+    assert all(text.startswith("\\begin{table}") for text in texts)
+
+
+@pytest.mark.view
 def test_representation_table_split_writes_two_tables() -> None:
     bh = Score("black_holes", "mass", "baseline", "MLP", 3.0, 3.0, 0.1)
     table = representation_table([ns_mass("baseline", "MLP", 2.0, 0.1), bh], shape="split")
@@ -318,7 +330,12 @@ def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path
 @pytest.mark.functional
 def test_main_stores_the_representation_table_as_json(ran: Path) -> None:
     folder = ran / "state" / SECTION / "tables"
-    assert {path.stem for path in folder.glob("*.json")} == {"representation"}
+    assert {path.stem for path in folder.glob("*.json")} == {
+        "representation",
+        "representation.split.1",
+        "representation.split.2",
+        "representation.transposed",
+    }
 
 
 @pytest.mark.functional

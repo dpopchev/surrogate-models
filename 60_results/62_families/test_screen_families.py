@@ -14,6 +14,7 @@ import pytest
 import screen_families
 from screen_families import (
     SECTION,
+    SHAPES,
     Candidate,
     FamiliesParityVariant,
     FamiliesSection,
@@ -26,6 +27,7 @@ from screen_families import (
     Work,
     candidates,
     error_figure,
+    family_object,
     family_table,
     job_line,
     main,
@@ -407,7 +409,7 @@ def test_main_removes_a_deselected_figure_s_wrapper_of_an_earlier_run(
 @pytest.mark.functional
 def test_main_stores_the_family_table_as_json(ran: Path) -> None:
     folder = ran / "state" / SECTION / "tables"
-    assert {path.stem for path in folder.glob("*.json")} == {"families"}
+    assert {path.stem for path in folder.glob("*.json")} == {"families", "families.rows_column"}
 
 
 @pytest.mark.functional
@@ -468,6 +470,16 @@ def test_family_table_rows_column_has_no_subscript() -> None:
     found = [on_ns_mass(KNN, 10_000, 2.5), on_ns_mass(RBF, 10_000, 3.0)]
     table = family_table(found, shape="rows_column")
     assert table_rows(table)[0].split(" & ")[2:4] == ["$2.50$", "$10^{4}$"]
+
+
+@pytest.mark.view
+@pytest.mark.parametrize("shape", sorted(SHAPES))
+def test_every_table_shape_renders(shape: str) -> None:
+    wall = Wall(Job("neutron_stars", "mass", GPR, rows=100_000, round=2), "past 30 min")
+    found = [on_ns_mass(KNN, 10_000, 2.5), on_ns_mass(RBF, 10_000, 3.0), wall]
+    tables = SHAPES[shape](family_object(found))
+    texts = [render(table, layout) for table in tables for layout in ("small", "aligned")]
+    assert all(text.startswith("\\begin{table}") for text in texts)
 
 
 @pytest.mark.model

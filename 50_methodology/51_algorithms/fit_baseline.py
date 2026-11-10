@@ -108,7 +108,7 @@ from paperlib.surrogate import (
     rmse,
     sklearn_fitter,
 )
-from paperlib.tables import Cell, Table, Text, aligns, fixed, render
+from paperlib.tables import Cell, Shape, Table, Text, aligns, fixed, render, shape_files
 from paperlib.tables import to_json as table_json
 from paperlib.trials import ReportEpochs, open_study, tell_run
 from paperlib.workers import run_jobs
@@ -438,22 +438,43 @@ def _row(pair: PairScores, scored: Scored) -> tuple[Cell, ...]:
     )
 
 
-def _test_row(pair: PairScores, scored: Scored) -> tuple[Cell, ...]:
-    """One row of the test table: the pair, the predictor, its test MARE, the significant
-    figures at the 95th percentile, the fit seconds and the one-row call seconds."""
-    return (
-        Text(pair_tex(pair.dataset, pair.target)),
-        Text(scored.predictor),
-        Text(_enote(scored.test.mean)),
-        fixed(significant_figures(scored.test.p95), 1),
-        fixed(scored.timing.fit, 0),
-        Text(_enote(scored.timing.predict_one)),
+TEST_CAPTION = (
+    "The baseline MLP against the mean and nearest-curve references, every predictor "
+    "fitted on the same curves and timed on one thread: MARE on the test curves, the "
+    "significant figures kept at the 95th percentile of the test error "
+    "($-\\log_{10}$), the fit time and the time of a one-row call in seconds. The "
+    "$\\Dch$ rows give the error of the charge rebuilt with the true $M$ from the "
+    "predicted $Y = \\log_{10}(\\Dch/M)$."
+)
+FOLDS_CAPTION = (
+    "The predictors of \\cref{tab:baseline} on the frozen folds: MARE as the mean "
+    "$\\pm$ the standard deviation over the folds."
+)
+
+
+def _columns_of(table: Table, label: str, caption: str, at: Sequence[int]) -> Table:
+    """The table cut to the columns at `at`, plain-aligned, under its own label and caption."""
+    return Table(
+        label,
+        caption,
+        aligns("".join(table.columns[i].align for i in at)),
+        tuple(tuple(row[i] for i in at) for row in table.header),
+        tuple(tuple(row[i] for i in at) for row in table.rows),
     )
 
 
-def _folds_row(pair: PairScores, scored: Scored) -> tuple[Cell, ...]:
-    """One row of the folds table: the pair, the predictor, its fold mean +/- std."""
-    return (Text(pair_tex(pair.dataset, pair.target)), Text(scored.predictor), _folds_cell(scored))
+def two_tables(table: Table) -> tuple[Table, ...]:
+    """The baseline table as a test table and a folds table: the folds column leaves the
+    first for a table of its own, beside the pair and the predictor."""
+    return (
+        _columns_of(table, table.label, TEST_CAPTION, (0, 1, 2, 4, 5, 6)),
+        _columns_of(table, "baseline-folds", FOLDS_CAPTION, (0, 1, 3)),
+    )
+
+
+# The shapes of the baseline table besides the one table, by the name the pick of paper.toml
+# gives them; each is applied to the stored table.
+SHAPES: Mapping[str, Shape] = {"two_tables": two_tables}
 
 
 def baseline_table(
@@ -471,46 +492,35 @@ def baseline_objects(
     """The Section 4.1 table as objects by stored name, to store as JSON: every predictor on
     every dataset and target, in one table or as a test table and a folds table (two_tables,
     the folds one as baseline_folds)."""
-    scored = [(pair, one) for pair in pairs for one in pair.scored]
-    match shape:
-        case "one_table":
-            table = Table(
-                "baseline",
-                "The baseline MLP against the mean and nearest-curve references, every predictor "
-                "fitted on the same curves and timed on one thread: MARE on the test curves and "
-                "on the frozen folds (mean $\\pm$ standard deviation), the significant figures "
-                "kept at the 95th percentile of the test error ($-\\log_{10}$), the fit time and "
-                "the time of a one-row call in seconds. The $\\Dch$ rows give the error of the "
-                "charge rebuilt with the true $M$ from the predicted $Y = \\log_{10}(\\Dch/M)$.",
-                aligns("llrrrrr"),
-                (_texts("Pair", "Predictor", "Test", "Folds", "Figures", "Fit s", "Call s"),),
-                tuple(_row(pair, one) for pair, one in scored),
-            )
-            return {"baseline": table}
-        case "two_tables":
-            test = Table(
-                "baseline",
-                "The baseline MLP against the mean and nearest-curve references, every predictor "
-                "fitted on the same curves and timed on one thread: MARE on the test curves, the "
-                "significant figures kept at the 95th percentile of the test error "
-                "($-\\log_{10}$), the fit time and the time of a one-row call in seconds. The "
-                "$\\Dch$ rows give the error of the charge rebuilt with the true $M$ from the "
-                "predicted $Y = \\log_{10}(\\Dch/M)$.",
-                aligns("llrrrr"),
-                (_texts("Pair", "Predictor", "Test", "Figures", "Fit s", "Call s"),),
-                tuple(_test_row(pair, one) for pair, one in scored),
-            )
-            folds = Table(
-                "baseline-folds",
-                "The predictors of \\cref{tab:baseline} on the frozen folds: MARE as the mean "
-                "$\\pm$ the standard deviation over the folds.",
-                aligns("llr"),
-                (_texts("Pair", "Predictor", "Folds"),),
-                tuple(_folds_row(pair, one) for pair, one in scored),
-            )
-            return {"baseline": test, "baseline_folds": folds}
-        case _:
-            assert_never(shape)
+    table = _one_table(pairs)
+    if shape == "one_table":
+        return {"baseline": table}
+    test, folds = SHAPES[shape](table)
+    return {"baseline": test, "baseline_folds": folds}
+
+
+def baseline_stored(
+    pairs: list[PairScores], shape: BaselineTableLayout = "one_table"
+) -> dict[str, Table]:
+    """The tables to store as JSON: the paper's pick by its names, and every shape of the table
+    beside it as baseline.<shape> (baseline.two_tables.1 and .2)."""
+    return baseline_objects(pairs, shape) | shape_files("baseline", SHAPES, _one_table(pairs))
+
+
+def _one_table(pairs: list[PairScores]) -> Table:
+    """Every predictor on every dataset and target, in one table."""
+    return Table(
+        "baseline",
+        "The baseline MLP against the mean and nearest-curve references, every predictor "
+        "fitted on the same curves and timed on one thread: MARE on the test curves and "
+        "on the frozen folds (mean $\\pm$ standard deviation), the significant figures "
+        "kept at the 95th percentile of the test error ($-\\log_{10}$), the fit time and "
+        "the time of a one-row call in seconds. The $\\Dch$ rows give the error of the "
+        "charge rebuilt with the true $M$ from the predicted $Y = \\log_{10}(\\Dch/M)$.",
+        aligns("llrrrrr"),
+        (_texts("Pair", "Predictor", "Test", "Folds", "Figures", "Fit s", "Call s"),),
+        tuple(_row(pair, one) for pair in pairs for one in pair.scored),
+    )
 
 
 def numbers(fit: Fit) -> dict[str, str]:
@@ -908,7 +918,7 @@ def _write_section(
         stale.unlink()
     (out / f"{PARITY}.tex").write_text(figure_tex(variants.parity))
     macros = numbers(fits[NEUTRON_STARS.dataset, "mass"]) | charge_numbers(mares)
-    _store(state, baseline_objects(pairs, config.tables.baseline), macros)
+    _store(state, baseline_stored(pairs, config.tables.baseline), macros)
 
 
 def _latest_baseline(entries: Sequence[LedgerEntry]) -> str:
@@ -1063,7 +1073,7 @@ def main(
     if tables_only:
         keys = [(p.dataset, p.target) for p in found_pairs]
         scored = pair_scores(read_ledger(Path(argv[4]) / "ledger"), keys)
-        _store(state, baseline_objects(scored, config.tables.baseline), None)
+        _store(state, baseline_stored(scored, config.tables.baseline), None)
         out.mkdir(parents=True, exist_ok=True)
         (out / f"{PARITY}.png").unlink(missing_ok=True)
         (out / f"{PARITY}.tex").write_text(figure_tex(section.variants.parity))
