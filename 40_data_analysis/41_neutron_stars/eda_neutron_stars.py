@@ -53,7 +53,6 @@ from paperlib.eda import (
     Adjacency,
     ColumnSummary,
     RowsPerCurve,
-    booktabs,
     camel,
     curve_adjacency,
     curve_ids,
@@ -63,7 +62,6 @@ from paperlib.eda import (
     kfold_mae,
     make_curve_space,
     neighbour_distances,
-    number_tex,
     orders_of_magnitude,
     render_macros,
     rim_mask,
@@ -86,6 +84,7 @@ from paperlib.plots import (
     mark_size,
     write_variant_sheet,
 )
+from paperlib.tables import Plain, Table, Text, aligns, fixed, number, render
 
 logger = logging.getLogger(__name__)
 
@@ -347,61 +346,84 @@ STRATEGY_LABELS: dict[SplitStrategy, str] = {
 }
 
 
-def _univariate_table(found: Evidence, layout: TableLayout) -> str:
+def _univariate_table(found: Evidence) -> Table:
     """Table A: range, orders of magnitude and skew, raw against log10."""
     summary = {(s.column, s.scale): s for s in found.summaries}
-    rows = [
-        f"{TABLE_LABELS[c]} & ${number_tex(summary[c, 'raw'].minimum)}$ & "
-        f"${number_tex(summary[c, 'raw'].maximum)}$ & "
-        f"{orders_of_magnitude(summary[c, 'raw']):.1f} & "
-        f"{summary[c, 'raw'].skew:.2f} & {summary[c, 'log10'].skew:.2f}"
+    rows = tuple(
+        (
+            Text(TABLE_LABELS[c]),
+            number(summary[c, "raw"].minimum),
+            number(summary[c, "raw"].maximum),
+            fixed(orders_of_magnitude(summary[c, "raw"]), 1),
+            fixed(summary[c, "raw"].skew, 2),
+            fixed(summary[c, "log10"].skew, 2),
+        )
         for c in SUMMARY_COLUMNS
-    ]
-    header = "Variable & min & max & orders & skew & skew of $\\log_{10}$"
+    )
+    header = tuple(
+        Text(h) for h in ("Variable", "min", "max", "orders", "skew", "skew of $\\log_{10}$")
+    )
     caption = (
         "Neutron stars: range, orders of magnitude spanned (orders) and skewness of each "
         "continuous variable, raw and in $\\log_{10}$."
     )
-    return booktabs("ns-univariate", caption, "lrrrrr", header, rows, layout)
+    return Table("ns-univariate", caption, aligns("lrrrrr"), (header,), rows)
 
 
-def _charge_table(found: Evidence, layout: TableLayout) -> str:
+def _charge_table(found: Evidence) -> Table:
     """Table B: how each charge target correlates with M and the free parameters."""
-    rows = [
-        f"{CHARGE_LABELS[t.target]} & {t.pearson_m:.2f} & {t.spearman_m:.2f} & "
-        f"{t.pearson_lambda:.2f} & {t.pearson_beta:.2f}"
+    rows = tuple(
+        (
+            Text(CHARGE_LABELS[t.target]),
+            fixed(t.pearson_m, 2),
+            fixed(t.spearman_m, 2),
+            fixed(t.pearson_lambda, 2),
+            fixed(t.pearson_beta, 2),
+        )
         for t in found.targets
-    ]
-    header = "Target & Pearson $M$ & Spearman $M$ & Pearson $\\lambda$ & Pearson $\\beta$"
+    )
+    header = tuple(
+        Text(h)
+        for h in (
+            "Target",
+            "Pearson $M$",
+            "Spearman $M$",
+            "Pearson $\\lambda$",
+            "Pearson $\\beta$",
+        )
+    )
     caption = "Neutron stars: correlation of the two candidate charge targets."
-    return booktabs("ns-charge-correlation", caption, "lrrrr", header, rows, layout)
+    return Table("ns-charge-correlation", caption, aligns("lrrrr"), (header,), rows)
 
 
-def _split_table(found: Evidence, layout: TableLayout) -> str:
+def _split_table(found: Evidence) -> Table:
     """Table C: 1-NN error per split strategy and target."""
     error = {(s.strategy, s.target): _split_error(s) for s in found.splits}
-    rows = [
-        f"{STRATEGY_LABELS[strategy]} & {error[strategy, 'log10_D_over_M']} & "
-        f"{error[strategy, 'M']}"
+    rows = tuple(
+        (
+            Text(STRATEGY_LABELS[strategy]),
+            Plain(error[strategy, "log10_D_over_M"]),
+            Plain(error[strategy, "M"]),
+        )
         for strategy in get_args(SplitStrategy)
-    ]
-    header = "Held out & $\\log_{10}(D/M)$ & $M$"
+    )
+    header = tuple(Text(h) for h in ("Held out", "$\\log_{10}(D/M)$", "$M$"))
     caption = (
         f"Neutron stars: 1-nearest-neighbour mean absolute error under each split "
         f"({found.folds} folds; the rim is predicted from the interior)."
     )
-    return booktabs("ns-split-strategies", caption, "lrr", header, rows, layout)
+    return Table("ns-split-strategies", caption, aligns("lrr"), (header,), rows)
 
 
 def table_tex(found: Evidence, table: NsTable, layout: TableLayout = "small") -> str:
     """The booktabs table environment of one table in the paper's table layout."""
     match table:
         case "univariate":
-            return _univariate_table(found, layout)
+            return render(_univariate_table(found), layout)
         case "charge_correlation":
-            return _charge_table(found, layout)
+            return render(_charge_table(found), layout)
         case "split_strategies":
-            return _split_table(found, layout)
+            return render(_split_table(found), layout)
         case _:
             assert_never(table)
 
@@ -908,10 +930,10 @@ def _write_ceilings(
 ) -> None:
     """Write the ceilings table, the per-decade table and the figure of the data limits."""
     (out / f"{SECTION}_tab_ceilings.tex").write_text(
-        ceiling_table("ns-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS, layout)
+        render(ceiling_table("ns-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS), layout)
     )
     (out / f"{SECTION}_tab_ceiling_decades.tex").write_text(
-        decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS, layout)
+        render(decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS), layout)
     )
     fig = _ceilings(bounds, style, variant)
     fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)

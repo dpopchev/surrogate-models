@@ -20,8 +20,9 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import FormatStrFormatter, MultipleLocator, NullLocator
 from scipy.interpolate import CubicSpline, PchipInterpolator
 
-from paperlib.config import CeilingsVariant, TableLayout
-from paperlib.eda import booktabs, sci_tex
+from paperlib.config import CeilingsVariant
+from paperlib.eda import sci_tex
+from paperlib.tables import Cell, Table, Text, aligns, fixed, power
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
@@ -147,26 +148,23 @@ def ceiling_table(
     caption: str,
     found: Ceilings,
     labels: Mapping[str, str],
-    layout: TableLayout = "small",
-) -> str:
+) -> Table:
     """A table of the ceilings: per target the median noise, the along-curve p95, the
     across-curve p95 per curve key and the significant figures they allow."""
     keys = list(dict.fromkeys(key for _, key in found.across))
-    rows = [
-        " & ".join(
-            [
-                labels[target],
-                f"${_sci(found.noise[target].median)}$",
-                f"${_sci(found.along[target].p95)}$",
-                *(f"${_sci(found.across[target, key].p95)}$" for key in keys),
-                f"{reachable_figures(found, target):.1f}",
-            ]
+    rows = tuple(
+        (
+            Text(labels[target]),
+            _sci_cell(found.noise[target].median),
+            _sci_cell(found.along[target].p95),
+            *(_sci_cell(found.across[target, key].p95) for key in keys),
+            fixed(reachable_figures(found, target), 1),
         )
         for target in found.noise
-    ]
-    across = " & ".join(f"across {labels[key]}" for key in keys)
-    header = f"Target & noise & along & {across} & figures"
-    return booktabs(label, caption, "l" + "r" * (len(keys) + 3), header, rows, layout)
+    )
+    across = [f"across {labels[key]}" for key in keys]
+    header = tuple(Text(h) for h in ("Target", "noise", "along", *across, "figures"))
+    return Table(label, caption, aligns("l" + "r" * (len(keys) + 3)), (header,), rows)
 
 
 def decade_table(
@@ -174,8 +172,7 @@ def decade_table(
     caption: str,
     found: Ceilings,
     labels: Mapping[str, str],
-    layout: TableLayout = "small",
-) -> str:
+) -> Table:
     """A table of the decade target's across-curve ceiling: per decade the median per curve
     key varied and the significant figures the worse of them allows."""
     keys = list(found.decades)
@@ -183,12 +180,12 @@ def decade_table(
     rows = []
     for decade in decades:
         medians = [found.decades[key].get(decade) for key in keys]
-        cells = [f"${_sci(s.median)}$" if s else "--" for s in medians]
+        cells = [_sci_cell(s.median) if s else Text("--") for s in medians]
         worst = max(s.median for s in medians if s)
-        rows.append(" & ".join([f"$10^{{{decade}}}$", *cells, f"{-np.log10(worst):.1f}"]))
-    across = " & ".join(f"across {labels[key]}" for key in keys)
-    header = f"Decade & {across} & figures"
-    return booktabs(label, caption, "l" + "r" * (len(keys) + 1), header, rows, layout)
+        rows.append((Text(f"$10^{{{decade}}}$"), *cells, fixed(-np.log10(worst), 1)))
+    across = [f"across {labels[key]}" for key in keys]
+    header = tuple(Text(h) for h in ("Decade", *across, "figures"))
+    return Table(label, caption, aligns("l" + "r" * (len(keys) + 1)), (header,), tuple(rows))
 
 
 def _figure_lines(ax: Axes) -> None:
@@ -322,6 +319,11 @@ FLOOR_ON_PLOT = 1e-12
 def _sci(value: float) -> str:
     """A bound in scientific notation, or a dash when the data left it undefined."""
     return sci_tex(value) if np.isfinite(value) else "--"
+
+
+def _sci_cell(value: float) -> Cell:
+    """A bound as a power-of-ten cell, or a dash in math mode when the data left it undefined."""
+    return power(value) if np.isfinite(value) else Text("$--$")
 
 
 def reachable_figures(found: Ceilings, target: str) -> float:

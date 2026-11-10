@@ -3,6 +3,7 @@
 The renderer formats from the cells; it never parses a LaTeX string back.
 """
 
+import math
 from dataclasses import dataclass
 from typing import Literal, assert_never
 
@@ -18,10 +19,11 @@ class Text:
 
 @dataclass(frozen=True)
 class Plain:
-    """A plain number, its digits as printed."""
+    """A plain number, its digits as printed, in math mode when `math`."""
 
     mantissa: str
     bold: bool = False
+    math: bool = False
 
 
 @dataclass(frozen=True)
@@ -75,9 +77,37 @@ class Table:
     rows: tuple[tuple[Cell, ...], ...]
 
 
+def aligns(letters: str) -> tuple[Column, ...]:
+    """The columns of a spec of plain alignment letters, e.g. "lrr"."""
+    return tuple(Column(letter) for letter in letters)  # type: ignore[arg-type]
+
+
+def fixed(value: float, decimals: int) -> Cell:
+    """A number to a fixed count of decimals, as text when it is not finite."""
+    text = f"{value:.{decimals}f}"
+    return Plain(text) if math.isfinite(value) else Text(text)
+
+
+def power(value: float, bold: bool = False) -> Power:
+    """A number as a mantissa of three significant digits times a power of ten."""
+    mantissa, exponent = f"{value:.2e}".split("e")
+    return Power(mantissa, int(exponent), bold)
+
+
+def number(value: float) -> Plain | Power:
+    """A number in math mode: 0 as 0, three significant digits between 0.01 and 1000, else a
+    power of ten."""
+    if value == 0:
+        return Plain("0", math=True)
+    if not 0.01 <= abs(value) < 1000:
+        return power(value)
+    decimals = max(2 - math.floor(math.log10(abs(value))), 0)
+    return Plain(f"{value:.{decimals}f}", math=True)
+
+
 def _small_number(number: Number) -> str:
     match number:
-        case Plain(mantissa, _):
+        case Plain(mantissa, _, _):
             inner = mantissa
         case Power(mantissa, exponent, _):
             inner = f"{mantissa}\\times 10^{{{exponent}}}"
@@ -87,7 +117,7 @@ def _small_number(number: Number) -> str:
             assert_never(number)
     if number.bold:
         return f"$\\mathbf{{{inner}}}$"
-    return inner if isinstance(number, Plain) else f"${inner}$"
+    return f"${inner}$" if not isinstance(number, Plain) or number.math else inner
 
 
 def _small(cell: Cell) -> str:
