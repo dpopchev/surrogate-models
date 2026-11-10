@@ -31,6 +31,7 @@
 - 2026-10-12 W-132: fact: 00_metadata/paper_knobs.py keeps a third family-tag map, SPACE_TAG, with the two networks as Net (T-348) -> W-132 moves it beside FAMILY_TAG too
 - 2026-11-10 E-012: standing: board close gates on make deliverable, never lint -> a lane runs make lint typecheck before its close supersedes: E-012#1
 - 2026-11-10 E-013: T-373: fact: the scope gate reads a path only from a token with a slash or an extension; a bare folder name (92_black_holes) names nothing -> W-140 briefs amended on the branch to name each 90_appendix/9x path and shared file
+- 2026-11-10 E-013: fact: an attribution trailer in unpushed 1b83564 was rewritten out of main and wi/W-140-appendix (filter-branch, messages only) -> T-373 evidence 388f1c8 is fa76073, its record de324d2 is ad290b4, cdb0e87 is 6b166c0
 - 2026-11-10 W-139: standing: Table.small_spec holds a *{n}{x} repeat spec -> the small layout writes it as given, aligned reads the columns supersedes: W-139#1
 
 ## Open questions
