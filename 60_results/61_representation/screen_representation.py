@@ -10,9 +10,10 @@ and is scored through paperlib/harness.py with the weighted k-NN, the local RBF
 
 import argparse
 import logging
+import math
 import sys
 from collections.abc import Callable, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime
 from functools import partial
 from itertools import product
@@ -51,12 +52,14 @@ from paperlib.design import (
     design,
     pair_tex,
 )
-from paperlib.eda import booktabs, make_curve_space, render_macros
+from paperlib.eda import make_curve_space, render_macros
 from paperlib.families import make_knn, make_rbf
 from paperlib.harness import Fitter, Run, harness
 from paperlib.runs import LedgerEntry, RunMetadata, Setting
 from paperlib.scorecard import significant_figures
 from paperlib.surrogate import Training, make_training, network_fitter, sklearn_fitter
+from paperlib.tables import Cell as TableCell
+from paperlib.tables import Column, Plain, Span, Spread, Table, Text, render
 from paperlib.trials import ReportEpochs, open_study, tell_run
 from paperlib.workers import run_jobs
 
@@ -347,21 +350,28 @@ def _transposed(found: Sequence[Score], layout: TableLayout) -> str:
             if not any(key[:2] == (dataset, target) and key[3] == model for key in by_key):
                 continue
             cells = [
-                _entry(
-                    by_key.get((dataset, target, r, model)),
-                    by_key.get((dataset, target, "baseline", model)),
-                ).replace(" & ", " / ")
+                Text(
+                    " / ".join(
+                        _entry_tex(
+                            by_key.get((dataset, target, r, model)),
+                            by_key.get((dataset, target, "baseline", model)),
+                        )
+                    )
+                )
                 for r in shown
             ]
-            rows.append(f"{pair_tex(dataset, target)} & {MODEL_TEX[model]} & {' & '.join(cells)}")
-    return booktabs(
+            rows.append((Text(pair_tex(dataset, target)), Text(MODEL_TEX[model]), *cells))
+    fitted = [Column("l", before="@{}"), Column("l"), *(Column("r") for _ in shown)]
+    columns = (*fitted[:-1], replace(fitted[-1], after="@{}"))
+    header = (tuple(Text(h) for h in ("Pair", "Model", *(REPRESENTATION_TEX[r] for r in shown))),)
+    table = Table(
         "representation",
         f"{REPRESENTATION_CAPTION} Each cell: test / folds.",
-        "@{}ll" + "r" * len(shown) + "@{}",
-        "Pair & Model & " + " & ".join(REPRESENTATION_TEX[r] for r in shown),
-        rows,
-        layout,
+        columns,
+        header,
+        tuple(rows),
     )
+    return render(table, layout)
 
 
 def _eight_columns(found: Sequence[Score], layout: TableLayout, label: str, caption: str) -> str:
@@ -372,39 +382,59 @@ def _eight_columns(found: Sequence[Score], layout: TableLayout, label: str, capt
     rows = []
     for dataset, target, representation in dict.fromkeys(key[:3] for key in by_key):
         entries = [
-            _entry(
+            cell
+            for model in MODELS
+            for cell in _entry(
                 by_key.get((dataset, target, representation, model)),
                 by_key.get((dataset, target, "baseline", model)),
             )
-            for model in MODELS
         ]
         rows.append(
-            f"{pair_tex(dataset, target)} & "
-            f"{REPRESENTATION_TEX[representation]} & {' & '.join(entries)}"
+            (Text(pair_tex(dataset, target)), Text(REPRESENTATION_TEX[representation]), *entries)
         )
-    return booktabs(
-        label,
-        caption,
-        # Eight columns fit the text width only with 8pt gaps and no outer padding.
-        "@{}l@{\\hspace{8pt}}l*{6}{@{\\hspace{8pt}}r}@{}",
-        "Pair & Representation & \\multicolumn{2}{c}{$k$-NN} & "
-        "\\multicolumn{2}{c}{local RBF} & \\multicolumn{2}{c}{MLP} \\\\\n"
-        " & & Test & Folds & Test & Folds & Test & Folds",
-        rows,
-        layout,
+    # Eight columns fit the text width only with 8pt gaps and no outer padding.
+    gap = "@{\\hspace{8pt}}"
+    columns = (
+        Column("l", before="@{}", after=gap),
+        Column("l"),
+        *(Column("r", before=gap) for _ in range(5)),
+        Column("r", before=gap, after="@{}"),
     )
+    header = (
+        (
+            Text("Pair"),
+            Text("Representation"),
+            Span(2, "c", "$k$-NN"),
+            Span(2, "c", "local RBF"),
+            Span(2, "c", "MLP"),
+        ),
+        tuple(Text(h) for h in ("", "", *("Test", "Folds") * 3)),
+    )
+    spec = "@{}l@{\\hspace{8pt}}l*{6}{@{\\hspace{8pt}}r}@{}"
+    table = Table(label, caption, columns, header, tuple(rows), spec)
+    return render(table, layout)
 
 
-def _entry(score: Score | None, baseline: Score | None) -> str:
+def _entry(score: Score | None, baseline: Score | None) -> tuple[TableCell, TableCell]:
     """One model's two columns of a table row: test figures, then fold mean +/- deviation, in
     bold when it beats the baseline; dashes for a model the cell does not run (the MLP on
     curve-wise)."""
+    if score is None or not all(math.isfinite(v) for v in (score.test, score.folds, score.spread)):
+        test_tex, folds_tex = _entry_tex(score, baseline)
+        return Text(test_tex), Text(folds_tex)
+    bold = baseline is not None and beats(score, baseline)
+    spread = Spread(f"{score.folds:.2f}", f"{score.spread:.2f}", bold)
+    return Plain(f"{score.test:.2f}", math=True), spread
+
+
+def _entry_tex(score: Score | None, baseline: Score | None) -> tuple[str, str]:
+    """The two figures of an entry as LaTeX text, for a cell that holds both."""
     if score is None:
-        return "-- & --"
+        return "--", "--"
     folds = f"{score.folds:.2f}_{{\\pm {score.spread:.2f}}}"
     if baseline is not None and beats(score, baseline):
         folds = f"\\mathbf{{{folds}}}"
-    return f"${score.test:.2f}$ & ${folds}$"
+    return f"${score.test:.2f}$", f"${folds}$"
 
 
 def _reference_fitter(

@@ -15,7 +15,7 @@ import logging
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime
 from functools import partial
 from itertools import product
@@ -79,7 +79,7 @@ from paperlib.design import (
     pairs,
     target_symbol,
 )
-from paperlib.eda import booktabs, number_tex, render_macros
+from paperlib.eda import number_tex, render_macros
 from paperlib.harness import Fitter, Run, harness
 from paperlib.plots import (
     SYMBOLS,
@@ -97,6 +97,8 @@ from paperlib.plots import (
 from paperlib.runs import RunMetadata, Setting, entry_from_json
 from paperlib.scorecard import relative_errors, significant_figures
 from paperlib.surrogate import Training, make_training
+from paperlib.tables import Cell as TableCell
+from paperlib.tables import Column, Plain, Span, Table, Text, render
 from paperlib.workers import run_jobs
 
 logger = logging.getLogger(__name__)
@@ -290,40 +292,55 @@ def family_table(
     }
     match shape:
         case "subscripts":
-            cell, spec, where = _cell, "@{}ll*{4}{r}@{}", "the subscript"
-            header = " & ".join(pair_tex(dataset, target) for dataset, target in keys)
-        case "rows_column":
-            cell, spec, where = _rows_cell, "@{}ll*{4}{rr}@{}", "the rows column"
+            cell, width, where, spec = _cell, 1, "the subscript", "@{}ll*{4}{r}@{}"
             header = (
-                " & ".join(f"\\multicolumn{{2}}{{c}}{{{pair_tex(d, t)}}}" for d, t in keys)
-                + " \\\\\n & & "
-                + " & ".join("figures & rows" for _ in keys)
+                (
+                    Text("Family"),
+                    Text("Unit"),
+                    *(Text(pair_tex(dataset, target)) for dataset, target in keys),
+                ),
+            )
+        case "rows_column":
+            cell, width, where, spec = _rows_cell, 2, "the rows column", "@{}ll*{4}{rr}@{}"
+            header = (
+                (
+                    Text("Family"),
+                    Text("Unit"),
+                    *(Span(2, "c", pair_tex(d, t)) for d, t in keys),
+                ),
+                (Text(""), Text(""), *(Text(h) for _ in keys for h in ("figures", "rows"))),
             )
         case _:
             assert_never(shape)
-    rows = [
-        f"{FAMILY_TEX[candidate.family]} & {candidate.unit} & "
-        + " & ".join(
-            cell(
-                last.get((dataset, target, candidate)),
-                (dataset, target, candidate) in leaders,
-            )
-            for dataset, target in keys
+    rows = tuple(
+        (
+            Text(FAMILY_TEX[candidate.family]),
+            Text(candidate.unit),
+            *(
+                one
+                for dataset, target in keys
+                for one in cell(
+                    last.get((dataset, target, candidate)),
+                    (dataset, target, candidate) in leaders,
+                )
+            ),
         )
         for candidate in candidates()
-    ]
-    return booktabs(
+    )
+    fitted = [Column("l", before="@{}"), Column("l"), *(Column("r") for _ in keys * width)]
+    table = Table(
         "families",
         "Each family in each unit of prediction, eliminated by successive halving over the "
         "training rows: the significant figures kept at the 95th percentile of the error "
         "($-\\log_{10}$) on the frozen folds, at the most training rows the candidate ran on "
         f"({where}); a wall is a fit past the time or the memory budget there. The pair's "
         "best at the most rows is in bold. The errors are measured in $M$ or $\\Dch$.",
-        spec,
-        f"Family & Unit & {header}",
+        (*fitted[:-1], replace(fitted[-1], after="@{}")),
+        header,
         rows,
-        layout,
+        spec,
     )
+    return render(table, layout)
 
 
 # Macro tags of the families and units: \famNsMassRbfCurvewiseFigures.
@@ -876,34 +893,36 @@ def _at_most_rows(outcomes: Sequence[Outcome], dataset: str, target: Target) -> 
     return [o for o in mine if o.job.rows == most]
 
 
-def _cell(outcome: Outcome | None, bold: bool) -> str:
+def _cell(outcome: Outcome | None, bold: bool) -> tuple[TableCell, ...]:
     """One candidate's table cell on one pair: its folds' figures with its rows as the
     subscript, in bold for the pair's leader; dashes for a candidate the pair never ran."""
     if outcome is None:
-        return "--"
+        return (Text("--"),)
     rows = f"_{{10^{{{round(np.log10(outcome.job.rows))}}}}}"
     match outcome:
         case Scored():
             figures = f"\\mathbf{{{outcome.folds:.2f}}}" if bold else f"{outcome.folds:.2f}"
-            return f"${figures}{rows}$"
+            return (Text(f"${figures}{rows}$"),)
         case Wall():
-            return f"wall${rows}$"
+            return (Text(f"wall${rows}$"),)
         case _:
             assert_never(outcome)
 
 
-def _rows_cell(outcome: Outcome | None, bold: bool) -> str:
+def _rows_cell(outcome: Outcome | None, bold: bool) -> tuple[TableCell, ...]:
     """One candidate's two cells on one pair: its folds' figures, in bold for the pair's
     leader, then its rows; dashes for a candidate the pair never ran."""
     if outcome is None:
-        return "-- & --"
-    rows = f"$10^{{{round(np.log10(outcome.job.rows))}}}$"
+        return Text("--"), Text("--")
+    rows = Text(f"$10^{{{round(np.log10(outcome.job.rows))}}}$")
     match outcome:
         case Scored():
-            figures = f"\\mathbf{{{outcome.folds:.2f}}}" if bold else f"{outcome.folds:.2f}"
-            return f"${figures}$ & {rows}"
+            text = f"{outcome.folds:.2f}"
+            if not np.isfinite(outcome.folds):
+                return Text(f"$\\mathbf{{{text}}}$" if bold else f"${text}$"), rows
+            return Plain(text, bold, math=True), rows
         case Wall():
-            return f"wall & {rows}"
+            return Text("wall"), rows
         case _:
             assert_never(outcome)
 

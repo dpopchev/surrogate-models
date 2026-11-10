@@ -76,6 +76,20 @@ def test_fixed_and_power_cells_render_as_f_strings_did(layout: TableLayout) -> N
     assert render(table, layout) == booktabs("f", "F.", "lrrr", "w & x & y & z", rows, layout)
 
 
+@pytest.mark.view
+@pytest.mark.parametrize("layout", ["small", "aligned"])
+def test_a_small_spec_with_a_repeat_is_written_as_given_in_the_small_layout(
+    layout: TableLayout,
+) -> None:
+    columns = (Column("l", before="@{}"), *aligns("rrr")[:-1], Column("r", after="@{}"))
+    row = (Text("a"), Plain("1"), Plain("2"), Plain("3"))
+    header = tuple(Text(h) for h in "wxyz")
+    table = Table("s", "S.", columns, (header,), (row,), small_spec="@{}l*{3}{r}@{}")
+    column = "S[table-format=1]"
+    spec = "@{}l*{3}{r}@{}" if layout == "small" else f"@{{}}l{column * 3}@{{}}"
+    assert f"\\begin{{tabular}}{{{spec}}}" in render(table, layout)
+
+
 @pytest.mark.functional
 def test_aligns_gives_a_column_per_letter() -> None:
     assert aligns("lrc") == (Column("l"), Column("r"), Column("c"))

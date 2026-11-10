@@ -69,7 +69,7 @@ from paperlib.design import (
     pairs,
 )
 from paperlib.diagnostics import curve_overlay, error_cdf, loss_curve
-from paperlib.eda import CurveSpace, booktabs, curve_ids, render_macros, sci_tex, text_width_size
+from paperlib.eda import CurveSpace, curve_ids, render_macros, sci_tex, text_width_size
 from paperlib.families import make_mean_reference, make_nearest_reference
 from paperlib.harness import FitRows, Fitter, Predictor, Run, Timing, harness
 from paperlib.plots import (
@@ -107,6 +107,7 @@ from paperlib.surrogate import (
     rmse,
     sklearn_fitter,
 )
+from paperlib.tables import Cell, Table, Text, aligns, fixed, render
 from paperlib.trials import ReportEpochs, open_study, tell_run
 from paperlib.workers import run_jobs
 
@@ -388,36 +389,47 @@ def _enote(value: float) -> str:
     return f"{mantissa}e{int(exponent)}"
 
 
-def _row(pair: PairScores, scored: Scored) -> str:
+def _texts(*items: str) -> tuple[Cell, ...]:
+    """A row of text cells."""
+    return tuple(Text(item) for item in items)
+
+
+def _folds_cell(scored: Scored) -> Cell:
+    """The fold mean +/- std of one predictor, as text."""
+    folds = np.array([fold.mean for fold in scored.folds])
+    return Text(f"{_enote(float(folds.mean()))} $\\pm$ {_enote(float(folds.std()))}")
+
+
+def _row(pair: PairScores, scored: Scored) -> tuple[Cell, ...]:
     """One table row: the pair, the predictor, its test MARE, fold mean +/- std, the
     significant figures at the 95th percentile, the fit seconds and the one-row call seconds."""
-    folds = np.array([fold.mean for fold in scored.folds])
     return (
-        f"{pair_tex(pair.dataset, pair.target)} & {scored.predictor} & "
-        f"{_enote(scored.test.mean)} & "
-        f"{_enote(float(folds.mean()))} $\\pm$ {_enote(float(folds.std()))} & "
-        f"{significant_figures(scored.test.p95):.1f} & {scored.timing.fit:.0f} & "
-        f"{_enote(scored.timing.predict_one)}"
+        Text(pair_tex(pair.dataset, pair.target)),
+        Text(scored.predictor),
+        Text(_enote(scored.test.mean)),
+        _folds_cell(scored),
+        fixed(significant_figures(scored.test.p95), 1),
+        fixed(scored.timing.fit, 0),
+        Text(_enote(scored.timing.predict_one)),
     )
 
 
-def _test_row(pair: PairScores, scored: Scored) -> str:
+def _test_row(pair: PairScores, scored: Scored) -> tuple[Cell, ...]:
     """One row of the test table: the pair, the predictor, its test MARE, the significant
     figures at the 95th percentile, the fit seconds and the one-row call seconds."""
     return (
-        f"{pair_tex(pair.dataset, pair.target)} & {scored.predictor} & "
-        f"{_enote(scored.test.mean)} & {significant_figures(scored.test.p95):.1f} & "
-        f"{scored.timing.fit:.0f} & {_enote(scored.timing.predict_one)}"
+        Text(pair_tex(pair.dataset, pair.target)),
+        Text(scored.predictor),
+        Text(_enote(scored.test.mean)),
+        fixed(significant_figures(scored.test.p95), 1),
+        fixed(scored.timing.fit, 0),
+        Text(_enote(scored.timing.predict_one)),
     )
 
 
-def _folds_row(pair: PairScores, scored: Scored) -> str:
+def _folds_row(pair: PairScores, scored: Scored) -> tuple[Cell, ...]:
     """One row of the folds table: the pair, the predictor, its fold mean +/- std."""
-    folds = np.array([fold.mean for fold in scored.folds])
-    return (
-        f"{pair_tex(pair.dataset, pair.target)} & {scored.predictor} & "
-        f"{_enote(float(folds.mean()))} $\\pm$ {_enote(float(folds.std()))}"
-    )
+    return (Text(pair_tex(pair.dataset, pair.target)), Text(scored.predictor), _folds_cell(scored))
 
 
 def baseline_table(
@@ -430,7 +442,7 @@ def baseline_table(
     scored = [(pair, one) for pair in pairs for one in pair.scored]
     match shape:
         case "one_table":
-            return booktabs(
+            table = Table(
                 "baseline",
                 "The baseline MLP against the mean and nearest-curve references, every predictor "
                 "fitted on the same curves and timed on one thread: MARE on the test curves and "
@@ -438,13 +450,13 @@ def baseline_table(
                 "kept at the 95th percentile of the test error ($-\\log_{10}$), the fit time and "
                 "the time of a one-row call in seconds. The $\\Dch$ rows give the error of the "
                 "charge rebuilt with the true $M$ from the predicted $Y = \\log_{10}(\\Dch/M)$.",
-                "llrrrrr",
-                "Pair & Predictor & Test & Folds & Figures & Fit s & Call s",
-                [_row(pair, one) for pair, one in scored],
-                layout,
+                aligns("llrrrrr"),
+                (_texts("Pair", "Predictor", "Test", "Folds", "Figures", "Fit s", "Call s"),),
+                tuple(_row(pair, one) for pair, one in scored),
             )
+            return render(table, layout)
         case "two_tables":
-            return booktabs(
+            test = Table(
                 "baseline",
                 "The baseline MLP against the mean and nearest-curve references, every predictor "
                 "fitted on the same curves and timed on one thread: MARE on the test curves, the "
@@ -452,19 +464,19 @@ def baseline_table(
                 "($-\\log_{10}$), the fit time and the time of a one-row call in seconds. The "
                 "$\\Dch$ rows give the error of the charge rebuilt with the true $M$ from the "
                 "predicted $Y = \\log_{10}(\\Dch/M)$.",
-                "llrrrr",
-                "Pair & Predictor & Test & Figures & Fit s & Call s",
-                [_test_row(pair, one) for pair, one in scored],
-                layout,
-            ) + booktabs(
+                aligns("llrrrr"),
+                (_texts("Pair", "Predictor", "Test", "Figures", "Fit s", "Call s"),),
+                tuple(_test_row(pair, one) for pair, one in scored),
+            )
+            folds = Table(
                 "baseline-folds",
                 "The predictors of \\cref{tab:baseline} on the frozen folds: MARE as the mean "
                 "$\\pm$ the standard deviation over the folds.",
-                "llr",
-                "Pair & Predictor & Folds",
-                [_folds_row(pair, one) for pair, one in scored],
-                layout,
+                aligns("llr"),
+                (_texts("Pair", "Predictor", "Folds"),),
+                tuple(_folds_row(pair, one) for pair, one in scored),
             )
+            return render(test, layout) + render(folds, layout)
         case _:
             assert_never(shape)
 

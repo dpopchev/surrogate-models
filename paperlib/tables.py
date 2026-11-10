@@ -68,13 +68,18 @@ class Column:
 
 @dataclass(frozen=True)
 class Table:
-    """A labelled, captioned table: columns, header rows and body rows of typed cells."""
+    """A labelled, captioned table: columns, header rows and body rows of typed cells.
+
+    `small_spec`, when set, is the tabular spec the small layout writes as given, for a table
+    whose spec repeats a column group (`*{4}{r}`); the aligned layout reads the columns.
+    """
 
     label: str
     caption: str
     columns: tuple[Column, ...]
     header: tuple[tuple[Cell, ...], ...]
     rows: tuple[tuple[Cell, ...], ...]
+    small_spec: str = ""
 
 
 def aligns(letters: str) -> tuple[Column, ...]:
@@ -197,6 +202,8 @@ def _numbers_of(table: Table, at: int) -> list[Number]:
 
 
 def _spec(table: Table, layout: TableLayout) -> str:
+    if layout == "small" and table.small_spec:
+        return table.small_spec
     parts = []
     for at, column in enumerate(table.columns):
         match layout:
