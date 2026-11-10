@@ -49,28 +49,9 @@ $(ASSETS)/00_metadata/00_metadata_build_stamp.tex: paperlib/tools/build_stamp.py
 	@$(RUN) python $< $@
 	$(call log_done,build stamp written to $@)
 
-# Section 3.1: the NS EDA writes the figures and tables paper.toml selects and their numbers;
-# the numbers file, written on every run, stands for the whole set (the script empties its
-# own folder first).
-NS_EDA        := 40_data_analysis/41_neutron_stars/eda_neutron_stars.py
-NS_EDA_ASSETS := $(ASSETS)/41_neutron_stars/41_neutron_stars_num.tex
-PAPER_ASSETS  += $(NS_EDA_ASSETS)
-# The EDA probes the split with the split's own folds and seed (mk/data.mk); the NS pile-up
-# window in M is the band below a curve's M_max that Section 3.1 counts.
-NS_PILE_UP_WINDOW := 0.09
-
-$(NS_EDA_ASSETS): $(NS_EDA) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet
-	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW)
-	$(call log_done,NS EDA figures and numbers written to $(@D)/)
-
-# Section 3.2: the BH EDA, the same way; its numbers file stands for the whole set.
-BH_EDA        := 40_data_analysis/42_black_holes/eda_black_holes.py
-BH_EDA_ASSETS := $(ASSETS)/42_black_holes/42_black_holes_num.tex
-PAPER_ASSETS  += $(BH_EDA_ASSETS)
-
-$(BH_EDA_ASSETS): $(BH_EDA) paper.toml $(PAPERLIB) $(STATE)/black_holes.parquet
-	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED)
-	$(call log_done,BH EDA figures and numbers written to $(@D)/)
+# The sections' own rules -- the scripts, knobs, recorded batches and one target named after the
+# folder -- live in <chapter>/<section>/<section>.mk, included by the Makefile after mk/*.mk;
+# each appends its assets to PAPER_ASSETS. The recipes below read their variables at recipe time.
 
 # Every variant of each figure that has them, with one contact sheet per figure, drawn to
 # pick from: paper.toml records the pick, make compile places it (W-111). Never an asset. The
@@ -163,81 +144,6 @@ preset-variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(S
 	@$(RUN) python $(PRESETS_SHEET) $(VARIANTS)/presets $(subst $() ,$(comma),$(PLOT_PRESETS)) $(subst $() ,$(comma),$(notdir $(PRESET_FIGURES)))
 	$(call log_done,three figures under each preset ($(PLOT_PRESETS)) in $(VARIANTS)/presets/presets_variants.png)
 
-# Section 3.3: the split numbers, from the split file.
-PREP_NUMBERS := 40_data_analysis/43_preprocessing/preprocessing_numbers.py
-PREP_ASSETS  := $(ASSETS)/43_preprocessing/43_preprocessing_num.tex
-PAPER_ASSETS += $(PREP_ASSETS)
-
-$(PREP_ASSETS): $(PREP_NUMBERS) $(STATE)/split.parquet paper.toml
-	@$(RUN) python $(PREP_NUMBERS) $(STATE)/split.parquet $(ASSETS) --seed $(SPLIT_SEED)
-	$(call log_done,Section 3.3 numbers written to $@)
-
-# Section 4.1: the baseline surrogate trains a network, minutes on this CPU, so it is its own
-# target and not in PAPER_ASSETS -- make check (paper-verify) would retrain it on every change
-# of a shared module (T-080). The numbers file stands for the whole set; the epoch lines stream
-# while it trains.
-BASELINE        := 50_methodology/51_algorithms/fit_baseline.py
-BASELINE_ASSETS := $(ASSETS)/51_algorithms/51_algorithms_num.tex
-
-$(BASELINE_ASSETS): $(BASELINE) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
-	$(call log_info,fitting the baseline on NS and BH$(comma) mass and charge -- one line per epoch; make follow shows it from any terminal)
-	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE)
-	$(call log_done,baseline table$(comma) numbers and parity figure written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
-
-.PHONY: baseline
-baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1
-	$(call log_done,baseline assets current in $(dir $(BASELINE_ASSETS)))
-
-# The baseline table alone is a paper asset: rebuilt from the latest baseline batch of the
-# ledger in seconds, nothing fitted, so a change to baseline_table reaches the paper without a
-# refit (W-128). A ledger without a baseline batch keeps the table as make baseline last wrote it.
-BASELINE_TABLE := $(ASSETS)/51_algorithms/51_algorithms_tab_baseline.tex
-PAPER_ASSETS   += $(BASELINE_TABLE)
-
-$(BASELINE_TABLE): $(BASELINE) paper.toml $(PAPERLIB) $(TABLE_DATA) $(wildcard $(STATE)/ledger)
-	@if out=$$($(RUN) python $(BASELINE) $(TABLE_DATA) $(ASSETS) $(STATE) --tables 2>&1); then \
-	  printf "$(BOLD)$(GREEN)%s$(RESET) %s\n" "[DONE]" "baseline table rebuilt from the ledger -> $@" >&2; \
-	elif printf '%s' "$$out" | grep -q 'no baseline batch in the ledger'; then \
-	  printf "$(BOLD)$(YELLOW)%s$(RESET) %s\n" "[WARN]" "no baseline batch in the ledger -- $@ kept; make baseline fits one" >&2; \
-	else printf '%s\n' "$$out" >&2; exit 1; fi
-
-# Each baseline run logs into its own <run>/train.log and repoints latest.log at it (W-054);
-# tail -F follows the name, so one make follow keeps up across runs. It ends with Ctrl-C, so
-# its log_done never prints.
-BASELINE_LOG := $(STATE)/51_algorithms/latest.log
-
-.PHONY: follow
-follow: ## Follow the running baseline's log live
-	$(call log_info,following $(BASELINE_LOG) -- waits for a run if none started yet; Ctrl-C ends it)
-	@tail -n 40 -F $(BASELINE_LOG)
-	$(call log_done,stopped following $(BASELINE_LOG))
-
-# The runs at a glance (W-057): one line per run from its run.json, newest first; make run
-# lists one run's files, the latest unless R names a run folder.
-LIST_RUNS := 50_methodology/51_algorithms/list_runs.py
-R         ?= latest
-
-.PHONY: runs
-runs: ## List the baseline runs, newest first
-	@$(RUN) python $(LIST_RUNS) $(STATE)
-	$(call log_done,baseline runs listed from $(STATE)/51_algorithms/)
-
-.PHONY: run
-run: ## Show one baseline run's files -- R=<run>, default latest
-	@$(RUN) python $(LIST_RUNS) $(STATE) --run $(R)
-	$(call log_done,files of baseline run $(R) listed)
-
-# The run ledger (W-077): one line per harness run of every make baseline, newest first; B=<batch
-# id or its first characters> lists one batch.
-LIST_LEDGER := 50_methodology/51_algorithms/list_ledger.py
-LEDGER      := $(STATE)/ledger
-B           ?=
-
-.PHONY: ledger
-ledger: ## List the run ledger -- B=<batch> for one batch
-	@$(RUN) python $(LIST_LEDGER) $(STATE) $(if $(B),--batch $(B))
-	$(call log_done,ledger listed from $(LEDGER)/ -- $(words $(wildcard $(LEDGER)/*.json)) entries$(if $(B), in all$(comma) batch $(B) shown))
-
 # The fits as live trials (W-081): optuna-dashboard on a study journal -- make baseline's, or a
 # screen's or tuning's batch journal under $(STATE)/<section>/ (W-092). By default the one
 # written last, so a running batch is the one shown; JOURNAL=<path> opens another. It ends with
@@ -252,99 +158,19 @@ dashboard: ## Follow the fits live in optuna-dashboard -- the newest study journ
 	@$(RUN) optuna-dashboard $(JOURNAL) --port $(DASHBOARD_PORT)
 	$(call log_done,stopped optuna-dashboard)
 
-# Section 5.1: the representation screen (W-066), one factor at a time from the baseline at
-# equal model -- about 60 harness jobs, hours on the workers, so like the baseline it is its own
-# target; make assets only rebuilds the table from the recorded batch (W-130). Its knobs are written here only (Decision on W-066): the
-# k-NN's k, the local RBF's neighbours, the curve-wise spline's knots, the MLP seeds counted
-# from paper.toml's seed. The table is read back from the run's ledger batch.
-REPRESENTATION        := 60_results/61_representation/screen_representation.py
-REPRESENTATION_ASSETS := $(ASSETS)/61_representation/61_representation_tab_representation.tex
-# 100 neighbours: 50 leave the RBF singular on NS folds whose neighbourhoods span two curves (W-086).
-REPRESENTATION_KNOBS  := --k 8 --neighbours 100 --knots 8 --seeds 3
-# The recorded batch Section 5.1 reports (2026-10-08, clean at 700c05e): the table is rebuilt from
-# its ledger entries in seconds. Empty it to refit the whole screen (hours):
-# make representation REPRESENTATION_BATCH=
-REPRESENTATION_BATCH  ?= 01a11acc-9832-7478-8831-1adfdc78f228
-
-$(REPRESENTATION_ASSETS): $(REPRESENTATION) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
-	$(call log_info,$(if $(REPRESENTATION_BATCH),rebuilding the representation table from batch $(REPRESENTATION_BATCH),screening the representations ($(REPRESENTATION_KNOBS)) -- follow the trials with make dashboard))
-	@$(RUN) python $(REPRESENTATION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(REPRESENTATION_KNOBS) $(if $(REPRESENTATION_BATCH),--batch $(REPRESENTATION_BATCH))
-	$(call log_done,representation table written to $@)
-
-# A paper asset while its batch is recorded: make assets rebuilds it in seconds, never a screen.
-PAPER_ASSETS += $(if $(REPRESENTATION_BATCH),$(REPRESENTATION_ASSETS))
-
-.PHONY: representation
-representation: $(REPRESENTATION_ASSETS) ## Run the representation screen for Section 5.1
-	$(call log_done,representation assets current in $(dir $(REPRESENTATION_ASSETS)))
-
-# Section 5.2: the family screen (W-067), successive halving over the training rows -- every
-# family pointwise and curve-wise at the first budget, the top 3 of each unit per pair at the
-# second, the top 2 of each at the third, each unit ranked apart because a thinned NS design
-# keeps few curves (Decisions on W-067); a fit past 30 min or 4 GB is the family's wall there
-# (Decision on W-067), on 3 workers. Hours, so its own target, in make assets only from its
-# recorded batch (W-130); one line per finished job in the log. Its knobs are written here
-# only. The k-NN, RBF and spline knobs are the representation screen's.
-FAMILIES        := 60_results/62_families/screen_families.py
-FAMILIES_ASSETS := $(ASSETS)/62_families/62_families_tab_families.tex
-FAMILIES_KNOBS  := --k 8 --neighbours 100 --knots 8 --per-curve 10 \
-                   --budgets 1000 10000 100000 --keeps 3 2 --minutes 30 --memory-gb 4 --workers 3
-# The recorded batch Section 5.2 reports (2026-10-08, clean at 037443f; 88 outcomes): its saved
-# outcomes (local/state/62_families/<batch>.json) rebuild the table and figures in seconds.
-# Empty it to refit the whole screen (hours): make families FAMILIES_BATCH=
-FAMILIES_BATCH  ?= 01a11be4-6eca-7427-a5dd-a97dd7a0194d
-
-$(FAMILIES_ASSETS): $(FAMILIES) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
-	$(call log_info,$(if $(FAMILIES_BATCH),rebuilding the family table from batch $(FAMILIES_BATCH),screening the families ($(FAMILIES_KNOBS)) -- one line per finished job))
-	@$(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(FAMILIES_KNOBS) $(if $(FAMILIES_BATCH),--batch $(FAMILIES_BATCH))
-	$(call log_done,family table written to $@)
-
-# A paper asset while its batch is recorded: make assets rebuilds it in seconds, never a screen.
-PAPER_ASSETS += $(if $(FAMILIES_BATCH),$(FAMILIES_ASSETS))
-
-.PHONY: families
-families: $(FAMILIES_ASSETS) ## Run the family screen for Section 5.2
-	$(call log_done,family assets current in $(dir $(FAMILIES_ASSETS)))
-
-# Section 5.3's tuning (W-068): every candidate on the family screen's short list searched with
-# the same Optuna trials over its own hyperparameters, scored on the frozen folds; a fit past the
-# wall fails its trial. Hours, so its own target, in make assets only from its recorded batch
-# (W-130); one line per finished job in the log, the trials live in optuna-dashboard on the
-# batch's journal under $(STATE)/63_precision/. Its knobs are written here only; k, neighbours
-# and knots are the screen's, each overridden by a trial that searches it. The short list and
-# the screen's figures come from its recorded batch in the ledger: per pair, the candidates
-# within --within figures of the best on the most rows (Section 5.2).
-TUNING        := 60_results/63_precision/tune_survivors.py
-TUNING_ASSETS := $(ASSETS)/63_precision/63_precision_tab_tuning.tex
-TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --workers 3 --within 1.0
-# The recorded batch (T-206, 2026-10-10): make tuning rebuilds the table from its outcomes in
-# seconds; TUNING_BATCH= (empty) runs the whole tuning again (about 33 hours).
-TUNING_BATCH  ?= 01a11d49-1647-735a-af05-a58e497428f2
-
-$(TUNING_ASSETS): $(TUNING) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
-	$(call log_info,$(if $(TUNING_BATCH),rebuilding the tuning table from batch $(TUNING_BATCH),tuning the short list ($(TUNING_KNOBS)) -- one line per finished job))
-	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) $(if $(TUNING_BATCH),--batch $(TUNING_BATCH))
-	$(call log_done,tuning table written to $@)
-
-# A paper asset while its batch is recorded: make assets rebuilds it in seconds, never a tuning.
-PAPER_ASSETS += $(if $(TUNING_BATCH),$(TUNING_ASSETS))
-
-.PHONY: tuning
-tuning: $(TUNING_ASSETS) ## Run the tuning of the short list for Section 5.3
-	$(call log_done,tuning assets current in $(dir $(TUNING_ASSETS)))
-
 # The knobs the text cites (W-116): the baseline network's settings from paper.toml and the
-# screens' knobs above, which live here only -- so this file is a prerequisite too.
+# screens' knobs, which live in the three results .mk files -- so those are prerequisites too
+# (literal paths: the sections are included after this file).
 KNOBS        := paperlib/tools/paper_knobs.py
 KNOBS_ASSETS := $(ASSETS)/00_metadata/00_metadata_knobs_num.tex
 PAPER_ASSETS += $(KNOBS_ASSETS)
 
-$(KNOBS_ASSETS): $(KNOBS) paper.toml $(PAPERLIB) mk/paper.mk
+$(KNOBS_ASSETS): $(KNOBS) paper.toml $(PAPERLIB) 60_results/61_representation/61_representation.mk 60_results/62_families/62_families.mk 60_results/63_precision/63_precision.mk
 	@$(RUN) python $(KNOBS) $@ --representation "$(REPRESENTATION_KNOBS)" --families "$(FAMILIES_KNOBS)" --tuning "$(TUNING_KNOBS)"
 	$(call log_done,knobs written to $@)
 
 .PHONY: assets
-assets: $(PAPER_ASSETS) ## Generate the section assets under build/assets/
+assets: ## Generate the section assets under build/assets/
 	$(call log_done,assets in $(ASSETS)/: $(sort $(notdir $(patsubst %/,%,$(dir $(PAPER_ASSETS))))))
 
 # The assets comparison: record the sha256 sums of every asset (the build stamp left out, it

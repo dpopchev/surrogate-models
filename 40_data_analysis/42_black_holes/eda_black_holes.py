@@ -22,6 +22,7 @@ from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
+from pydantic import BaseModel, ConfigDict
 
 from paperlib.ceilings import (
     Ceilings,
@@ -34,17 +35,12 @@ from paperlib.ceilings import (
 )
 from paperlib.config import (
     NOTATION_TEX,
-    BhChargeTargetVariant,
-    BhExistenceEdgeVariant,
-    BhFigure,
-    BhMassRadiusVariant,
-    BhTable,
-    BlackHoleVariants,
     CeilingsVariant,
     PaperConfig,
     TableLayout,
     UnivariateVariant,
     load_config,
+    load_section,
 )
 from paperlib.eda import (
     Adjacency,
@@ -82,6 +78,42 @@ from paperlib.tables import Table, Text, aligns, fixed, number, render
 logger = logging.getLogger(__name__)
 
 # --- vocabulary and types ---------------------------------------------------------------------
+
+BhFigure = Literal["univariate_continuous", "mass_radius", "charge_target", "existence_edge"]
+BhTable = Literal["univariate", "charge_correlation", "split_strategies"]
+# inset: M against r_h, the departure from GR in an inset; departure: M - r_h/2 against r_h;
+# both: the two side by side (W-111).
+BhMassRadiusVariant = Literal["inset", "departure", "both"]
+# two_panels: M against log10 D and log10 D/M; log_d: log10 D alone (W-112).
+BhChargeTargetVariant = Literal["two_panels", "log_d"]
+# segments: each curve's r_h range; edge_line: r_h,min against beta; zoomed: the segments
+# near the edge (W-112).
+BhExistenceEdgeVariant = Literal["segments", "edge_line", "zoomed"]
+
+
+class BlackHoleVariants(BaseModel):
+    """Section 3.2: which variant of each BH figure the paper places (W-111)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    mass_radius: BhMassRadiusVariant = "inset"
+    univariate_continuous: UnivariateVariant = "histograms"
+    charge_target: BhChargeTargetVariant = "two_panels"
+    existence_edge: BhExistenceEdgeVariant = "segments"
+    ceilings: CeilingsVariant = "annotated"
+
+
+class BlackHolesSection(BaseModel):
+    """Section 3.2: which BH EDA figures and tables eda_black_holes.py renders."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    figures: tuple[BhFigure, ...] = get_args(BhFigure)
+    tables: tuple[BhTable, ...] = get_args(BhTable)
+    variants: BlackHoleVariants = BlackHoleVariants()
+
+
+SECTION_TOML = Path(__file__).with_name("42_black_holes.toml")
 
 CURVE = ("beta",)
 BH_SPACE = make_curve_space({"beta": "raw", "r_h": "raw"}, CURVE)
@@ -773,7 +805,11 @@ def _write_ceilings(
     )
 
 
-def main(argv: list[str], config: PaperConfig | None = None) -> None:
+def main(
+    argv: list[str],
+    config: PaperConfig | None = None,
+    section: BlackHolesSection | None = None,
+) -> None:
     """Write the selected figures and tables and the numbers into the section's folder of the
     asset dir, after emptying that folder of an earlier run -- or, given --variants, only
     every figure variant and its contact sheet into that dir's section folder."""
@@ -789,7 +825,7 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
-    section = config.data_analysis.black_holes
+    section = section or load_section(BlackHolesSection, SECTION_TOML)
     for figure in section.figures:
         fig = draw(figure, table, config.plot, section.variants)
         fig.savefig(out / f"{asset(figure)}.png", dpi=config.plot.dpi)

@@ -301,9 +301,7 @@ def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path
     folder = tmp_path_factory.mktemp("screen")
     ns, bh, split_file = toy_inputs(folder)
     network = {"width": 8, "depth": 1, "max_epochs": 2, "batch_size": 8, "workers": 1}
-    config = PaperConfig.model_validate(
-        {"plot": {"usetex": False}, "methodology": {"algorithms": network}}
-    )
+    config = PaperConfig.model_validate({"plot": {"usetex": False}, "network": network})
     paths = [str(ns), str(bh), str(split_file), str(folder / "assets"), str(folder / "state")]
     knobs = ["--k", "2", "--neighbours", "1000", "--knots", "2", "--seeds", "1"]
     main(

@@ -18,7 +18,7 @@ from datetime import datetime
 from functools import partial
 from itertools import product
 from pathlib import Path
-from typing import Any, assert_never, get_args
+from typing import Any, Literal, assert_never, get_args
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,6 +33,7 @@ from optuna.distributions import BaseDistribution, IntDistribution
 from optuna.storages import JournalStorage
 from optuna.storages.journal import JournalFileBackend
 from optuna.trial import TrialState
+from pydantic import BaseModel, ConfigDict
 
 from paperlib import surrogate
 from paperlib.batches import (
@@ -54,11 +55,10 @@ from paperlib.candidates import FAMILIES, UNITS, Candidate, Knobs, tuned_fitter
 from paperlib.config import (
     NOTATION_TEX,
     PaperConfig,
-    PrecisionHistoryVariant,
-    PrecisionRangesVariant,
     TableLayout,
     TuningTableLayout,
     load_config,
+    load_section,
 )
 from paperlib.design import (
     BLACK_HOLES,
@@ -108,6 +108,33 @@ logger = logging.getLogger(__name__)
 # --- vocabulary and types ---------------------------------------------------------------------
 
 SECTION = "63_precision"
+SECTION_TOML = Path(__file__).with_name("63_precision.toml")
+
+# dots_and_best: every trial and the best so far; best_only: the best so far alone; regret: the
+# best so far minus each trial, log-scaled (W-113).
+PrecisionHistoryVariant = Literal["dots_and_best", "best_only", "regret"]
+# row: knots, neighbours and the network side by side; grid: 2 x 2, the knots split by
+# dataset; no_network: knots and neighbours alone (W-113).
+PrecisionRangesVariant = Literal["row", "grid", "no_network"]
+
+
+class PrecisionVariants(BaseModel):
+    """Section 5.3: which variant of each tuning figure the paper places (W-113)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    history: PrecisionHistoryVariant = "dots_and_best"
+    ranges: PrecisionRangesVariant = "row"
+
+
+class PrecisionSection(BaseModel):
+    """Section 5.3: the tuning figures tune_survivors.py writes (W-113)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    variants: PrecisionVariants = PrecisionVariants()
+
+
 HISTORY = f"{SECTION}_fig_history"
 RANGES = f"{SECTION}_fig_ranges"
 # The data ceilings of Sections 4.1 and 4.2 (W-064) in significant figures, as their macros.
@@ -1028,6 +1055,7 @@ def main(
     commit: Callable[[], str] | None = None,
     dirty: Callable[[], bool] | None = None,
     now: Callable[[], datetime] | None = None,
+    section: PrecisionSection | None = None,
 ) -> None:
     """Tune every short-listed candidate on the workers, saving the outcomes under the state
     folder, and write the tuning table -- or, given --batch, fit nothing and take that batch."""
@@ -1035,7 +1063,8 @@ def main(
     for path in (args.ns, args.bh, args.split):
         assert path.is_file(), f"input not found: {path}"
     config = config or load_config()
-    settings = config.methodology.algorithms
+    settings = config.network
+    section = section or load_section(PrecisionSection, SECTION_TOML)
     training = make_training(settings)
     tables = {
         NEUTRON_STARS.dataset: pd.read_parquet(args.ns),
@@ -1077,7 +1106,7 @@ def main(
         write_checked(numbers_tex, render_macros(found))
         logger.info("done: tuning numbers of batch %s -> %s", batch, numbers_tex)
         apply_style(config.plot, NOTATION_TEX.read_text())
-        picks = config.results.precision.variants
+        picks = section.variants
         drawn = (
             (
                 HISTORY,

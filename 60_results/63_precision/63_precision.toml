@@ -1,0 +1,7 @@
+# Which variant of each Section 5.3 figure the paper places; `make variants` draws them from
+# TUNING_BATCH's journal, nothing fitted (W-113).
+[variants]
+history = "dots_and_best"  # dots_and_best: every trial and the best so far | best_only
+                           # regret: the best so far minus each trial, log scale
+ranges = "row"             # row: knots, neighbours, network side by side
+                           # grid: 2 x 2, the knots split by dataset | no_network

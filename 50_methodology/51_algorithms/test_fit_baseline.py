@@ -449,9 +449,7 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
     (assets / SECTION / "stale.tex").write_text("from an earlier run")
     # One worker: the shared fit count interleaves across pairs on several (T-179 covers those).
     network = {"width": 8, "depth": 1, "max_epochs": 2, "batch_size": 8, "workers": 1}
-    config = PaperConfig.model_validate(
-        {"plot": {"usetex": False}, "methodology": {"algorithms": network}}
-    )
+    config = PaperConfig.model_validate({"plot": {"usetex": False}, "network": network})
     main(
         [str(ns), str(bh), str(split_file), str(assets), str(state)],
         config,
@@ -468,9 +466,7 @@ def test_the_run_names_make_dashboard_as_it_starts(
 ) -> None:
     ns, bh, split_file = toy_inputs(tmp_path)
     network = {"width": 8, "depth": 1, "max_epochs": 1, "batch_size": 8, "workers": 1}
-    config = PaperConfig.model_validate(
-        {"plot": {"usetex": False}, "methodology": {"algorithms": network}}
-    )
+    config = PaperConfig.model_validate({"plot": {"usetex": False}, "network": network})
     paths = [str(ns), str(bh), str(split_file), str(tmp_path / "assets"), str(tmp_path / "state")]
     main(paths, config, commit=lambda: "abc1234", dirty=lambda: False)
     assert "make dashboard" in caplog.text

@@ -24,6 +24,7 @@ from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
+from pydantic import BaseModel, ConfigDict
 
 from paperlib.ceilings import (
     Ceilings,
@@ -38,16 +39,11 @@ from paperlib.ceilings import (
 from paperlib.config import (
     NOTATION_TEX,
     CeilingsVariant,
-    NeutronStarVariants,
-    NsChargeTargetVariant,
-    NsFigure,
-    NsMassDensityVariant,
-    NsMassMaxVariant,
-    NsTable,
     PaperConfig,
     TableLayout,
     UnivariateVariant,
     load_config,
+    load_section,
 )
 from paperlib.eda import (
     Adjacency,
@@ -89,6 +85,49 @@ from paperlib.tables import Plain, Table, Text, aligns, fixed, number, render
 logger = logging.getLogger(__name__)
 
 # --- vocabulary and types ---------------------------------------------------------------------
+
+NsFigure = Literal[
+    "univariate",
+    "charge_target",
+    "mass_density",
+    "grid_fill",
+    "curve_adjacency",
+    "univariate_continuous",
+    "mass_max",
+]
+NsTable = Literal["univariate", "charge_correlation", "split_strategies"]
+# scatter: every row; lines: one line per curve; lambda_inset: by lambda, a beta inset (W-112).
+NsChargeTargetVariant = Literal["scatter", "lines", "lambda_inset"]
+# by_lambda or by_beta: the curves coloured by that parameter; two_panels: both (W-112).
+NsMassDensityVariant = Literal["by_lambda", "by_beta", "two_panels"]
+# histogram_heatmap: distance to M_max and the M_max grid; heatmap_contours: the grid alone
+# with M_max contours; log_histogram: the distance alone, log-y (W-112).
+NsMassMaxVariant = Literal["histogram_heatmap", "heatmap_contours", "log_histogram"]
+
+
+class NeutronStarVariants(BaseModel):
+    """Section 3.1: which variant of each NS figure the paper places (W-112)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    charge_target: NsChargeTargetVariant = "scatter"
+    mass_density: NsMassDensityVariant = "by_lambda"
+    univariate_continuous: UnivariateVariant = "histograms"
+    mass_max: NsMassMaxVariant = "histogram_heatmap"
+    ceilings: CeilingsVariant = "annotated"
+
+
+class NeutronStarsSection(BaseModel):
+    """Section 3.1: which NS EDA figures and tables eda_neutron_stars.py renders."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    figures: tuple[NsFigure, ...] = get_args(NsFigure)
+    tables: tuple[NsTable, ...] = get_args(NsTable)
+    variants: NeutronStarVariants = NeutronStarVariants()
+
+
+SECTION_TOML = Path(__file__).with_name("41_neutron_stars.toml")
 
 CURVE = ("beta", "lambda")
 # The probe space: beta and lambda as they are, the central density in log10.
@@ -946,7 +985,11 @@ def _write_ceilings(
     )
 
 
-def main(argv: list[str], config: PaperConfig | None = None) -> None:
+def main(
+    argv: list[str],
+    config: PaperConfig | None = None,
+    section: NeutronStarsSection | None = None,
+) -> None:
     """Write the selected figures and tables, the numbers and the figures .tex into the section's
     folder of the asset dir, after emptying that folder of an earlier run."""
     args = _arguments(argv)
@@ -966,7 +1009,7 @@ def main(argv: list[str], config: PaperConfig | None = None) -> None:
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
-    section = config.data_analysis.neutron_stars
+    section = section or load_section(NeutronStarsSection, SECTION_TOML)
     for figure in section.figures:
         fig = draw(figure, table, config.plot, args.window, section.variants)
         fig.savefig(out / f"{asset(figure)}.png", dpi=config.plot.dpi)

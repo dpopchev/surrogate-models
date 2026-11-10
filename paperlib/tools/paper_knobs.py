@@ -1,7 +1,7 @@
 """Write the knobs the text cites as LaTeX macros: the baseline network's settings, the
 screens' make knobs (W-116) and the tuning's search ranges (W-131).
 
-Reads [methodology.algorithms] of paper.toml; the screens' knobs live in mk/paper.mk only
+Reads [network] of paper.toml; the screens' knobs live in mk/paper.mk only
 (Decision on W-066), so make passes their flag strings. Writes one \\knob... macro per setting:
 \\knobNet<Field> per network field, \\knob<Screen><Flag> per screen flag, a flag of several
 values one macro per value with an ordinal suffix (\\knobFamiliesBudgetsFirst).
@@ -20,7 +20,7 @@ from pathlib import Path
 
 from optuna.distributions import FloatDistribution, IntDistribution
 
-from paperlib.config import AlgorithmsSection, load_config
+from paperlib.config import NetworkSettings, load_config
 from paperlib.eda import camel, number_tex, render_macros
 from paperlib.search import KNOTS, SPACES, Space
 
@@ -71,7 +71,7 @@ def _value(text: str) -> int | float:
     return int(text) if text.lstrip("-").isdigit() else float(text)
 
 
-def knob_numbers(net: AlgorithmsSection, screens: dict[str, str]) -> dict[str, str]:
+def knob_numbers(net: NetworkSettings, screens: dict[str, str]) -> dict[str, str]:
     """Every knob, keyed by its \\knob macro name: the network's fields, then each screen's
     flags (screens maps a macro tag, Repr, to its make knob string)."""
     found = {
@@ -138,7 +138,7 @@ def main(argv: list[str]) -> None:
     """Write the knobs macro file from paper.toml and the screens' make knobs."""
     args = _arguments(argv)
     screens = {tag: getattr(args, screen) for screen, tag in SCREENS.items()}
-    found = knob_numbers(load_config().methodology.algorithms, screens)
+    found = knob_numbers(load_config().network, screens)
     found |= space_numbers({SPACE_TAG[f]: space for f, space in SPACES.items()}, KNOTS)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(render_macros(found))

@@ -466,7 +466,7 @@ def _run_screen(
     now: Callable[[], datetime] | None,
 ) -> str:
     """Run every job of the screen on the workers as trials of a new batch; return its id."""
-    settings = config.methodology.algorithms
+    settings = config.network
     tables = {
         NEUTRON_STARS.dataset: pd.read_parquet(args.ns),
         BLACK_HOLES.dataset: pd.read_parquet(args.bh),
@@ -596,7 +596,7 @@ def main(
     for path in (args.ns, args.bh, args.split):
         assert path.is_file(), f"input not found: {path}"
     config = config or load_config()
-    settings = config.methodology.algorithms
+    settings = config.network
     training = make_training(settings)
     seeds = tuple(training.seed + i for i in range(args.seeds))
     jobs = len(plan(cells(), seeds))

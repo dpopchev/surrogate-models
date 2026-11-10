@@ -1,5 +1,6 @@
-# The paper's choices, read by paperlib/config.py (the schema: every key and its allowed values).
+# The paper-wide choices, read by paperlib/config.py (the schema: every key and its allowed values).
 # Edit a choice and re-run `make compile`; PAPER__<SECTION>__<FIELD> env vars override this file.
+# Each section's own figure and table picks and variants are in the toml beside its script.
 
 [plot]
 context = "paper"         # paper | notebook | talk
@@ -40,92 +41,10 @@ anchor = 0                # palette index for single-color NS marks (blue)
 beta_cmap = "flare"
 anchor = 1                # palette index for single-color BH marks (orange)
 
-# Section 3.1 -- which NS EDA figures and tables eda_neutron_stars.py renders; the section text
-# places each one beside the paragraph that cites it, and a deselected one simply drops out.
-# Also available: "univariate" (every variable, equal bins), "curve_adjacency"
-# (nearest-neighbour distance, own vs other curve) and "grid_fill" (rows per curve; the
-# triangle already shows in mass_max).
-[data_analysis.neutron_stars]
-figures = [
-  "univariate_continuous",  # rho_c, M, D, D/M raw and log10, one bar per grid value
-  "mass_density",           # M vs log10 rho_c per curve
-  "charge_target",          # M vs log10 D and log10 D/M, by lambda and beta
-  "mass_max",               # distance to each curve's M_max, M_max over the grid
-]
-tables = ["univariate", "charge_correlation", "split_strategies"]
-
-# Which variant of each Section 3.1 figure the paper places; `make variants` draws them all
-# side by side under build/variants/41_neutron_stars/ to pick from (W-112).
-[data_analysis.neutron_stars.variants]
-charge_target = "scatter"            # scatter: every row | lines: one line per curve
-                                     # lambda_inset: by lambda, a beta miniature inset
-mass_density = "by_lambda"           # by_lambda | by_beta: the curves coloured by it
-                                     # two_panels: by lambda and by beta side by side
-univariate_continuous = "histograms" # histograms: a row per variable, raw and log10
-                                     # log_counts: the same, log-y row counts
-                                     # transposed: raw and log10 as two rows, half the height
-mass_max = "histogram_heatmap"       # histogram_heatmap: distance to M_max and the M_max grid
-                                     # heatmap_contours: the grid alone, M_max contours
-                                     # log_histogram: the distance alone, log-y counts
-ceilings = "annotated"               # annotated: a panel per target, 4 and 5 figures lines
-                                     # figures_axis: a right axis in significant figures
-                                     # one_panel: both targets' p95, target by line style
-
-# Section 3.2 -- which BH EDA figures and tables eda_black_holes.py renders; placed by the text.
-[data_analysis.black_holes]
-figures = [
-  "univariate_continuous",  # r_h, M, D, D/M raw and log10, one bar per grid value
-  "mass_radius",            # M against r_h, one line per beta
-  "charge_target",          # M against log10 D and log10 D/M, by beta
-  "existence_edge",         # each beta curve's r_h range, r_h,min marked
-]
-tables = ["univariate", "charge_correlation", "split_strategies"]
-
-# Which variant of each Section 3.2 figure the paper places; `make variants` draws them all
-# side by side under build/variants/42_black_holes/ to pick from (W-111).
-[data_analysis.black_holes.variants]
-mass_radius = "inset"     # inset: M against r_h, the departure from GR in an inset
-                          # departure: M - r_h/2 against r_h, the GR relation as the zero line
-                          # both: the two side by side
-univariate_continuous = "histograms"  # histograms | log_counts | transposed, as in 3.1
-charge_target = "two_panels"          # two_panels: log10 D and log10 D/M | log_d: log10 D only
-existence_edge = "segments"           # segments: each curve's r_h range
-                                      # edge_line: r_h,min against beta
-                                      # zoomed: the segments near the edge
-ceilings = "annotated"                # annotated | figures_axis | one_panel, as in 3.1
-
-# Section 5.2 -- which family-screen figures screen_families.py writes (W-102); placed by the
-# text like Section 3's, a deselected one drops out. The family table is always written.
-[results.families]
-figures = [
-  "parity",                 # each unit's best per pair: predicted against true on the test curves
-  "errors",                 # the same candidates' relative error per test row, median and p95
-  "scaling",                # folds' figures and the final fit's seconds against the training rows
-]
-
-# Which variant of each Section 5.2 figure the paper places; `make variants` draws them from
-# FAMILIES_BATCH, nothing fitted (W-113).
-[results.families.variants]
-parity = "parity"            # parity: predicted against true | residual: predicted minus true
-errors = "scatter_profiles"  # scatter_profiles: a panel per pair and candidate, scatter and profiles
-                             # profiles: the profiles alone, candidates overlaid, a panel per pair
-                             # hexbin: the rows' density as hexagons, with the profiles
-scaling = "figures_and_seconds"  # figures_and_seconds: per pair the folds' figures and the fit seconds
-                                 # marker_size: a panel per pair, the seconds as marker size
-                                 # small_multiples: a panel per family
-
-# Which variant of each Section 5.3 figure the paper places; `make variants` draws them from
-# TUNING_BATCH's journal, nothing fitted (W-113).
-[results.precision.variants]
-history = "dots_and_best"  # dots_and_best: every trial and the best so far | best_only
-                           # regret: the best so far minus each trial, log scale
-ranges = "row"             # row: knots, neighbours, network side by side
-                           # grid: 2 x 2, the knots split by dataset | no_network
-
-# Section 4.1 -- the baseline network fit_baseline.py trains (E-005): a plain MLP, the control
-# arm of H2 (MSE, ReLU) and H3 (no skips). PAPER__METHODOLOGY__ALGORITHMS__MAX_EPOCHS=2 in the
+# The baseline network fit_baseline.py trains (E-005), read by the screens too: a plain MLP, the
+# control arm of H2 (MSE, ReLU) and H3 (no skips). PAPER__NETWORK__MAX_EPOCHS=2 in the
 # environment gives a quick smoke run.
-[methodology.algorithms]
+[network]
 width = 64                # units per hidden layer
 depth = 3                 # hidden layers
 activation = "relu"       # relu | gelu | tanh
@@ -139,12 +58,6 @@ seed = 20261005           # torch initialization, batch order and validation cur
 log_level = "INFO"        # INFO: stage and epoch lines | DEBUG: more detail
 threads = 1               # torch threads per fit: 1 is fastest here (2.6 s vs 11.4 s an epoch at 7)
 workers = 6               # fits at once on one-thread processes (3.2x at 6); 1 when fit seconds are reported
-
-# Which variant of the Section 4.1 parity figure the paper places; `make variants` draws them
-# from the latest baseline batch's ledger entries, nothing fitted (W-113).
-[methodology.algorithms.variants]
-parity = "ns_mass"        # ns_mass: the NS mass parity | residual_strip: with its residuals below
-                          # all_pairs: every dataset and target, 2 x 2
 
 # The layout of every table, and of each results table; `make variants` renders every layout
 # to a page image under build/variants/tables/ to pick from (W-114).
