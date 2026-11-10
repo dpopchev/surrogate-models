@@ -26,7 +26,7 @@ PAPER_LATEX    := $(abspath $(WORK))/latex/$(PAPER_FLAVOUR)
 # Every .tex and .bib of the chapter folders except the flavour entries. The
 # build is flat, so basenames must be unique -- compile refuses a clash.
 PAPER_SRC = $(filter-out $(PAPER_FLAVOURS:%=00_metadata/%.tex), \
-              $(shell find [0-9][0-9]_* -type f \( -name '*.tex' -o -name '*.bib' \) | sort))
+              $(shell find [0-9][0-9]_* paperlib/latex -type f \( -name '*.tex' -o -name '*.bib' \) | sort))
 
 LATEXMK := latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error -silent
 
@@ -45,7 +45,7 @@ PAPERLIB     := $(filter-out paperlib/test_%,$(wildcard paperlib/*.py))
 .PHONY: FORCE
 FORCE:
 
-$(ASSETS)/00_metadata/00_metadata_build_stamp.tex: 00_metadata/build_stamp.py FORCE
+$(ASSETS)/00_metadata/00_metadata_build_stamp.tex: paperlib/tools/build_stamp.py FORCE
 	@$(RUN) python $< $@
 	$(call log_done,build stamp written to $@)
 
@@ -95,7 +95,7 @@ variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/s
 # (W-125) and gs rasterizes it. Then each results table in each of its other [tables] shapes
 # (W-124): the small flat copy with that one table rewritten under PAPER__TABLES__<FIELD>, as
 # <table stem>_<shape>.png. $(ASSETS) itself is never written.
-TABLES_ENTRY  := 00_metadata/tables_entry.py
+TABLES_ENTRY  := paperlib/tools/tables_entry.py
 TABLES_WORK   := $(WORK)/tables
 TABLE_LAYOUTS := small aligned
 # field:shape:section/table stem, one per shape other than the current form.
@@ -144,7 +144,7 @@ table-variants: assets
 # family and tuning figures are redrawn with PAPER__PLOT__PRESET=<name> into
 # $(PRESETS_WORK)/<name>/ from their recorded batches, nothing fitted; the three figures are
 # copied to $(VARIANTS)/presets/<name>/. $(ASSETS) itself is never written.
-PRESETS_SHEET   := 00_metadata/presets_sheet.py
+PRESETS_SHEET   := paperlib/tools/presets_sheet.py
 PRESETS_WORK    := $(WORK)/presets
 PLOT_PRESETS    := paper light large
 PRESET_FIGURES  := 41_neutron_stars/41_neutron_stars_fig_mass_density 62_families/62_families_fig_errors 63_precision/63_precision_fig_history
@@ -335,7 +335,7 @@ tuning: $(TUNING_ASSETS) ## Run the tuning of the short list for Section 5.3
 
 # The knobs the text cites (W-116): the baseline network's settings from paper.toml and the
 # screens' knobs above, which live here only -- so this file is a prerequisite too.
-KNOBS        := 00_metadata/paper_knobs.py
+KNOBS        := paperlib/tools/paper_knobs.py
 KNOBS_ASSETS := $(ASSETS)/00_metadata/00_metadata_knobs_num.tex
 PAPER_ASSETS += $(KNOBS_ASSETS)
 
@@ -407,7 +407,7 @@ paper-verify: compile ## Compile a copy of the upload folder in isolation
 # $(PAPER_DIR)/ (same names overwrite), then delete by hand the files the run
 # lists as removed. The list of the last run is machine-local and outside
 # $(STATE), so make clean keeps it (CLAUDE.md, Gate deviations).
-OVERLEAF_UPLOAD := 00_metadata/overleaf_upload.py
+OVERLEAF_UPLOAD := paperlib/tools/overleaf_upload.py
 OVERLEAF_LIST   := $(LOCAL)/overleaf/last-upload.txt
 
 .PHONY: overleaf
@@ -419,7 +419,7 @@ overleaf: compile ## Prepare the Overleaf upload and list what changed
 # document body) compiles on its own in $(SECTIONS_WORK)/<section>/, beside a copy
 # of the upload folder and the full build's main.aux, so its references to the
 # rest of the paper resolve through xr-hyper.
-SECTION_ENTRY := 00_metadata/section_entry.py
+SECTION_ENTRY := paperlib/tools/section_entry.py
 SECTIONS      := $(shell sed -n '/begin{document}/,/end{document}/s/^\\input{\(.*\)}$$/\1/p' $(PAPER_ENTRY))
 SECTIONS_WORK := $(WORK)/sections
 SECTIONS_OUT  := $(BUILD)/paper/sections

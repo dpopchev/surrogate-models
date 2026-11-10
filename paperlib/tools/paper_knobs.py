@@ -6,7 +6,7 @@ Reads [methodology.algorithms] of paper.toml; the screens' knobs live in mk/pape
 \\knobNet<Field> per network field, \\knob<Screen><Flag> per screen flag, a flag of several
 values one macro per value with an ordinal suffix (\\knobFamiliesBudgetsFirst).
 
-Run as `uv run python 00_metadata/paper_knobs.py <out.tex> --representation "<flags>"
+Run as `uv run python paperlib/tools/paper_knobs.py <out.tex> --representation "<flags>"
 --families "<flags>" --tuning "<flags>"` (mk/paper.mk does).
 """
 

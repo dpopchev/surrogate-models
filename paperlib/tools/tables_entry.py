@@ -5,7 +5,7 @@ work folder on a page of its own, in sorted order; latexmk compiles it there, pd
 page to its table (W-125), gs rasterizes the pages (poppler is not installed, gs is) and each
 page is named after the table it holds.
 
-Run as `uv run python 00_metadata/tables_entry.py <article.tex> <layout> <work dir> <out dir>`
+Run as `uv run python paperlib/tools/tables_entry.py <article.tex> <layout> <work dir> <out dir>`
 (mk/paper.mk does), the work folder holding the paper's sources and one layout's assets, flat.
 """
 

@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pytest
-from section_entry import main, section_entry, sections
+from paperlib.tools.section_entry import main, section_entry, sections
 
 ARTICLE = (
     "\\documentclass{article}\n"

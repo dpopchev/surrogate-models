@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pytest
-from presets_sheet import sheet_images
+from paperlib.tools.presets_sheet import sheet_images
 
 
 @pytest.mark.view

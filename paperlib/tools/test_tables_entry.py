@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pytest
-from tables_entry import rasterize_commands, tables_entry
+from paperlib.tools.tables_entry import rasterize_commands, tables_entry
 
 ARTICLE = (
     "\\documentclass{article}\n"

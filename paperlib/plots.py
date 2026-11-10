@@ -105,7 +105,7 @@ class PlotStyle(BaseModel):
 
 
 # Every symbol a figure or a table names, by column name, in the paper's notation
-# (00_metadata/notation.tex). Tables are LaTeX and take the macros as they are (MACROS); a
+# (paperlib/latex/notation.tex). Tables are LaTeX and take the macros as they are (MACROS); a
 # figure reads SYMBOLS, which hands the macro to usetex and, when LaTeX is off (mathtext, the
 # tests), the macro's body from the notation apply_style received.
 MACROS: Mapping[str, str] = {
@@ -128,7 +128,7 @@ MACROS: Mapping[str, str] = {
 
 # The paper's notation macros: input by the preamble, handed to LaTeX by apply_style, read by
 # SYMBOLS when LaTeX is off.
-NOTATION_TEX = Path(__file__).resolve().parents[1] / "00_metadata" / "notation.tex"
+NOTATION_TEX = Path(__file__).resolve().parents[1] / "paperlib" / "latex" / "notation.tex"
 
 
 class Symbols(Mapping[str, str]):
@@ -191,7 +191,7 @@ def expand(text: str, notation: str) -> str:
 
 def apply_style(style: PlotStyle, notation: str = "") -> None:
     """Set the seaborn theme, then the matplotlib rcParams the style fixes; `notation` is the
-    paper's macro file (00_metadata/notation.tex), handed to LaTeX as the preamble so a label
+    paper's macro file (paperlib/latex/notation.tex), handed to LaTeX as the preamble so a label
     may use the macros the captions use (W-098)."""
     width = style.text_width_pt / POINTS_PER_INCH
     sns.set_theme(context=style.context, style="ticks", palette=style.palette)

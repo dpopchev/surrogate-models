@@ -1,6 +1,6 @@
 """Write the build stamp -- commit, work-tree state and day -- as a LaTeX macro for the title page.
 
-Run as `uv run python 00_metadata/build_stamp.py <out.tex>` (mk/paper.mk does).
+Run as `uv run python paperlib/tools/build_stamp.py <out.tex>` (mk/paper.mk does).
 """
 
 import logging

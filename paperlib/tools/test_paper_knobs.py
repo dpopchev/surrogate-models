@@ -2,9 +2,8 @@
 
 import pytest
 from optuna.distributions import CategoricalDistribution, FloatDistribution, IntDistribution
-from paper_knobs import knob_numbers, space_numbers
-
 from paperlib.config import AlgorithmsSection
+from paperlib.tools.paper_knobs import knob_numbers, space_numbers
 
 pytestmark = pytest.mark.model
 

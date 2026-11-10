@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pytest
-from overleaf_upload import UploadDiff, diff_upload, main, report
+from paperlib.tools.overleaf_upload import UploadDiff, diff_upload, main, report
 
 CURRENT = ("a.tex", "b.png", "c.tex")
 PREVIOUS = ("a.tex", "old.png")

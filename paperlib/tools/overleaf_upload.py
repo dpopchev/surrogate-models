@@ -4,7 +4,7 @@ Overleaf's free plan takes files dragged into the project, overwriting same name
 deleting: the upload folder is compared with the file list of the previous run, the files to
 delete on Overleaf are printed, and the list is refreshed.
 
-Run as `uv run python 00_metadata/overleaf_upload.py <upload folder> <last-upload list>`
+Run as `uv run python paperlib/tools/overleaf_upload.py <upload folder> <last-upload list>`
 (mk/paper.mk does).
 """
 

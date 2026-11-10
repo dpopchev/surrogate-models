@@ -4,7 +4,7 @@ The entry keeps the article's preamble and generated numbers, inputs only the ch
 and reads the labels of the full build (main.aux) through xr-hyper, so a reference to another
 section or its tables prints as in the whole paper.
 
-Run as `uv run python 00_metadata/section_entry.py <article.tex> <section folder> <out dir>`
+Run as `uv run python paperlib/tools/section_entry.py <article.tex> <section folder> <out dir>`
 (mk/paper.mk does).
 """
 

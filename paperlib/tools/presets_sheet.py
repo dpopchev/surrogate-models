@@ -4,7 +4,7 @@ Each preset's figures were drawn with PAPER__PLOT__PRESET=<name> and copied to
 <root>/<name>/<figure>.png (mk/paper.mk does); the sheet holds a row per preset and a column
 per figure, each panel titled by both, written as <root>/presets_variants.png.
 
-Run as `uv run python 00_metadata/presets_sheet.py <root> <preset,...> <figure,...>`.
+Run as `uv run python paperlib/tools/presets_sheet.py <root> <preset,...> <figure,...>`.
 """
 
 import logging
