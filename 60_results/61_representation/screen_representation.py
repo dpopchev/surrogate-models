@@ -3,9 +3,9 @@ representation, each scored at equal model.
 
 The baseline representation is the one of Section 4.1: NS log10 rho_c, the target M or the
 charge target Y = log10(D/M), one row at a time. Each other cell changes one factor -- NS rho_c
-raw, the mass as log10 M, the charge as linear D, or the curve-wise unit (shared/curvewise.py) --
-and is scored through shared/harness.py with the weighted k-NN, the local RBF (shared/families.py)
-and the baseline MLP.
+raw, the mass as log10 M, the charge as linear D, or the curve-wise unit (paperlib/curvewise.py) --
+and is scored through paperlib/harness.py with the weighted k-NN, the local RBF
+(paperlib/families.py) and the baseline MLP.
 """
 
 import argparse
@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 from sklearn.pipeline import Pipeline
 
-from shared.batches import (
+from paperlib.batches import (
     Batch,
     at_level,
     git_commit,
@@ -35,10 +35,10 @@ from shared.batches import (
     write_checked,
     write_entry,
 )
-from shared.candidates import Unit, curve_columns
-from shared.config import PaperConfig, RepresentationTableLayout, TableLayout, load_config
-from shared.curvewise import curvewise_fitter
-from shared.design import (
+from paperlib.candidates import Unit, curve_columns
+from paperlib.config import PaperConfig, RepresentationTableLayout, TableLayout, load_config
+from paperlib.curvewise import curvewise_fitter
+from paperlib.design import (
     BLACK_HOLES,
     DATASET_TEX,
     NEUTRON_STARS,
@@ -51,14 +51,14 @@ from shared.design import (
     design,
     pair_tex,
 )
-from shared.eda import booktabs, make_curve_space, render_macros
-from shared.families import make_knn, make_rbf
-from shared.harness import Fitter, Run, harness
-from shared.runs import LedgerEntry, RunMetadata, Setting
-from shared.scorecard import significant_figures
-from shared.surrogate import Training, make_training, network_fitter, sklearn_fitter
-from shared.trials import ReportEpochs, open_study, tell_run
-from shared.workers import run_jobs
+from paperlib.eda import booktabs, make_curve_space, render_macros
+from paperlib.families import make_knn, make_rbf
+from paperlib.harness import Fitter, Run, harness
+from paperlib.runs import LedgerEntry, RunMetadata, Setting
+from paperlib.scorecard import significant_figures
+from paperlib.surrogate import Training, make_training, network_fitter, sklearn_fitter
+from paperlib.trials import ReportEpochs, open_study, tell_run
+from paperlib.workers import run_jobs
 
 logger = logging.getLogger(__name__)
 

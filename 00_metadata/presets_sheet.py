@@ -15,8 +15,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-from shared.config import load_config
-from shared.plots import ARTICLE_TEXT_WIDTH_PT, POINTS_PER_INCH
+from paperlib.config import load_config
+from paperlib.plots import ARTICLE_TEXT_WIDTH_PT, POINTS_PER_INCH
 
 logger = logging.getLogger(__name__)
 

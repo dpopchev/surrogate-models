@@ -44,13 +44,13 @@ from fit_baseline import (
     start_banner,
 )
 
-from shared.ceilings import Spread
-from shared.config import PaperConfig
-from shared.design import NEUTRON_STARS, Design
-from shared.harness import Timing
-from shared.plots import NOTATION_TEX, PlotStyle, apply_style
-from shared.runs import Epochs, from_json
-from shared.surrogate import Training, mare, mare_in_d
+from paperlib.ceilings import Spread
+from paperlib.config import PaperConfig
+from paperlib.design import NEUTRON_STARS, Design
+from paperlib.harness import Timing
+from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
+from paperlib.runs import Epochs, from_json
+from paperlib.surrogate import Training, mare, mare_in_d
 
 
 @pytest.fixture(autouse=True)

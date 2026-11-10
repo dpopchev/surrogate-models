@@ -20,9 +20,9 @@ from pathlib import Path
 
 from optuna.distributions import FloatDistribution, IntDistribution
 
-from shared.config import AlgorithmsSection, load_config
-from shared.eda import camel, number_tex, render_macros
-from shared.search import KNOTS, SPACES, Space
+from paperlib.config import AlgorithmsSection, load_config
+from paperlib.eda import camel, number_tex, render_macros
+from paperlib.search import KNOTS, SPACES, Space
 
 logger = logging.getLogger(__name__)
 

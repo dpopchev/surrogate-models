@@ -1,7 +1,7 @@
 # pyproject.toml at the COLOCATED level (rules/python.md -> Levels): python is a
 # tool of a repository that is not a python project. Each module lives in the
 # folder of the artifact it serves with test_<module>.py beside it; code used by
-# several folders lives in shared/. uv manages the local .venv from this file;
+# several folders lives in paperlib/. uv manages the local .venv from this file;
 # nothing is built.
 
 [project]
@@ -54,10 +54,10 @@ dev = [
 # ---------------------------------------------------------------------------
 
 [tool.pytest.ini_options]
-# Tests are collected from every artifact folder and shared/. The default
+# Tests are collected from every artifact folder and paperlib/. The default
 # prepend import mode puts each test's folder on sys.path, so a test imports
 # the module beside it by name; importlib mode cannot. Basenames are therefore
-# unique in the repository. The root on pythonpath makes `shared.<m>` importable.
+# unique in the repository. The root on pythonpath makes `paperlib.<m>` importable.
 testpaths = ["."]
 pythonpath = ["."]
 norecursedirs = [".*", "build", "local", "node_modules"]
@@ -90,7 +90,7 @@ cache-dir = "local/.ruff_cache"
 select = ["E", "F", "I", "B", "UP", "N", "SIM", "RUF"]
 
 [tool.pyright]
-# The root execution environment resolves `shared.<m>`; a module's sibling
+# The root execution environment resolves `paperlib.<m>`; a module's sibling
 # import resolves from its own folder.
 include = ["."]
 exclude = ["**/__pycache__", ".venv", "build", "local"]

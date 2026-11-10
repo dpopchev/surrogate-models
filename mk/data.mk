@@ -36,7 +36,7 @@ SPLIT_SEED          := 20261005
 SPLIT_FOLDS         := 5
 SPLIT_TEST_FRACTION := 0.15
 
-$(STATE)/split.parquet: $(SPLIT_SCRIPT) shared/eda.py $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet | $(STATE)
+$(STATE)/split.parquet: $(SPLIT_SCRIPT) paperlib/eda.py $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet | $(STATE)
 	@$(RUN) python $(SPLIT_SCRIPT) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $@ --seed $(SPLIT_SEED) --folds $(SPLIT_FOLDS) --test-fraction $(SPLIT_TEST_FRACTION)
 	$(call log_done,curve split written to $@)
 
