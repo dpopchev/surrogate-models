@@ -13,7 +13,7 @@ import logging
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from functools import partial
 from itertools import product
@@ -73,7 +73,7 @@ from paperlib.design import (
     pairs,
     target_symbol,
 )
-from paperlib.eda import booktabs, camel, number_tex, render_macros
+from paperlib.eda import camel, number_tex, render_macros
 from paperlib.harness import Run, harness
 from paperlib.plots import (
     SYMBOLS,
@@ -99,6 +99,7 @@ from paperlib.search import (
     space_of,
 )
 from paperlib.surrogate import Training, make_training
+from paperlib.tables import Cell, Column, Plain, Span, Table, Text, render
 from paperlib.trials import open_study
 from paperlib.workers import run_jobs
 
@@ -400,42 +401,59 @@ def tuning_table(
         before = screen.get(job)
         match outcome:
             case Tuned():
-                gain = "--" if before is None else f"${outcome.folds - before:+.2f}$"
-                folds, test = f"${outcome.folds:.2f}$", f"${outcome.test:.2f}$"
-                tuned = f"{folds} & {gain} & {test}" if shape == "delta" else f"{folds} & {test}"
+                gain = (
+                    Text("--") if before is None else _math_cell(f"{outcome.folds - before:+.2f}")
+                )
+                folds, test = _math_cell(f"{outcome.folds:.2f}"), _math_cell(f"{outcome.test:.2f}")
+                tuned = (folds, gain, test) if shape == "delta" else (folds, test)
             case Walled():
-                tuned = f"\\multicolumn{{{3 if shape == 'delta' else 2}}}{{c}}{{wall}}"
+                tuned = (Span(3 if shape == "delta" else 2, "c", "wall"),)
             case _:
                 assert_never(outcome)
-        screen_cell = "--" if before is None else f"${before:.2f}$"
-        screened = "" if shape == "no_screen" else f"{screen_cell} & "
+        screen_cell = Text("--") if before is None else _math_cell(f"{before:.2f}")
+        screened = () if shape == "no_screen" else (screen_cell,)
         rows.append(
-            f"{pair_tex(job.dataset, job.target)} & "
-            f"{job.candidate.family} & {job.candidate.unit} & "
-            f"{screened}{tuned} & "
-            f"${CEILING_TEX[(job.dataset, job.target)]}$"
+            (
+                Text(pair_tex(job.dataset, job.target)),
+                Text(job.candidate.family),
+                Text(job.candidate.unit),
+                *screened,
+                *tuned,
+                Text(f"${CEILING_TEX[(job.dataset, job.target)]}$"),
+            )
         )
     match shape:
         case "screen_tuned_test":
-            spec, header = "@{}lll*{4}{r}@{}", "Screen & Tuned & Test"
+            heads, spec = ("Screen", "Tuned", "Test"), "@{}lll*{4}{r}@{}"
         case "no_screen":
-            spec, header = "@{}lll*{3}{r}@{}", "Tuned & Test"
+            heads, spec = ("Tuned", "Test"), "@{}lll*{3}{r}@{}"
         case "delta":
-            spec, header = "@{}lll*{5}{r}@{}", "Screen & Tuned & $\\Delta$ & Test"
+            heads, spec = ("Screen", "Tuned", "$\\Delta$", "Test"), "@{}lll*{5}{r}@{}"
         case _:
             assert_never(shape)
-    return booktabs(
+    fitted = [Column("l", before="@{}"), Column("l"), Column("l"), *(Column("r") for _ in heads)]
+    fitted.append(Column("r"))
+    table = Table(
         "tuning",
         "Each short-listed candidate of \\cref{tab:families} after the same budget of trials "
         "over its own hyperparameters: the significant figures kept at the 95th percentile of "
         "the error ($-\\log_{10}$), on the frozen folds at the screen and after the tuning, on "
         "the test curves for the best trial refitted, against the pair's data ceiling. A wall: "
         "every trial ran past the time budget. The errors are measured in $M$ or $\\Dch$.",
+        (*fitted[:-1], replace(fitted[-1], after="@{}")),
+        (tuple(Text(h) for h in ("Pair", "Family", "Unit", *heads, "Ceiling")),),
+        tuple(rows),
         spec,
-        f"Pair & Family & Unit & {header} & Ceiling",
-        rows,
-        layout,
     )
+    return render(table, layout)
+
+
+def _math_cell(text: str) -> Cell:
+    """A figure in math mode, a plain number where the aligned layout reads it as one; a signed
+    gain (+0.12) stays text, as the string it was."""
+    if text.lstrip("-").replace(".", "", 1).isdigit():
+        return Plain(text, math=True)
+    return Text(f"${text}$")
 
 
 # Macro tags of the families and units, as in screen_families.py: \tunNsMassRbfPointwiseFolds.

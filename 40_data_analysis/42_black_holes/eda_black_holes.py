@@ -50,7 +50,6 @@ from paperlib.eda import (
     Adjacency,
     ColumnSummary,
     RowsPerCurve,
-    booktabs,
     camel,
     curve_adjacency,
     curve_ids,
@@ -78,6 +77,7 @@ from paperlib.plots import (
     mark_size,
     write_variant_sheet,
 )
+from paperlib.tables import Table, Text, aligns, fixed, number, render
 
 logger = logging.getLogger(__name__)
 
@@ -319,60 +319,84 @@ STRATEGY_LABELS: dict[BhSplitStrategy, str] = {
 }
 
 
-def _univariate_table(found: Evidence, layout: TableLayout) -> str:
+def _univariate_table(found: Evidence) -> Table:
     """Range, orders of magnitude and skew, raw against log10."""
     summary = {(s.column, s.scale): s for s in found.summaries}
-    rows = [
-        f"{LABELS[c]} & ${number_tex(summary[c, 'raw'].minimum)}$ & "
-        f"${number_tex(summary[c, 'raw'].maximum)}$ & "
-        f"{orders_of_magnitude(summary[c, 'raw']):.2f} & "
-        f"{summary[c, 'raw'].skew:.2f} & {summary[c, 'log10'].skew:.2f}"
+    rows = tuple(
+        (
+            Text(LABELS[c]),
+            number(summary[c, "raw"].minimum),
+            number(summary[c, "raw"].maximum),
+            fixed(orders_of_magnitude(summary[c, "raw"]), 2),
+            fixed(summary[c, "raw"].skew, 2),
+            fixed(summary[c, "log10"].skew, 2),
+        )
         for c in SUMMARY_COLUMNS
-    ]
-    header = "Variable & min & max & orders & skew & skew of $\\log_{10}$"
+    )
+    header = tuple(
+        Text(h) for h in ("Variable", "min", "max", "orders", "skew", "skew of $\\log_{10}$")
+    )
     caption = (
         "Black holes: range, orders of magnitude spanned (orders) and skewness of each "
         "continuous variable, raw and in $\\log_{10}$."
     )
-    return booktabs("bh-univariate", caption, "lrrrrr", header, rows, layout)
+    return Table("bh-univariate", caption, aligns("lrrrrr"), (header,), rows)
 
 
-def _charge_table(found: Evidence, layout: TableLayout) -> str:
+def _charge_table(found: Evidence) -> Table:
     """How each candidate charge target correlates with M, beta and r_h."""
-    rows = [
-        f"{TARGET_LABELS[t.target]} & {t.pearson_m:.3f} & {t.spearman_m:.3f} & "
-        f"{t.pearson_beta:.3f} & {t.pearson_rh:.3f}"
+    rows = tuple(
+        (
+            Text(TARGET_LABELS[t.target]),
+            fixed(t.pearson_m, 3),
+            fixed(t.spearman_m, 3),
+            fixed(t.pearson_beta, 3),
+            fixed(t.pearson_rh, 3),
+        )
         for t in found.targets
-    ]
-    header = "Target & Pearson $M$ & Spearman $M$ & Pearson $\\beta$ & Pearson $r_h$"
+    )
+    header = tuple(
+        Text(h)
+        for h in (
+            "Target",
+            "Pearson $M$",
+            "Spearman $M$",
+            "Pearson $\\beta$",
+            "Pearson $r_h$",
+        )
+    )
     caption = "Black holes: correlation of the candidate charge targets."
-    return booktabs("bh-charge-correlation", caption, "lrrrr", header, rows, layout)
+    return Table("bh-charge-correlation", caption, aligns("lrrrr"), (header,), rows)
 
 
-def _split_table(found: Evidence, layout: TableLayout) -> str:
+def _split_table(found: Evidence) -> Table:
     """1-NN error per split strategy and target."""
-    error = {(s.strategy, s.target): _split_error(s) for s in found.splits}
-    rows = [
-        f"{STRATEGY_LABELS[strategy]} & ${error[strategy, 'M']}$ & ${error[strategy, 'log10_D']}$"
+    error = {(s.strategy, s.target): number(s.mae) for s in found.splits}
+    rows = tuple(
+        (
+            Text(STRATEGY_LABELS[strategy]),
+            error[strategy, "M"],
+            error[strategy, "log10_D"],
+        )
         for strategy in get_args(BhSplitStrategy)
-    ]
-    header = "Held out & $M$ & $\\log_{10} D$"
+    )
+    header = tuple(Text(h) for h in ("Held out", "$M$", "$\\log_{10} D$"))
     caption = (
         f"Black holes: 1-nearest-neighbour mean absolute error under each split "
         f"({found.folds} folds; the outer curves are predicted from the others)."
     )
-    return booktabs("bh-split-strategies", caption, "lrr", header, rows, layout)
+    return Table("bh-split-strategies", caption, aligns("lrr"), (header,), rows)
 
 
 def table_tex(found: Evidence, table: BhTable, layout: TableLayout = "small") -> str:
     """The booktabs table environment of one table in the paper's table layout."""
     match table:
         case "univariate":
-            return _univariate_table(found, layout)
+            return render(_univariate_table(found), layout)
         case "charge_correlation":
-            return _charge_table(found, layout)
+            return render(_charge_table(found), layout)
         case "split_strategies":
-            return _split_table(found, layout)
+            return render(_split_table(found), layout)
         case _:
             assert_never(table)
 
