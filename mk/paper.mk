@@ -347,6 +347,23 @@ $(KNOBS_ASSETS): $(KNOBS) paper.toml $(SHARED) mk/paper.mk
 assets: $(PAPER_ASSETS) ## Generate the section assets under build/assets/
 	$(call log_done,assets in $(ASSETS)/: $(sort $(notdir $(patsubst %/,%,$(dir $(PAPER_ASSETS))))))
 
+# The assets comparison: record the sha256 sums of every asset (the build stamp left out, it
+# carries the commit), then check a later build against them. The baseline lives under
+# $(STATE) because a recipe writes $(LOCAL) only there.
+ASSETS_BASELINE := $(STATE)/assets-baseline.sha
+
+.PHONY: assets-baseline
+assets-baseline: assets ## Record the sha256 sums of the assets as the baseline to compare against
+	@mkdir -p $(STATE)
+	@find $(ASSETS) -type f ! -name '00_metadata_build_stamp.tex' | sort | xargs sha256sum > $(ASSETS_BASELINE)
+	$(call log_done,$(ASSETS_BASELINE) written: $$(wc -l < $(ASSETS_BASELINE)) lines)
+
+.PHONY: assets-same
+assets-same: assets ## Check the assets against the recorded baseline
+	@test -f $(ASSETS_BASELINE) || { echo "no baseline $(ASSETS_BASELINE): run make assets-baseline at the commit to compare against" >&2; exit 1; }
+	@sha256sum --quiet -c $(ASSETS_BASELINE) >&2
+	$(call log_done,assets match $(ASSETS_BASELINE))
+
 .PHONY: compile
 compile: assets ## Build the flat paper and its PDF under build/paper/
 	@dups=$$({ printf '%s\n' $(notdir $(PAPER_SRC)); find $(ASSETS) -type f -printf '%f\n'; } \
