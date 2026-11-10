@@ -20,9 +20,9 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import FormatStrFormatter, MultipleLocator, NullLocator
 from scipy.interpolate import CubicSpline, PchipInterpolator
 
-from paperlib.config import CeilingsVariant
+from paperlib.config import CeilingsVariant, TableLayout
 from paperlib.eda import sci_tex
-from paperlib.tables import Cell, Table, Text, aligns, fixed, power
+from paperlib.tables import Cell, Table, Text, aligns, fixed, power, render
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
@@ -148,6 +148,28 @@ def ceiling_table(
     caption: str,
     found: Ceilings,
     labels: Mapping[str, str],
+    layout: TableLayout = "small",
+) -> str:
+    """The ceilings table rendered in the paper's table layout."""
+    return render(ceiling_object(label, caption, found, labels), layout)
+
+
+def decade_table(
+    label: str,
+    caption: str,
+    found: Ceilings,
+    labels: Mapping[str, str],
+    layout: TableLayout = "small",
+) -> str:
+    """The per-decade ceilings table rendered in the paper's table layout."""
+    return render(decade_object(label, caption, found, labels), layout)
+
+
+def ceiling_object(
+    label: str,
+    caption: str,
+    found: Ceilings,
+    labels: Mapping[str, str],
 ) -> Table:
     """A table of the ceilings: per target the median noise, the along-curve p95, the
     across-curve p95 per curve key and the significant figures they allow."""
@@ -167,7 +189,7 @@ def ceiling_table(
     return Table(label, caption, aligns("l" + "r" * (len(keys) + 3)), (header,), rows)
 
 
-def decade_table(
+def decade_object(
     label: str,
     caption: str,
     found: Ceilings,

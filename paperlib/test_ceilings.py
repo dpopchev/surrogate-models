@@ -24,7 +24,6 @@ from paperlib.ceilings import (
     spread,
     uncertainty_macros,
 )
-from paperlib.tables import render
 
 # Three curves keyed by p along x: log y is cubic in x, so a cubic spline along a curve is exact.
 X = np.linspace(0.0, 1.0, 12)
@@ -211,14 +210,14 @@ def test_the_ceiling_table_gives_one_row_per_target() -> None:
         "$Y$ & $1.00\\times 10^{-8}$ & $2.00\\times 10^{-6}$ & $1.00\\times 10^{-4}$ & "
         "$1.00\\times 10^{-3}$ & 3.0"
     )
-    assert row in render(ceiling_table("ex-ceilings", "Ceilings.", KNOWN, LABELS), "small")
+    assert row in ceiling_table("ex-ceilings", "Ceilings.", KNOWN, LABELS)
 
 
 @pytest.mark.view
 def test_the_decade_table_gives_the_median_per_direction_and_the_figures_of_the_worse() -> None:
     # Medians 4e-4 (across p) and 2e-4 (across q): the worse keeps -log10(4e-4) = 3.4 figures.
     row = "$10^{-3}$ & $4.00\\times 10^{-4}$ & $2.00\\times 10^{-4}$ & 3.4"
-    assert row in render(decade_table("ex-decades", "Per decade.", KNOWN, LABELS), "small")
+    assert row in decade_table("ex-decades", "Per decade.", KNOWN, LABELS)
 
 
 class TestCeilingFigure:

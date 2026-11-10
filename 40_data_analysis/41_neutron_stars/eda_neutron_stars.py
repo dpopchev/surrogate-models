@@ -930,10 +930,10 @@ def _write_ceilings(
 ) -> None:
     """Write the ceilings table, the per-decade table and the figure of the data limits."""
     (out / f"{SECTION}_tab_ceilings.tex").write_text(
-        render(ceiling_table("ns-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS), layout)
+        ceiling_table("ns-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS, layout)
     )
     (out / f"{SECTION}_tab_ceiling_decades.tex").write_text(
-        render(decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS), layout)
+        decade_table("ns-ceiling-decades", DECADES_CAPTION, bounds, CEILING_LABELS, layout)
     )
     fig = _ceilings(bounds, style, variant)
     fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
