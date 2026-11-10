@@ -125,6 +125,12 @@ def test_figure_tex_includes_its_figure() -> None:
     )
 
 
+@pytest.mark.view
+def test_figure_tex_includes_the_picked_variant_file() -> None:
+    variants = NeutronStarVariants(mass_density="by_beta")
+    assert "{41_neutron_stars_fig_mass_density_by_beta}" in figure_tex("mass_density", variants)
+
+
 def grid(betas: range, lambdas: range, missing: tuple[tuple[int, int], ...] = ()) -> pd.DataFrame:
     """A beta x lambda grid of 4-row curves whose D follows beta, lambda and the row."""
     return curves(
@@ -353,7 +359,6 @@ class TestMain:
 
     def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:
         assert sorted(p.name for p in (assets / "41_neutron_stars").iterdir()) == [
-            "41_neutron_stars_fig_ceilings.png",
             "41_neutron_stars_fig_ceilings.tex",
             "41_neutron_stars_fig_grid_fill.png",
             "41_neutron_stars_fig_grid_fill.tex",

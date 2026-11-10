@@ -30,7 +30,7 @@ $(BASELINE_STATE)/numbers.json $(BASELINE_ASSETS) &: $(BASELINE) $(RENDER_ASSETS
 	$(call log_info,fitting the baseline on NS and BH$(comma) mass and charge -- one line per epoch; make follow shows it from any terminal)
 	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE)
 	@$(RUN) python $(RENDER_ASSETS) $(BASELINE_STATE) $(ASSETS)
-	$(call log_done,baseline table and numbers rendered and parity figure written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
+	$(call log_done,baseline table and numbers rendered and parity wrapper written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
 
 .PHONY: baseline
 baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1

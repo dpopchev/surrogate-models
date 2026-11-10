@@ -794,7 +794,7 @@ def parity_tex(variant: FamiliesParityVariant = "parity") -> str:
     """The figure environment of the parity figure, placed here or at the top of a page."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{PARITY}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{PARITY}_{variant}}}\n"
         f"\\caption{{{_parity_caption(variant)}}}\n"
         "\\label{fig:families-parity}\n\\end{figure}\n"
     )
@@ -834,7 +834,7 @@ def errors_tex(variant: FamiliesErrorsVariant = "scatter_profiles") -> str:
     """The figure environment of the error figure, placed here or at the top of a page."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{ERRORS}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{ERRORS}_{variant}}}\n"
         f"\\caption{{{_errors_caption(variant)}}}\n"
         "\\label{fig:families-errors}\n\\end{figure}\n"
     )
@@ -877,7 +877,7 @@ def scaling_tex(
     """The figure environment of the scaling figure, its budgets stated in the caption."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{SCALING}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{SCALING}_{variant}}}\n"
         f"\\caption{{{_scaling_caption(minutes, memory_gb, variant)}}}\n"
         "\\label{fig:families-scaling}\n\\end{figure}\n"
     )
@@ -1150,35 +1150,17 @@ def main(
             len(outcomes),
             args.state / SECTION,
         )
-        # The panels' titles read the symbols, which expand the notation the style hands on.
-        apply_style(config.plot, NOTATION_TEX.read_text())
-        panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
+        # The wrappers include the picked variant's PNG, which --figures draws under build/figures.
         picks = section.variants
-        drawers: dict[FamiliesFigure, Callable[[], tuple[str, Figure, str]]] = {
-            "parity": lambda: (
-                PARITY,
-                parity_figure(panels, config.plot, picks.parity),
-                parity_tex(picks.parity),
-            ),
-            "errors": lambda: (
-                ERRORS,
-                error_figure(panels, config.plot, picks.errors),
-                errors_tex(picks.errors),
-            ),
-            "scaling": lambda: (
-                SCALING,
-                scaling_figure(
-                    trajectories(outcomes), config.plot, args.minutes * 60.0, picks.scaling
-                ),
-                scaling_tex(args.minutes, args.memory_gb, picks.scaling),
-            ),
+        wrappers: dict[FamiliesFigure, tuple[str, str]] = {
+            "parity": (PARITY, parity_tex(picks.parity)),
+            "errors": (ERRORS, errors_tex(picks.errors)),
+            "scaling": (SCALING, scaling_tex(args.minutes, args.memory_gb, picks.scaling)),
         }
         for selected in section.figures:
-            name, figure, tex = drawers[selected]()
-            figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
-            plt.close(figure)
+            name, tex = wrappers[selected]
             write_checked(out / f"{name}.tex", tex)
-            logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.png")
+            logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.tex")
 
 
 def _parity_panels(

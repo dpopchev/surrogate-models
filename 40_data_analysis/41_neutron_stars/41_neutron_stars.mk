@@ -19,7 +19,7 @@ NS_EDA_STATE  := $(STATE)/41_neutron_stars
 $(NS_EDA_STATE)/numbers.json $(NS_EDA_ASSETS) &: $(NS_EDA) $(RENDER_ASSETS) paper.toml $(NS_EDA_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet
 	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --state $(STATE) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW)
 	@$(RUN) python $(RENDER_ASSETS) $(NS_EDA_STATE) $(ASSETS)
-	$(call log_done,NS EDA figures written to $(@D)/ and tables and numbers to $(NS_EDA_STATE)/)
+	$(call log_done,NS EDA figure wrappers written to $(@D)/ and tables and numbers to $(NS_EDA_STATE)/; make figures draws the PNGs)
 
 .PHONY: 41_neutron_stars
 41_neutron_stars: $(NS_EDA_ASSETS) ## Build the neutron-star EDA assets for Section 3.1

@@ -323,13 +323,15 @@ def test_main_stores_a_table_row_per_job(ran: Path) -> None:
 
 
 @pytest.mark.functional
-def test_main_draws_the_history_figure(ran: Path) -> None:
-    assert (ran / "assets" / SECTION / f"{SECTION}_fig_history.png").stat().st_size > 0
+def test_main_history_wrapper_includes_the_picked_variant_file(ran: Path) -> None:
+    wrapper = (ran / "assets" / SECTION / f"{SECTION}_fig_history.tex").read_text()
+    assert f"{{{SECTION}_fig_history_dots_and_best}}" in wrapper
 
 
 @pytest.mark.functional
-def test_main_draws_the_ranges_figure(ran: Path) -> None:
-    assert (ran / "assets" / SECTION / f"{SECTION}_fig_ranges.png").stat().st_size > 0
+def test_main_ranges_wrapper_includes_the_picked_variant_file(ran: Path) -> None:
+    wrapper = (ran / "assets" / SECTION / f"{SECTION}_fig_ranges.tex").read_text()
+    assert f"{{{SECTION}_fig_ranges_row}}" in wrapper
 
 
 @pytest.mark.model

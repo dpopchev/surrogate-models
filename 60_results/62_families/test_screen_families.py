@@ -327,18 +327,19 @@ def test_a_dying_round_leaves_the_outcomes_of_its_finished_jobs(
 
 
 @pytest.mark.functional
-def test_main_draws_the_parity_figure(ran: Path) -> None:
-    assert (ran / "assets" / SECTION / f"{SECTION}_fig_parity.png").stat().st_size > 0
-
-
-@pytest.mark.functional
-def test_main_draws_the_error_figure(ran: Path) -> None:
-    assert (ran / "assets" / SECTION / f"{SECTION}_fig_errors.png").stat().st_size > 0
-
-
-@pytest.mark.functional
-def test_main_draws_the_scaling_figure(ran: Path) -> None:
-    assert (ran / "assets" / SECTION / f"{SECTION}_fig_scaling.png").stat().st_size > 0
+def test_main_wrappers_include_the_picked_variant_files(ran: Path) -> None:
+    folder = ran / "assets" / SECTION
+    included = {
+        name: f"{{{SECTION}_fig_{name}_{variant}}}"
+        for name, variant in (
+            ("parity", "parity"),
+            ("errors", "scatter_profiles"),
+            ("scaling", "figures_and_seconds"),
+        )
+    }
+    assert all(
+        included[name] in (folder / f"{SECTION}_fig_{name}.tex").read_text() for name in included
+    )
 
 
 @pytest.mark.functional
@@ -356,7 +357,7 @@ def test_main_writes_only_the_selected_figure_and_its_wrapper(
         section=FamiliesSection(figures=("parity",)),
     )
     written = sorted(p.name for p in (tmp_path / "assets" / SECTION).glob("*_fig_*"))
-    assert written == [f"{SECTION}_fig_parity.png", f"{SECTION}_fig_parity.tex"]
+    assert written == [f"{SECTION}_fig_parity.tex"]
 
 
 @pytest.mark.functional

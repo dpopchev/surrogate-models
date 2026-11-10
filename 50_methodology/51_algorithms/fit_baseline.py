@@ -745,7 +745,7 @@ def figure_tex(variant: AlgParityVariant = "ns_mass") -> str:
     width = "\\textwidth" if variant == "all_pairs" else "0.5\\textwidth"
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width={width}]{{{PARITY}}}\n"
+        f"\\includegraphics[width={width}]{{{PARITY}_{variant}}}\n"
         f"\\caption{{{_parity_caption(variant)}}}\n"
         "\\label{fig:alg-parity}\n\\end{figure}\n"
     )
@@ -906,11 +906,7 @@ def _write_section(
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
-    variant = variants.parity
-    figure = parity_figure(fits, config.plot, variant)
-    figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)
-    plt.close(figure)
-    (out / f"{PARITY}.tex").write_text(figure_tex(variant))
+    (out / f"{PARITY}.tex").write_text(figure_tex(variants.parity))
     macros = numbers(fits[NEUTRON_STARS.dataset, "mass"]) | charge_numbers(mares)
     _store(state, baseline_objects(pairs, config.tables.baseline), macros)
 

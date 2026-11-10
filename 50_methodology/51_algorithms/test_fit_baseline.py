@@ -388,8 +388,8 @@ def test_parity_all_pairs_has_four_axes() -> None:
 
 
 @pytest.mark.view
-def test_the_figure_wrapper_includes_the_parity_image() -> None:
-    assert "{51_algorithms_fig_parity}" in figure_tex()
+def test_the_figure_wrapper_includes_the_picked_parity_variant() -> None:
+    assert "{51_algorithms_fig_parity_all_pairs}" in figure_tex("all_pairs")
 
 
 NS_KEYS = [(1.0, 1.0), (1.0, 2.0), (2.0, 1.0), (2.0, 2.0), (3.0, 1.0)]
@@ -488,11 +488,10 @@ class TestMain:
         stored = (ran / "state" / SECTION / "tables" / "baseline.json").read_text()
         return render(table_from_json(stored), "small")
 
-    def test_writes_the_parity_figure_into_its_section_and_empties_it_of_the_rest(
+    def test_writes_the_parity_wrapper_alone_into_its_section_and_empties_it_of_the_rest(
         self, ran: Path
     ) -> None:
         assert sorted(p.name for p in (ran / "assets" / SECTION).iterdir()) == [
-            "51_algorithms_fig_parity.png",
             "51_algorithms_fig_parity.tex",
         ]
 

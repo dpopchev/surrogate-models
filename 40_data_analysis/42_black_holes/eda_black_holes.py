@@ -458,6 +458,11 @@ def asset(figure: BhFigure) -> str:
     return f"{SECTION}_fig_{figure}"
 
 
+def picked_stem(figure: BhFigure, variants: BlackHoleVariants = DEFAULT_VARIANTS) -> str:
+    """The stem of the file the paper includes: the picked variant's PNG under build/figures/."""
+    return f"{asset(figure)}_{getattr(variants, figure)}"
+
+
 def _mass_radius_caption(variant: BhMassRadiusVariant) -> str:
     """The caption of the mass_radius figure in one variant."""
     match variant:
@@ -529,7 +534,7 @@ def figure_tex(figure: BhFigure, variants: BlackHoleVariants = DEFAULT_VARIANTS)
     of a page (!htb)."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{asset(figure)}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{picked_stem(figure, variants)}}}\n"
         f"\\caption{{{caption(figure, variants)}}}\n"
         f"\\label{{fig:bh-{figure.replace('_', '-')}}}\n"
         "\\end{figure}\n"
@@ -838,13 +843,10 @@ def _write_ceilings(
     out: Path, bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant
 ) -> None:
     """Write the figure of the data limits."""
-    fig = _ceilings(bounds, style, variant)
-    fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
-    plt.close(fig)
     caption_ = ceilings_caption(*CEILINGS_FIGURE, variant)
     (out / f"{SECTION}_fig_ceilings.tex").write_text(
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{SECTION}_fig_ceilings}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{SECTION}_fig_ceilings_{variant}}}\n"
         f"\\caption{{{caption_}}}\n\\label{{fig:bh-ceilings}}\n\\end{{figure}}\n"
     )
 
@@ -875,9 +877,6 @@ def main(
         stale.unlink()
     section = section or load_section(BlackHolesSection, SECTION_TOML)
     for figure in section.figures:
-        fig = draw(figure, table, config.plot, section.variants)
-        fig.savefig(out / f"{asset(figure)}.png", dpi=config.plot.dpi)
-        plt.close(fig)
         (out / f"{asset(figure)}.tex").write_text(figure_tex(figure, section.variants))
     found = evidence(table, args.folds, args.seed)
     bounds = _bounds(table)

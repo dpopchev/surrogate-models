@@ -972,7 +972,7 @@ def history_tex(minutes: float, variant: PrecisionHistoryVariant = "dots_and_bes
     """The figure environment of the history figure, its wall stated in the caption."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{HISTORY}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{HISTORY}_{variant}}}\n"
         f"\\caption{{{_history_caption(minutes, variant)}}}\n"
         "\\label{fig:tuning-history}\n\\end{figure}\n"
     )
@@ -1015,7 +1015,7 @@ def ranges_tex(variant: PrecisionRangesVariant = "row") -> str:
     """The figure environment of the ranges figure, placed here or at the top of a page."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{RANGES}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{RANGES}_{variant}}}\n"
         f"\\caption{{{_ranges_caption(variant)}}}\n"
         "\\label{fig:tuning-ranges}\n\\end{figure}\n"
     )
@@ -1111,6 +1111,8 @@ def main(
         screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
+        for stale in out.iterdir():  # a figure PNG or wrapper of an earlier run
+            stale.unlink()
         # A batch's figures show its own jobs, in the order it ran them.
         ran = tuple(outcome.job for outcome in outcomes)
         points = journal_points(saved.with_suffix(".journal"), batch, ran)
@@ -1124,25 +1126,15 @@ def main(
             len(outcomes),
             args.state / SECTION,
         )
-        apply_style(config.plot, NOTATION_TEX.read_text())
+        # The wrappers include the picked variant's PNG, which --figures draws under build/figures.
         picks = section.variants
-        drawn = (
-            (
-                HISTORY,
-                history_figure(points, config.plot, picks.history),
-                history_tex(args.minutes, picks.history),
-            ),
-            (
-                RANGES,
-                ranges_figure(points, config.plot, picks.ranges),
-                ranges_tex(picks.ranges),
-            ),
+        wrappers = (
+            (HISTORY, history_tex(args.minutes, picks.history)),
+            (RANGES, ranges_tex(picks.ranges)),
         )
-        for name, figure, tex in drawn:
-            figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
-            plt.close(figure)
+        for name, tex in wrappers:
             write_checked(out / f"{name}.tex", tex)
-            logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.png")
+            logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.tex")
 
 
 def _run_tuning(
