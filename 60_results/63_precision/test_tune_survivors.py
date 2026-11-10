@@ -252,7 +252,7 @@ def test_a_saved_batch_reads_back_as_its_outcomes() -> None:
 TOY_CONFIG = PaperConfig.model_validate(
     {
         "plot": {"usetex": False},
-        "methodology": {"algorithms": {"width": 8, "depth": 1, "max_epochs": 2, "batch_size": 8}},
+        "network": {"width": 8, "depth": 1, "max_epochs": 2, "batch_size": 8},
     }
 )
 TOY_KNOBS = [

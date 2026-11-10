@@ -14,6 +14,8 @@ import screen_families
 from screen_families import (
     SECTION,
     Candidate,
+    FamiliesParityVariant,
+    FamiliesSection,
     Job,
     Panel,
     Scored,
@@ -41,7 +43,7 @@ from screen_families import (
     trajectories,
 )
 
-from paperlib.config import FamiliesParityVariant, PaperConfig
+from paperlib.config import PaperConfig
 from paperlib.design import Design, Target
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
 
@@ -267,9 +269,7 @@ def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path
     folder = tmp_path_factory.mktemp("screen")
     ns, bh, split_file = toy_inputs(folder)
     network = {"width": 8, "depth": 1, "max_epochs": 2, "batch_size": 8}
-    config = PaperConfig.model_validate(
-        {"plot": {"usetex": False}, "methodology": {"algorithms": network}}
-    )
+    config = PaperConfig.model_validate({"plot": {"usetex": False}, "network": network})
     paths = [str(ns), str(bh), str(split_file), str(folder / "assets"), str(folder / "state")]
     main(
         [*paths, *TOY_KNOBS],
@@ -340,10 +340,13 @@ def test_main_writes_only_the_selected_figure_and_its_wrapper(
     """Rebuilt from the ran batch into a folder of its own, with paper.toml selecting parity."""
     (saved,) = (ran / "state" / SECTION).glob("*.json")
     ns, bh, split_file = toy_inputs(tmp_path)
-    selection = {"results": {"families": {"figures": ["parity"]}}}
-    config = PaperConfig.model_validate({"plot": {"usetex": False}, **selection})
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
     paths = [str(ns), str(bh), str(split_file), str(tmp_path / "assets"), str(ran / "state")]
-    main([*paths, *TOY_KNOBS, "--batch", saved.stem], config)
+    main(
+        [*paths, *TOY_KNOBS, "--batch", saved.stem],
+        config,
+        section=FamiliesSection(figures=("parity",)),
+    )
     written = sorted(p.name for p in (tmp_path / "assets" / SECTION).glob("*_fig_*"))
     assert written == [f"{SECTION}_fig_parity.png", f"{SECTION}_fig_parity.tex"]
 
@@ -354,14 +357,17 @@ def test_main_removes_a_deselected_figure_s_wrapper_of_an_earlier_run(
 ) -> None:
     (saved,) = (ran / "state" / SECTION).glob("*.json")
     ns, bh, split_file = toy_inputs(tmp_path)
-    selection = {"results": {"families": {"figures": ["parity"]}}}
-    config = PaperConfig.model_validate({"plot": {"usetex": False}, **selection})
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
     out = tmp_path / "assets" / SECTION
     out.mkdir(parents=True)
     stale = out / f"{SECTION}_fig_errors.tex"
     stale.write_text("earlier run")
     paths = [str(ns), str(bh), str(split_file), str(tmp_path / "assets"), str(ran / "state")]
-    main([*paths, *TOY_KNOBS, "--batch", saved.stem], config)
+    main(
+        [*paths, *TOY_KNOBS, "--batch", saved.stem],
+        config,
+        section=FamiliesSection(figures=("parity",)),
+    )
     assert not stale.exists()
 
 

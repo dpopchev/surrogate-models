@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import pytest
 from eda_neutron_stars import (
+    NeutronStarsSection,
+    NeutronStarVariants,
     beta_share_at_fixed_lambda,
     ceiling_colors,
     charge_targets,
@@ -28,7 +30,7 @@ from eda_neutron_stars import (
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from paperlib.config import NeutronStarVariants, PaperConfig
+from paperlib.config import PaperConfig
 from paperlib.eda import RowsPerCurve, with_charge_targets
 from paperlib.plots import NOTATION_TEX, PlotStyle, anchor_color, apply_style
 
@@ -339,11 +341,13 @@ class TestMain:
         (assets / "42_black_holes").mkdir()
         (assets / "42_black_holes" / "kept.tex").write_text("another section's asset")
         selection = {"figures": ["grid_fill"], "tables": ["split_strategies"]}
-        config = PaperConfig.model_validate(
-            {"plot": {"usetex": False}, "data_analysis": {"neutron_stars": selection}}
-        )
+        config = PaperConfig.model_validate({"plot": {"usetex": False}})
         knobs = ["--folds", "2", "--seed", "0", "--window", str(WINDOW)]
-        main([str(table), str(assets), *knobs], config=config)
+        main(
+            [str(table), str(assets), *knobs],
+            config=config,
+            section=NeutronStarsSection.model_validate(selection),
+        )
         return assets
 
     def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:

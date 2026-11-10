@@ -20,7 +20,7 @@ from datetime import datetime
 from functools import partial
 from itertools import product
 from pathlib import Path
-from typing import Any, assert_never, get_args
+from typing import Any, Literal, assert_never, get_args
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,6 +28,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
+from pydantic import BaseModel, ConfigDict
 
 from paperlib import surrogate
 from paperlib.batches import (
@@ -57,14 +58,11 @@ from paperlib.candidates import (
 from paperlib.ceilings import PROFILE_BINS, profile
 from paperlib.config import (
     NOTATION_TEX,
-    FamiliesErrorsVariant,
-    FamiliesFigure,
-    FamiliesParityVariant,
-    FamiliesScalingVariant,
     FamiliesTableLayout,
     PaperConfig,
     TableLayout,
     load_config,
+    load_section,
 )
 from paperlib.design import (
     BLACK_HOLES,
@@ -106,6 +104,38 @@ logger = logging.getLogger(__name__)
 # --- vocabulary and types ---------------------------------------------------------------------
 
 SECTION = "62_families"
+SECTION_TOML = Path(__file__).with_name("62_families.toml")
+
+FamiliesFigure = Literal["parity", "errors", "scaling"]
+# parity: predicted against true; residual: predicted minus true against true (W-113).
+FamiliesParityVariant = Literal["parity", "residual"]
+# scatter_profiles: a panel per pair and candidate, scatter and profiles; profiles: the
+# profiles only, the candidates overlaid, a panel per pair; hexbin: a density per panel (W-113).
+FamiliesErrorsVariant = Literal["scatter_profiles", "profiles", "hexbin"]
+# figures_and_seconds: per pair the folds' figures and the fit seconds; marker_size: a panel per
+# pair, the seconds as marker size; small_multiples: a panel per family (W-113).
+FamiliesScalingVariant = Literal["figures_and_seconds", "marker_size", "small_multiples"]
+
+
+class FamiliesVariants(BaseModel):
+    """Section 5.2: which variant of each family-screen figure the paper places (W-113)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    parity: FamiliesParityVariant = "parity"
+    errors: FamiliesErrorsVariant = "scatter_profiles"
+    scaling: FamiliesScalingVariant = "figures_and_seconds"
+
+
+class FamiliesSection(BaseModel):
+    """Section 5.2: which family-screen figures screen_families.py writes."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    figures: tuple[FamiliesFigure, ...] = get_args(FamiliesFigure)
+    variants: FamiliesVariants = FamiliesVariants()
+
+
 PARITY = f"{SECTION}_fig_parity"
 ERRORS = f"{SECTION}_fig_errors"
 SCALING = f"{SECTION}_fig_scaling"
@@ -1060,6 +1090,7 @@ def main(
     commit: Callable[[], str] | None = None,
     dirty: Callable[[], bool] | None = None,
     now: Callable[[], datetime] | None = None,
+    section: FamiliesSection | None = None,
 ) -> None:
     """Run the screen round by round on the workers, saving every round's outcomes under the
     state folder, each run leaving its ledger entry -- or, given --batch, fit nothing and take
@@ -1069,7 +1100,8 @@ def main(
         assert path.is_file(), f"input not found: {path}"
     assert len(args.keeps) == len(args.budgets) - 1, "one keep per round after the first"
     config = config or load_config()
-    settings = config.methodology.algorithms
+    settings = config.network
+    section = section or load_section(FamiliesSection, SECTION_TOML)
     training = make_training(settings)
     tables = {
         NEUTRON_STARS.dataset: pd.read_parquet(args.ns),
@@ -1107,7 +1139,7 @@ def main(
         # The panels' titles read the symbols, which expand the notation the style hands on.
         apply_style(config.plot, NOTATION_TEX.read_text())
         panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
-        picks = config.results.families.variants
+        picks = section.variants
         drawers: dict[FamiliesFigure, Callable[[], tuple[str, Figure, str]]] = {
             "parity": lambda: (
                 PARITY,
@@ -1127,7 +1159,7 @@ def main(
                 scaling_tex(args.minutes, args.memory_gb, picks.scaling),
             ),
         }
-        for selected in config.results.families.figures:
+        for selected in section.figures:
             name, figure, tex = drawers[selected]()
             figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
             plt.close(figure)

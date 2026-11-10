@@ -3,7 +3,7 @@
 import pytest
 from optuna.distributions import CategoricalDistribution, FloatDistribution, IntDistribution
 
-from paperlib.config import AlgorithmsSection
+from paperlib.config import NetworkSettings
 from paperlib.tools.paper_knobs import knob_numbers, space_numbers
 
 pytestmark = pytest.mark.model
@@ -11,7 +11,7 @@ pytestmark = pytest.mark.model
 
 def test_knob_macros_name_every_setting() -> None:
     found = knob_numbers(
-        AlgorithmsSection(),
+        NetworkSettings(),
         {"Repr": "--k 8 --seeds 3", "Families": "--budgets 1000 10000 --memory-gb 4"},
     )
     assert set(found) == {

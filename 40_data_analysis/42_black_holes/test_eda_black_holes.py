@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import pytest
 from eda_black_holes import (
+    BlackHolesSection,
+    BlackHoleVariants,
     CurveStart,
     beta_effect,
     charge_targets,
@@ -26,7 +28,7 @@ from eda_black_holes import (
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from paperlib.config import BlackHoleVariants, PaperConfig
+from paperlib.config import PaperConfig
 from paperlib.eda import number_tex, with_charge_targets
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
 
@@ -245,10 +247,12 @@ class TestMain:
         (assets / "41_neutron_stars").mkdir()
         (assets / "41_neutron_stars" / "kept.tex").write_text("another section's asset")
         selection = {"figures": ["existence_edge"], "tables": ["split_strategies"]}
-        config = PaperConfig.model_validate(
-            {"plot": {"usetex": False}, "data_analysis": {"black_holes": selection}}
+        config = PaperConfig.model_validate({"plot": {"usetex": False}})
+        main(
+            [str(table), str(assets), "--folds", "3", "--seed", "0"],
+            config=config,
+            section=BlackHolesSection.model_validate(selection),
         )
-        main([str(table), str(assets), "--folds", "3", "--seed", "0"], config=config)
         return assets
 
     def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:
@@ -275,10 +279,12 @@ class TestMain:
         table, assets = tmp_path / "bh.parquet", tmp_path / "assets"
         curves().to_parquet(table)
         picked = {"figures": ["mass_radius"], "variants": {"mass_radius": "departure"}}
-        config = PaperConfig.model_validate(
-            {"plot": {"usetex": False}, "data_analysis": {"black_holes": picked}}
+        config = PaperConfig.model_validate({"plot": {"usetex": False}})
+        main(
+            [str(table), str(assets), "--folds", "3", "--seed", "0"],
+            config=config,
+            section=BlackHolesSection.model_validate(picked),
         )
-        main([str(table), str(assets), "--folds", "3", "--seed", "0"], config=config)
         wrapper = assets / "42_black_holes" / "42_black_holes_fig_mass_radius.tex"
         assert "departure" in wrapper.read_text()
 

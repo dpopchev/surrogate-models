@@ -13,7 +13,7 @@ from skorch.dataset import Dataset
 from skorch.utils import Ansi
 from torch import nn
 
-from paperlib.config import AlgorithmsSection
+from paperlib.config import NetworkSettings
 from paperlib.families import make_mean_reference
 from paperlib.harness import FitRows
 from paperlib.surrogate import (
@@ -38,7 +38,7 @@ from paperlib.surrogate import (
 
 @pytest.mark.edge
 def test_make_training_carries_every_network_field_of_the_section() -> None:
-    section = AlgorithmsSection(
+    section = NetworkSettings(
         width=7,
         depth=2,
         activation="gelu",

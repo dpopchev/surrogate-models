@@ -27,7 +27,7 @@ from tabulate import tabulate
 from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
-from paperlib.config import AlgorithmsSection
+from paperlib.config import NetworkSettings
 from paperlib.diagnostics import loss_curve
 from paperlib.harness import FitRows, Fitter, Predictor
 from paperlib.progress import approx_minutes, stop_window
@@ -67,7 +67,7 @@ class Training:
     seed: int
 
 
-def make_training(section: AlgorithmsSection) -> Training:
+def make_training(section: NetworkSettings) -> Training:
     """The Training of the configured baseline network, every field named."""
     return Training(
         width=section.width,

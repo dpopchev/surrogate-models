@@ -23,7 +23,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from functools import partial
 from pathlib import Path
-from typing import Any, Protocol, assert_never, get_args
+from typing import Any, Literal, Protocol, assert_never, get_args
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,6 +31,7 @@ import optuna
 import pandas as pd
 import torch
 from matplotlib.figure import Figure
+from pydantic import BaseModel, ConfigDict
 from sklearn.pipeline import Pipeline
 
 from paperlib.batches import (
@@ -48,12 +49,12 @@ from paperlib.batches import (
 from paperlib.ceilings import Spread
 from paperlib.config import (
     NOTATION_TEX,
-    AlgorithmsSection,
-    AlgParityVariant,
     BaselineTableLayout,
+    NetworkSettings,
     PaperConfig,
     TableLayout,
     load_config,
+    load_section,
 )
 from paperlib.design import (
     BLACK_HOLES,
@@ -114,8 +115,30 @@ from paperlib.workers import run_jobs
 logger = logging.getLogger(__name__)
 
 SECTION = "51_algorithms"
+SECTION_TOML = Path(__file__).with_name("51_algorithms.toml")
 
 # --- vocabulary and types ---------------------------------------------------------------------
+
+# ns_mass: the NS mass parity; residual_strip: the same with its residuals below; all_pairs:
+# every dataset and target, 2 x 2 (W-113).
+AlgParityVariant = Literal["ns_mass", "residual_strip", "all_pairs"]
+
+
+class AlgorithmsVariants(BaseModel):
+    """Section 4.1: which variant of each figure the paper places (W-113)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    parity: AlgParityVariant = "ns_mass"
+
+
+class AlgorithmsSection(BaseModel):
+    """Section 4.1's own settings: its figure variants; the network is paper-wide."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    variants: AlgorithmsVariants = AlgorithmsVariants()
+
 
 # A score of predictions against the truth on the target's rows: mare, or mare_in_d for the
 # charge target, whose error is measured in D rebuilt with the true M (W-073).
@@ -224,7 +247,7 @@ class _Job:
     run: _Run
     candidate: str
     training: Training
-    settings: AlgorithmsSection
+    settings: NetworkSettings
     progress: _Progress
     style: PlotStyle
 
@@ -852,6 +875,7 @@ def _write_section(
     fits: Mapping[tuple[str, str], Fit],
     config: PaperConfig,
     mares: Mapping[str, ChargeMares],
+    variants: AlgorithmsVariants,
 ) -> None:
     """Empty the section's asset folder, then write the baseline table, the NS mass numbers
     with the charge MAREs of each dataset, and the parity figure in its picked variant."""
@@ -860,7 +884,7 @@ def _write_section(
         stale.unlink()
     table = baseline_table(pairs, config.tables.layout, config.tables.baseline)
     (out / f"{SECTION}_tab_baseline.tex").write_text(table)
-    variant = config.methodology.algorithms.variants.parity
+    variant = variants.parity
     figure = parity_figure(fits, config.plot, variant)
     figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)
     plt.close(figure)
@@ -979,6 +1003,7 @@ def main(
     commit: Callable[[], str] | None = None,
     dirty: Callable[[], bool] | None = None,
     now: Callable[[], datetime] | None = None,
+    section: AlgorithmsSection | None = None,
 ) -> None:
     """Score the baseline and its references on every dataset and target; write the baseline
     table, the NS mass numbers and parity figure into the section's folder of the asset dir,
@@ -1002,7 +1027,8 @@ def main(
         assert path.is_file(), f"input not found: {path}"
     config = config or load_config()
     now = now or utc_now
-    settings = config.methodology.algorithms
+    settings = config.network
+    section = section or load_section(AlgorithmsSection, SECTION_TOML)
     apply_style(config.plot, NOTATION_TEX.read_text())
     torch.set_num_threads(settings.threads)
     training = make_training(settings)
@@ -1083,7 +1109,7 @@ def main(
         mares[dataset] = charge_mares(mass, charge)
     # The section's assets are written last, into the last run's log that make follow shows.
     with _logging_into(run / "train.log", settings.log_level):
-        _write_section(out, scores, fits, config, mares)
+        _write_section(out, scores, fits, config, mares, section.variants)
         logger.info("all %d fits done in %s", total, duration_text(time.time() - first))
         logger.info("done: baseline table, NS mass numbers and parity figure -> %s", out)
 
