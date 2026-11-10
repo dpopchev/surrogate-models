@@ -40,6 +40,7 @@
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
 - 2026-11-10 E-009: parked -- 4 decisions, 5 deviations -> ledgers/E-009.md
+- 2026-11-10 E-012: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 8 hours) (developer, 2026-11-10)
 - 2026-11-10 E-012: each section folder is an independent module holding its data and tests; shared data passes through local/; paperlib holds what is paper-wide, the LaTeX formatting and includes that are not front matter included; one virtual environment (developer, 2026-11-10)
 - 2026-11-10 E-012: tables are built as objects, values -> Table -> renderer; figures are built apart as standalone deliverables under build/, each variant its own file to compare side by side, never one big figure of the variants -- the contact sheets of W-111 and W-115 go (developer, 2026-11-10)
 - 2026-11-10 E-013: goal: a pipeline that is the algorithm for building surrogates which minimize the relative error, extrapolate beyond the data and flag out-of-domain inputs with feedback, tested on the 2-parameter (BH) and 3-parameter (NS) maps (developer, 2026-11-10)
