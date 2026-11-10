@@ -221,7 +221,7 @@ $(SECTIONS_OUT)/%.pdf: compile
 	$(call log_done,section $* compiled on its own to $@)
 
 .PHONY: section
-section: $(SECTIONS_OUT)/$(S).pdf ## Compile one section alone, e.g. S=50_methodology
+section: $(SECTIONS_OUT)/$(S).pdf ## Compile one section alone, e.g. S=40_pipeline
 
 .PHONY: sections
 sections: $(SECTIONS:%=$(SECTIONS_OUT)/%.pdf) ## Compile each section alone into build/paper/sections/
@@ -240,7 +240,7 @@ examples: ## Show common commands with examples
 	  '  make run R=<run folder>         one older run, its folder name taken from make runs' \
 	  '' \
 	  'The paper' \
-	  '  make section S=50_methodology   one section as its own PDF -> $(SECTIONS_OUT)/50_methodology.pdf' \
+	  '  make section S=40_pipeline      one section as its own PDF -> $(SECTIONS_OUT)/40_pipeline.pdf' \
 	  '  make sections                   every section as its own PDF -> $(SECTIONS_OUT)/' \
 	  '  make compile                    the whole paper -> $(PAPER_PDF)' \
 	  '  make overleaf                   the upload folder and what changed since the last upload' \
