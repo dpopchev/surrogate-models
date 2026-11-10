@@ -315,3 +315,9 @@ def load_config(toml_file: Path = PAPER_TOML) -> PaperConfig:
     """Read toml_file into a PaperConfig; environment variables override the file."""
     with toml_file.open("rb") as handle:
         return PaperConfig(**tomllib.load(handle))
+
+
+def load_section[M: BaseModel](model: type[M], toml_file: Path) -> M:
+    """Read one section's toml_file into model, a section's own settings (W-136)."""
+    with toml_file.open("rb") as handle:
+        return model(**tomllib.load(handle))

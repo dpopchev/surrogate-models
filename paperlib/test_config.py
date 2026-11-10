@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import get_args
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from paperlib.config import (
     PAPER_TOML,
@@ -15,6 +15,7 @@ from paperlib.config import (
     NetLoss,
     PaperConfig,
     load_config,
+    load_section,
     missing_section_folders,
 )
 from paperlib.surrogate import Activation, Loss
@@ -205,3 +206,16 @@ def test_the_shipped_paper_toml_sets_the_baseline_network() -> None:
 @pytest.mark.edge
 def test_every_paper_section_has_its_folder() -> None:
     assert missing_section_folders(PaperConfig, ROOT) == ()
+
+
+class _Knobs(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    width: int = 1
+    name: str = "a"
+
+
+@pytest.mark.edge
+def test_section_settings_come_from_the_section_toml(tmp_path: Path) -> None:
+    toml = write(tmp_path, 'width = 8\nname = "b"\n')
+    assert load_section(_Knobs, toml) == _Knobs(width=8, name="b")
