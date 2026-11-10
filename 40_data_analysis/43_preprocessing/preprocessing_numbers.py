@@ -1,14 +1,16 @@
 """The numbers Section 3.3 cites about the split (W-020).
 
-Reads the frozen split (local/state/split.parquet); writes \\prep... LaTeX macros: per dataset
+Reads the frozen split (local/state/split.parquet); stores \\prep... LaTeX macros: per dataset
 the curves in the test set and in each GroupKFold fold, and the curves the extrapolation ablation
 flags. The charge floor these numbers once carried is gone (W-063). \\prepDecisionsLayout names
 the decisions tables' layout of paper.toml [tables] decisions, the file the text inputs (W-124).
 
-Run as `uv run python <this file> <split> <asset dir> --seed <n>` (mk/paper.mk does).
+Run as `uv run python <this file> <split> <state dir> --seed <n>` (43_preprocessing.mk does);
+the macros are stored as JSON and paperlib/tools/render_assets.py writes the asset.
 """
 
 import argparse
+import json
 import logging
 import sys
 from dataclasses import dataclass
@@ -17,7 +19,6 @@ from pathlib import Path
 import pandas as pd
 
 from paperlib.config import DecisionsTableLayout, load_config
-from paperlib.eda import render_macros
 
 logger = logging.getLogger(__name__)
 
@@ -92,29 +93,27 @@ SECTION = "43_preprocessing"
 
 
 def _arguments(argv: list[str]) -> argparse.Namespace:
-    """Parse the split path, the asset dir and the split seed."""
+    """Parse the split path, the state dir and the split seed."""
     parser = argparse.ArgumentParser(prog="preprocessing_numbers.py")
-    for name in ("split", "assets"):
+    for name in ("split", "state"):
         parser.add_argument(name, type=Path)
     parser.add_argument("--seed", type=int, required=True)
     return parser.parse_args(argv)
 
 
 def main(argv: list[str]) -> None:
-    """Write the Section 3.3 numbers from the split file into the section's folder of the asset
-    dir, after emptying that folder of an earlier run."""
+    """Store the Section 3.3 numbers from the split file as JSON under the section's folder of
+    the state dir, for paperlib/tools/render_assets.py to write the asset from."""
     args = _arguments(argv)
     assert args.split.is_file(), f"input not found: {args.split}"
     split = pd.read_parquet(args.split)
     splits = tuple(split_summary(split, name) for name in TAGS)
-    out = args.assets / SECTION
+    out = args.state / SECTION
     out.mkdir(parents=True, exist_ok=True)
-    for stale in out.iterdir():
-        stale.unlink()
-    numbers_tex = out / f"{SECTION}_num.tex"
+    numbers_json = out / "numbers.json"
     decisions = load_config().tables.decisions
-    numbers_tex.write_text(render_macros(numbers(splits, args.seed, decisions)))
-    logger.info("done: Section 3.3 numbers -> %s", numbers_tex)
+    numbers_json.write_text(json.dumps(numbers(splits, args.seed, decisions)))
+    logger.info("done: Section 3.3 numbers -> %s", numbers_json)
 
 
 if __name__ == "__main__":

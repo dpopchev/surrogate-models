@@ -1,5 +1,6 @@
 """Facts about the NS exploratory computations, on tiny synthetic curves."""
 
+import json
 from pathlib import Path
 
 import matplotlib
@@ -344,7 +345,7 @@ class TestMain:
         config = PaperConfig.model_validate({"plot": {"usetex": False}})
         knobs = ["--folds", "2", "--seed", "0", "--window", str(WINDOW)]
         main(
-            [str(table), str(assets), *knobs],
+            [str(table), str(assets), "--state", str(tmp_path / "state"), *knobs],
             config=config,
             section=NeutronStarsSection.model_validate(selection),
         )
@@ -356,19 +357,41 @@ class TestMain:
             "41_neutron_stars_fig_ceilings.tex",
             "41_neutron_stars_fig_grid_fill.png",
             "41_neutron_stars_fig_grid_fill.tex",
-            "41_neutron_stars_num.tex",
-            "41_neutron_stars_tab_ceiling_decades.tex",
-            "41_neutron_stars_tab_ceilings.tex",
-            "41_neutron_stars_tab_split_strategies.tex",
         ]
 
+    @staticmethod
+    def numbers(assets: Path) -> dict[str, str]:
+        """The numbers the run stored under the state folder beside the assets."""
+        return json.loads((assets.parent / "state/41_neutron_stars/numbers.json").read_text())
+
     def test_writes_the_reachable_figures_into_the_numbers(self, assets) -> None:
-        numbers_tex = (assets / "41_neutron_stars" / "41_neutron_stars_num.tex").read_text()
-        assert "\\nsEdaCeilDFigures" in numbers_tex
+        assert "nsEdaCeilDFigures" in self.numbers(assets)
 
     def test_leaves_other_sections_alone(self, assets) -> None:
         assert (assets / "42_black_holes" / "kept.tex").is_file()
 
     def test_writes_the_raw_counts_into_the_numbers(self, assets) -> None:
-        numbers_tex = (assets / "41_neutron_stars" / "41_neutron_stars_num.tex").read_text()
-        assert "\\newcommand{\\nsEdaRawRows}{20}" in numbers_tex
+        assert self.numbers(assets)["nsEdaRawRows"] == "20"
+
+
+@pytest.mark.functional
+def test_ns_eda_writes_its_five_tables_as_json(tmp_path: Path) -> None:
+    table, assets, state = tmp_path / "ns.parquet", tmp_path / "assets", tmp_path / "state"
+    prepared = DENSE.copy()
+    prepared.attrs.update({"runs": 5, "empty_runs": 1, "rows": 20})
+    prepared.to_parquet(table)
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
+    knobs = ["--folds", "2", "--seed", "0", "--window", str(WINDOW)]
+    main(
+        [str(table), str(assets), "--state", str(state), *knobs],
+        config=config,
+        section=NeutronStarsSection.model_validate({"figures": []}),
+    )
+    stored = {path.stem for path in (state / "41_neutron_stars" / "tables").glob("*.json")}
+    assert stored == {
+        "univariate",
+        "charge_correlation",
+        "split_strategies",
+        "ceilings",
+        "ceiling_decades",
+    }
