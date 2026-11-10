@@ -3,7 +3,6 @@
 import pytest
 
 from paperlib.config import TableLayout
-from paperlib.eda import booktabs, number_tex
 from paperlib.tables import (
     Column,
     Plain,
@@ -18,14 +17,6 @@ from paperlib.tables import (
     power,
     render,
 )
-
-SPEC = "@{}ll@{\\hspace{8pt}}rr@{}"
-HEADER = "A & B & \\multicolumn{2}{c}{C} \\\\\n & & Test & Folds"
-ROWS = [
-    "x & y & $5.89\\times 10^{14}$ & $1.96_{\\pm 0.02}$",
-    "z & w & 0.57 & $\\mathbf{2.36_{\\pm 0.04}}$",
-    "u & v & -0.03 & 0.4",
-]
 
 SAMPLE = Table(
     label="x",
@@ -48,32 +39,87 @@ SAMPLE = Table(
 )
 
 
+HEAD = "\\begin{table}[!htb]\n\\centering\n\\small\n"
+FOOT = "\\bottomrule\n\\end{tabular}\n\\end{table}\n"
+
+SAMPLE_TEX = {
+    "small": (
+        f"{HEAD}\\caption{{A table.}}\n\\label{{tab:x}}\n"
+        "\\begin{tabular}{@{}ll@{\\hspace{8pt}}rr@{}}\n\\toprule\n"
+        "A & B & \\multicolumn{2}{c}{C} \\\\\n & & Test & Folds \\\\\n\\midrule\n"
+        "x & y & $5.89\\times 10^{14}$ & $1.96_{\\pm 0.02}$ \\\\\n"
+        "z & w & 0.57 & $\\mathbf{2.36_{\\pm 0.04}}$ \\\\\n"
+        f"u & v & -0.03 & 0.4 \\\\\n{FOOT}"
+    ),
+    "aligned": (
+        f"{HEAD}\\caption{{A table.}}\n\\label{{tab:x}}\n"
+        "\\begin{tabular}{@{}ll@{\\hspace{8pt}}S[table-format=-1.2e2]S[table-format=1.2(1)]@{}}\n"
+        "\\toprule\nA & B & \\multicolumn{2}{c}{C} \\\\\n &  & {Test} & {Folds} \\\\\n\\midrule\n"
+        "x & y & 5.89e14 & 1.96 +- 0.02 \\\\\n"
+        "z & w & 0.57 & \\bfseries 2.36 +- 0.04 \\\\\n"
+        f"u & v & -0.03 & 0.4 \\\\\n{FOOT}"
+    ),
+}
+
+
 @pytest.mark.view
 @pytest.mark.parametrize("layout", ["small", "aligned"])
-def test_table_renders_as_booktabs_did(layout: TableLayout) -> None:
-    assert render(SAMPLE, layout) == booktabs("x", "A table.", SPEC, HEADER, ROWS, layout)
+def test_table_renders_as_the_paper_writes_it(layout: TableLayout) -> None:
+    assert render(SAMPLE, layout) == SAMPLE_TEX[layout]
 
 
 VALUES = [0.0, 0.5, 12.3, 345.6, 0.001, 5.89e14, -0.03, -2000.0, 3.82e-8]
 
+NUMBERS_TEX = {
+    "small": (
+        f"{HEAD}\\caption{{N.}}\n\\label{{tab:n}}\n\\begin{{tabular}}{{lr}}\n\\toprule\n"
+        "h & x \\\\\n\\midrule\n"
+        "v & $0$ \\\\\nv & $0.500$ \\\\\nv & $12.3$ \\\\\nv & $346$ \\\\\n"
+        "v & $1.00\\times 10^{-3}$ \\\\\nv & $5.89\\times 10^{14}$ \\\\\n"
+        "v & $-0.0300$ \\\\\nv & $-2.00\\times 10^{3}$ \\\\\n"
+        f"v & $3.82\\times 10^{{-8}}$ \\\\\n{FOOT}"
+    ),
+    "aligned": (
+        f"{HEAD}\\caption{{N.}}\n\\label{{tab:n}}\n"
+        "\\begin{tabular}{lS[table-format=-3.4e-2]}\n\\toprule\n"
+        "h & {x} \\\\\n\\midrule\n"
+        "v & 0 \\\\\nv & 0.500 \\\\\nv & 12.3 \\\\\nv & 346 \\\\\n"
+        "v & 1.00e-3 \\\\\nv & 5.89e14 \\\\\nv & -0.0300 \\\\\nv & -2.00e3 \\\\\n"
+        f"v & 3.82e-8 \\\\\n{FOOT}"
+    ),
+}
+
 
 @pytest.mark.view
 @pytest.mark.parametrize("layout", ["small", "aligned"])
-def test_number_cells_render_as_number_tex_did(layout: TableLayout) -> None:
+def test_number_cells_render_as_the_paper_writes_them(layout: TableLayout) -> None:
     body = tuple((Text("v"), number(v)) for v in VALUES)
     table = Table("n", "N.", aligns("lr"), ((Text("h"), Text("x")),), body)
-    rows = [f"v & ${number_tex(v)}$" for v in VALUES]
-    assert render(table, layout) == booktabs("n", "N.", "lr", "h & x", rows, layout)
+    assert render(table, layout) == NUMBERS_TEX[layout]
+
+
+FIXED_TEX = {
+    "small": (
+        f"{HEAD}\\caption{{F.}}\n\\label{{tab:f}}\n\\begin{{tabular}}{{lrrr}}\n\\toprule\n"
+        "w & x & y & z \\\\\n\\midrule\n"
+        f"a & 0.46 & $8.20\\times 10^{{-8}}$ & nan \\\\\n{FOOT}"
+    ),
+    "aligned": (
+        f"{HEAD}\\caption{{F.}}\n\\label{{tab:f}}\n"
+        "\\begin{tabular}{lS[table-format=1.2]S[table-format=1.2e-1]S}\n\\toprule\n"
+        "w & {x} & {y} & {z} \\\\\n\\midrule\n"
+        f"a & 0.46 & 8.20e-8 & {{nan}} \\\\\n{FOOT}"
+    ),
+}
 
 
 @pytest.mark.view
 @pytest.mark.parametrize("layout", ["small", "aligned"])
-def test_fixed_and_power_cells_render_as_f_strings_did(layout: TableLayout) -> None:
+def test_fixed_and_power_cells_render_as_the_paper_writes_them(layout: TableLayout) -> None:
     row = (Text("a"), fixed(0.456, 2), power(8.2e-8), fixed(float("nan"), 1))
     header = tuple(Text(h) for h in "wxyz")
     table = Table("f", "F.", aligns("lrrr"), (header,), (row,))
-    rows = ["a & 0.46 & $8.20\\times 10^{-8}$ & nan"]
-    assert render(table, layout) == booktabs("f", "F.", "lrrr", "w & x & y & z", rows, layout)
+    assert render(table, layout) == FIXED_TEX[layout]
 
 
 @pytest.mark.view
