@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-012 > W-138 > T-368   | blocked: 0 | todo roots: 14 | done: 406 | pruned: 60
+open path: E-012 > W-138 > T-369   | blocked: 0 | todo roots: 14 | done: 407 | pruned: 60
 
 ## Tree
 
@@ -48,7 +48,7 @@ E-012         [doing]    Section modules, paperlib and standalone figures and ta
   W-135  issue  [done]     Tables are built as objects -- T-354 [done], T-355 [done], T-356 [done], T-357 [done]
   W-136  issue  [done]     One section builds on its own -- T-358 [done], T-359 [done], T-360 [done], T-361 [done]
   W-137  issue  [done]     Tables and numbers pass through local/state -- T-362 [done], T-363 [done], T-364 [done], T-365 [done], T-385 [done]
-  W-138  issue  [doing]    Every figure variant is its own file under build/figures -- T-366 [done], T-367 [done], T-368 [doing]   <- ACTIVE LEAF, T-369 [todo]
+  W-138  issue  [doing]    Every figure variant is its own file under build/figures -- T-366 [done], T-367 [done], T-368 [done], T-369 [doing]   <- ACTIVE LEAF
   W-139  issue  [todo]     Every table layout and shape is its own file under build/tables -- T-370 [todo], T-371 [todo], T-372 [todo]
 E-013         [todo]     The paper tells the physics, the data science is the appendix
   W-140  issue  [todo]     The data-science subsections become the appendix -- T-373 [todo], T-374 [todo], T-375 [todo]
@@ -829,8 +829,8 @@ flowchart TD
   E012 --> W138["W-138 issue doing: Every figure variant is its own file under build/figures"]
   W138 --> T366["T-366 done: Draw every Section 3 figure variant as its own file -> a figures mode in eda_neutron_stars.py and eda_black_holes.py"]
   W138 --> T367["T-367 done: Draw every methodology and results figure variant as its own file -> a figures mode in fit_baseline.py, screen_families.py and tune_survivors.py"]
-  W138 --> T368["T-368 doing: Remove the contact sheets -> paperlib/plots.py without contact_sheet, the presets as standalone files -- ACTIVE LEAF"]
-  W138 --> T369["T-369 todo: Wire make figures and the picks of the paper -> a figures target in mk/paper.mk, the paper includes build/figures"]
+  W138 --> T368["T-368 done: Remove the contact sheets -> paperlib/plots.py without contact_sheet, the presets as standalone files"]
+  W138 --> T369["T-369 doing: Wire make figures and the picks of the paper -> a figures target in mk/paper.mk, the paper includes build/figures -- ACTIVE LEAF"]
   E012 --> W139["W-139 issue todo: Every table layout and shape is its own file under build/tables"]
   W139 --> T370["T-370 todo: Turn the table shapes into functions over Table -> one Table -> Table function per shape in the four scripts"]
   W139 --> T371["T-371 todo: Render every table layout and shape as a standalone PDF -> paperlib/tools/table_pages.py and make tables"]
@@ -877,8 +877,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E012,W138,T368 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W134,T351,T352,T353,T381,W135,T354,T355,T356,T357,W136,T358,T359,T360,T361,W137,T362,T363,T364,T365,T385,T366,T367 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,T369,W139,T370,T371,T372,E013,W140,T373,T374,T375,W141,T376,T377,W142,T378,T379,T380,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384 todo
+  class E006,E009,E012,W138,T369 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W134,T351,T352,T353,T381,W135,T354,T355,T356,T357,W136,T358,T359,T360,T361,W137,T362,T363,T364,T365,T385,T366,T367,T368 done
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W139,T370,T371,T372,E013,W140,T373,T374,T375,W141,T376,T377,W142,T378,T379,T380,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
