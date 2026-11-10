@@ -455,6 +455,21 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return folder
 
 
+@pytest.mark.edge
+def test_table_rebuild_writes_the_parity_wrapper(ran: Path, tmp_path: Path) -> None:
+    folder = tmp_path / "assets" / SECTION
+    folder.mkdir(parents=True)
+    (folder / f"{SECTION}_fig_parity.png").write_bytes(b"stale")
+    (folder / f"{SECTION}_num.tex").write_text("kept")
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
+    main(
+        [str(ran / name) for name in ("ns.parquet", "bh.parquet", "split.parquet")]
+        + [str(tmp_path / "assets"), str(ran / "state"), "--tables"],
+        config,
+    )
+    assert {p.name for p in folder.iterdir()} == {f"{SECTION}_num.tex", f"{SECTION}_fig_parity.tex"}
+
+
 @pytest.mark.functional
 def test_the_run_names_make_dashboard_as_it_starts(
     tmp_path: Path, caplog: pytest.LogCaptureFixture

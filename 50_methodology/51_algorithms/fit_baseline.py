@@ -1029,7 +1029,8 @@ def main(
     after emptying that folder of an earlier run; leave each pair's run record and diagnostics
     in a folder named after its run under the state dir. Given --figures <dir>, fit nothing:
     draw every parity variant from the latest baseline batch's ledger entries into <dir>.
-    Given --tables, fit nothing: rewrite the baseline table alone from those entries."""
+    Given --tables, fit nothing: rewrite the baseline table from those entries and the parity
+    wrapper of the picked variant, dropping a stale unsuffixed parity PNG."""
     figures_dir = None
     if "--figures" in argv:
         at = argv.index("--figures")
@@ -1063,6 +1064,9 @@ def main(
         keys = [(p.dataset, p.target) for p in found_pairs]
         scored = pair_scores(read_ledger(Path(argv[4]) / "ledger"), keys)
         _store(state, baseline_objects(scored, config.tables.baseline), None)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / f"{PARITY}.png").unlink(missing_ok=True)
+        (out / f"{PARITY}.tex").write_text(figure_tex(section.variants.parity))
         logger.info("done: baseline table rebuilt from the ledger, nothing fitted -> %s", state)
         return
     total = sum(len(set(p.design.fold[p.design.fold >= 0].tolist())) + 1 for p in found_pairs)
