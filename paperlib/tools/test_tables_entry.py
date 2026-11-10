@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+
 from paperlib.tools.tables_entry import rasterize_commands, tables_entry
 
 ARTICLE = (

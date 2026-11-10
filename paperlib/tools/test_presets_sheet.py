@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+
 from paperlib.tools.presets_sheet import sheet_images
 
 

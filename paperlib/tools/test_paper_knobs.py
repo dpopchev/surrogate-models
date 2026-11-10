@@ -2,6 +2,7 @@
 
 import pytest
 from optuna.distributions import CategoricalDistribution, FloatDistribution, IntDistribution
+
 from paperlib.config import AlgorithmsSection
 from paperlib.tools.paper_knobs import knob_numbers, space_numbers
 

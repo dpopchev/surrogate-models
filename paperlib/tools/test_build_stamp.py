@@ -3,6 +3,7 @@
 from datetime import date
 
 import pytest
+
 from paperlib.tools.build_stamp import WorkTree, make_build_stamp, render_tex, stamp_text
 
 pytestmark = pytest.mark.model

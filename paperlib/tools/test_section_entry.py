@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+
 from paperlib.tools.section_entry import main, section_entry, sections
 
 ARTICLE = (
