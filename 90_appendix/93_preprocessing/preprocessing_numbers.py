@@ -1,0 +1,121 @@
+"""The numbers Section 3.3 cites about the split (W-020).
+
+Reads the frozen split (local/state/split.parquet); stores \\prep... LaTeX macros: per dataset
+the curves in the test set and in each GroupKFold fold, and the curves the extrapolation ablation
+flags. The charge floor these numbers once carried is gone (W-063). \\prepDecisionsLayout names
+the decisions tables' layout of paper.toml [tables] decisions, the file the text inputs (W-124).
+
+Run as `uv run python <this file> <split> <state dir> --seed <n>` (93_preprocessing.mk does);
+the macros are stored as JSON and paperlib/tools/render_assets.py writes the asset.
+"""
+
+import argparse
+import json
+import logging
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+import pandas as pd
+
+from paperlib.config import DecisionsTableLayout, load_config
+
+logger = logging.getLogger(__name__)
+
+# --- vocabulary and types ---------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SplitSummary:
+    """How one dataset's curves are split."""
+
+    dataset: str
+    curves: int
+    test: int
+    fold_min: int
+    fold_max: int
+    folds: int
+    ablation: int
+
+    @property
+    def test_percent(self) -> float:
+        """The share of curves in the test set, in percent."""
+        return 100 * self.test / self.curves
+
+
+# --- pure functions ---------------------------------------------------------------------------
+
+
+def split_summary(split: pd.DataFrame, dataset: str) -> SplitSummary:
+    """Summarize one dataset's rows of the split file."""
+    rows = split[split["dataset"] == dataset]
+    fold_sizes = rows.loc[rows["label"] != "test", "label"].value_counts()
+    return SplitSummary(
+        dataset,
+        len(rows),
+        int((rows["label"] == "test").sum()),
+        int(fold_sizes.min()),
+        int(fold_sizes.max()),
+        len(fold_sizes),
+        int(rows["ablation"].sum()),
+    )
+
+
+# Macro tags of the datasets: \prepNs..., \prepBh...
+TAGS = {"neutron_stars": "Ns", "black_holes": "Bh"}
+
+
+def numbers(
+    splits: tuple[SplitSummary, ...], seed: int, decisions: DecisionsTableLayout = "wide"
+) -> dict[str, str]:
+    """Every number Section 3.3 cites, keyed by its \\prep macro name, and the decisions
+    tables' layout."""
+    found = {"prepSeed": f"{seed}", "prepDecisionsLayout": decisions}
+    for s in splits:
+        tag = TAGS[s.dataset]
+        found |= {
+            f"prep{tag}Curves": f"{s.curves}",
+            f"prep{tag}TestCurves": f"{s.test}",
+            f"prep{tag}TrainCurves": f"{s.curves - s.test}",
+            f"prep{tag}TestPercent": f"{s.test_percent:.1f}",
+            f"prep{tag}FoldMin": f"{s.fold_min}",
+            f"prep{tag}FoldMax": f"{s.fold_max}",
+            f"prep{tag}Folds": f"{s.folds}",
+            f"prep{tag}AblationCurves": f"{s.ablation}",
+        }
+    return found
+
+
+# --- shell ------------------------------------------------------------------------------------
+
+# The section's asset folder, and the prefix that keeps its basenames unique in the flat build.
+SECTION = "93_preprocessing"
+
+
+def _arguments(argv: list[str]) -> argparse.Namespace:
+    """Parse the split path, the state dir and the split seed."""
+    parser = argparse.ArgumentParser(prog="preprocessing_numbers.py")
+    for name in ("split", "state"):
+        parser.add_argument(name, type=Path)
+    parser.add_argument("--seed", type=int, required=True)
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str]) -> None:
+    """Store the Section 3.3 numbers from the split file as JSON under the section's folder of
+    the state dir, for paperlib/tools/render_assets.py to write the asset from."""
+    args = _arguments(argv)
+    assert args.split.is_file(), f"input not found: {args.split}"
+    split = pd.read_parquet(args.split)
+    splits = tuple(split_summary(split, name) for name in TAGS)
+    out = args.state / SECTION
+    out.mkdir(parents=True, exist_ok=True)
+    numbers_json = out / "numbers.json"
+    decisions = load_config().tables.decisions
+    numbers_json.write_text(json.dumps(numbers(splits, args.seed, decisions)))
+    logger.info("done: Section 3.3 numbers -> %s", numbers_json)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    main(sys.argv[1:])

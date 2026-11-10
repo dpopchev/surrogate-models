@@ -1,0 +1,1452 @@
+"""The family screen behind Section 5.2 (W-067): every model family on W-066's representation,
+pointwise and curve-wise, eliminated by successive halving over the training rows.
+
+Every candidate -- a family in one unit of prediction -- is scored through paperlib/harness.py on
+each pair (dataset and target) at the first budget of training rows, thinned along each curve;
+the best share per pair, ranked on the frozen folds' p95 significant figures, goes on to the
+next budget. A fit past the time budget is stopped in its worker, and a pointwise GPR whose
+kernel matrix would pass the memory budget is not run: both are the family's wall at that
+budget. One line per finished job tells how far the screen is and how long is left.
+"""
+
+import argparse
+import json
+import logging
+import math
+import re
+import sys
+import time
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import asdict, dataclass, replace
+from datetime import datetime
+from functools import partial
+from itertools import product
+from pathlib import Path
+from typing import Any, Literal, assert_never, get_args
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
+from pydantic import BaseModel, ConfigDict
+
+from paperlib import surrogate
+from paperlib.batches import (
+    Batch,
+    WallError,
+    at_level,
+    git_commit,
+    git_dirty,
+    make_batch,
+    new_id,
+    outcomes_path,
+    progress_tail,
+    utc_now,
+    wall,
+    write_checked,
+    write_entry,
+)
+from paperlib.candidates import (
+    FAMILIES,
+    UNITS,
+    Candidate,
+    Family,
+    Knobs,
+    Unit,
+    fitter_of,
+)
+from paperlib.ceilings import PROFILE_BINS, profile
+from paperlib.config import (
+    NOTATION_TEX,
+    FamiliesTableLayout,
+    PaperConfig,
+    TableLayout,
+    load_config,
+    load_section,
+)
+from paperlib.design import (
+    BLACK_HOLES,
+    DATASET_TEX,
+    NEUTRON_STARS,
+    SPECS,
+    TARGETS,
+    Design,
+    Pair,
+    Target,
+    pair_tex,
+    pairs,
+    target_symbol,
+)
+from paperlib.eda import number_tex
+from paperlib.harness import Fitter, Run, harness
+from paperlib.plots import (
+    SYMBOLS,
+    CoolCmap,
+    PlotStyle,
+    WarmCmap,
+    apply_style,
+    colormap,
+    figure_size,
+    line_width,
+    mark_alpha,
+    mark_size,
+)
+from paperlib.runs import RunMetadata, Setting, entry_from_json
+from paperlib.scorecard import relative_errors, significant_figures
+from paperlib.surrogate import Training, make_training
+from paperlib.tables import Cell as TableCell
+from paperlib.tables import (
+    Column,
+    Plain,
+    Shape,
+    Span,
+    Table,
+    Text,
+    render,
+    shape_files,
+    to_json,
+)
+from paperlib.workers import run_jobs
+
+logger = logging.getLogger(__name__)
+
+# --- vocabulary and types ---------------------------------------------------------------------
+
+SECTION = "98_families"
+SECTION_TOML = Path(__file__).with_name("98_families.toml")
+
+FamiliesFigure = Literal["parity", "errors", "scaling"]
+# parity: predicted against true; residual: predicted minus true against true (W-113).
+FamiliesParityVariant = Literal["parity", "residual"]
+# scatter_profiles: a panel per pair and candidate, scatter and profiles; profiles: the
+# profiles only, the candidates overlaid, a panel per pair; hexbin: a density per panel (W-113).
+FamiliesErrorsVariant = Literal["scatter_profiles", "profiles", "hexbin"]
+# figures_and_seconds: per pair the folds' figures and the fit seconds; marker_size: a panel per
+# pair, the seconds as marker size; small_multiples: a panel per family (W-113).
+FamiliesScalingVariant = Literal["figures_and_seconds", "marker_size", "small_multiples"]
+
+
+class FamiliesVariants(BaseModel):
+    """Section 5.2: which variant of each family-screen figure the paper places (W-113)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    parity: FamiliesParityVariant = "parity"
+    errors: FamiliesErrorsVariant = "scatter_profiles"
+    scaling: FamiliesScalingVariant = "figures_and_seconds"
+
+
+class FamiliesSection(BaseModel):
+    """Section 5.2: which family-screen figures screen_families.py writes."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    figures: tuple[FamiliesFigure, ...] = get_args(FamiliesFigure)
+    variants: FamiliesVariants = FamiliesVariants()
+
+
+PARITY = f"{SECTION}_fig_parity"
+ERRORS = f"{SECTION}_fig_errors"
+SCALING = f"{SECTION}_fig_scaling"
+
+FAMILY_TEX = {
+    "k-NN": "$k$-NN",
+    "local RBF": "local RBF",
+    "GPR": "GPR",
+    "XGBoost": "XGBoost",
+    "MLP": "MLP",
+    "ResNet": "ResNet",
+}
+
+
+@dataclass(frozen=True)
+class Job:
+    """One candidate on one pair at one budget of training rows, in one round of the halving."""
+
+    dataset: str
+    target: Target
+    candidate: Candidate
+    rows: int
+    round: int
+
+
+@dataclass(frozen=True)
+class Scored:
+    """A job that ran: the mean p95 significant figures over its folds and on its test curves,
+    its ripple per curve parameter, its final fit's seconds and its ledger entry."""
+
+    job: Job
+    folds: float
+    test: float
+    ripple: tuple[float, ...]
+    fit_seconds: float
+    entry: str
+
+
+@dataclass(frozen=True)
+class Wall:
+    """A job past the time or the memory budget: why, in words."""
+
+    job: Job
+    reason: str
+
+
+Outcome = Scored | Wall
+
+
+@dataclass(frozen=True)
+class Series:
+    """One candidate's predictions against the truth on the test rows and their relative
+    errors in M or D, labelled for a legend."""
+
+    label: str
+    y_true: np.ndarray
+    y_pred: np.ndarray
+    errors: np.ndarray
+
+
+@dataclass(frozen=True)
+class Panel:
+    """One pair's panel of the parity figure: its dataset (for the colors), its title, the
+    target's axis label and the candidates shown."""
+
+    dataset: str
+    title: str
+    target: str
+    series: tuple[Series, ...]
+
+
+@dataclass(frozen=True)
+class Trajectory:
+    """One candidate's way through the rounds on one pair: the rows, folds' figures and final
+    fit seconds of each round it was scored in, and the rows of any wall it met."""
+
+    dataset: str
+    target: Target
+    candidate: Candidate
+    rows: tuple[int, ...]
+    folds: tuple[float, ...]
+    seconds: tuple[float, ...]
+    walls: tuple[int, ...]
+
+
+# --- pure functions ---------------------------------------------------------------------------
+
+
+def candidates() -> tuple[Candidate, ...]:
+    """Every family in every unit."""
+    return tuple(Candidate(family, unit) for family in FAMILIES for unit in UNITS)
+
+
+def thin(design: Design, rows: int, per_curve: int, seed: int) -> Design:
+    """The design with its training rows cut to about `rows`: every test row is kept; each
+    training curve keeps rows evenly spaced along its curve, at least per_curve of them, and
+    when there are too few rows for that on every curve, a seeded choice of rows // per_curve
+    whole curves does."""
+    train = ~design.test
+    total = int(train.sum())
+    keep = design.test.copy()
+    curves = np.unique(design.groups[train])
+    if rows < len(curves) * per_curve:
+        curves = np.random.default_rng(seed).choice(curves, rows // per_curve, replace=False)
+    for curve in curves:
+        mine = np.flatnonzero(train & (design.groups == curve))
+        mine = mine[np.argsort(design.X[mine, 0])]
+        share = min(len(mine), max(per_curve, round(len(mine) * rows / total)))
+        keep[mine[np.unique(np.linspace(0, len(mine) - 1, share).round().astype(int))]] = True
+    return _rows(design, keep)
+
+
+def _rows(design: Design, keep: np.ndarray) -> Design:
+    """The design's rows where keep is set."""
+    return Design(
+        X=design.X[keep],
+        y=design.y[keep],
+        groups=design.groups[keep],
+        test=design.test[keep],
+        fold=design.fold[keep],
+        ablation=design.ablation[keep],
+    )
+
+
+def survivors(outcomes: Sequence[Outcome], keep: int) -> tuple[Candidate, ...]:
+    """The best `keep` candidates of one pair's round on the folds' figures; a wall never
+    survives."""
+    return tuple(outcome.job.candidate for outcome in _ranked(outcomes)[:keep])
+
+
+def _ranked(outcomes: Sequence[Outcome]) -> list[Scored]:
+    """The scored outcomes, best on the folds' figures first; walls left out."""
+    ran: list[Scored] = []
+    for outcome in outcomes:
+        match outcome:
+            case Scored():
+                ran.append(outcome)
+            case Wall():
+                pass
+            case _:
+                assert_never(outcome)
+    return sorted(ran, key=lambda outcome: -outcome.folds)
+
+
+def next_jobs(
+    outcomes: Sequence[Outcome], budgets: Sequence[int], keeps: Sequence[int]
+) -> tuple[Job, ...]:
+    """The jobs of the round after the outcomes' round: each pair's best keeps[round]
+    candidates of each unit at the next budget of rows, pairs and then units in the order they
+    first appear. Each unit is ranked apart: a thinned design keeps few curves, which starves
+    only the curve-wise unit (W-067)."""
+    by_group: dict[tuple[str, Target, Unit], list[Outcome]] = {}
+    for outcome in outcomes:
+        job = outcome.job
+        by_group.setdefault((job.dataset, job.target, job.candidate.unit), []).append(outcome)
+    jobs = []
+    for (dataset, target, _), mine in by_group.items():
+        done = mine[0].job.round
+        for candidate in survivors(mine, keeps[done]):
+            jobs.append(Job(dataset, target, candidate, budgets[done + 1], done + 1))
+    return tuple(jobs)
+
+
+def family_table(
+    outcomes: Sequence[Outcome],
+    layout: TableLayout = "small",
+    shape: FamiliesTableLayout = "subscripts",
+) -> str:
+    """The Section 5.2 table in the paper's table layout."""
+    return render(family_object(outcomes, shape), layout)
+
+
+def family_object(outcomes: Sequence[Outcome], shape: FamiliesTableLayout = "subscripts") -> Table:
+    """The Section 5.2 table in its shape as an object, to store as JSON: the stored table
+    (subscripts), or a shape applied to it (rows_column)."""
+    table = _subscripts_table(outcomes)
+    return table if shape == "subscripts" else SHAPES[shape](table)[0]
+
+
+def families_stored(
+    outcomes: Sequence[Outcome], shape: FamiliesTableLayout = "subscripts"
+) -> dict[str, Table]:
+    """The tables to store as JSON: the paper's pick as families, and every shape of the table
+    beside it as families.<shape>."""
+    return {"families": family_object(outcomes, shape)} | shape_files(
+        "families", SHAPES, _subscripts_table(outcomes)
+    )
+
+
+def _subscripts_table(outcomes: Sequence[Outcome]) -> Table:
+    """One row per candidate, one column per pair, each cell the candidate's folds' p95
+    significant figures at the most rows it ran on (or its wall there), the pair's leader at
+    the most rows in bold, the rows a subscript."""
+    last: dict[tuple[str, Target, Candidate], Outcome] = {}
+    for outcome in sorted(outcomes, key=lambda found: found.job.rows):
+        job = outcome.job
+        last[(job.dataset, job.target, job.candidate)] = outcome
+    keys: list[tuple[str, Target]] = [
+        (spec.dataset, target) for spec, target in product(SPECS, TARGETS)
+    ]
+    leaders = {
+        (dataset, target, leader)
+        for dataset, target in keys
+        for leader in survivors(_at_most_rows(outcomes, dataset, target), keep=1)
+    }
+    header = (
+        (
+            Text("Family"),
+            Text("Unit"),
+            *(Text(pair_tex(dataset, target)) for dataset, target in keys),
+        ),
+    )
+    rows = tuple(
+        (
+            Text(FAMILY_TEX[candidate.family]),
+            Text(candidate.unit),
+            *(
+                _cell(
+                    last.get((dataset, target, candidate)),
+                    (dataset, target, candidate) in leaders,
+                )
+                for dataset, target in keys
+            ),
+        )
+        for candidate in candidates()
+    )
+    fitted = [Column("l", before="@{}"), Column("l"), *(Column("r") for _ in keys)]
+    return Table(
+        "families",
+        FAMILIES_CAPTION.format(where="the subscript"),
+        (*fitted[:-1], replace(fitted[-1], after="@{}")),
+        header,
+        rows,
+        "@{}ll*{4}{r}@{}",
+    )
+
+
+FAMILIES_CAPTION = (
+    "Each family in each unit of prediction, eliminated by successive halving over the "
+    "training rows: the significant figures kept at the 95th percentile of the error "
+    "($-\\log_{{10}}$) on the frozen folds, at the most training rows the candidate ran on "
+    "({where}); a wall is a fit past the time or the memory budget there. The pair's "
+    "best at the most rows is in bold. The errors are measured in $M$ or $\\Dch$."
+)
+# A subscripts cell: the figures, bold for the pair's leader, and the rows as the subscript.
+_SCORED_CELL = re.compile(
+    r"^\$(?:\\mathbf\{(?P<bold>.+)\}|(?P<plain>.+))_\{10\^\{(?P<rows>-?\d+)\}\}\$$"
+)
+_WALL_CELL = re.compile(r"^wall\$_\{10\^\{(?P<rows>-?\d+)\}\}\$$")
+
+
+def _rows_cells(cell: TableCell) -> tuple[TableCell, TableCell]:
+    """A subscripts cell as the figures and the rows apart, as a rows column writes them."""
+    assert isinstance(cell, Text), f"a subscripts cell is text: {cell}"
+    if cell.tex == "--":
+        return Text("--"), Text("--")
+    if wall := _WALL_CELL.match(cell.tex):
+        return Text("wall"), Text(f"$10^{{{wall['rows']}}}$")
+    scored = _SCORED_CELL.match(cell.tex)
+    assert scored, f"a cell of neither a score nor a wall: {cell.tex}"
+    figures = scored["bold"] or scored["plain"]
+    rows = Text(f"$10^{{{scored['rows']}}}$")
+    if not math.isfinite(float(figures)):
+        return Text(f"$\\mathbf{{{figures}}}$" if scored["bold"] else f"${figures}$"), rows
+    return Plain(figures, bool(scored["bold"]), math=True), rows
+
+
+def rows_column(table: Table) -> tuple[Table, ...]:
+    """The table with the rows of each cell in a column of their own beside the pair's
+    figures, in place of the subscript."""
+    pairs = table.header[0][2:]
+    header = (
+        (table.header[0][0], table.header[0][1], *(Span(2, "c", _tex(pair)) for pair in pairs)),
+        (Text(""), Text(""), *(Text(h) for _ in pairs for h in ("figures", "rows"))),
+    )
+    rows = tuple(
+        (*row[:2], *(one for cell in row[2:] for one in _rows_cells(cell))) for row in table.rows
+    )
+    fitted = [Column("l", before="@{}"), Column("l"), *(Column("r") for _ in pairs * 2)]
+    return (
+        replace(
+            table,
+            caption=FAMILIES_CAPTION.format(where="the rows column"),
+            columns=(*fitted[:-1], replace(fitted[-1], after="@{}")),
+            header=header,
+            rows=rows,
+            small_spec="@{}ll*{4}{rr}@{}",
+        ),
+    )
+
+
+def _tex(cell: TableCell) -> str:
+    """The text of a text cell."""
+    assert isinstance(cell, Text), f"a text cell: {cell}"
+    return cell.tex
+
+
+# The shapes of the families table besides the subscripts, by the name the pick of paper.toml
+# gives them; each is applied to the stored table.
+SHAPES: Mapping[str, Shape] = {"rows_column": rows_column}
+
+
+def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
+    """Store the tables as JSON by name and the numbers under the section's state folder, for
+    paperlib/tools/render_assets.py to write the assets from; an earlier run's tables go."""
+    folder = state / SECTION / "tables"
+    folder.mkdir(parents=True, exist_ok=True)
+    for stale in folder.glob("*.json"):
+        stale.unlink()
+    for name, table in tables.items():
+        (folder / f"{name}.json").write_text(to_json(table))
+    (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
+
+
+# Macro tags of the families and units: \famNsMassRbfCurvewiseFigures.
+FAMILY_TAG = {
+    "k-NN": "Knn",
+    "local RBF": "Rbf",
+    "GPR": "Gpr",
+    "XGBoost": "Xgboost",
+    "MLP": "Mlp",
+    "ResNet": "Resnet",
+}
+UNIT_TAG = {"pointwise": "Pointwise", "curve-wise": "Curvewise"}
+
+
+def numbers(outcomes: Sequence[Outcome]) -> dict[str, str]:
+    """Every figure Section 5.2 cites. Per pair, at the most rows it ran on, the leader as the
+    table names it (\\fam<Pair>Leader, \\fam<Pair>LeaderUnit) and how many families stay within
+    one figure of it (\\fam<Pair>WithinOne). Per candidate, at the most rows it reached
+    (\\fam<Pair><Family><Unit>Rows), its folds' figures and final fit's seconds (Figures,
+    Seconds), or the rows of its wall there (WallRows)."""
+    macros: dict[str, str] = {}
+    pairs: dict[tuple[str, Target], None] = dict.fromkeys(
+        (o.job.dataset, o.job.target) for o in outcomes
+    )
+    for dataset, target in pairs:
+        pair = f"{DATASET_TEX[dataset].capitalize()}{target.capitalize()}"
+        ranked = _ranked(_at_most_rows(outcomes, dataset, target))
+        if ranked:
+            leader = ranked[0]
+            near = {o.job.candidate.family for o in ranked if o.folds >= leader.folds - 1.0}
+            macros |= {
+                f"fam{pair}Leader": FAMILY_TEX[leader.job.candidate.family],
+                f"fam{pair}LeaderUnit": leader.job.candidate.unit,
+                f"fam{pair}WithinOne": f"{len(near)}",
+            }
+        mine = [o for o in outcomes if (o.job.dataset, o.job.target) == (dataset, target)]
+        last = {o.job.candidate: o for o in sorted(mine, key=lambda o: o.job.rows)}
+        for candidate, outcome in last.items():
+            name = f"fam{pair}{FAMILY_TAG[candidate.family]}{UNIT_TAG[candidate.unit]}"
+            rows = f"10^{{{round(np.log10(outcome.job.rows))}}}"
+            match outcome:
+                case Scored():
+                    macros |= {
+                        f"{name}Rows": rows,
+                        f"{name}Figures": f"{outcome.folds:.2f}",
+                        f"{name}Seconds": number_tex(outcome.fit_seconds),
+                    }
+                case Wall():
+                    macros[f"{name}WallRows"] = rows
+                case _:
+                    assert_never(outcome)
+    return macros
+
+
+def parity_picks(outcomes: Sequence[Outcome]) -> tuple[Scored, ...]:
+    """Per pair, in the order the pairs first appear, the best scored candidate of each unit
+    at the most rows the pair ran on: the candidates the parity figure shows."""
+    picks: list[Scored] = []
+    pairs: dict[tuple[str, Target], None] = dict.fromkeys(
+        (o.job.dataset, o.job.target) for o in outcomes
+    )
+    for dataset, target in pairs:
+        at_most = _at_most_rows(outcomes, dataset, target)
+        for unit in UNITS:
+            ranked = _ranked([o for o in at_most if o.job.candidate.unit == unit])
+            picks += ranked[:1]
+    return tuple(picks)
+
+
+def axis_label(target: Target) -> str:
+    """The parity figure's axis label of the target: the mass in solar masses, the charge as
+    the model's Y."""
+    match target:
+        case "mass":
+            return f"{SYMBOLS['M']} ({SYMBOLS['Msun']})"
+        case "charge":
+            return SYMBOLS["Y"]
+        case _:
+            assert_never(target)
+
+
+def parity_figure(
+    panels: Sequence[Panel], style: PlotStyle, variant: FamiliesParityVariant = "parity"
+) -> Figure:
+    """Predicted against true target on the test curves with the y = x line (parity), or the
+    residual, predicted minus true, against the true target with the zero line (residual):
+    one panel per pair in a grid of two columns, each candidate in one end of its dataset's
+    colormap.
+
+    Raises ValueError for a panel of a dataset with no colormap.
+    """
+    rows = (len(panels) + 1) // 2
+    figure, grid = plt.subplots(
+        rows, 2, figsize=figure_size(style, rows, 0.5), layout="constrained", squeeze=False
+    )
+    for axes, panel in zip(grid.flat, panels, strict=False):
+        colors = _colors(panel, style)
+        match variant:
+            case "parity":
+                for color, series in zip(colors, panel.series, strict=True):
+                    axes.scatter(
+                        series.y_true,
+                        series.y_pred,
+                        s=mark_size(style, 2),
+                        alpha=mark_alpha(style, 0.4),
+                        color=color,
+                        label=series.label,
+                    )
+                values = np.concatenate([np.r_[s.y_true, s.y_pred] for s in panel.series])
+                span = [float(values.min()), float(values.max())]
+                width = line_width(style, 0.8)
+                axes.plot(span, span, color="black", linestyle="--", linewidth=width)
+                axes.set_ylabel(f"predicted {panel.target}")
+                # The points follow the diagonal, so the lower right corner stays empty.
+                axes.legend(fontsize="x-small", markerscale=3, loc="lower right")
+            case "residual":
+                axes.axhline(0.0, color="black", linestyle="--", linewidth=line_width(style, 0.8))
+                for color, series in zip(colors, panel.series, strict=True):
+                    axes.scatter(
+                        series.y_true,
+                        series.y_pred - series.y_true,
+                        s=mark_size(style, 2),
+                        alpha=mark_alpha(style, 0.4),
+                        color=color,
+                        label=series.label,
+                    )
+                axes.set_ylabel(f"predicted - true {panel.target}")
+                axes.legend(fontsize="x-small", markerscale=3)
+            case _:
+                assert_never(variant)
+        axes.set_title(panel.title)
+        axes.set_xlabel(f"true {panel.target}")
+    return figure
+
+
+def _error_profiles(panels: Sequence[Panel], style: PlotStyle) -> Figure:
+    """The relative error profiles only, a panel per pair in a grid of two columns: each
+    candidate's median (solid) and 95th percentile (dashed) in its color, overlaid."""
+    rows = (len(panels) + 1) // 2
+    figure, grid = plt.subplots(
+        rows, 2, figsize=figure_size(style, rows, 0.5), layout="constrained", squeeze=False
+    )
+    for axes, panel in zip(grid.flat, panels, strict=False):
+        for color, series in zip(_colors(panel, style), panel.series, strict=True):
+            found = profile(series.y_true, series.errors, PROFILE_BINS)
+            width = line_width(style, 1.0)
+            axes.plot(found.centers, found.median, color=color, linewidth=width, label=series.label)
+            axes.plot(found.centers, found.p95, color=color, linewidth=width, linestyle="--")
+        axes.set_yscale("log")
+        axes.set_title(panel.title, fontsize="small")
+        axes.set_xlabel(f"true {panel.target}")
+        axes.set_ylabel("relative error")
+        axes.legend(fontsize="x-small")
+    return figure
+
+
+def error_figure(
+    panels: Sequence[Panel], style: PlotStyle, variant: FamiliesErrorsVariant = "scatter_profiles"
+) -> Figure:
+    """The relative error in M or D against the true target on a log scale: a row per pair
+    and a column per candidate, the y axis shared along a row, each panel the candidate's
+    scatter in its color with its median (solid) and 95th percentile (dashed) in black
+    (scatter_profiles) or its density as hexagons (hexbin); or the profiles alone, the
+    candidates overlaid, a panel per pair (profiles).
+
+    Raises ValueError for a panel of a dataset with no colormap.
+    """
+    if variant == "profiles":
+        return _error_profiles(panels, style)
+    columns = max(len(panel.series) for panel in panels)
+    figure, grid = plt.subplots(
+        len(panels),
+        columns,
+        figsize=figure_size(style, len(panels), 0.38),
+        layout="constrained",
+        squeeze=False,
+        sharey="row",
+    )
+    for row, panel in enumerate(panels):
+        for column, (color, series) in enumerate(
+            zip(_colors(panel, style), panel.series, strict=True)
+        ):
+            axes = grid[row, column]
+            match variant:
+                case "scatter_profiles":
+                    axes.scatter(
+                        series.y_true,
+                        series.errors,
+                        s=mark_size(style, 1),
+                        alpha=mark_alpha(style, 0.15),
+                        color=color,
+                        rasterized=True,
+                    )
+                case "hexbin":
+                    # An exact prediction has no logarithm: it is drawn at the floor.
+                    axes.hexbin(
+                        series.y_true,
+                        np.maximum(series.errors, 1e-12),
+                        yscale="log",
+                        gridsize=30,
+                        mincnt=1,
+                        cmap=colormap(_cmap(panel.dataset, style)),
+                        bins="log",
+                    )
+                case _:
+                    assert_never(variant)
+            found = profile(series.y_true, series.errors, PROFILE_BINS)
+            width = line_width(style, 1.0)
+            axes.plot(found.centers, found.median, color="black", linewidth=width)
+            axes.plot(found.centers, found.p95, color="black", linewidth=width, linestyle="--")
+            axes.set_yscale("log")
+            axes.set_title(f"{panel.title}: {series.label}", fontsize="small")
+            axes.set_xlabel(f"true {panel.target}")
+            axes.set_ylabel("relative error")
+    return figure
+
+
+def _scaling_legend(figure: Figure, palette: Mapping[Family, Any], wall: bool) -> None:
+    """The families by colour and the units by line style, and the wall cross if drawn, in one
+    row below the panels."""
+    handles = [
+        *(Line2D([], [], color=palette[family]) for family in FAMILIES),
+        Line2D([], [], color="black"),
+        Line2D([], [], color="black", linestyle="--"),
+    ]
+    labels = [*FAMILIES, *UNITS]
+    if wall:
+        handles.append(Line2D([], [], color="black", marker="x", linestyle=""))
+        labels.append("wall")
+    figure.legend(handles, labels, loc="outside lower center", ncols=5, fontsize="x-small")
+
+
+def _scaling_marker_size(paths: Sequence[Trajectory], style: PlotStyle) -> Figure:
+    """Per pair a panel: the folds' p95 significant figures against the training rows, a line
+    per candidate, its family by colour and its unit by line style, each round's marker as
+    large as the final fit took seconds (area proportional to log10 seconds)."""
+    pairs: list[tuple[str, Target]] = list(dict.fromkeys((p.dataset, p.target) for p in paths))
+    rows = (len(pairs) + 1) // 2
+    figure, grid = plt.subplots(
+        rows, 2, figsize=figure_size(style, rows, 0.5), layout="constrained", squeeze=False
+    )
+    palette = dict(zip(FAMILIES, sns.color_palette(style.palette, len(FAMILIES)), strict=True))
+    for axes, (dataset, target) in zip(grid.flat, pairs, strict=False):
+        for path in (p for p in paths if (p.dataset, p.target) == (dataset, target)):
+            color = palette[path.candidate.family]
+            dashes = "--" if path.candidate.unit == "curve-wise" else "-"
+            width = line_width(style, 0.8)
+            axes.plot(path.rows, path.folds, color=color, linestyle=dashes, linewidth=width)
+            seconds = np.log10(np.maximum(np.array(path.seconds), 1e-3) / 1e-3)
+            sizes = mark_size(style, 6.0) * (1.0 + seconds)
+            axes.scatter(path.rows, path.folds, s=sizes, color=color, zorder=3)
+        axes.set_xscale("log")
+        axes.set_title(f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}")
+        axes.set_xlabel("training rows")
+        axes.set_ylabel("folds' figures")
+    for axes in grid.flat[len(pairs) :]:
+        axes.remove()
+    _scaling_legend(figure, palette, wall=False)
+    return figure
+
+
+def _scaling_small_multiples(paths: Sequence[Trajectory], style: PlotStyle) -> Figure:
+    """Per family a panel, the axes shared: the folds' p95 significant figures against the
+    training rows, a line per pair and unit, the pair by colour and the unit by line style."""
+    families = [f for f in FAMILIES if any(p.candidate.family == f for p in paths)]
+    pairs: list[tuple[str, Target]] = list(dict.fromkeys((p.dataset, p.target) for p in paths))
+    columns = min(3, len(families))
+    rows = (len(families) + columns - 1) // columns
+    figure, grid = plt.subplots(
+        rows,
+        columns,
+        figsize=figure_size(style, rows, 0.4),
+        layout="constrained",
+        squeeze=False,
+        sharex=True,
+        sharey=True,
+    )
+    palette = dict(zip(pairs, sns.color_palette(style.palette, len(pairs)), strict=True))
+    for axes, family in zip(grid.flat, families, strict=False):
+        for path in (p for p in paths if p.candidate.family == family):
+            axes.plot(
+                path.rows,
+                path.folds,
+                color=palette[path.dataset, path.target],
+                linestyle="--" if path.candidate.unit == "curve-wise" else "-",
+                marker="o",
+                markersize=mark_size(style, 3),
+            )
+        axes.set_xscale("log")
+        axes.set_title(family, fontsize="small")
+    for axes in grid.flat[len(families) :]:
+        axes.remove()
+    for axes in grid[:, 0]:
+        axes.set_ylabel("folds' figures")
+    for axes in grid[-1]:
+        axes.set_xlabel("training rows")
+    handles = [
+        *(Line2D([], [], color=palette[pair]) for pair in pairs),
+        Line2D([], [], color="black"),
+        Line2D([], [], color="black", linestyle="--"),
+    ]
+    labels = [*(f"{DATASET_TEX[d]} {SYMBOLS[target_symbol(t)]}" for d, t in pairs), *UNITS]
+    figure.legend(handles, labels, loc="outside lower center", ncols=3, fontsize="x-small")
+    return figure
+
+
+def scaling_figure(
+    paths: Sequence[Trajectory],
+    style: PlotStyle,
+    wall_seconds: float = 1800.0,
+    variant: FamiliesScalingVariant = "figures_and_seconds",
+) -> Figure:
+    """Per pair a row: the folds' p95 significant figures and the final fit's seconds against
+    the training rows on a log scale, a line per candidate up to the round it left, its family
+    by color and its unit by line style (curve-wise dashed), a wall a cross at its rows and at
+    wall_seconds, the time budget of a fit (figures_and_seconds); or the figures alone with the
+    seconds as marker size (marker_size), or a panel per family (small_multiples)."""
+    match variant:
+        case "figures_and_seconds":
+            pass
+        case "marker_size":
+            return _scaling_marker_size(paths, style)
+        case "small_multiples":
+            return _scaling_small_multiples(paths, style)
+        case _:
+            assert_never(variant)
+    pairs: list[tuple[str, Target]] = list(dict.fromkeys((p.dataset, p.target) for p in paths))
+    figure, grid = plt.subplots(
+        len(pairs),
+        2,
+        figsize=figure_size(style, len(pairs), 0.42),
+        layout="constrained",
+        squeeze=False,
+        sharex=True,
+    )
+    palette = dict(zip(FAMILIES, sns.color_palette(style.palette, len(FAMILIES)), strict=True))
+    for row, (dataset, target) in enumerate(pairs):
+        figures_axes, seconds_axes = grid[row]
+        for path in (p for p in paths if (p.dataset, p.target) == (dataset, target)):
+            line = {
+                "color": palette[path.candidate.family],
+                "linestyle": "--" if path.candidate.unit == "curve-wise" else "-",
+                "marker": "o",
+                "markersize": mark_size(style, 3),
+            }
+            figures_axes.plot(path.rows, path.folds, **line)
+            seconds_axes.plot(path.rows, path.seconds, **line)
+            for rows in path.walls:
+                seconds_axes.plot(
+                    [rows],
+                    [wall_seconds],
+                    marker="x",
+                    markersize=mark_size(style, 7),
+                    color=line["color"],
+                )
+        title = f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}"
+        figures_axes.set_ylabel(f"{title}: folds' figures")
+        seconds_axes.set_ylabel("fit seconds")
+        seconds_axes.set_yscale("log")
+        for axes in (figures_axes, seconds_axes):
+            axes.set_xscale("log")
+    for axes in grid[-1]:
+        axes.set_xlabel("training rows")
+    _scaling_legend(figure, palette, wall=True)
+    return figure
+
+
+def _colors(panel: Panel, style: PlotStyle) -> list[Any]:
+    """One color per candidate of the panel, spread to the two ends of the dataset's colormap
+    so that two candidates never blend."""
+    shades = colormap(_cmap(panel.dataset, style))
+    return [shades(p) for p in np.linspace(0.15, 0.85, len(panel.series))]
+
+
+CHARGE_AS_Y = "The charge is shown as the target the models see, $Y = \\log_{10}(\\Dch/M)$."
+
+
+# Each caption names the other 5.2 figure only when paper.toml places it (\pickref, W-133).
+_ERRORS_REF = "\\pickref{{fig:families-errors}}{{; }}{{ shows {}}}"
+
+
+def _parity_caption(variant: FamiliesParityVariant) -> str:
+    """The caption of the parity figure in one variant."""
+    picks = (
+        "per dataset and target, for the best candidate of each unit of prediction on the most "
+        "training rows; the legend gives the significant figures kept on the folds"
+    )
+    match variant:
+        case "parity":
+            return (
+                f"Predicted against true target on the test curves, {picks}, and the dashed "
+                "line is $y = x$. At these precisions every candidate lies on the line"
+                f"{_ERRORS_REF.format('where they differ')}. {CHARGE_AS_Y}"
+            )
+        case "residual":
+            return (
+                f"The residual, predicted minus true target, on the test curves against the "
+                f"true target, {picks}, and the dashed line is zero"
+                f"{_ERRORS_REF.format('the relative errors')}. {CHARGE_AS_Y}"
+            )
+        case _:
+            assert_never(variant)
+
+
+def parity_tex(variant: FamiliesParityVariant = "parity") -> str:
+    """The figure environment of the parity figure, placed here or at the top of a page."""
+    return (
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{PARITY}_{variant}}}\n"
+        f"\\caption{{{_parity_caption(variant)}}}\n"
+        "\\label{fig:families-parity}\n\\end{figure}\n"
+    )
+
+
+def _errors_caption(variant: FamiliesErrorsVariant) -> str:
+    """The caption of the error figure in one variant."""
+    error = (
+        "The relative error in $M$ or $\\Dch$ on the test curves against the true target, for "
+        "the best candidate of each unit of prediction on the most training rows"
+        "\\pickref{fig:families-parity}{ (}{)}"
+    )
+    profiles = "95th percentile (dashed) in equal-count bins of the true target"
+    match variant:
+        case "scatter_profiles":
+            return (
+                f"{error}: a row per dataset and target, a column per unit of prediction, the "
+                "error axis shared along a row. The black lines are each candidate's median "
+                f"(solid) and {profiles}."
+            )
+        case "profiles":
+            return (
+                f"{error}, a panel per dataset and target: each candidate's median (solid) "
+                f"and {profiles}, in its colour."
+            )
+        case "hexbin":
+            return (
+                f"{error}: a row per dataset and target, a column per unit of prediction, the "
+                "test rows' density as hexagons, darker where more. The black lines are each "
+                f"candidate's median (solid) and {profiles}."
+            )
+        case _:
+            assert_never(variant)
+
+
+def errors_tex(variant: FamiliesErrorsVariant = "scatter_profiles") -> str:
+    """The figure environment of the error figure, placed here or at the top of a page."""
+    return (
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{ERRORS}_{variant}}}\n"
+        f"\\caption{{{_errors_caption(variant)}}}\n"
+        "\\label{fig:families-errors}\n\\end{figure}\n"
+    )
+
+
+def _scaling_caption(minutes: float, memory_gb: float, variant: FamiliesScalingVariant) -> str:
+    """The caption of the scaling figure in one variant, its budgets stated."""
+    match variant:
+        case "figures_and_seconds":
+            return (
+                "Successive halving over the training rows, per dataset and target: the "
+                "significant figures kept on the folds (left) and the seconds of the final fit "
+                "at one thread (right) against the training rows, a line per candidate up to the "
+                "round it was eliminated in, curve-wise dashed. A cross is a wall, a fit past "
+                f"${minutes:g}$ minutes or ${memory_gb:g}$\\,GB at those rows, drawn at the "
+                "time budget."
+            )
+        case "marker_size":
+            return (
+                "Successive halving over the training rows, a panel per dataset and target: the "
+                "significant figures kept on the folds against the training rows, a line per "
+                "candidate up to the round it was eliminated in, curve-wise dashed, each marker "
+                "as large as the final fit took seconds at one thread. A candidate that met its "
+                f"wall, ${minutes:g}$ minutes or ${memory_gb:g}$\\,GB, ends a round earlier."
+            )
+        case "small_multiples":
+            return (
+                "Successive halving over the training rows, a panel per model family: the "
+                "significant figures kept on the folds against the training rows, a line per "
+                "dataset and target up to the round the family was eliminated in, curve-wise "
+                f"dashed. A wall, ${minutes:g}$ minutes or ${memory_gb:g}$\\,GB, ends a line."
+            )
+        case _:
+            assert_never(variant)
+
+
+def scaling_tex(
+    minutes: float, memory_gb: float, variant: FamiliesScalingVariant = "figures_and_seconds"
+) -> str:
+    """The figure environment of the scaling figure, its budgets stated in the caption."""
+    return (
+        "\\begin{figure}[!htb]\n\\centering\n"
+        f"\\includegraphics[width=\\textwidth]{{{SCALING}_{variant}}}\n"
+        f"\\caption{{{_scaling_caption(minutes, memory_gb, variant)}}}\n"
+        "\\label{fig:families-scaling}\n\\end{figure}\n"
+    )
+
+
+def _cmap(dataset: str, style: PlotStyle) -> CoolCmap | WarmCmap:
+    """The dataset's colormap of the paper style.
+
+    Raises ValueError for any other dataset.
+    """
+    if dataset == NEUTRON_STARS.dataset:
+        return style.neutron_stars.beta_cmap
+    if dataset == BLACK_HOLES.dataset:
+        return style.black_holes.beta_cmap
+    raise ValueError(f"no colormap for dataset {dataset}")
+
+
+def trajectories(outcomes: Sequence[Outcome]) -> tuple[Trajectory, ...]:
+    """Every candidate's way through the rounds, per pair in the order the pairs first
+    appear, candidates in the screen's order: the scaling figure's lines and walls."""
+    found: dict[tuple[str, Target, Candidate], list[Outcome]] = {}
+    for outcome in sorted(outcomes, key=lambda o: o.job.rows):
+        job = outcome.job
+        found.setdefault((job.dataset, job.target, job.candidate), []).append(outcome)
+    pairs: dict[tuple[str, Target], None] = dict.fromkeys(
+        (dataset, target) for dataset, target, _ in found
+    )
+    paths = []
+    for dataset, target in pairs:
+        for candidate in candidates():
+            mine = found.get((dataset, target, candidate), [])
+            scored = _ranked_by_rows(mine)
+            walls = tuple(o.job.rows for o in mine if o not in scored)
+            if mine:
+                paths.append(
+                    Trajectory(
+                        dataset,
+                        target,
+                        candidate,
+                        tuple(o.job.rows for o in scored),
+                        tuple(o.folds for o in scored),
+                        tuple(o.fit_seconds for o in scored),
+                        walls,
+                    )
+                )
+    return tuple(paths)
+
+
+def _ranked_by_rows(outcomes: Sequence[Outcome]) -> list[Scored]:
+    """The scored outcomes in the order of their rows; walls left out."""
+    return sorted(_ranked(outcomes), key=lambda o: o.job.rows)
+
+
+def _at_most_rows(outcomes: Sequence[Outcome], dataset: str, target: Target) -> list[Outcome]:
+    """The pair's outcomes at the most rows any of them ran on."""
+    mine = [o for o in outcomes if (o.job.dataset, o.job.target) == (dataset, target)]
+    most = max((o.job.rows for o in mine), default=0)
+    return [o for o in mine if o.job.rows == most]
+
+
+def _cell(outcome: Outcome | None, bold: bool) -> TableCell:
+    """One candidate's table cell on one pair: its folds' figures with its rows as the
+    subscript, in bold for the pair's leader; dashes for a candidate the pair never ran."""
+    if outcome is None:
+        return Text("--")
+    rows = f"_{{10^{{{round(np.log10(outcome.job.rows))}}}}}"
+    match outcome:
+        case Scored():
+            figures = f"\\mathbf{{{outcome.folds:.2f}}}" if bold else f"{outcome.folds:.2f}"
+            return Text(f"${figures}{rows}$")
+        case Wall():
+            return Text(f"wall${rows}$")
+        case _:
+            assert_never(outcome)
+
+
+def outcomes_to_json(outcomes: Sequence[Outcome]) -> str:
+    """The outcomes as indented JSON, each tagged scored or wall."""
+    tagged = []
+    for outcome in outcomes:
+        match outcome:
+            case Scored():
+                tagged.append({"kind": "scored", **asdict(outcome)})
+            case Wall():
+                tagged.append({"kind": "wall", **asdict(outcome)})
+            case _:
+                assert_never(outcome)
+    return json.dumps(tagged, indent=2) + "\n"
+
+
+def outcomes_from_json(text: str) -> tuple[Outcome, ...]:
+    """The outcomes an outcomes_to_json text holds."""
+    found: list[Outcome] = []
+    for fields in json.loads(text):
+        raw = fields["job"]
+        job = Job(
+            raw["dataset"],
+            raw["target"],
+            Candidate(**raw["candidate"]),
+            raw["rows"],
+            raw["round"],
+        )
+        if fields["kind"] == "wall":
+            found.append(Wall(job, fields["reason"]))
+        else:
+            found.append(
+                Scored(
+                    job,
+                    fields["folds"],
+                    fields["test"],
+                    tuple(fields["ripple"]),
+                    fields["fit_seconds"],
+                    fields["entry"],
+                )
+            )
+    return tuple(found)
+
+
+def over_memory(candidate: Candidate, rows: int, memory_bytes: float) -> bool:
+    """Whether the candidate's fit is known to pass the memory budget unrun: a pointwise GPR's
+    kernel matrix of rows x rows doubles."""
+    return candidate == Candidate("GPR", "pointwise") and rows * rows * 8 > memory_bytes
+
+
+def run_job(
+    job: Job,
+    data: Design,
+    fitter: Fitter,
+    seed: int,
+    valid_fraction: float,
+    per_curve: int,
+    seconds: float,
+    memory_bytes: float,
+    record: Callable[[Run], str],
+) -> Outcome:
+    """One job through the harness on the design thinned to the job's rows, each fit within
+    the time budget; record keeps the run (its ledger entry) and names it. A wall when the
+    candidate is known to pass the memory budget, or a fit passes the time or the memory."""
+    if over_memory(job.candidate, job.rows, memory_bytes):
+        return Wall(job, f"kernel matrix over {memory_bytes / 1e9:g} GB")
+    thinned = thin(data, job.rows, per_curve, seed)
+    entries: list[str] = []
+    try:
+        (run,) = harness(
+            thinned,
+            job.target,
+            wall(fitter, seconds),
+            [seed],
+            valid_fraction,
+            record=lambda ran: entries.append(record(ran)),
+        )
+    except WallError as stopped:
+        return Wall(job, str(stopped))
+    except MemoryError:
+        return Wall(job, "out of memory")
+    folds = float(np.mean([significant_figures(fold.p95) for fold in run.folds]))
+    test = significant_figures(run.test.zones["test"].p95)
+    return Scored(job, folds, test, run.ripple, run.timing.fit, entries[0])
+
+
+def job_line(outcome: Outcome, done: int, total: int, elapsed: float) -> str:
+    """One finished job: its pair, candidate, rows and round, its fold and test figures or its
+    wall, then how many of the round's jobs are done, the elapsed time and the time left."""
+    job = outcome.job
+    match outcome:
+        case Scored():
+            result = f"folds {outcome.folds:.2f}, test {outcome.test:.2f} figures"
+        case Wall():
+            result = f"wall, {outcome.reason}"
+        case _:
+            assert_never(outcome)
+    return (
+        f"job {done}/{total} of round {job.round + 1} done: {job.dataset} {job.target}, "
+        f"{job.candidate.family} {job.candidate.unit}, {job.rows} rows: {result}; "
+        f"{progress_tail(done, total, elapsed)}"
+    )
+
+
+# --- shell ------------------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Context:
+    """What every job of one screen shares: the batch (its ledger, its code and its start), the
+    families' settings and the budgets of one fit."""
+
+    batch: Batch
+    knobs: Knobs
+    training: Training
+    seconds: float
+    memory_bytes: float
+    log_level: str
+
+
+@dataclass(frozen=True)
+class Work:
+    """One job with its pair, run in a worker process."""
+
+    job: Job
+    pair: Pair
+    context: Context
+
+
+def main(
+    argv: list[str],
+    config: PaperConfig | None = None,
+    commit: Callable[[], str] | None = None,
+    dirty: Callable[[], bool] | None = None,
+    now: Callable[[], datetime] | None = None,
+    section: FamiliesSection | None = None,
+) -> None:
+    """Run the screen round by round on the workers, saving every round's outcomes under the
+    state folder, each run leaving its ledger entry -- or, given --batch, fit nothing and take
+    that saved batch."""
+    args = _arguments(argv)
+    for path in (args.ns, args.bh, args.split):
+        assert path.is_file(), f"input not found: {path}"
+    assert len(args.keeps) == len(args.budgets) - 1, "one keep per round after the first"
+    config = config or load_config()
+    settings = config.network
+    section = section or load_section(FamiliesSection, SECTION_TOML)
+    training = make_training(settings)
+    tables = {
+        NEUTRON_STARS.dataset: pd.read_parquet(args.ns),
+        BLACK_HOLES.dataset: pd.read_parquet(args.bh),
+    }
+    split = pd.read_parquet(args.split)
+    by_key = {(p.dataset, p.target): p for p in pairs(tables, split, SPECS, TARGETS)}
+    with at_level(settings.log_level):
+        if args.batch is None:
+            batch = _run_screen(args, by_key, training, settings.log_level, commit, dirty, now)
+        else:
+            batch = args.batch
+            logger.info("rebuilding the assets from batch %s; nothing is fitted", batch)
+        saved = outcomes_path(args.state, SECTION, batch)
+        outcomes = outcomes_from_json(saved.read_text())
+        if args.figures is not None:
+            apply_style(config.plot, NOTATION_TEX.read_text())
+            panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
+            paths = trajectories(outcomes)
+            _write_figures(args.figures / SECTION, panels, paths, config.plot, args.minutes)
+            return
+        out = args.assets / SECTION
+        out.mkdir(parents=True, exist_ok=True)
+        for stale in out.iterdir():  # a deselected figure's wrapper of an earlier run (W-102)
+            stale.unlink()
+        _store(args.state, families_stored(outcomes, config.tables.families), numbers(outcomes))
+        logger.info(
+            "done: family table and numbers of batch %s, %d outcomes -> %s",
+            batch,
+            len(outcomes),
+            args.state / SECTION,
+        )
+        # The wrappers include the picked variant's PNG, which --figures draws under build/figures.
+        picks = section.variants
+        wrappers: dict[FamiliesFigure, tuple[str, str]] = {
+            "parity": (PARITY, parity_tex(picks.parity)),
+            "errors": (ERRORS, errors_tex(picks.errors)),
+            "scaling": (SCALING, scaling_tex(args.minutes, args.memory_gb, picks.scaling)),
+        }
+        for selected in section.figures:
+            name, tex = wrappers[selected]
+            write_checked(out / f"{name}.tex", tex)
+            logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.tex")
+
+
+def _parity_panels(
+    picks: Sequence[Scored],
+    by_key: Mapping[tuple[str, str], Pair],
+    ledger: Path,
+) -> list[Panel]:
+    """One panel per pair of the picks: each pick's test predictions, read from its ledger
+    entry, against the true target of the pair's test rows."""
+    series: dict[tuple[str, Target], list[Series]] = {}
+    for pick in picks:
+        job = pick.job
+        data = by_key[(job.dataset, job.target)].design
+        truth = data.y[data.test]
+        entry = entry_from_json((ledger / f"{pick.entry}.json").read_text())
+        predicted = np.array(entry.predictions)
+        assert len(predicted) == len(truth), (
+            f"entry {pick.entry}: {len(predicted)} predictions for {len(truth)} test rows"
+        )
+        label = f"{job.candidate.family} {job.candidate.unit}, {pick.folds:.2f}"
+        errors = relative_errors(truth, predicted, job.target)
+        found = Series(label, truth, predicted, errors)
+        series.setdefault((job.dataset, job.target), []).append(found)
+    return [
+        Panel(
+            dataset,
+            f"{DATASET_TEX[dataset]} {SYMBOLS[target_symbol(target)]}",
+            axis_label(target),
+            tuple(s),
+        )
+        for (dataset, target), s in series.items()
+    ]
+
+
+def _run_screen(
+    args: argparse.Namespace,
+    by_key: Mapping[tuple[str, str], Pair],
+    training: Training,
+    log_level: str,
+    commit: Callable[[], str] | None,
+    dirty: Callable[[], bool] | None,
+    now: Callable[[], datetime] | None,
+) -> str:
+    """Run every round of the screen as a new batch, saving the outcomes after each round;
+    return the batch id."""
+    batch = make_batch(
+        args.state,
+        # The screen keeps no trial journal; the batch names where one would go.
+        journal=lambda found: outcomes_path(args.state, SECTION, found).with_suffix(".journal"),
+        commit=commit or git_commit,
+        dirty=dirty or git_dirty,
+        now=now or utc_now,
+        new_id=new_id,
+    )
+    context = Context(
+        batch=batch,
+        knobs=Knobs(args.k, args.neighbours, args.knots, args.per_curve),
+        training=training,
+        seconds=args.minutes * 60.0,
+        memory_bytes=args.memory_gb * 1e9,
+        log_level=log_level,
+    )
+    batch.ledger.mkdir(parents=True, exist_ok=True)
+    saved = outcomes_path(args.state, SECTION, batch.id)
+    saved.parent.mkdir(parents=True, exist_ok=True)
+    jobs = tuple(
+        Job(pair.dataset, pair.target, candidate, args.budgets[0], 0)
+        for pair in by_key.values()
+        for candidate in candidates()
+    )
+    outcomes: list[Outcome] = []
+    for round_ in range(len(args.budgets)):
+        logger.info(
+            "round %d of %d: %d jobs at %d rows on %d workers, batch %s",
+            round_ + 1,
+            len(args.budgets),
+            len(jobs),
+            args.budgets[round_],
+            args.workers,
+            batch.id,
+        )
+        found = _run_round(jobs, by_key, context, args.workers, saved, outcomes)
+        outcomes += found
+        write_checked(saved, outcomes_to_json(outcomes))
+        if round_ + 1 < len(args.budgets):
+            jobs = next_jobs(found, args.budgets, args.keeps)
+    return batch.id
+
+
+def _run_round(
+    jobs: Sequence[Job],
+    by_key: Mapping[tuple[str, str], Pair],
+    context: Context,
+    workers: int,
+    saved: Path,
+    before: Sequence[Outcome],
+) -> list[Outcome]:
+    """One round's jobs on the workers, a line logged as each ends; outcomes in job order. The
+    earlier rounds' outcomes (`before`) and the round's finished jobs are saved after every
+    job, so a parent that dies leaves them."""
+    works = [
+        partial(screen_job, Work(job, by_key[(job.dataset, job.target)], context)) for job in jobs
+    ]
+    started = time.monotonic()
+    finished: dict[int, Outcome] = {}
+
+    def report(index: int, outcome: Outcome) -> None:
+        finished[index] = outcome
+        logger.info(job_line(outcome, len(finished), len(works), time.monotonic() - started))
+        kept = [*before, *(finished[i] for i in sorted(finished))]
+        write_checked(saved, outcomes_to_json(kept))
+
+    # Each worker logs at the screen's level with the networks' epoch tables silenced.
+    return run_jobs(
+        works,
+        workers,
+        log_level=context.log_level,
+        quiet=(surrogate.__name__,),
+        on_done=report,
+    )
+
+
+def screen_job(work: Work) -> Outcome:
+    """Run one job: fit its candidate under the wall and record its ledger entry."""
+    job, context = work.job, work.context
+
+    def record(run: Run) -> str:
+        """Write the run's ledger entry and name it."""
+        settings: dict[str, Setting] = {
+            "unit": job.candidate.unit,
+            "rows": job.rows,
+            "round": job.round,
+            **asdict(context.knobs),
+        }
+        batch = context.batch
+        meta = RunMetadata(
+            id=new_id(),
+            batch=batch.id,
+            dataset=job.dataset,
+            target=job.target,
+            candidate=job.candidate.family,
+            settings=settings,
+            commit=batch.commit,
+            dirty=batch.dirty,
+            started=batch.started,
+            epochs=None,
+        )
+        return write_entry(batch.ledger, run, meta).meta.id
+
+    fitter = fitter_of(job.candidate, work.pair.space, context.knobs, context.training)
+    return run_job(
+        job,
+        work.pair.design,
+        fitter,
+        context.training.seed,
+        context.training.valid_fraction,
+        context.knobs.per_curve,
+        context.seconds,
+        context.memory_bytes,
+        record,
+    )
+
+
+def _arguments(argv: list[str]) -> argparse.Namespace:
+    """The inputs, the asset and state folders, and the knobs; mk/paper.mk passes every knob,
+    so it is the one place their values are written."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    for name in ("ns", "bh", "split", "assets", "state"):
+        parser.add_argument(name, type=Path)
+    parser.add_argument("--k", type=int, required=True, help="the k-NN's neighbours")
+    parser.add_argument("--neighbours", type=int, required=True, help="the local RBF's")
+    parser.add_argument("--knots", type=int, required=True, help="the curve-wise spline's")
+    parser.add_argument("--per-curve", type=int, required=True, help="fewest rows per curve")
+    parser.add_argument("--budgets", type=int, nargs="+", required=True, help="rows per round")
+    parser.add_argument("--keeps", type=int, nargs="*", required=True, help="kept per round")
+    parser.add_argument("--minutes", type=float, required=True, help="time budget of a fit")
+    parser.add_argument("--memory-gb", type=float, required=True, help="memory budget of a fit")
+    parser.add_argument("--workers", type=int, required=True, help="fits at once")
+    parser.add_argument("--batch", help="fit nothing; rebuild the assets from this saved batch")
+    parser.add_argument(
+        "--figures",
+        type=Path,
+        help="with --batch: draw every figure variant as its own PNG into this dir",
+    )
+    args = parser.parse_args(argv)
+    if args.figures is not None and args.batch is None:
+        parser.error("--figures draws from a recorded batch: give --batch too")
+    return args
+
+
+def _write_figures(
+    out: Path,
+    panels: Sequence[Panel],
+    paths: Sequence[Trajectory],
+    style: PlotStyle,
+    minutes: float,
+) -> None:
+    """Every variant of the parity, error and scaling figures as <stem>_<variant>.png in out,
+    each a file of its own at the style's dpi, no contact sheet."""
+    out.mkdir(parents=True, exist_ok=True)
+    drawn = 0
+    for stem, drawers in _variant_drawers(panels, paths, style, minutes).items():
+        for variant, drawer in drawers.items():
+            fig = drawer()
+            fig.savefig(out / f"{stem}_{variant}.png", dpi=style.dpi)
+            plt.close(fig)
+            drawn += 1
+    logger.info("done: %d family figure variants -> %s", drawn, out)
+
+
+def _variant_drawers(
+    panels: Sequence[Panel],
+    paths: Sequence[Trajectory],
+    style: PlotStyle,
+    minutes: float,
+) -> dict[str, dict[str, Callable[[], Figure]]]:
+    """The drawers of every variant, per figure stem."""
+    return {
+        PARITY: {
+            v: partial(parity_figure, panels, style, v) for v in get_args(FamiliesParityVariant)
+        },
+        ERRORS: {
+            v: partial(error_figure, panels, style, v) for v in get_args(FamiliesErrorsVariant)
+        },
+        SCALING: {
+            v: partial(scaling_figure, paths, style, minutes * 60.0, v)
+            for v in get_args(FamiliesScalingVariant)
+        },
+    }
+
+
+if __name__ == "__main__":
+    # The console handler only; main sets the level from the config for the run's duration.
+    logging.basicConfig(format="%(message)s")
+    main(sys.argv[1:])

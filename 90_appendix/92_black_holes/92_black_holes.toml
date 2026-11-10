@@ -1,0 +1,21 @@
+# Section 3.2 -- which BH EDA figures and tables eda_black_holes.py renders; placed by the text.
+figures = [
+  "univariate_continuous",  # r_h, M, D, D/M raw and log10, one bar per grid value
+  "mass_radius",            # M against r_h, one line per beta
+  "charge_target",          # M against log10 D and log10 D/M, by beta
+  "existence_edge",         # each beta curve's r_h range, r_h,min marked
+]
+tables = ["univariate", "charge_correlation", "split_strategies"]
+
+# Which variant of each Section 3.2 figure the paper places; `make variants` draws them all
+# side by side under build/variants/92_black_holes/ to pick from (W-111).
+[variants]
+mass_radius = "inset"     # inset: M against r_h, the departure from GR in an inset
+                          # departure: M - r_h/2 against r_h, the GR relation as the zero line
+                          # both: the two side by side
+univariate_continuous = "histograms"  # histograms | log_counts | transposed, as in 3.1
+charge_target = "two_panels"          # two_panels: log10 D and log10 D/M | log_d: log10 D only
+existence_edge = "segments"           # segments: each curve's r_h range
+                                      # edge_line: r_h,min against beta
+                                      # zoomed: the segments near the edge
+ceilings = "annotated"                # annotated | figures_axis | one_panel, as in 3.1

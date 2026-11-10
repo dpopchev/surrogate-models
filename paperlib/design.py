@@ -1,6 +1,6 @@
 """The design-matrix contract every surrogate reads its data through (W-034).
 
-A prepared table and the frozen curve split (50_methodology/51_algorithms/split_datasets.py)
+A prepared table and the frozen curve split (90_appendix/95_algorithms/split_datasets.py)
 become one Design per dataset and target: the inputs of the dataset's curve space, each raw or
 in log10, the target (M in M_sun, or the charge target log10(D/M) of Section 3.3, W-063), one
 integer per curve for grouped splitting, and each row's test and ablation flags.
