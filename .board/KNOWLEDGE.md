@@ -29,24 +29,20 @@
 - 2026-10-12 W-128: standing: a LaTeX log never writes '<file>.tex: Overfull' (the box follows the file's open paren) -> a check on a table's fit counts the Overfull boxes supersedes: W-128#2
 - 2026-10-12 W-131: standing: still typed in Sections 5.2 to the appendix: about ten/seventy rows per curve, ripple thirty/five times, error-figure readings, GP memory arithmetic -> no macro carries them (W-131) supersedes: W-131#2
 - 2026-10-12 W-132: fact: 00_metadata/paper_knobs.py keeps a third family-tag map, SPACE_TAG, with the two networks as Net (T-348) -> W-132 moves it beside FAMILY_TAG too
-- 2026-11-10 E-012: fact: board close gates on make deliverable, never lint; the land of W-134 failed on 6 ruff I001 in tests T-353 moved -> every go word asks the lane to run make lint typecheck before its close
-- 2026-11-10 W-139: fact: T-356 gave Table an optional small_spec (the small layout writes a *{n}{x} repeat spec as given, aligned reads the columns) -> the shapes of W-139 keep or fold it
-- 2026-11-10 W-139: fact: since T-365 the split pick of representation and the two_tables pick of baseline store two tables (representation + representation_bh, baseline + baseline_folds); the section .tex inputs only the first -> W-139's render of a shape writes both into the one asset
+- 2026-11-10 E-012: standing: board close gates on make deliverable, never lint -> a lane runs make lint typecheck before its close supersedes: E-012#1
+- 2026-11-10 W-139: standing: Table.small_spec holds a *{n}{x} repeat spec -> the small layout writes it as given, aligned reads the columns supersedes: W-139#1
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 - 2026-10-07 W-047: open: what observational sigma do realistic mock observations of M and D carry (supervisors)? the data ceiling alone allows a surrogate about 1e-4 M_sun on the NS mass and 1.6e-3 dex on the NS charge (W-064) -- the surrogate's error target follows from it
 - 2026-10-10 W-068: T-206: open: best trials on range edges: BH cw knots 24 of 24, RBF pw neighbours NS 399/377 of 400, BH 51/50 of 50 -> widen KNOTS and neighbours before W-093's precision regime, or run W-093 on these? supersedes: W-068#2
 - 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
+- 2026-11-10 W-139: open: a non-default split or two_tables pick stores two tables -- does the paper then show both? (unchecked at the E-012 close) supersedes: W-139#2
 
 ## Decisions
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
 - 2026-11-10 E-009: parked -- 4 decisions, 5 deviations -> ledgers/E-009.md
-- 2026-11-10 E-012: T-381 is exempt from the close red proof: its fix is to test files, so the proof applies the fix itself; red stands on red: 6 and the land gate failure at f069e61 (developer, 2026-11-10)
-- 2026-11-10 E-012: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 8 hours) (developer, 2026-11-10)
-- 2026-11-10 E-012: each section folder is an independent module holding its data and tests; shared data passes through local/; paperlib holds what is paper-wide, the LaTeX formatting and includes that are not front matter included; one virtual environment (developer, 2026-11-10)
-- 2026-11-10 E-012: tables are built as objects, values -> Table -> renderer; figures are built apart as standalone deliverables under build/, each variant its own file to compare side by side, never one big figure of the variants -- the contact sheets of W-111 and W-115 go (developer, 2026-11-10)
 - 2026-11-10 E-013: goal: a pipeline that is the algorithm for building surrogates which minimize the relative error, extrapolate beyond the data and flag out-of-domain inputs with feedback, tested on the 2-parameter (BH) and 3-parameter (NS) maps (developer, 2026-11-10)
 - 2026-11-10 E-013: the paper's focus is the physics of compact objects; the data science goes to the appendix; MCMC is future work (developer, 2026-11-10)
 

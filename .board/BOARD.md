@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-012   | blocked: 0 | todo roots: 15 | done: 414 | pruned: 60
+open path: none   | blocked: 0 | todo roots: 15 | done: 415 | pruned: 60
 
 ## Tree
 
@@ -43,13 +43,6 @@ E-009         [doing]    The paper follows the revised structure, and the releas
   W-059  spike  [done]     Which refs.bib keys the revised structure's citations name -- T-107 [done], T-108 [pruned]   [pruned: superseded: the real references move to the standalone spike W-061 (T-118); W-059 closes on placeholder keys (T-117)], T-117 [done]
   W-060  issue  [done]     Title and outline bullets aligned to the revised structure -- T-114 [done], T-115 [done], T-116 [done]
   W-100  spike  [todo]     What the paper claims once the search names its winners   (filed during T-206) -- T-233 [todo], T-234 [todo]
-E-012         [doing]    Section modules, paperlib and standalone figures and tables
-  W-134  issue  [done]     shared/ and the paper-wide tools become the paperlib package -- T-351 [done], T-352 [done], T-353 [done], T-381 [done]
-  W-135  issue  [done]     Tables are built as objects -- T-354 [done], T-355 [done], T-356 [done], T-357 [done]
-  W-136  issue  [done]     One section builds on its own -- T-358 [done], T-359 [done], T-360 [done], T-361 [done]
-  W-137  issue  [done]     Tables and numbers pass through local/state -- T-362 [done], T-363 [done], T-364 [done], T-365 [done], T-385 [done]
-  W-138  issue  [done]     Every figure variant is its own file under build/figures -- T-366 [done], T-367 [done], T-368 [done], T-369 [done], T-387 [done]
-  W-139  issue  [done]     Every table layout and shape is its own file under build/tables -- T-370 [done], T-371 [done], T-372 [done]
 E-013         [todo]     The paper tells the physics, the data science is the appendix
   W-140  issue  [todo]     The data-science subsections become the appendix -- T-373 [todo], T-374 [todo], T-375 [todo]
   W-141  issue  [todo]     The body follows the agreed outline -- T-376 [todo], T-377 [todo]
@@ -505,6 +498,53 @@ closed 2026-10-12 -- outcome: make variants writes every variant of every figure
 
 - T-350 [done] Guard the 5.2 captions' cross-references test-first -> 60_results/62_families/screen_families.py
 
+### E-012 [done] Section modules, paperlib and standalone figures and tables
+
+closed 2026-11-10 -- outcome: Each section folder is a module with its own make target, settings file and tests; shared code lives in the paperlib package; tables are typed objects stored in local/state and rendered from there; make figures and make tables write every variant as a standalone file under build/; make deliverable builds article.pdf throughout. -- ledger: ledgers/E-012.md
+
+#### W-134 issue [done] shared/ and the paper-wide tools become the paperlib package
+
+- T-351 [done] Add the assets comparison -> make assets-baseline and make assets-same in mk/paper.mk
+- T-352 [done] Move shared/ into the package paperlib/ -> paperlib/ with every import rewritten
+- T-353 [done] Move the tools and LaTeX includes of 00_metadata into paperlib -> paperlib/tools/ and paperlib/latex/
+- T-381 [done] Sort the imports of the moved tool tests -> paperlib/tools/test_*.py pass ruff
+
+#### W-135 issue [done] Tables are built as objects
+
+- T-354 [done] Write the Table object and its renderer test-first -> paperlib/tables.py
+- T-355 [done] Port the Section 3 tables to Table -> eda_neutron_stars.py, eda_black_holes.py, paperlib/ceilings.py
+- T-356 [done] Port the methodology and results tables to Table -> fit_baseline.py and the three results scripts
+- T-357 [done] Remove the string table renderer -> paperlib/eda.py without booktabs and its parsers
+
+#### W-136 issue [done] One section builds on its own
+
+- T-358 [done] Load the settings of a section from its own toml -> load_section in paperlib/config.py
+- T-359 [done] Split paper.toml into the section settings files -> <section>/<section>.toml beside each script
+- T-360 [done] Move the recipes of each section into its folder -> <section>/<section>.mk with a target named after the folder
+- T-361 [done] Guard the section boundary -> a test that no section imports another
+
+#### W-137 issue [done] Tables and numbers pass through local/state
+
+- T-362 [done] Store a Table as JSON -> to_json and from_json in paperlib/tables.py
+- T-363 [done] Render stored tables and numbers into assets -> paperlib/tools/render_assets.py
+- T-364 [done] Hand the Section 3 tables and numbers through local/state -> 41, 42 and 43 write JSON, render_assets writes the assets
+- T-365 [done] Hand the methodology and results tables and numbers through local/state -> 51, 61, 62 and 63 write JSON
+- T-385 [done] Keep the table and preset variants running -> mk/paper.mk passes --state and renders the stored tables
+
+#### W-138 issue [done] Every figure variant is its own file under build/figures
+
+- T-366 [done] Draw every Section 3 figure variant as its own file -> a figures mode in eda_neutron_stars.py and eda_black_holes.py
+- T-367 [done] Draw every methodology and results figure variant as its own file -> a figures mode in fit_baseline.py, screen_families.py and tune_survivors.py
+- T-368 [done] Remove the contact sheets -> paperlib/plots.py without contact_sheet, the presets as standalone files
+- T-369 [done] Wire make figures and the picks of the paper -> a figures target in mk/paper.mk, the paper includes build/figures
+- T-387 [done] Write the parity wrapper on every 5.1 rebuild -> fit_baseline.py --tables writes the picked wrapper and drops the stale parity PNG
+
+#### W-139 issue [done] Every table layout and shape is its own file under build/tables
+
+- T-370 [done] Turn the table shapes into functions over Table -> one Table -> Table function per shape in the four scripts
+- T-371 [done] Render every table layout and shape as a standalone PDF -> paperlib/tools/table_pages.py and make tables
+- T-372 [done] Remove the table environment overrides -> no PAPER__TABLES__ left, table-variants gone
+
 ### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
 
 closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/python.md, When make check runs, Then it passes with the repository root on pytest pythonpath and the python files matching the add-python COLOCATED templates. -- ledger: ledgers/W-005.md
@@ -805,38 +845,6 @@ flowchart TD
   E009 --> W100["W-100 spike todo: What the paper claims once the search names its winners"]
   W100 --> T233["T-233 todo: List every claim of the title block, abstract, introduction, Section 3.4 and Section 7 against Section 5 -> Findings on W-100"]
   W100 --> T234["T-234 todo: Decide the thesis with the developer and the supervisors -> the W-100 spike decision"]
-  E012["E-012 doing: Section modules, paperlib and standalone figures and tables"]
-  E012 --> W134["W-134 issue done: shared/ and the paper-wide tools become the paperlib package"]
-  W134 --> T351["T-351 done: Add the assets comparison -> make assets-baseline and make assets-same in mk/paper.mk"]
-  W134 --> T352["T-352 done: Move shared/ into the package paperlib/ -> paperlib/ with every import rewritten"]
-  W134 --> T353["T-353 done: Move the tools and LaTeX includes of 00_metadata into paperlib -> paperlib/tools/ and paperlib/latex/"]
-  W134 --> T381["T-381 done: Sort the imports of the moved tool tests -> paperlib/tools/test_*.py pass ruff"]
-  E012 --> W135["W-135 issue done: Tables are built as objects"]
-  W135 --> T354["T-354 done: Write the Table object and its renderer test-first -> paperlib/tables.py"]
-  W135 --> T355["T-355 done: Port the Section 3 tables to Table -> eda_neutron_stars.py, eda_black_holes.py, paperlib/ceilings.py"]
-  W135 --> T356["T-356 done: Port the methodology and results tables to Table -> fit_baseline.py and the three results scripts"]
-  W135 --> T357["T-357 done: Remove the string table renderer -> paperlib/eda.py without booktabs and its parsers"]
-  E012 --> W136["W-136 issue done: One section builds on its own"]
-  W136 --> T358["T-358 done: Load the settings of a section from its own toml -> load_section in paperlib/config.py"]
-  W136 --> T359["T-359 done: Split paper.toml into the section settings files -> <section>/<section>.toml beside each script"]
-  W136 --> T360["T-360 done: Move the recipes of each section into its folder -> <section>/<section>.mk with a target named after the folder"]
-  W136 --> T361["T-361 done: Guard the section boundary -> a test that no section imports another"]
-  E012 --> W137["W-137 issue done: Tables and numbers pass through local/state"]
-  W137 --> T362["T-362 done: Store a Table as JSON -> to_json and from_json in paperlib/tables.py"]
-  W137 --> T363["T-363 done: Render stored tables and numbers into assets -> paperlib/tools/render_assets.py"]
-  W137 --> T364["T-364 done: Hand the Section 3 tables and numbers through local/state -> 41, 42 and 43 write JSON, render_assets writes the assets"]
-  W137 --> T365["T-365 done: Hand the methodology and results tables and numbers through local/state -> 51, 61, 62 and 63 write JSON"]
-  W137 --> T385["T-385 done: Keep the table and preset variants running -> mk/paper.mk passes --state and renders the stored tables"]
-  E012 --> W138["W-138 issue done: Every figure variant is its own file under build/figures"]
-  W138 --> T366["T-366 done: Draw every Section 3 figure variant as its own file -> a figures mode in eda_neutron_stars.py and eda_black_holes.py"]
-  W138 --> T367["T-367 done: Draw every methodology and results figure variant as its own file -> a figures mode in fit_baseline.py, screen_families.py and tune_survivors.py"]
-  W138 --> T368["T-368 done: Remove the contact sheets -> paperlib/plots.py without contact_sheet, the presets as standalone files"]
-  W138 --> T369["T-369 done: Wire make figures and the picks of the paper -> a figures target in mk/paper.mk, the paper includes build/figures"]
-  W138 --> T387["T-387 done: Write the parity wrapper on every 5.1 rebuild -> fit_baseline.py --tables writes the picked wrapper and drops the stale parity PNG"]
-  E012 --> W139["W-139 issue done: Every table layout and shape is its own file under build/tables"]
-  W139 --> T370["T-370 done: Turn the table shapes into functions over Table -> one Table -> Table function per shape in the four scripts"]
-  W139 --> T371["T-371 done: Render every table layout and shape as a standalone PDF -> paperlib/tools/table_pages.py and make tables"]
-  W139 --> T372["T-372 done: Remove the table environment overrides -> no PAPER__TABLES__ left, table-variants gone"]
   E013["E-013 todo: The paper tells the physics, the data science is the appendix"]
   E013 --> W140["W-140 issue todo: The data-science subsections become the appendix"]
   W140 --> T373["T-373 todo: Move the Section 3 folders into the appendix -> 90_appendix/91_neutron_stars to 94_hypotheses"]
@@ -881,8 +889,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E012 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W134,T351,T352,T353,T381,W135,T354,T355,T356,T357,W136,T358,T359,T360,T361,W137,T362,T363,T364,T365,T385,W138,T366,T367,T368,T369,T387,W139,T370,T371,T372 done
+  class E006,E009 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,E013,W140,T373,T374,T375,W141,T376,T377,W142,T378,T379,T380,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W146,T386 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
