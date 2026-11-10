@@ -13,6 +13,7 @@ Run as `uv run python <this file> <ns.parquet> <bh.parquet> <split.parquet> <ass
 <state dir>` (mk/paper.mk does).
 """
 
+import json
 import logging
 import multiprocessing
 import sys
@@ -70,7 +71,7 @@ from paperlib.design import (
     pairs,
 )
 from paperlib.diagnostics import curve_overlay, error_cdf, loss_curve
-from paperlib.eda import CurveSpace, curve_ids, render_macros, sci_tex, text_width_size
+from paperlib.eda import CurveSpace, curve_ids, sci_tex, text_width_size
 from paperlib.families import make_mean_reference, make_nearest_reference
 from paperlib.harness import FitRows, Fitter, Predictor, Run, Timing, harness
 from paperlib.plots import (
@@ -109,6 +110,7 @@ from paperlib.surrogate import (
     sklearn_fitter,
 )
 from paperlib.tables import Cell, Table, Text, aligns, fixed, render
+from paperlib.tables import to_json as table_json
 from paperlib.trials import ReportEpochs, open_study, tell_run
 from paperlib.workers import run_jobs
 
@@ -460,8 +462,16 @@ def baseline_table(
     layout: TableLayout = "small",
     shape: BaselineTableLayout = "one_table",
 ) -> str:
-    """The Section 4.1 table: every predictor on every dataset and target, in one table or as
-    a test table and a folds table (two_tables)."""
+    """The Section 4.1 table in the paper's table layout."""
+    return "".join(render(table, layout) for table in baseline_objects(pairs, shape).values())
+
+
+def baseline_objects(
+    pairs: list[PairScores], shape: BaselineTableLayout = "one_table"
+) -> dict[str, Table]:
+    """The Section 4.1 table as objects by stored name, to store as JSON: every predictor on
+    every dataset and target, in one table or as a test table and a folds table (two_tables,
+    the folds one as baseline_folds)."""
     scored = [(pair, one) for pair in pairs for one in pair.scored]
     match shape:
         case "one_table":
@@ -477,7 +487,7 @@ def baseline_table(
                 (_texts("Pair", "Predictor", "Test", "Folds", "Figures", "Fit s", "Call s"),),
                 tuple(_row(pair, one) for pair, one in scored),
             )
-            return render(table, layout)
+            return {"baseline": table}
         case "two_tables":
             test = Table(
                 "baseline",
@@ -499,7 +509,7 @@ def baseline_table(
                 (_texts("Pair", "Predictor", "Folds"),),
                 tuple(_folds_row(pair, one) for pair, one in scored),
             )
-            return render(test, layout) + render(folds, layout)
+            return {"baseline": test, "baseline_folds": folds}
         case _:
             assert_never(shape)
 
@@ -869,28 +879,41 @@ def _ledger_writer(
     return record
 
 
+def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str] | None) -> None:
+    """Store the tables as JSON by name, and the numbers when given, under the section's state
+    folder, for paperlib/tools/render_assets.py to write the assets from; an earlier run's
+    tables go."""
+    folder = state / "tables"
+    folder.mkdir(parents=True, exist_ok=True)
+    for stale in folder.glob("*.json"):
+        stale.unlink()
+    for name, table in tables.items():
+        (folder / f"{name}.json").write_text(table_json(table))
+    if macros is not None:
+        (state / "numbers.json").write_text(json.dumps(dict(macros)))
+
+
 def _write_section(
     out: Path,
+    state: Path,
     pairs: list[PairScores],
     fits: Mapping[tuple[str, str], Fit],
     config: PaperConfig,
     mares: Mapping[str, ChargeMares],
     variants: AlgorithmsVariants,
 ) -> None:
-    """Empty the section's asset folder, then write the baseline table, the NS mass numbers
-    with the charge MAREs of each dataset, and the parity figure in its picked variant."""
+    """Empty the section's asset folder, then write the parity figure in its picked variant and
+    store the baseline table and the NS mass numbers with the charge MAREs of each dataset."""
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
-    table = baseline_table(pairs, config.tables.layout, config.tables.baseline)
-    (out / f"{SECTION}_tab_baseline.tex").write_text(table)
     variant = variants.parity
     figure = parity_figure(fits, config.plot, variant)
     figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)
     plt.close(figure)
     (out / f"{PARITY}.tex").write_text(figure_tex(variant))
     macros = numbers(fits[NEUTRON_STARS.dataset, "mass"]) | charge_numbers(mares)
-    (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
+    _store(state, baseline_objects(pairs, config.tables.baseline), macros)
 
 
 def _latest_baseline(entries: Sequence[LedgerEntry]) -> str:
@@ -1043,10 +1066,8 @@ def main(
     if tables_only:
         keys = [(p.dataset, p.target) for p in found_pairs]
         scored = pair_scores(read_ledger(Path(argv[4]) / "ledger"), keys)
-        out.mkdir(parents=True, exist_ok=True)
-        table = out / f"{SECTION}_tab_baseline.tex"
-        table.write_text(baseline_table(scored, config.tables.layout, config.tables.baseline))
-        logger.info("done: baseline table rebuilt from the ledger, nothing fitted -> %s", table)
+        _store(state, baseline_objects(scored, config.tables.baseline), None)
+        logger.info("done: baseline table rebuilt from the ledger, nothing fitted -> %s", state)
         return
     total = sum(len(set(p.design.fold[p.design.fold >= 0].tolist())) + 1 for p in found_pairs)
     first = time.time()
@@ -1109,9 +1130,11 @@ def main(
         mares[dataset] = charge_mares(mass, charge)
     # The section's assets are written last, into the last run's log that make follow shows.
     with _logging_into(run / "train.log", settings.log_level):
-        _write_section(out, scores, fits, config, mares, section.variants)
+        _write_section(out, state, scores, fits, config, mares, section.variants)
         logger.info("all %d fits done in %s", total, duration_text(time.time() - first))
-        logger.info("done: baseline table, NS mass numbers and parity figure -> %s", out)
+        logger.info(
+            "done: baseline table and NS mass numbers -> %s, parity figure -> %s", state, out
+        )
 
 
 if __name__ == "__main__":

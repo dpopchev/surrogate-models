@@ -73,7 +73,7 @@ from paperlib.design import (
     pairs,
     target_symbol,
 )
-from paperlib.eda import camel, number_tex, render_macros
+from paperlib.eda import camel, number_tex
 from paperlib.harness import Run, harness
 from paperlib.plots import (
     SYMBOLS,
@@ -99,7 +99,7 @@ from paperlib.search import (
     space_of,
 )
 from paperlib.surrogate import Training, make_training
-from paperlib.tables import Cell, Column, Plain, Span, Table, Text, render
+from paperlib.tables import Cell, Column, Plain, Span, Table, Text, render, to_json
 from paperlib.trials import open_study
 from paperlib.workers import run_jobs
 
@@ -419,9 +419,18 @@ def tuning_table(
     layout: TableLayout = "small",
     shape: TuningTableLayout = "screen_tuned_test",
 ) -> str:
-    """The tuning table: per pair and candidate the screen's figures, the tuned fold and test
-    figures, and the pair's data ceiling; without the screen (no_screen), or with the tuned
-    minus the screen figures beside the tuned ones (delta)."""
+    """The tuning table in the paper's table layout."""
+    return render(tuning_object(outcomes, screen, shape), layout)
+
+
+def tuning_object(
+    outcomes: Sequence[Outcome],
+    screen: Mapping[Job, float],
+    shape: TuningTableLayout = "screen_tuned_test",
+) -> Table:
+    """The tuning table as an object, to store as JSON: per pair and candidate the screen's
+    figures, the tuned fold and test figures, and the pair's data ceiling; without the screen
+    (no_screen), or with the tuned minus the screen figures beside the tuned ones (delta)."""
     rows = []
     for outcome in outcomes:
         job = outcome.job
@@ -460,7 +469,7 @@ def tuning_table(
             assert_never(shape)
     fitted = [Column("l", before="@{}"), Column("l"), Column("l"), *(Column("r") for _ in heads)]
     fitted.append(Column("r"))
-    table = Table(
+    return Table(
         "tuning",
         "Each short-listed candidate of \\cref{tab:families} after the same budget of trials "
         "over its own hyperparameters: the significant figures kept at the 95th percentile of "
@@ -472,7 +481,18 @@ def tuning_table(
         tuple(rows),
         spec,
     )
-    return render(table, layout)
+
+
+def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
+    """Store the tables as JSON by name and the numbers under the section's state folder, for
+    paperlib/tools/render_assets.py to write the assets from; an earlier run's tables go."""
+    folder = state / SECTION / "tables"
+    folder.mkdir(parents=True, exist_ok=True)
+    for stale in folder.glob("*.json"):
+        stale.unlink()
+    for name, table in tables.items():
+        (folder / f"{name}.json").write_text(to_json(table))
+    (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
 
 
 def _math_cell(text: str) -> Cell:
@@ -1092,19 +1112,19 @@ def main(
         screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
-        path = out / f"{SECTION}_tab_tuning.tex"
-        write_checked(
-            path, tuning_table(outcomes, screen, config.tables.layout, config.tables.tuning)
-        )
-        logger.info("done: tuning table of batch %s, %d jobs -> %s", batch, len(outcomes), path)
         # A batch's figures show its own jobs, in the order it ran them.
         ran = tuple(outcome.job for outcome in outcomes)
         points = journal_points(saved.with_suffix(".journal"), batch, ran)
-        numbers_tex = out / f"{SECTION}_num.tex"
         found = numbers(outcomes, points, screen)
         found |= analysis(outcomes, points, screen, settings.seed)
-        write_checked(numbers_tex, render_macros(found))
-        logger.info("done: tuning numbers of batch %s -> %s", batch, numbers_tex)
+        table = tuning_object(outcomes, screen, config.tables.tuning)
+        _store(args.state, {"tuning": table}, found)
+        logger.info(
+            "done: tuning table and numbers of batch %s, %d jobs -> %s",
+            batch,
+            len(outcomes),
+            args.state / SECTION,
+        )
         apply_style(config.plot, NOTATION_TEX.read_text())
         picks = section.variants
         drawn = (

@@ -9,10 +9,11 @@ and is scored through paperlib/harness.py with the weighted k-NN, the local RBF
 """
 
 import argparse
+import json
 import logging
 import math
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from datetime import datetime
 from functools import partial
@@ -33,7 +34,6 @@ from paperlib.batches import (
     new_id,
     read_ledger,
     utc_now,
-    write_checked,
     write_entry,
 )
 from paperlib.candidates import Unit, curve_columns
@@ -52,14 +52,14 @@ from paperlib.design import (
     design,
     pair_tex,
 )
-from paperlib.eda import make_curve_space, render_macros
+from paperlib.eda import make_curve_space
 from paperlib.families import make_knn, make_rbf
 from paperlib.harness import Fitter, Run, harness
 from paperlib.runs import LedgerEntry, RunMetadata, Setting
 from paperlib.scorecard import significant_figures
 from paperlib.surrogate import Training, make_training, network_fitter, sklearn_fitter
 from paperlib.tables import Cell as TableCell
-from paperlib.tables import Column, Plain, Span, Spread, Table, Text, render
+from paperlib.tables import Column, Plain, Span, Spread, Table, Text, render, to_json
 from paperlib.trials import ReportEpochs, open_study, tell_run
 from paperlib.workers import run_jobs
 
@@ -323,23 +323,38 @@ def representation_table(
     """The Section 5.1 table in its shape: every pair in eight columns, the NS and the BH pairs
     as two such tables (split), or a row per pair and model with a column per representation
     (transposed)."""
+    tables = representation_objects(found, layout, shape)
+    return "".join(render(table, layout) for table in tables.values())
+
+
+def representation_objects(
+    found: Sequence[Score],
+    layout: TableLayout = "small",
+    shape: RepresentationTableLayout = "eight_columns",
+) -> dict[str, Table]:
+    """The Section 5.1 table in its shape as objects by stored name, to store as JSON: one
+    table, or the NS and the BH tables (split, the BH one as representation_bh). The caption
+    names the spread as the layout writes it."""
     caption = REPRESENTATION_CAPTION.replace(SPREAD_TEX["small"], SPREAD_TEX[layout])
     match shape:
         case "eight_columns":
-            return _eight_columns(found, layout, "representation", caption)
+            return {"representation": _eight_columns(found, "representation", caption)}
         case "split":
             ns = [s for s in found if s.dataset == NEUTRON_STARS.dataset]
             bh = [s for s in found if s.dataset != NEUTRON_STARS.dataset]
-            return _eight_columns(
-                ns, layout, "representation", f"Neutron stars. {caption}"
-            ) + _eight_columns(bh, layout, "representation-bh", "Black holes, as above.")
+            return {
+                "representation": _eight_columns(ns, "representation", f"Neutron stars. {caption}"),
+                "representation_bh": _eight_columns(
+                    bh, "representation-bh", "Black holes, as above."
+                ),
+            }
         case "transposed":
-            return _transposed(found, layout)
+            return {"representation": _transposed(found)}
         case _:
             assert_never(shape)
 
 
-def _transposed(found: Sequence[Score], layout: TableLayout) -> str:
+def _transposed(found: Sequence[Score]) -> Table:
     """One row per pair and model, a column per representation, each cell test / folds; a
     cell is text in either layout, so the caption keeps the spread as the subscript."""
     by_key = {(s.dataset, s.target, s.representation, s.model): s for s in found}
@@ -364,17 +379,16 @@ def _transposed(found: Sequence[Score], layout: TableLayout) -> str:
     fitted = [Column("l", before="@{}"), Column("l"), *(Column("r") for _ in shown)]
     columns = (*fitted[:-1], replace(fitted[-1], after="@{}"))
     header = (tuple(Text(h) for h in ("Pair", "Model", *(REPRESENTATION_TEX[r] for r in shown))),)
-    table = Table(
+    return Table(
         "representation",
         f"{REPRESENTATION_CAPTION} Each cell: test / folds.",
         columns,
         header,
         tuple(rows),
     )
-    return render(table, layout)
 
 
-def _eight_columns(found: Sequence[Score], layout: TableLayout, label: str, caption: str) -> str:
+def _eight_columns(found: Sequence[Score], label: str, caption: str) -> Table:
     """One row per pair and representation, each model's test figures and fold figures (mean
     +/- standard deviation over folds and seeds), a fold entry in bold where it beats the
     pair's baseline at that model."""
@@ -411,8 +425,7 @@ def _eight_columns(found: Sequence[Score], layout: TableLayout, label: str, capt
         tuple(Text(h) for h in ("", "", *("Test", "Folds") * 3)),
     )
     spec = "@{}l@{\\hspace{8pt}}l*{6}{@{\\hspace{8pt}}r}@{}"
-    table = Table(label, caption, columns, header, tuple(rows), spec)
-    return render(table, layout)
+    return Table(label, caption, columns, header, tuple(rows), spec)
 
 
 def _entry(score: Score | None, baseline: Score | None) -> tuple[TableCell, TableCell]:
@@ -557,14 +570,23 @@ def screen_job(work: Work) -> None:
     )
 
 
-def _write_table(out: Path, table: str) -> Path:
-    """Empty the section's asset folder, then write the table; it must read back unchanged."""
+def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
+    """Store the tables as JSON by name and the numbers under the section's state folder, for
+    paperlib/tools/render_assets.py to write the assets from; an earlier run's tables go."""
+    folder = state / SECTION / "tables"
+    folder.mkdir(parents=True, exist_ok=True)
+    for stale in folder.glob("*.json"):
+        stale.unlink()
+    for name, table in tables.items():
+        (folder / f"{name}.json").write_text(to_json(table))
+    (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
+
+
+def _empty(out: Path) -> None:
+    """Empty the section's asset folder of an earlier run's files."""
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
-    path = out / f"{SECTION}_tab_representation.tex"
-    write_checked(path, table)
-    return path
 
 
 def _arguments(argv: list[str]) -> argparse.Namespace:
@@ -610,10 +632,12 @@ def main(
         entries = [entry for entry in read_ledger(ledger) if entry.meta.batch == batch]
         assert len(entries) == jobs, f"batch {batch}: {len(entries)} ledger entries for {jobs} jobs"
         found = scores(entries)
-        table = representation_table(found, config.tables.layout, config.tables.representation)
-        path = _write_table(args.assets / SECTION, table)
-        write_checked(path.with_name(f"{SECTION}_num.tex"), render_macros(numbers(found)))
-        logger.info("done: representation table and numbers of batch %s -> %s", batch, path)
+        tables = representation_objects(found, config.tables.layout, config.tables.representation)
+        _empty(args.assets / SECTION)
+        _store(args.state, tables, numbers(found))
+        logger.info(
+            "done: representation table and numbers of batch %s -> %s", batch, args.state / SECTION
+        )
 
 
 if __name__ == "__main__":

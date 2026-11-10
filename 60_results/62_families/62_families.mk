@@ -15,10 +15,18 @@ FAMILIES_KNOBS  := --k 8 --neighbours 100 --knots 8 --per-curve 10 \
 # Empty it to refit the whole screen (hours): make families FAMILIES_BATCH=
 FAMILIES_BATCH  ?= 01a11be4-6eca-7427-a5dd-a97dd7a0194d
 
-$(FAMILIES_ASSETS): $(FAMILIES) paper.toml $(FAMILIES_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+# The script stores the table and numbers as JSON under $(STATE)/62_families/ and still writes
+# the figures; render_assets.py writes the table and numbers assets from the JSON, after the
+# script has emptied the folder. One grouped rule, so a build that lost the table reruns the
+# script, as one that lost the numbers does.
+RENDER_ASSETS  := paperlib/tools/render_assets.py
+FAMILIES_STATE := $(STATE)/62_families
+
+$(FAMILIES_STATE)/numbers.json $(FAMILIES_ASSETS) &: $(FAMILIES) $(RENDER_ASSETS) paper.toml $(FAMILIES_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(FAMILIES_BATCH),rebuilding the family table from batch $(FAMILIES_BATCH),screening the families ($(FAMILIES_KNOBS)) -- one line per finished job))
 	@$(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(FAMILIES_KNOBS) $(if $(FAMILIES_BATCH),--batch $(FAMILIES_BATCH))
-	$(call log_done,family table written to $@)
+	@$(RUN) python $(RENDER_ASSETS) $(FAMILIES_STATE) $(ASSETS)
+	$(call log_done,family table and numbers rendered to $(dir $(FAMILIES_ASSETS)))
 
 # A paper asset while its batch is recorded: make assets rebuilds it in seconds, never a screen.
 PAPER_ASSETS += $(if $(FAMILIES_BATCH),$(FAMILIES_ASSETS))

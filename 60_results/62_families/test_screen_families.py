@@ -1,5 +1,6 @@
 """Facts about the family screen behind Section 5.2, on tiny synthetic data."""
 
+import json
 import time
 from collections.abc import Callable
 from dataclasses import replace
@@ -46,6 +47,7 @@ from screen_families import (
 from paperlib.config import PaperConfig
 from paperlib.design import Design, Target
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
+from paperlib.tables import from_json, render
 
 # The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
 ToyInputs = Callable[[Path], tuple[Path, Path, Path]]
@@ -288,9 +290,15 @@ TOY_KNOBS = [
 ]
 
 
+def saved_batch(state: Path) -> Path:
+    """The one batch file under a section's state folder, the stored numbers aside."""
+    (saved,) = (path for path in (state / SECTION).glob("*.json") if path.name != "numbers.json")
+    return saved
+
+
 @pytest.mark.functional
 def test_main_saves_the_outcomes_of_every_round(ran: Path) -> None:
-    (saved,) = (ran / "state" / SECTION).glob("*.json")
+    saved = saved_batch(ran / "state")
     # Per pair: 12 candidates, then 3 of each unit, then 2 of each unit.
     assert len(outcomes_from_json(saved.read_text())) == 4 * (12 + 6 + 4)
 
@@ -338,7 +346,7 @@ def test_main_writes_only_the_selected_figure_and_its_wrapper(
     ran: Path, tmp_path: Path, toy_inputs: ToyInputs
 ) -> None:
     """Rebuilt from the ran batch into a folder of its own, with paper.toml selecting parity."""
-    (saved,) = (ran / "state" / SECTION).glob("*.json")
+    saved = saved_batch(ran / "state")
     ns, bh, split_file = toy_inputs(tmp_path)
     config = PaperConfig.model_validate({"plot": {"usetex": False}})
     paths = [str(ns), str(bh), str(split_file), str(tmp_path / "assets"), str(ran / "state")]
@@ -355,7 +363,7 @@ def test_main_writes_only_the_selected_figure_and_its_wrapper(
 def test_main_removes_a_deselected_figure_s_wrapper_of_an_earlier_run(
     ran: Path, tmp_path: Path, toy_inputs: ToyInputs
 ) -> None:
-    (saved,) = (ran / "state" / SECTION).glob("*.json")
+    saved = saved_batch(ran / "state")
     ns, bh, split_file = toy_inputs(tmp_path)
     config = PaperConfig.model_validate({"plot": {"usetex": False}})
     out = tmp_path / "assets" / SECTION
@@ -372,9 +380,21 @@ def test_main_removes_a_deselected_figure_s_wrapper_of_an_earlier_run(
 
 
 @pytest.mark.functional
-def test_main_writes_the_family_table(ran: Path) -> None:
-    table = ran / "assets" / SECTION / f"{SECTION}_tab_families.tex"
-    assert len(table_rows(table.read_text())) == 12
+def test_main_stores_the_family_table_as_json(ran: Path) -> None:
+    folder = ran / "state" / SECTION / "tables"
+    assert {path.stem for path in folder.glob("*.json")} == {"families"}
+
+
+@pytest.mark.functional
+def test_main_stores_a_family_table_row_per_candidate(ran: Path) -> None:
+    stored = (ran / "state" / SECTION / "tables" / "families.json").read_text()
+    assert len(table_rows(render(from_json(stored), "small"))) == 12
+
+
+@pytest.mark.functional
+def test_main_stores_the_numbers_as_json(ran: Path) -> None:
+    stored = json.loads((ran / "state" / SECTION / "numbers.json").read_text())
+    assert stored
 
 
 def on_ns_mass(candidate: Candidate, rows: int, folds: float) -> Scored:

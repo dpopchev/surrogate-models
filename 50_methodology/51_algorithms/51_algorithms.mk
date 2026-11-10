@@ -20,10 +20,17 @@ BASELINE        := 50_methodology/51_algorithms/fit_baseline.py
 BASELINE_TOML   := 50_methodology/51_algorithms/51_algorithms.toml
 BASELINE_ASSETS := $(ASSETS)/51_algorithms/51_algorithms_num.tex
 
-$(BASELINE_ASSETS): $(BASELINE) paper.toml $(BASELINE_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+# The script stores the table and numbers as JSON under $(STATE)/51_algorithms/ and still writes
+# the parity figure (after emptying the asset folder); render_assets.py writes the table and
+# numbers assets from the JSON. One grouped rule, so a build that lost the numbers reruns the fit.
+RENDER_ASSETS  := paperlib/tools/render_assets.py
+BASELINE_STATE := $(STATE)/51_algorithms
+
+$(BASELINE_STATE)/numbers.json $(BASELINE_ASSETS) &: $(BASELINE) $(RENDER_ASSETS) paper.toml $(BASELINE_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,fitting the baseline on NS and BH$(comma) mass and charge -- one line per epoch; make follow shows it from any terminal)
 	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE)
-	$(call log_done,baseline table$(comma) numbers and parity figure written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
+	@$(RUN) python $(RENDER_ASSETS) $(BASELINE_STATE) $(ASSETS)
+	$(call log_done,baseline table and numbers rendered and parity figure written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
 
 .PHONY: baseline
 baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1
@@ -35,8 +42,9 @@ baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1
 BASELINE_TABLE := $(ASSETS)/51_algorithms/51_algorithms_tab_baseline.tex
 PAPER_ASSETS   += $(BASELINE_TABLE)
 
-$(BASELINE_TABLE): $(BASELINE) paper.toml $(BASELINE_TOML) $(PAPERLIB) $(TABLE_DATA) $(wildcard $(STATE)/ledger)
-	@if out=$$($(RUN) python $(BASELINE) $(TABLE_DATA) $(ASSETS) $(STATE) --tables 2>&1); then \
+$(BASELINE_TABLE): $(BASELINE) $(RENDER_ASSETS) paper.toml $(BASELINE_TOML) $(PAPERLIB) $(TABLE_DATA) $(wildcard $(STATE)/ledger)
+	@if out=$$($(RUN) python $(BASELINE) $(TABLE_DATA) $(ASSETS) $(STATE) --tables 2>&1) \
+	  && out=$$($(RUN) python $(RENDER_ASSETS) $(BASELINE_STATE) $(ASSETS) 2>&1); then \
 	  printf "$(BOLD)$(GREEN)%s$(RESET) %s\n" "[DONE]" "baseline table rebuilt from the ledger -> $@" >&2; \
 	elif printf '%s' "$$out" | grep -q 'no baseline batch in the ledger'; then \
 	  printf "$(BOLD)$(YELLOW)%s$(RESET) %s\n" "[WARN]" "no baseline batch in the ledger -- $@ kept; make baseline fits one" >&2; \

@@ -12,10 +12,18 @@ REPRESENTATION_KNOBS  := --k 8 --neighbours 100 --knots 8 --seeds 3
 # make representation REPRESENTATION_BATCH=
 REPRESENTATION_BATCH  ?= 01a11acc-9832-7478-8831-1adfdc78f228
 
-$(REPRESENTATION_ASSETS): $(REPRESENTATION) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+# The script stores the table and numbers as JSON under $(STATE)/61_representation/ (after
+# emptying the asset folder); render_assets.py writes the table and numbers assets from the JSON.
+# One grouped rule, so a build that lost the table reruns the script, as one that lost the
+# numbers does.
+RENDER_ASSETS        := paperlib/tools/render_assets.py
+REPRESENTATION_STATE := $(STATE)/61_representation
+
+$(REPRESENTATION_STATE)/numbers.json $(REPRESENTATION_ASSETS) &: $(REPRESENTATION) $(RENDER_ASSETS) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(REPRESENTATION_BATCH),rebuilding the representation table from batch $(REPRESENTATION_BATCH),screening the representations ($(REPRESENTATION_KNOBS)) -- follow the trials with make dashboard))
 	@$(RUN) python $(REPRESENTATION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(REPRESENTATION_KNOBS) $(if $(REPRESENTATION_BATCH),--batch $(REPRESENTATION_BATCH))
-	$(call log_done,representation table written to $@)
+	@$(RUN) python $(RENDER_ASSETS) $(REPRESENTATION_STATE) $(ASSETS)
+	$(call log_done,representation table and numbers rendered to $(dir $(REPRESENTATION_ASSETS)))
 
 # A paper asset while its batch is recorded: make assets rebuilds it in seconds, never a screen.
 PAPER_ASSETS += $(if $(REPRESENTATION_BATCH),$(REPRESENTATION_ASSETS))
