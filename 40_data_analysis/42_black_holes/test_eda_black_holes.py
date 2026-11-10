@@ -1,5 +1,6 @@
 """Facts about the BH exploratory computations, on tiny synthetic curves."""
 
+import json
 from pathlib import Path
 
 import matplotlib
@@ -235,6 +236,9 @@ def test_figure_tex_includes_the_image_of_its_own_stem() -> None:
     assert "{42_black_holes_fig_existence_edge}" in figure_tex("existence_edge")
 
 
+KNOBS = ["--folds", "3", "--seed", "0"]
+
+
 class TestMain:
     pytestmark = pytest.mark.functional
 
@@ -249,7 +253,7 @@ class TestMain:
         selection = {"figures": ["existence_edge"], "tables": ["split_strategies"]}
         config = PaperConfig.model_validate({"plot": {"usetex": False}})
         main(
-            [str(table), str(assets), "--folds", "3", "--seed", "0"],
+            [str(table), str(assets), "--state", str(tmp_path / "state"), *KNOBS],
             config=config,
             section=BlackHolesSection.model_validate(selection),
         )
@@ -261,14 +265,15 @@ class TestMain:
             "42_black_holes_fig_ceilings.tex",
             "42_black_holes_fig_existence_edge.png",
             "42_black_holes_fig_existence_edge.tex",
-            "42_black_holes_num.tex",
-            "42_black_holes_tab_ceilings.tex",
-            "42_black_holes_tab_split_strategies.tex",
         ]
 
     def test_writes_the_reachable_figures_into_the_numbers(self, assets) -> None:
-        numbers_tex = (assets / "42_black_holes" / "42_black_holes_num.tex").read_text()
-        assert "\\bhEdaCeilDFigures" in numbers_tex
+        stored = json.loads((assets.parent / "state/42_black_holes/numbers.json").read_text())
+        assert "bhEdaCeilDFigures" in stored
+
+    def test_stores_its_tables_as_json(self, assets) -> None:
+        tables = (assets.parent / "state/42_black_holes/tables").glob("*.json")
+        assert sorted(p.stem for p in tables) == ["ceilings", "split_strategies"]
 
     def test_leaves_other_sections_alone(self, assets) -> None:
         assert (assets / "41_neutron_stars" / "kept.tex").is_file()
@@ -281,7 +286,7 @@ class TestMain:
         picked = {"figures": ["mass_radius"], "variants": {"mass_radius": "departure"}}
         config = PaperConfig.model_validate({"plot": {"usetex": False}})
         main(
-            [str(table), str(assets), "--folds", "3", "--seed", "0"],
+            [str(table), str(assets), "--state", str(tmp_path / "state"), *KNOBS],
             config=config,
             section=BlackHolesSection.model_validate(picked),
         )

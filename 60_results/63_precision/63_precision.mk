@@ -14,10 +14,17 @@ TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --wor
 # seconds; TUNING_BATCH= (empty) runs the whole tuning again (about 33 hours).
 TUNING_BATCH  ?= 01a11d49-1647-735a-af05-a58e497428f2
 
-$(TUNING_ASSETS): $(TUNING) paper.toml $(TUNING_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+# The script stores the table and numbers as JSON under $(STATE)/63_precision/ and still writes
+# the figures; render_assets.py writes the table and numbers assets from the JSON. One grouped
+# rule, so a build that lost the table reruns the script, as one that lost the numbers does.
+RENDER_ASSETS := paperlib/tools/render_assets.py
+TUNING_STATE  := $(STATE)/63_precision
+
+$(TUNING_STATE)/numbers.json $(TUNING_ASSETS) &: $(TUNING) $(RENDER_ASSETS) paper.toml $(TUNING_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(TUNING_BATCH),rebuilding the tuning table from batch $(TUNING_BATCH),tuning the short list ($(TUNING_KNOBS)) -- one line per finished job))
 	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) $(if $(TUNING_BATCH),--batch $(TUNING_BATCH))
-	$(call log_done,tuning table written to $@)
+	@$(RUN) python $(RENDER_ASSETS) $(TUNING_STATE) $(ASSETS)
+	$(call log_done,tuning table and numbers rendered to $(dir $(TUNING_ASSETS)))
 
 # A paper asset while its batch is recorded: make assets rebuilds it in seconds, never a tuning.
 PAPER_ASSETS += $(if $(TUNING_BATCH),$(TUNING_ASSETS))

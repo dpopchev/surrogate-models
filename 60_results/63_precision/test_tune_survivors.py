@@ -1,5 +1,6 @@
 """Facts about the tuning behind Section 5.3, on tiny synthetic data."""
 
+import json
 import shutil
 import time
 from collections.abc import Callable
@@ -54,6 +55,7 @@ from paperlib.harness import Run, Timing
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
 from paperlib.runs import RunMetadata, entry_from_run
 from paperlib.scorecard import Scorecard
+from paperlib.tables import from_json, render
 
 # The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
 ToyInputs = Callable[[Path], tuple[Path, Path, Path]]
@@ -287,16 +289,35 @@ def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path
     return folder
 
 
+def saved_batch(state: Path) -> Path:
+    """The one batch file under a section's state folder, the stored numbers aside."""
+    (saved,) = (path for path in (state / SECTION).glob("*.json") if path.name != "numbers.json")
+    return saved
+
+
+@pytest.mark.functional
+def test_tuning_writes_its_table_as_json(ran: Path) -> None:
+    stored = {path.stem for path in (ran / "state" / SECTION / "tables").glob("*.json")}
+    assert stored == {"tuning"}
+
+
+@pytest.mark.functional
+def test_main_stores_the_numbers_as_json(ran: Path) -> None:
+    stored = json.loads((ran / "state" / SECTION / "numbers.json").read_text())
+    assert "tunNsMassRbfPointwiseTrials" in stored
+
+
 @pytest.mark.functional
 def test_a_saved_batch_rebuilds_the_table(ran: Path) -> None:
-    (saved,) = (ran / "state" / SECTION).glob("*.json")
+    saved = saved_batch(ran / "state")
     main([*toy_paths(ran, "rebuilt"), *TOY_KNOBS, "--batch", saved.stem], TOY_CONFIG)
-    assert (ran / "rebuilt" / SECTION / f"{SECTION}_tab_tuning.tex").stat().st_size > 0
+    assert (ran / "state" / SECTION / "tables" / "tuning.json").stat().st_size > 0
 
 
 @pytest.mark.functional
-def test_main_writes_a_table_row_per_job(ran: Path) -> None:
-    table = (ran / "assets" / SECTION / f"{SECTION}_tab_tuning.tex").read_text()
+def test_main_stores_a_table_row_per_job(ran: Path) -> None:
+    text = (ran / "state" / SECTION / "tables" / "tuning.json").read_text()
+    table = render(from_json(text), "small")
     body = table.split("\\midrule\n")[1].split("\\bottomrule")[0]
     assert body.count("\\\\\n") == 3
 
@@ -346,7 +367,7 @@ def test_a_dying_tuning_leaves_the_outcomes_of_its_finished_jobs(
 def test_recover_rebuilds_a_batch_s_outcomes_from_its_journal_and_ledger(
     ran: Path, tmp_path: Path
 ) -> None:
-    (saved,) = (ran / "state" / SECTION).glob("*.json")
+    saved = saved_batch(ran / "state")
     shutil.copytree(ran / "state", tmp_path / "state")
     (tmp_path / "state" / SECTION / saved.name).unlink()
     inputs = toy_paths(ran)[:3]

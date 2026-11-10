@@ -1,5 +1,7 @@
 """Facts about the Table object and its renderer, on a tiny synthetic table."""
 
+from dataclasses import replace
+
 import pytest
 
 from paperlib.config import TableLayout
@@ -13,9 +15,11 @@ from paperlib.tables import (
     Text,
     aligns,
     fixed,
+    from_json,
     number,
     power,
     render,
+    to_json,
 )
 
 SAMPLE = Table(
@@ -134,6 +138,13 @@ def test_a_small_spec_with_a_repeat_is_written_as_given_in_the_small_layout(
     column = "S[table-format=1]"
     spec = "@{}l*{3}{r}@{}" if layout == "small" else f"@{{}}l{column * 3}@{{}}"
     assert f"\\begin{{tabular}}{{{spec}}}" in render(table, layout)
+
+
+@pytest.mark.model
+def test_table_round_trips_through_json() -> None:
+    rows = (*SAMPLE.rows, (Plain("1", True, True),))
+    table = replace(SAMPLE, small_spec="@{}l*{3}{r}@{}", rows=rows)
+    assert from_json(to_json(table)) == table
 
 
 @pytest.mark.functional

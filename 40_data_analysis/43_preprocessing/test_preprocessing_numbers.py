@@ -1,5 +1,6 @@
 """Facts about the Section 3.3 numbers, on tiny synthetic split and tables."""
 
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -68,25 +69,21 @@ class TestMain:
     pytestmark = pytest.mark.functional
 
     @pytest.fixture
-    def assets(self, tmp_path: Path) -> Path:
+    def state(self, tmp_path: Path) -> Path:
         split = tmp_path / "s.parquet"
         SPLIT.to_parquet(split)
-        assets = tmp_path / "assets"
-        (assets / "43_preprocessing").mkdir(parents=True)
-        (assets / "43_preprocessing" / "old.tex").write_text("from an earlier run")
-        (assets / "41_neutron_stars").mkdir()
-        (assets / "41_neutron_stars" / "kept.tex").write_text("another section's asset")
-        main([str(split), str(assets), "--seed", "7"])
-        return assets
+        state = tmp_path / "state"
+        (state / "41_neutron_stars").mkdir(parents=True)
+        (state / "41_neutron_stars" / "kept.json").write_text("another section's state")
+        main([str(split), str(state), "--seed", "7"])
+        return state
 
-    def test_writes_the_numbers_into_its_section_folder_alone(self, assets) -> None:
-        assert [p.name for p in (assets / "43_preprocessing").iterdir()] == [
-            "43_preprocessing_num.tex"
-        ]
+    def test_stores_the_numbers_in_its_section_folder_alone(self, state) -> None:
+        assert [p.name for p in (state / "43_preprocessing").iterdir()] == ["numbers.json"]
 
-    def test_writes_the_numbers_as_macros(self, assets) -> None:
-        numbers_tex = assets / "43_preprocessing" / "43_preprocessing_num.tex"
-        assert "\\newcommand{\\prepBhTestCurves}{1}" in numbers_tex.read_text()
+    def test_stores_the_numbers_by_macro_name(self, state) -> None:
+        stored = json.loads((state / "43_preprocessing" / "numbers.json").read_text())
+        assert stored["prepBhTestCurves"] == "1"
 
-    def test_leaves_other_sections_alone(self, assets) -> None:
-        assert (assets / "41_neutron_stars" / "kept.tex").is_file()
+    def test_leaves_other_sections_alone(self, state) -> None:
+        assert (state / "41_neutron_stars" / "kept.json").is_file()

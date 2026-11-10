@@ -8,8 +8,10 @@ become \\bhEda... macros; the dataset-agnostic machinery lives in paperlib/eda.p
 """
 
 import argparse
+import json
 import logging
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
@@ -28,7 +30,7 @@ from paperlib.ceilings import (
     Ceilings,
     ceiling_figure,
     ceiling_macros,
-    ceiling_table,
+    ceiling_object,
     ceilings_caption,
     measure,
     uncertainty_macros,
@@ -55,7 +57,6 @@ from paperlib.eda import (
     make_curve_space,
     number_tex,
     orders_of_magnitude,
-    render_macros,
     row_splitter,
     summarize,
     text_width_size,
@@ -73,7 +74,7 @@ from paperlib.plots import (
     mark_size,
     write_variant_sheet,
 )
-from paperlib.tables import Table, Text, aligns, fixed, number, render
+from paperlib.tables import Table, Text, aligns, fixed, number, render, to_json
 
 logger = logging.getLogger(__name__)
 
@@ -420,17 +421,31 @@ def _split_table(found: Evidence) -> Table:
     return Table("bh-split-strategies", caption, aligns("lrr"), (header,), rows)
 
 
-def table_tex(found: Evidence, table: BhTable, layout: TableLayout = "small") -> str:
-    """The booktabs table environment of one table in the paper's table layout."""
+def table_object(found: Evidence, table: BhTable) -> Table:
+    """One table as an object, to store as JSON and to render under any layout."""
     match table:
         case "univariate":
-            return render(_univariate_table(found), layout)
+            return _univariate_table(found)
         case "charge_correlation":
-            return render(_charge_table(found), layout)
+            return _charge_table(found)
         case "split_strategies":
-            return render(_split_table(found), layout)
+            return _split_table(found)
         case _:
             assert_never(table)
+
+
+def table_tex(found: Evidence, table: BhTable, layout: TableLayout = "small") -> str:
+    """The booktabs table environment of one table in the paper's table layout."""
+    return render(table_object(found, table), layout)
+
+
+def table_objects(
+    found: Evidence, names: tuple[BhTable, ...], bounds: Ceilings
+) -> dict[str, Table]:
+    """The section's tables by stored name: the selected ones and the ceilings table."""
+    return {name: table_object(found, name) for name in names} | {
+        "ceilings": ceiling_object("bh-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS)
+    }
 
 
 # The section's asset folder, and the prefix that keeps its basenames unique in the flat build.
@@ -743,6 +758,11 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--folds", type=int, required=True, help="probe folds of the split")
     parser.add_argument("--seed", type=int, required=True, help="the split's seed")
     parser.add_argument(
+        "--state",
+        type=Path,
+        help="the state dir: the tables and numbers are stored as JSON under <state>/<section>/",
+    )
+    parser.add_argument(
         "--variants",
         type=Path,
         help="draw every variant of each figure into this dir to pick from; assets untouched",
@@ -783,17 +803,22 @@ def _ceilings(bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant) -> F
     return ceiling_figure(bounds, CEILING_LABELS, SYMBOLS["r_h"], colors, variant)
 
 
+def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
+    """Store the tables as JSON by name and the numbers under the section's state folder, for
+    paperlib/tools/render_assets.py to write the assets from; an earlier run's tables go."""
+    folder = state / SECTION / "tables"
+    folder.mkdir(parents=True, exist_ok=True)
+    for stale in folder.glob("*.json"):
+        stale.unlink()
+    for name, table in tables.items():
+        (folder / f"{name}.json").write_text(to_json(table))
+    (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
+
+
 def _write_ceilings(
-    out: Path,
-    bounds: Ceilings,
-    style: PlotStyle,
-    variant: CeilingsVariant,
-    layout: TableLayout = "small",
+    out: Path, bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant
 ) -> None:
-    """Write the ceilings table and the figure of the data limits."""
-    (out / f"{SECTION}_tab_ceilings.tex").write_text(
-        ceiling_table("bh-ceilings", CEILINGS_CAPTION, bounds, CEILING_LABELS, layout)
-    )
+    """Write the figure of the data limits."""
     fig = _ceilings(bounds, style, variant)
     fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
     plt.close(fig)
@@ -840,12 +865,15 @@ def main(
         | ceiling_macros("bhEda", bounds, CEILING_TAGS)
         | uncertainty_macros("bhEda", bounds, CEILING_TAGS, typical, "D")
     )
-    (out / f"{SECTION}_num.tex").write_text(render_macros(macros))
-    for name in section.tables:
-        (out / f"{SECTION}_tab_{name}.tex").write_text(table_tex(found, name, config.tables.layout))
-    _write_ceilings(out, bounds, config.plot, section.variants.ceilings, config.tables.layout)
+    assert args.state is not None, "--state is required unless --variants is given"
+    _store(args.state, table_objects(found, section.tables, bounds), macros)
+    _write_ceilings(out, bounds, config.plot, section.variants.ceilings)
     logger.info(
-        "done: BH figures %s, tables %s and numbers -> %s", section.figures, section.tables, out
+        "done: BH figures %s -> %s, tables %s and numbers -> %s",
+        section.figures,
+        out,
+        section.tables,
+        args.state / SECTION,
     )
 
 

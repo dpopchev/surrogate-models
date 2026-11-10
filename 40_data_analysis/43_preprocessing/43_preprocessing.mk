@@ -3,8 +3,15 @@ PREP_NUMBERS := 40_data_analysis/43_preprocessing/preprocessing_numbers.py
 PREP_ASSETS  := $(ASSETS)/43_preprocessing/43_preprocessing_num.tex
 PAPER_ASSETS += $(PREP_ASSETS)
 
-$(PREP_ASSETS): $(PREP_NUMBERS) $(STATE)/split.parquet paper.toml
-	@$(RUN) python $(PREP_NUMBERS) $(STATE)/split.parquet $(ASSETS) --seed $(SPLIT_SEED)
+RENDER_ASSETS := paperlib/tools/render_assets.py
+PREP_STATE    := $(STATE)/43_preprocessing
+
+$(PREP_STATE)/numbers.json: $(PREP_NUMBERS) $(STATE)/split.parquet paper.toml
+	@$(RUN) python $(PREP_NUMBERS) $(STATE)/split.parquet $(STATE) --seed $(SPLIT_SEED)
+	$(call log_done,Section 3.3 numbers stored in $@)
+
+$(PREP_ASSETS): $(PREP_STATE)/numbers.json $(RENDER_ASSETS) $(PAPERLIB)
+	@$(RUN) python $(RENDER_ASSETS) $(PREP_STATE) $(ASSETS)
 	$(call log_done,Section 3.3 numbers written to $@)
 
 .PHONY: 43_preprocessing

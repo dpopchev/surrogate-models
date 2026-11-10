@@ -9,9 +9,17 @@ PAPER_ASSETS  += $(NS_EDA_ASSETS)
 # window in M is the band below a curve's M_max that Section 3.1 counts.
 NS_PILE_UP_WINDOW := 0.09
 
-$(NS_EDA_ASSETS): $(NS_EDA) paper.toml $(NS_EDA_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet
-	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW)
-	$(call log_done,NS EDA figures and numbers written to $(@D)/)
+# The script stores the tables and numbers as JSON under $(STATE)/41_neutron_stars/ and still
+# writes the figures; render_assets.py writes the table and numbers assets from the JSON, after
+# the script has emptied the folder. One grouped rule, so a build that lost the figures reruns
+# the script, as one that lost the numbers does.
+RENDER_ASSETS := paperlib/tools/render_assets.py
+NS_EDA_STATE  := $(STATE)/41_neutron_stars
+
+$(NS_EDA_STATE)/numbers.json $(NS_EDA_ASSETS) &: $(NS_EDA) $(RENDER_ASSETS) paper.toml $(NS_EDA_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet
+	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --state $(STATE) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW)
+	@$(RUN) python $(RENDER_ASSETS) $(NS_EDA_STATE) $(ASSETS)
+	$(call log_done,NS EDA figures written to $(@D)/ and tables and numbers to $(NS_EDA_STATE)/)
 
 .PHONY: 41_neutron_stars
 41_neutron_stars: $(NS_EDA_ASSETS) ## Build the neutron-star EDA assets for Section 3.1

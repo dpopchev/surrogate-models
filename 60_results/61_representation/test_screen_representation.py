@@ -42,6 +42,7 @@ from paperlib.harness import Run, Timing
 from paperlib.runs import LedgerEntry, RunMetadata, entry_from_run
 from paperlib.scorecard import Scorecard
 from paperlib.surrogate import Training
+from paperlib.tables import from_json, render
 from paperlib.workers import run_jobs
 
 # The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
@@ -315,9 +316,21 @@ def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path
 
 
 @pytest.mark.functional
-def test_main_writes_a_table_row_for_every_representation_cell(ran: Path) -> None:
-    table = ran / "assets" / SECTION / f"{SECTION}_tab_representation.tex"
-    assert len(table_rows(table.read_text())) == 14
+def test_main_stores_the_representation_table_as_json(ran: Path) -> None:
+    folder = ran / "state" / SECTION / "tables"
+    assert {path.stem for path in folder.glob("*.json")} == {"representation"}
+
+
+@pytest.mark.functional
+def test_main_stores_a_table_row_for_every_representation_cell(ran: Path) -> None:
+    stored = (ran / "state" / SECTION / "tables" / "representation.json").read_text()
+    assert len(table_rows(render(from_json(stored), "small"))) == 14
+
+
+@pytest.mark.functional
+def test_main_stores_the_numbers_as_json(ran: Path) -> None:
+    stored = json.loads((ran / "state" / SECTION / "numbers.json").read_text())
+    assert stored
 
 
 def rebuild_from_batch(ran: Path, assets: Path) -> None:

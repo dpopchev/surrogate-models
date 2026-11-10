@@ -1,5 +1,6 @@
 """Facts about the baseline fit behind Section 4.1, on tiny synthetic curves."""
 
+import json
 import re
 from collections.abc import Callable
 from dataclasses import replace
@@ -51,6 +52,8 @@ from paperlib.harness import Timing
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
 from paperlib.runs import Epochs, from_json
 from paperlib.surrogate import Training, mare, mare_in_d
+from paperlib.tables import from_json as table_from_json
+from paperlib.tables import render
 
 
 @pytest.fixture(autouse=True)
@@ -430,14 +433,6 @@ def test_each_curve_is_named_by_its_key(tmp_path: Path) -> None:
     assert names[1] == "$\\beta$ = 1, $\\lambda$ = 2"
 
 
-def first_group(pattern: str, path: Path) -> str:
-    """The first capture group of pattern in the file at path; a missing match fails loudly."""
-    match = re.search(pattern, path.read_text())
-    if match is None:
-        raise AssertionError(f"{pattern} not found in {path.name}")
-    return match.group(1)
-
-
 @pytest.fixture(scope="module")
 def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """One main run on the toy NS and BH tables, a stale asset left from an earlier run, the
@@ -482,38 +477,49 @@ def test_a_trial_names_its_candidate_while_it_runs() -> None:
 class TestMain:
     pytestmark = pytest.mark.functional
 
-    def test_writes_the_numbers_and_the_parity_figure_into_its_section(self, ran: Path) -> None:
+    @staticmethod
+    def stored_numbers(ran: Path) -> dict[str, str]:
+        """The numbers the run stored under its state folder."""
+        return json.loads((ran / "state" / SECTION / "numbers.json").read_text())
+
+    @staticmethod
+    def stored_table(ran: Path) -> str:
+        """The baseline table the run stored, rendered in the small layout."""
+        stored = (ran / "state" / SECTION / "tables" / "baseline.json").read_text()
+        return render(table_from_json(stored), "small")
+
+    def test_writes_the_parity_figure_into_its_section_and_empties_it_of_the_rest(
+        self, ran: Path
+    ) -> None:
         assert sorted(p.name for p in (ran / "assets" / SECTION).iterdir()) == [
             "51_algorithms_fig_parity.png",
             "51_algorithms_fig_parity.tex",
-            "51_algorithms_num.tex",
-            "51_algorithms_tab_baseline.tex",
         ]
 
-    def test_writes_the_charge_mare_with_true_and_predicted_mass_per_dataset(
+    def test_stores_the_baseline_table_as_json(self, ran: Path) -> None:
+        folder = ran / "state" / SECTION / "tables"
+        assert {path.stem for path in folder.glob("*.json")} == {"baseline"}
+
+    def test_stores_the_charge_mare_with_true_and_predicted_mass_per_dataset(
         self, ran: Path
     ) -> None:
-        numbers_tex = (ran / "assets" / SECTION / "51_algorithms_num.tex").read_text()
-        assert len(re.findall(r"\\base(?:Ns|Bh)ChargeMare(?:True|Pred)M\}", numbers_tex)) == 4
+        pattern = re.compile(r"base(?:Ns|Bh)ChargeMare(?:True|Pred)M")
+        assert len([name for name in self.stored_numbers(ran) if pattern.fullmatch(name)]) == 4
 
     def test_scores_the_charge_rows_in_d_like_the_true_mass_macro(self, ran: Path) -> None:
-        folder = ran / "assets" / SECTION
-        numbers_tex, table_tex = (
-            folder / "51_algorithms_num.tex",
-            folder / "51_algorithms_tab_baseline.tex",
-        )
-        mantissa = first_group(r"\\baseBhChargeMareTrueM\}\{(.*)\\times 10", numbers_tex)
-        exponent = first_group(r"\\baseBhChargeMareTrueM\}\{.*10\^\{(.*)\}\}\n", numbers_tex)
+        macro = self.stored_numbers(ran)["baseBhChargeMareTrueM"]
+        mantissa = float(re.search(r"(.*)\\times 10", macro).group(1))  # type: ignore[union-attr]
+        exponent = int(re.search(r"10\^\{(.*)\}", macro).group(1))  # type: ignore[union-attr]
         # The row prints two significant digits (7.6e-3), the macro three.
-        row = first_group(r"BH \$\\Dch\$ & MLP & ([^ ]*) &", table_tex)
-        assert float(row) == pytest.approx(float(mantissa) * 10 ** int(exponent), rel=0.05)
+        (row,) = re.findall(r"BH \$\\Dch\$ & MLP & ([^ ]*) &", self.stored_table(ran))
+        assert float(row) == pytest.approx(mantissa * 10**exponent, rel=0.05)
 
-    def test_writes_one_mlp_row_per_dataset_and_target(self, ran: Path) -> None:
-        table = (ran / "assets" / SECTION / "51_algorithms_tab_baseline.tex").read_text()
-        assert table.count("& MLP &") == 4
+    def test_stores_one_mlp_row_per_dataset_and_target(self, ran: Path) -> None:
+        assert self.stored_table(ran).count("& MLP &") == 4
 
     def test_leaves_a_run_folder_per_dataset_and_target(self, ran: Path) -> None:
-        runs = sorted(p.name for p in (ran / "state" / SECTION).iterdir() if p.is_dir())
+        folders = (p for p in (ran / "state" / SECTION).iterdir() if p.is_dir())
+        runs = sorted(p.name for p in folders if p.name != "tables")
         assert [name.rsplit("-", 1)[0] for name in runs] == [
             "black_holes-charge",
             "black_holes-mass",

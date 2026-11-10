@@ -77,7 +77,7 @@ from paperlib.design import (
     pairs,
     target_symbol,
 )
-from paperlib.eda import number_tex, render_macros
+from paperlib.eda import number_tex
 from paperlib.harness import Fitter, Run, harness
 from paperlib.plots import (
     SYMBOLS,
@@ -96,7 +96,7 @@ from paperlib.runs import RunMetadata, Setting, entry_from_json
 from paperlib.scorecard import relative_errors, significant_figures
 from paperlib.surrogate import Training, make_training
 from paperlib.tables import Cell as TableCell
-from paperlib.tables import Column, Plain, Span, Table, Text, render
+from paperlib.tables import Column, Plain, Span, Table, Text, render, to_json
 from paperlib.workers import run_jobs
 
 logger = logging.getLogger(__name__)
@@ -304,10 +304,15 @@ def family_table(
     layout: TableLayout = "small",
     shape: FamiliesTableLayout = "subscripts",
 ) -> str:
-    """The Section 5.2 table: one row per candidate, one column per pair, each cell the
-    candidate's folds' p95 significant figures at the most rows it ran on (or its wall there),
-    the pair's leader at the most rows in bold; the rows a subscript (subscripts) or a column
-    of their own beside each pair's figures (rows_column)."""
+    """The Section 5.2 table in the paper's table layout."""
+    return render(family_object(outcomes, shape), layout)
+
+
+def family_object(outcomes: Sequence[Outcome], shape: FamiliesTableLayout = "subscripts") -> Table:
+    """The Section 5.2 table as an object, to store as JSON: one row per candidate, one column
+    per pair, each cell the candidate's folds' p95 significant figures at the most rows it ran
+    on (or its wall there), the pair's leader at the most rows in bold; the rows a subscript
+    (subscripts) or a column of their own beside each pair's figures (rows_column)."""
     last: dict[tuple[str, Target, Candidate], Outcome] = {}
     for outcome in sorted(outcomes, key=lambda found: found.job.rows):
         job = outcome.job
@@ -358,7 +363,7 @@ def family_table(
         for candidate in candidates()
     )
     fitted = [Column("l", before="@{}"), Column("l"), *(Column("r") for _ in keys * width)]
-    table = Table(
+    return Table(
         "families",
         "Each family in each unit of prediction, eliminated by successive halving over the "
         "training rows: the significant figures kept at the 95th percentile of the error "
@@ -370,7 +375,18 @@ def family_table(
         rows,
         spec,
     )
-    return render(table, layout)
+
+
+def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
+    """Store the tables as JSON by name and the numbers under the section's state folder, for
+    paperlib/tools/render_assets.py to write the assets from; an earlier run's tables go."""
+    folder = state / SECTION / "tables"
+    folder.mkdir(parents=True, exist_ok=True)
+    for stale in folder.glob("*.json"):
+        stale.unlink()
+    for name, table in tables.items():
+        (folder / f"{name}.json").write_text(to_json(table))
+    (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
 
 
 # Macro tags of the families and units: \famNsMassRbfCurvewiseFigures.
@@ -1127,14 +1143,13 @@ def main(
         out.mkdir(parents=True, exist_ok=True)
         for stale in out.iterdir():  # a deselected figure's wrapper of an earlier run (W-102)
             stale.unlink()
-        path = out / f"{SECTION}_tab_families.tex"
-        write_checked(path, family_table(outcomes, config.tables.layout, config.tables.families))
-        write_checked(out / f"{SECTION}_num.tex", render_macros(numbers(outcomes)))
+        table = family_object(outcomes, config.tables.families)
+        _store(args.state, {"families": table}, numbers(outcomes))
         logger.info(
             "done: family table and numbers of batch %s, %d outcomes -> %s",
             batch,
             len(outcomes),
-            path,
+            args.state / SECTION,
         )
         # The panels' titles read the symbols, which expand the notation the style hands on.
         apply_style(config.plot, NOTATION_TEX.read_text())

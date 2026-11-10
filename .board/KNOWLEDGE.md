@@ -31,6 +31,7 @@
 - 2026-10-12 W-132: fact: 00_metadata/paper_knobs.py keeps a third family-tag map, SPACE_TAG, with the two networks as Net (T-348) -> W-132 moves it beside FAMILY_TAG too
 - 2026-11-10 E-012: fact: board close gates on make deliverable, never lint; the land of W-134 failed on 6 ruff I001 in tests T-353 moved -> every go word asks the lane to run make lint typecheck before its close
 - 2026-11-10 W-139: fact: T-356 gave Table an optional small_spec (the small layout writes a *{n}{x} repeat spec as given, aligned reads the columns) -> the shapes of W-139 keep or fold it
+- 2026-11-10 W-139: fact: since T-365 the split pick of representation and the two_tables pick of baseline store two tables (representation + representation_bh, baseline + baseline_folds); the section .tex inputs only the first -> W-139's render of a shape writes both into the one asset
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
