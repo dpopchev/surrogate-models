@@ -83,7 +83,6 @@ from paperlib.plots import (
     line_width,
     mark_alpha,
     mark_size,
-    write_variant_sheet,
 )
 from paperlib.progress import duration_text
 from paperlib.runs import (
@@ -746,7 +745,7 @@ def figure_tex(variant: AlgParityVariant = "ns_mass") -> str:
     width = "\\textwidth" if variant == "all_pairs" else "0.5\\textwidth"
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width={width}]{{{PARITY}}}\n"
+        f"\\includegraphics[width={width}]{{{PARITY}_{variant}}}\n"
         f"\\caption{{{_parity_caption(variant)}}}\n"
         "\\label{fig:alg-parity}\n\\end{figure}\n"
     )
@@ -907,11 +906,7 @@ def _write_section(
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
-    variant = variants.parity
-    figure = parity_figure(fits, config.plot, variant)
-    figure.savefig(out / f"{PARITY}.png", dpi=config.plot.dpi)
-    plt.close(figure)
-    (out / f"{PARITY}.tex").write_text(figure_tex(variant))
+    (out / f"{PARITY}.tex").write_text(figure_tex(variants.parity))
     macros = numbers(fits[NEUTRON_STARS.dataset, "mass"]) | charge_numbers(mares)
     _store(state, baseline_objects(pairs, config.tables.baseline), macros)
 
@@ -970,14 +965,15 @@ def read_back(
     return found
 
 
-def _write_variants(
-    out: Path, found: Mapping[tuple[str, str], Predicted], style: PlotStyle
-) -> None:
-    """Every parity variant as <stem>_<variant>.png in out and their contact sheet as
-    <stem>_variants.png, at the screen's resolution."""
+def _write_figures(out: Path, found: Mapping[tuple[str, str], Predicted], style: PlotStyle) -> None:
+    """Every parity variant as <stem>_<variant>.png in out, each a file of its own at the
+    style's dpi, no contact sheet."""
     out.mkdir(parents=True, exist_ok=True)
-    drawers = {v: partial(parity_figure, found, style, v) for v in get_args(AlgParityVariant)}
-    write_variant_sheet(out, PARITY, drawers, style)
+    for variant in get_args(AlgParityVariant):
+        fig = parity_figure(found, style, variant)
+        fig.savefig(out / f"{PARITY}_{variant}.png", dpi=style.dpi)
+        plt.close(fig)
+    logger.info("done: %d baseline figure variants -> %s", len(get_args(AlgParityVariant)), out)
 
 
 def write_diagnostics(
@@ -1031,18 +1027,19 @@ def main(
     """Score the baseline and its references on every dataset and target; write the baseline
     table, the NS mass numbers and parity figure into the section's folder of the asset dir,
     after emptying that folder of an earlier run; leave each pair's run record and diagnostics
-    in a folder named after its run under the state dir. Given --variants <dir>, fit nothing:
+    in a folder named after its run under the state dir. Given --figures <dir>, fit nothing:
     draw every parity variant from the latest baseline batch's ledger entries into <dir>.
-    Given --tables, fit nothing: rewrite the baseline table alone from those entries."""
-    variants_dir = None
-    if "--variants" in argv:
-        at = argv.index("--variants")
-        variants_dir, argv = Path(argv[at + 1]), argv[:at] + argv[at + 2 :]
+    Given --tables, fit nothing: rewrite the baseline table from those entries and the parity
+    wrapper of the picked variant, dropping a stale unsuffixed parity PNG."""
+    figures_dir = None
+    if "--figures" in argv:
+        at = argv.index("--figures")
+        figures_dir, argv = Path(argv[at + 1]), argv[:at] + argv[at + 2 :]
     tables_only = "--tables" in argv
     argv = [arg for arg in argv if arg != "--tables"]
     assert len(argv) == 5, (
         "usage: fit_baseline.py <ns.parquet> <bh.parquet> <split.parquet> <asset dir> "
-        f"<state dir> [--variants <dir>] [--tables], got {argv}"
+        f"<state dir> [--figures <dir>] [--tables], got {argv}"
     )
     ns, bh, split_file = Path(argv[0]), Path(argv[1]), Path(argv[2])
     out, state = Path(argv[3]) / SECTION, Path(argv[4]) / SECTION
@@ -1058,15 +1055,18 @@ def main(
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
     split = pd.read_parquet(split_file)
     found_pairs = pairs(tables, split, SPECS, TARGETS)
-    if variants_dir is not None:
+    if figures_dir is not None:
         designs = {(p.dataset, p.target): p.design for p in found_pairs}
         found = read_back(read_ledger(Path(argv[4]) / "ledger"), designs)
-        _write_variants(variants_dir / SECTION, found, config.plot)
+        _write_figures(figures_dir / SECTION, found, config.plot)
         return
     if tables_only:
         keys = [(p.dataset, p.target) for p in found_pairs]
         scored = pair_scores(read_ledger(Path(argv[4]) / "ledger"), keys)
         _store(state, baseline_objects(scored, config.tables.baseline), None)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / f"{PARITY}.png").unlink(missing_ok=True)
+        (out / f"{PARITY}.tex").write_text(figure_tex(section.variants.parity))
         logger.info("done: baseline table rebuilt from the ledger, nothing fitted -> %s", state)
         return
     total = sum(len(set(p.design.fold[p.design.fold >= 0].tolist())) + 1 for p in found_pairs)

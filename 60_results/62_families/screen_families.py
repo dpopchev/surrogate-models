@@ -90,7 +90,6 @@ from paperlib.plots import (
     line_width,
     mark_alpha,
     mark_size,
-    write_variant_sheet,
 )
 from paperlib.runs import RunMetadata, Setting, entry_from_json
 from paperlib.scorecard import relative_errors, significant_figures
@@ -795,7 +794,7 @@ def parity_tex(variant: FamiliesParityVariant = "parity") -> str:
     """The figure environment of the parity figure, placed here or at the top of a page."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{PARITY}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{PARITY}_{variant}}}\n"
         f"\\caption{{{_parity_caption(variant)}}}\n"
         "\\label{fig:families-parity}\n\\end{figure}\n"
     )
@@ -835,7 +834,7 @@ def errors_tex(variant: FamiliesErrorsVariant = "scatter_profiles") -> str:
     """The figure environment of the error figure, placed here or at the top of a page."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{ERRORS}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{ERRORS}_{variant}}}\n"
         f"\\caption{{{_errors_caption(variant)}}}\n"
         "\\label{fig:families-errors}\n\\end{figure}\n"
     )
@@ -878,7 +877,7 @@ def scaling_tex(
     """The figure environment of the scaling figure, its budgets stated in the caption."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{SCALING}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{SCALING}_{variant}}}\n"
         f"\\caption{{{_scaling_caption(minutes, memory_gb, variant)}}}\n"
         "\\label{fig:families-scaling}\n\\end{figure}\n"
     )
@@ -1133,11 +1132,11 @@ def main(
             logger.info("rebuilding the assets from batch %s; nothing is fitted", batch)
         saved = outcomes_path(args.state, SECTION, batch)
         outcomes = outcomes_from_json(saved.read_text())
-        if args.variants is not None:
+        if args.figures is not None:
             apply_style(config.plot, NOTATION_TEX.read_text())
             panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
             paths = trajectories(outcomes)
-            _write_variants(args.variants / SECTION, panels, paths, config.plot, args.minutes)
+            _write_figures(args.figures / SECTION, panels, paths, config.plot, args.minutes)
             return
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
@@ -1151,35 +1150,17 @@ def main(
             len(outcomes),
             args.state / SECTION,
         )
-        # The panels' titles read the symbols, which expand the notation the style hands on.
-        apply_style(config.plot, NOTATION_TEX.read_text())
-        panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
+        # The wrappers include the picked variant's PNG, which --figures draws under build/figures.
         picks = section.variants
-        drawers: dict[FamiliesFigure, Callable[[], tuple[str, Figure, str]]] = {
-            "parity": lambda: (
-                PARITY,
-                parity_figure(panels, config.plot, picks.parity),
-                parity_tex(picks.parity),
-            ),
-            "errors": lambda: (
-                ERRORS,
-                error_figure(panels, config.plot, picks.errors),
-                errors_tex(picks.errors),
-            ),
-            "scaling": lambda: (
-                SCALING,
-                scaling_figure(
-                    trajectories(outcomes), config.plot, args.minutes * 60.0, picks.scaling
-                ),
-                scaling_tex(args.minutes, args.memory_gb, picks.scaling),
-            ),
+        wrappers: dict[FamiliesFigure, tuple[str, str]] = {
+            "parity": (PARITY, parity_tex(picks.parity)),
+            "errors": (ERRORS, errors_tex(picks.errors)),
+            "scaling": (SCALING, scaling_tex(args.minutes, args.memory_gb, picks.scaling)),
         }
         for selected in section.figures:
-            name, figure, tex = drawers[selected]()
-            figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
-            plt.close(figure)
+            name, tex = wrappers[selected]
             write_checked(out / f"{name}.tex", tex)
-            logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.png")
+            logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.tex")
 
 
 def _parity_panels(
@@ -1360,27 +1341,44 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--workers", type=int, required=True, help="fits at once")
     parser.add_argument("--batch", help="fit nothing; rebuild the assets from this saved batch")
     parser.add_argument(
-        "--variants",
+        "--figures",
         type=Path,
-        help="with --batch: draw every figure variant into this dir to pick from; assets untouched",
+        help="with --batch: draw every figure variant as its own PNG into this dir",
     )
     args = parser.parse_args(argv)
-    if args.variants is not None and args.batch is None:
-        parser.error("--variants draws from a recorded batch: give --batch too")
+    if args.figures is not None and args.batch is None:
+        parser.error("--figures draws from a recorded batch: give --batch too")
     return args
 
 
-def _write_variants(
+def _write_figures(
     out: Path,
     panels: Sequence[Panel],
     paths: Sequence[Trajectory],
     style: PlotStyle,
     minutes: float,
 ) -> None:
-    """Every variant of the parity, error and scaling figures as <stem>_<variant>.png in out
-    and per figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
+    """Every variant of the parity, error and scaling figures as <stem>_<variant>.png in out,
+    each a file of its own at the style's dpi, no contact sheet."""
     out.mkdir(parents=True, exist_ok=True)
-    sheets: dict[str, dict[str, Callable[[], Figure]]] = {
+    drawn = 0
+    for stem, drawers in _variant_drawers(panels, paths, style, minutes).items():
+        for variant, drawer in drawers.items():
+            fig = drawer()
+            fig.savefig(out / f"{stem}_{variant}.png", dpi=style.dpi)
+            plt.close(fig)
+            drawn += 1
+    logger.info("done: %d family figure variants -> %s", drawn, out)
+
+
+def _variant_drawers(
+    panels: Sequence[Panel],
+    paths: Sequence[Trajectory],
+    style: PlotStyle,
+    minutes: float,
+) -> dict[str, dict[str, Callable[[], Figure]]]:
+    """The drawers of every variant, per figure stem."""
+    return {
         PARITY: {
             v: partial(parity_figure, panels, style, v) for v in get_args(FamiliesParityVariant)
         },
@@ -1392,8 +1390,6 @@ def _write_variants(
             for v in get_args(FamiliesScalingVariant)
         },
     }
-    for stem, drawers in sheets.items():
-        write_variant_sheet(out, stem, drawers, style)
 
 
 if __name__ == "__main__":

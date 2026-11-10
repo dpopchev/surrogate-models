@@ -84,7 +84,6 @@ from paperlib.plots import (
     line_width,
     mark_alpha,
     mark_size,
-    write_variant_sheet,
 )
 from paperlib.runs import LedgerEntry, RunMetadata, Setting
 from paperlib.scorecard import significant_figures
@@ -973,7 +972,7 @@ def history_tex(minutes: float, variant: PrecisionHistoryVariant = "dots_and_bes
     """The figure environment of the history figure, its wall stated in the caption."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{HISTORY}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{HISTORY}_{variant}}}\n"
         f"\\caption{{{_history_caption(minutes, variant)}}}\n"
         "\\label{fig:tuning-history}\n\\end{figure}\n"
     )
@@ -1016,7 +1015,7 @@ def ranges_tex(variant: PrecisionRangesVariant = "row") -> str:
     """The figure environment of the ranges figure, placed here or at the top of a page."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{RANGES}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{RANGES}_{variant}}}\n"
         f"\\caption{{{_ranges_caption(variant)}}}\n"
         "\\label{fig:tuning-ranges}\n\\end{figure}\n"
     )
@@ -1103,15 +1102,17 @@ def main(
             logger.info("rebuilding the tuning table from batch %s; nothing is fitted", batch)
         saved = outcomes_path(args.state, SECTION, batch)
         outcomes = outcomes_from_json(saved.read_text())
-        if args.variants is not None:
+        if args.figures is not None:
             ran = tuple(outcome.job for outcome in outcomes)
             points = journal_points(saved.with_suffix(".journal"), batch, ran)
             apply_style(config.plot, NOTATION_TEX.read_text())
-            _write_variants(args.variants / SECTION, points, config.plot)
+            _write_figures(args.figures / SECTION, points, config.plot)
             return
         screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
+        for stale in out.iterdir():  # a figure PNG or wrapper of an earlier run
+            stale.unlink()
         # A batch's figures show its own jobs, in the order it ran them.
         ran = tuple(outcome.job for outcome in outcomes)
         points = journal_points(saved.with_suffix(".journal"), batch, ran)
@@ -1125,25 +1126,15 @@ def main(
             len(outcomes),
             args.state / SECTION,
         )
-        apply_style(config.plot, NOTATION_TEX.read_text())
+        # The wrappers include the picked variant's PNG, which --figures draws under build/figures.
         picks = section.variants
-        drawn = (
-            (
-                HISTORY,
-                history_figure(points, config.plot, picks.history),
-                history_tex(args.minutes, picks.history),
-            ),
-            (
-                RANGES,
-                ranges_figure(points, config.plot, picks.ranges),
-                ranges_tex(picks.ranges),
-            ),
+        wrappers = (
+            (HISTORY, history_tex(args.minutes, picks.history)),
+            (RANGES, ranges_tex(picks.ranges)),
         )
-        for name, figure, tex in drawn:
-            figure.savefig(out / f"{name}.png", dpi=config.plot.dpi)
-            plt.close(figure)
+        for name, tex in wrappers:
             write_checked(out / f"{name}.tex", tex)
-            logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.png")
+            logger.info("done: %s of batch %s -> %s", name, batch, out / f"{name}.tex")
 
 
 def _run_tuning(
@@ -1320,21 +1311,21 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
         help="the short list keeps the candidates this many figures behind the pair's best",
     )
     parser.add_argument(
-        "--variants",
+        "--figures",
         type=Path,
-        help="with --batch: draw every figure variant into this dir to pick from; assets untouched",
+        help="with --batch: draw every figure variant as its own PNG into this dir",
     )
     args = parser.parse_args(argv)
-    if args.variants is not None and args.batch is None:
-        parser.error("--variants draws from a recorded batch: give --batch too")
+    if args.figures is not None and args.batch is None:
+        parser.error("--figures draws from a recorded batch: give --batch too")
     return args
 
 
-def _write_variants(out: Path, points: Sequence[TrialPoint], style: PlotStyle) -> None:
-    """Every variant of the history and ranges figures as <stem>_<variant>.png in out and per
-    figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
-    out.mkdir(parents=True, exist_ok=True)
-    sheets: dict[str, dict[str, Callable[[], Figure]]] = {
+def _variant_drawers(
+    points: Sequence[TrialPoint], style: PlotStyle
+) -> dict[str, dict[str, Callable[[], Figure]]]:
+    """The drawers of every variant of the history and ranges figures, per figure stem."""
+    return {
         HISTORY: {
             v: partial(history_figure, points, style, v) for v in get_args(PrecisionHistoryVariant)
         },
@@ -1342,8 +1333,20 @@ def _write_variants(out: Path, points: Sequence[TrialPoint], style: PlotStyle) -
             v: partial(ranges_figure, points, style, v) for v in get_args(PrecisionRangesVariant)
         },
     }
-    for stem, drawers in sheets.items():
-        write_variant_sheet(out, stem, drawers, style)
+
+
+def _write_figures(out: Path, points: Sequence[TrialPoint], style: PlotStyle) -> None:
+    """Every variant of the history and ranges figures as <stem>_<variant>.png in out, each a
+    file of its own at the style's dpi, no contact sheet."""
+    out.mkdir(parents=True, exist_ok=True)
+    drawn = 0
+    for stem, drawers in _variant_drawers(points, style).items():
+        for variant, drawer in drawers.items():
+            fig = drawer()
+            fig.savefig(out / f"{stem}_{variant}.png", dpi=style.dpi)
+            plt.close(fig)
+            drawn += 1
+    logger.info("done: %d tuning figure variants -> %s", drawn, out)
 
 
 if __name__ == "__main__":

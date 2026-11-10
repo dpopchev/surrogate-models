@@ -232,8 +232,8 @@ def test_charge_table_has_a_row_per_candidate_target() -> None:
 
 
 @pytest.mark.view
-def test_figure_tex_includes_the_image_of_its_own_stem() -> None:
-    assert "{42_black_holes_fig_existence_edge}" in figure_tex("existence_edge")
+def test_figure_tex_includes_the_file_of_the_picked_variant() -> None:
+    assert "{42_black_holes_fig_existence_edge_segments}" in figure_tex("existence_edge")
 
 
 KNOBS = ["--folds", "3", "--seed", "0"]
@@ -261,9 +261,7 @@ class TestMain:
 
     def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:
         assert sorted(p.name for p in (assets / "42_black_holes").iterdir()) == [
-            "42_black_holes_fig_ceilings.png",
             "42_black_holes_fig_ceilings.tex",
-            "42_black_holes_fig_existence_edge.png",
             "42_black_holes_fig_existence_edge.tex",
         ]
 

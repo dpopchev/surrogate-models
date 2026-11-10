@@ -53,20 +53,14 @@ $(ASSETS)/00_metadata/00_metadata_build_stamp.tex: paperlib/tools/build_stamp.py
 # folder -- live in <chapter>/<section>/<section>.mk, included by the Makefile after mk/*.mk;
 # each appends its assets to PAPER_ASSETS. The recipes below read their variables at recipe time.
 
-# Every variant of each figure that has them, with one contact sheet per figure, drawn to
-# pick from: paper.toml records the pick, make compile places it (W-111). Never an asset. The
+# Every variant of each figure that has them is a file of its own under $(FIGURES)/<section>/
+# (make figures): paper.toml records the pick, the figure's .tex wrapper includes the picked
+# variant's file and make compile copies it beside the sources (W-138). Never an asset. The
 # results figures are drawn from the recorded runs -- the baseline's ledger entries and the
 # batches below -- and nothing is fitted (W-113).
+FIGURES  := $(BUILD)/figures
+# The table layouts' page images (make table-variants) go under $(VARIANTS)/tables/.
 VARIANTS := $(BUILD)/variants
-
-.PHONY: variants
-variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet table-variants preset-variants ## Draw every figure variant and its contact sheet under build/variants/
-	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) --variants $(VARIANTS)
-	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --variants $(VARIANTS)
-	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) --variants $(VARIANTS)
-	@$(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) --variants $(VARIANTS)
-	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --variants $(VARIANTS)
-	$(call log_done,figure variants and contact sheets in $(VARIANTS)/)
 
 # Every table in each layout of paper.toml [tables], one page image per table and layout under
 # $(VARIANTS)/tables/ (W-114). Per layout, a copy of the assets in $(TABLES_WORK)/<layout>/ gets
@@ -97,7 +91,7 @@ state_work = rm -rf $(1)/state && mkdir -p $(1)/state && cp -Ras $(abspath $(STA
   rm -rf $(1)/state/[0-9][0-9]_*/tables $(1)/state/[0-9][0-9]_*/numbers.json
 
 .PHONY: table-variants
-table-variants: assets
+table-variants: assets ## Render every table in each layout and shape as a page image under build/variants/tables/
 	@for layout in $(TABLE_LAYOUTS); do \
 	  work=$(TABLES_WORK)/$$layout; \
 	  rm -rf $$work && mkdir -p $$work/assets $$work/flat && cp -R $(ASSETS)/. $$work/assets/ && \
@@ -131,31 +125,27 @@ table-variants: assets
 	done
 	$(call log_done,every table in each layout ($(TABLE_LAYOUTS)) and each results table in its other shapes in $(VARIANTS)/tables/)
 
-# Three representative figures under each style preset of paper.toml [plot.presets], on one
-# contact sheet $(VARIANTS)/presets/presets_variants.png (W-115). Per preset, the NS EDA and the
-# family and tuning figures are redrawn with PAPER__PLOT__PRESET=<name> into
-# $(PRESETS_WORK)/<name>/ from their recorded batches, nothing fitted; the three figures are
-# copied to $(VARIANTS)/presets/<name>/. $(ASSETS) itself is never written.
-PRESETS_SHEET   := paperlib/tools/presets_sheet.py
+# Three representative figures, every variant of each, under each style preset of paper.toml
+# [plot.presets], as files of their own under $(FIGURES)/presets/<name>/ (W-115). Per preset,
+# the --figures modes of the NS EDA and the family and tuning scripts redraw them with
+# PAPER__PLOT__PRESET=<name> into $(PRESETS_WORK)/<name>/ from the stored data and the recorded
+# batches, nothing fitted; the three figures' variants are copied to $(FIGURES)/presets/<name>/.
 PRESETS_WORK    := $(WORK)/presets
 PLOT_PRESETS    := paper light large
 PRESET_FIGURES  := 41_neutron_stars/41_neutron_stars_fig_mass_density 62_families/62_families_fig_errors 63_precision/63_precision_fig_history
 
-.PHONY: preset-variants
-preset-variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+.PHONY: figures
+figures: 41_neutron_stars_figures 42_black_holes_figures 51_algorithms_figures 62_families_figures 63_precision_figures $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every figure variant as its own PNG under build/figures/, and three figures under each preset
 	@for preset in $(PLOT_PRESETS); do \
-	  work=$(PRESETS_WORK)/$$preset; out=$(VARIANTS)/presets/$$preset; \
+	  work=$(PRESETS_WORK)/$$preset; out=$(FIGURES)/presets/$$preset; \
 	  rm -rf $$work $$out && mkdir -p $$work $$out && \
-	  $(call state_work,$$work) && \
 	  export PAPER__PLOT__PRESET=$$preset && \
-	  $(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $$work --state $$work/state --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) && \
-	  $(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $$work/state $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) && \
-	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $$work/state $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) && \
-	  for section in 41_neutron_stars 62_families 63_precision; do $(RUN) python $(RENDER_ASSETS) $$work/state/$$section $$work || exit 1; done && \
-	  for figure in $(PRESET_FIGURES); do cp $$work/$$figure.png $$out/ || exit 1; done || exit 1; \
+	  $(RUN) python $(NS_EDA) --figures $$work --state $(STATE) && \
+	  $(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) --figures $$work && \
+	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --figures $$work && \
+	  for figure in $(PRESET_FIGURES); do cp $$work/$${figure}_*.png $$out/ || exit 1; done || exit 1; \
 	done
-	@$(RUN) python $(PRESETS_SHEET) $(VARIANTS)/presets $(subst $() ,$(comma),$(PLOT_PRESETS)) $(subst $() ,$(comma),$(notdir $(PRESET_FIGURES)))
-	$(call log_done,three figures under each preset ($(PLOT_PRESETS)) in $(VARIANTS)/presets/presets_variants.png)
+	$(call log_done,figure variants in $(FIGURES)/ and three figures under each preset ($(PLOT_PRESETS)) in $(FIGURES)/presets/)
 
 # The fits as live trials (W-081): optuna-dashboard on a study journal -- make baseline's, or a
 # screen's or tuning's batch journal under $(STATE)/<section>/ (W-092). By default the one
@@ -204,15 +194,21 @@ assets-same: assets ## Check the assets against the recorded baseline
 	$(call log_done,assets match $(ASSETS_BASELINE))
 
 .PHONY: compile
-compile: assets ## Build the flat paper and its PDF under build/paper/
-	@dups=$$({ printf '%s\n' $(notdir $(PAPER_SRC)); find $(ASSETS) -type f -printf '%f\n'; } \
-	          | sort | uniq -d); \
+compile: assets figures ## Build the flat paper and its PDF under build/paper/
+	@picked=$$(grep -ho 'includegraphics\[[^]]*\]{[^}]*}' $(ASSETS)/*/*.tex | sed 's/.*{\(.*\)}/\1/' | sort -u); \
+	  dups=$$({ printf '%s\n' $(notdir $(PAPER_SRC)); find $(ASSETS) -type f -printf '%f\n'; \
+	            for stem in $$picked; do printf '%s.png\n' $$stem; done; } | sort | uniq -d); \
 	  if [ -n "$$dups" ]; then \
 	    printf 'duplicate source or asset basenames (the build is flat): %s\n' "$$dups" >&2; exit 1; \
 	  fi
 	@rm -rf $(PAPER_DIR) && mkdir -p $(PAPER_DIR)
 	@cp $(PAPER_SRC) $(PAPER_DIR)/
 	@find $(ASSETS) -type f -exec cp {} $(PAPER_DIR)/ \;
+	@# The picked variants: the PNG each figure wrapper includes, from build/figures/<section>/.
+	@for stem in $$(grep -ho 'includegraphics\[[^]]*\]{[^}]*}' $(ASSETS)/*/*.tex | sed 's/.*{\(.*\)}/\1/' | sort -u); do \
+	  test -f $(FIGURES)/*/$$stem.png || { printf 'no figure %s.png under %s: make figures draws it\n' $$stem $(FIGURES) >&2; exit 1; }; \
+	  cp $(FIGURES)/*/$$stem.png $(PAPER_DIR)/; \
+	done
 	@cp $(PAPER_ENTRY) $(PAPER_DIR)/main.tex
 	$(call log_info,assembled $(words $(PAPER_SRC)) sources and the assets of $(ASSETS)/ into $(PAPER_DIR)/ -- compiling)
 	@# -g: latexmk records no file an \InputIfFileExists missed, so a figure a pick adds or

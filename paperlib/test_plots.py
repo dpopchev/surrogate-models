@@ -4,14 +4,10 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-from pathlib import Path
-
 import matplotlib.pyplot as plt
-import numpy as np
 import pytest
 import seaborn as sns
 from matplotlib.colors import to_hex
-from matplotlib.figure import Figure
 from pydantic import ValidationError
 
 from paperlib.plots import (
@@ -22,10 +18,8 @@ from paperlib.plots import (
     anchor_color,
     apply_style,
     colormap,
-    contact_sheet,
     figure_size,
     make_symbols,
-    write_variant_sheet,
 )
 
 # A 2 in wide, 3 in tall text block.
@@ -36,25 +30,6 @@ STYLE = PlotStyle(usetex=False, font_size=9.0, text_width_pt=144.54, text_height
 def _restore_rcparams():
     with plt.rc_context():
         yield
-
-
-@pytest.mark.view
-def test_contact_sheet_places_one_labelled_panel_per_image(tmp_path: Path) -> None:
-    images = {label: tmp_path / f"{label}.png" for label in ("inset", "departure")}
-    for path in images.values():
-        plt.imsave(path, np.zeros((4, 6)))
-    sheet = contact_sheet(images)
-    assert [axes.get_title() for axes in sheet.axes] == ["inset", "departure"]
-
-
-@pytest.mark.view
-def test_variant_sheet_writes_one_png_per_variant_and_the_sheet(tmp_path: Path) -> None:
-    def drawer() -> Figure:
-        return plt.figure(figsize=(1, 1))
-
-    write_variant_sheet(tmp_path, "toy", {"one": drawer, "two": drawer}, STYLE)
-    written = sorted(path.name for path in tmp_path.glob("*.png"))
-    assert written == ["toy_one.png", "toy_two.png", "toy_variants.png"]
 
 
 @pytest.mark.model

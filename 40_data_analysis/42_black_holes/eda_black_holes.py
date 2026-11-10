@@ -10,6 +10,7 @@ become \\bhEda... macros; the dataset-agnostic machinery lives in paperlib/eda.p
 import argparse
 import json
 import logging
+import pickle
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -72,7 +73,6 @@ from paperlib.plots import (
     colormap,
     line_width,
     mark_size,
-    write_variant_sheet,
 )
 from paperlib.tables import Table, Text, aligns, fixed, number, render, to_json
 
@@ -458,6 +458,11 @@ def asset(figure: BhFigure) -> str:
     return f"{SECTION}_fig_{figure}"
 
 
+def picked_stem(figure: BhFigure, variants: BlackHoleVariants = DEFAULT_VARIANTS) -> str:
+    """The stem of the file the paper includes: the picked variant's PNG under build/figures/."""
+    return f"{asset(figure)}_{getattr(variants, figure)}"
+
+
 def _mass_radius_caption(variant: BhMassRadiusVariant) -> str:
     """The caption of the mass_radius figure in one variant."""
     match variant:
@@ -529,7 +534,7 @@ def figure_tex(figure: BhFigure, variants: BlackHoleVariants = DEFAULT_VARIANTS)
     of a page (!htb)."""
     return (
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{asset(figure)}}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{picked_stem(figure, variants)}}}\n"
         f"\\caption{{{caption(figure, variants)}}}\n"
         f"\\label{{fig:bh-{figure.replace('_', '-')}}}\n"
         "\\end{figure}\n"
@@ -762,34 +767,7 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
         type=Path,
         help="the state dir: the tables and numbers are stored as JSON under <state>/<section>/",
     )
-    parser.add_argument(
-        "--variants",
-        type=Path,
-        help="draw every variant of each figure into this dir to pick from; assets untouched",
-    )
     return parser.parse_args(argv)
-
-
-def _write_variants(out: Path, table: pd.DataFrame, style: PlotStyle) -> None:
-    """Every variant of each figure with variants, the ceilings figure's included, and per
-    figure their contact sheet, into out."""
-    out.mkdir(parents=True, exist_ok=True)
-    for name, field in BlackHoleVariants.model_fields.items():
-        if name == "ceilings":
-            continue
-        if name not in get_args(BhFigure):
-            raise ValueError(f"variants field {name} names no BH figure")
-        figure = cast(BhFigure, name)
-        drawers = {
-            variant: partial(
-                draw, figure, table, style, BlackHoleVariants.model_validate({name: variant})
-            )
-            for variant in get_args(field.annotation)
-        }
-        write_variant_sheet(out, asset(figure), drawers, style)
-    bounds = _bounds(table)
-    ceilings = {v: partial(_ceilings, bounds, style, v) for v in get_args(CeilingsVariant)}
-    write_variant_sheet(out, f"{SECTION}_fig_ceilings", ceilings, style)
 
 
 def _bounds(table: pd.DataFrame) -> Ceilings:
@@ -801,6 +779,52 @@ def _ceilings(bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant) -> F
     """The ceilings figure in one variant."""
     colors = {"beta": anchor_color(style, "black_holes")}
     return ceiling_figure(bounds, CEILING_LABELS, SYMBOLS["r_h"], colors, variant)
+
+
+@dataclass(frozen=True)
+class FigureData:
+    """What the figures plot, stored by the main run for the figures mode: the table with its
+    charge targets and the ceiling bounds."""
+
+    table: pd.DataFrame
+    bounds: Ceilings
+
+
+def _figure_data_path(state: Path) -> Path:
+    """Where the main run stores the figure data, machine-local interim."""
+    return state / SECTION / "figures.pkl"
+
+
+def _figure_arguments(argv: list[str]) -> argparse.Namespace:
+    """The figures mode: the out dir and the state dir the main run stored its data in."""
+    parser = argparse.ArgumentParser(prog="eda_black_holes.py")
+    parser.add_argument("--figures", type=Path, required=True, help="draw every variant here")
+    parser.add_argument("--state", type=Path, required=True, help="the state dir of the main run")
+    return parser.parse_args(argv)
+
+
+def _draw_figures(out: Path, data: FigureData, style: PlotStyle) -> None:
+    """Every variant of every figure with variants as <out>/<section>_fig_<name>_<variant>.png,
+    drawn from the stored data alone."""
+    out.mkdir(parents=True, exist_ok=True)
+    drawers: dict[str, partial[Figure]] = {}
+    for name, field in BlackHoleVariants.model_fields.items():
+        for variant in get_args(field.annotation):
+            if name == "ceilings":
+                drawers[f"{SECTION}_fig_ceilings_{variant}"] = partial(
+                    _ceilings, data.bounds, style, variant
+                )
+                continue
+            if name not in get_args(BhFigure):
+                raise ValueError(f"variants field {name} names no BH figure")
+            figure = cast(BhFigure, name)
+            chosen = BlackHoleVariants.model_validate({name: variant})
+            drawers[f"{asset(figure)}_{variant}"] = partial(draw, figure, data.table, style, chosen)
+    for stem, drawer in drawers.items():
+        fig = drawer()
+        fig.savefig(out / f"{stem}.png", dpi=style.dpi)
+        plt.close(fig)
+    logger.info("done: %d BH figure variants -> %s", len(drawers), out)
 
 
 def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
@@ -819,13 +843,10 @@ def _write_ceilings(
     out: Path, bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant
 ) -> None:
     """Write the figure of the data limits."""
-    fig = _ceilings(bounds, style, variant)
-    fig.savefig(out / f"{SECTION}_fig_ceilings.png", dpi=style.dpi)
-    plt.close(fig)
     caption_ = ceilings_caption(*CEILINGS_FIGURE, variant)
     (out / f"{SECTION}_fig_ceilings.tex").write_text(
         "\\begin{figure}[!htb]\n\\centering\n"
-        f"\\includegraphics[width=\\textwidth]{{{SECTION}_fig_ceilings}}\n"
+        f"\\includegraphics[width=\\textwidth]{{{SECTION}_fig_ceilings_{variant}}}\n"
         f"\\caption{{{caption_}}}\n\\label{{fig:bh-ceilings}}\n\\end{{figure}}\n"
     )
 
@@ -836,25 +857,26 @@ def main(
     section: BlackHolesSection | None = None,
 ) -> None:
     """Write the selected figures and tables and the numbers into the section's folder of the
-    asset dir, after emptying that folder of an earlier run -- or, given --variants, only
-    every figure variant and its contact sheet into that dir's section folder."""
+    asset dir, after emptying that folder of an earlier run -- or, given --figures, every
+    variant as its own PNG from the data the main run stored."""
+    if "--figures" in argv:
+        figure_args = _figure_arguments(argv)
+        config = config or load_config()
+        apply_style(config.plot, NOTATION_TEX.read_text())
+        data = pickle.loads(_figure_data_path(figure_args.state).read_bytes())
+        _draw_figures(figure_args.figures / SECTION, data, config.plot)
+        return
     args = _arguments(argv)
     source, out = args.table, args.assets / SECTION
     assert source.is_file(), f"prepared BH table not found: {source}"
     config = config or load_config()
     apply_style(config.plot, NOTATION_TEX.read_text())
     table = with_charge_targets(pd.read_parquet(source))
-    if args.variants is not None:
-        _write_variants(args.variants / SECTION, table, config.plot)
-        return
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
     section = section or load_section(BlackHolesSection, SECTION_TOML)
     for figure in section.figures:
-        fig = draw(figure, table, config.plot, section.variants)
-        fig.savefig(out / f"{asset(figure)}.png", dpi=config.plot.dpi)
-        plt.close(fig)
         (out / f"{asset(figure)}.tex").write_text(figure_tex(figure, section.variants))
     found = evidence(table, args.folds, args.seed)
     bounds = _bounds(table)
@@ -865,8 +887,9 @@ def main(
         | ceiling_macros("bhEda", bounds, CEILING_TAGS)
         | uncertainty_macros("bhEda", bounds, CEILING_TAGS, typical, "D")
     )
-    assert args.state is not None, "--state is required unless --variants is given"
+    assert args.state is not None, "--state is required"
     _store(args.state, table_objects(found, section.tables, bounds), macros)
+    _figure_data_path(args.state).write_bytes(pickle.dumps(FigureData(table, bounds)))
     _write_ceilings(out, bounds, config.plot, section.variants.ceilings)
     logger.info(
         "done: BH figures %s -> %s, tables %s and numbers -> %s",

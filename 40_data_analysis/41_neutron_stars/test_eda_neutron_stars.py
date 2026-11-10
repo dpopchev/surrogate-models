@@ -125,6 +125,12 @@ def test_figure_tex_includes_its_figure() -> None:
     )
 
 
+@pytest.mark.view
+def test_figure_tex_includes_the_picked_variant_file() -> None:
+    variants = NeutronStarVariants(mass_density="by_beta")
+    assert "{41_neutron_stars_fig_mass_density_by_beta}" in figure_tex("mass_density", variants)
+
+
 def grid(betas: range, lambdas: range, missing: tuple[tuple[int, int], ...] = ()) -> pd.DataFrame:
     """A beta x lambda grid of 4-row curves whose D follows beta, lambda and the row."""
     return curves(
@@ -353,7 +359,6 @@ class TestMain:
 
     def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:
         assert sorted(p.name for p in (assets / "41_neutron_stars").iterdir()) == [
-            "41_neutron_stars_fig_ceilings.png",
             "41_neutron_stars_fig_ceilings.tex",
             "41_neutron_stars_fig_grid_fill.png",
             "41_neutron_stars_fig_grid_fill.tex",
@@ -372,6 +377,36 @@ class TestMain:
 
     def test_writes_the_raw_counts_into_the_numbers(self, assets) -> None:
         assert self.numbers(assets)["nsEdaRawRows"] == "20"
+
+
+@pytest.mark.functional
+def test_ns_eda_draws_every_variant_as_its_own_file(tmp_path: Path) -> None:
+    table, assets, state = tmp_path / "ns.parquet", tmp_path / "assets", tmp_path / "state"
+    prepared = DENSE.copy()
+    prepared.attrs.update({"runs": 5, "empty_runs": 1, "rows": 20})
+    prepared.to_parquet(table)
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
+    knobs = ["--folds", "2", "--seed", "0", "--window", str(WINDOW)]
+    main(
+        [str(table), str(assets), "--state", str(state), *knobs],
+        config=config,
+        section=NeutronStarsSection.model_validate({"figures": []}),
+    )
+    out = tmp_path / "figures"
+    main(["--figures", str(out), "--state", str(state)], config=config)
+    stem = "41_neutron_stars_fig_"
+    expected = {
+        f"{stem}{name}_{variant}.png"
+        for name, variants in {
+            "ceilings": ("annotated", "figures_axis", "one_panel"),
+            "charge_target": ("scatter", "lines", "lambda_inset"),
+            "mass_density": ("by_lambda", "by_beta", "two_panels"),
+            "mass_max": ("histogram_heatmap", "heatmap_contours", "log_histogram"),
+            "univariate_continuous": ("histograms", "log_counts", "transposed"),
+        }.items()
+        for variant in variants
+    }
+    assert {p.name for p in (out / "41_neutron_stars").iterdir()} == expected
 
 
 @pytest.mark.functional

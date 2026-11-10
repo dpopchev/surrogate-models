@@ -30,7 +30,7 @@ $(BASELINE_STATE)/numbers.json $(BASELINE_ASSETS) &: $(BASELINE) $(RENDER_ASSETS
 	$(call log_info,fitting the baseline on NS and BH$(comma) mass and charge -- one line per epoch; make follow shows it from any terminal)
 	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE)
 	@$(RUN) python $(RENDER_ASSETS) $(BASELINE_STATE) $(ASSETS)
-	$(call log_done,baseline table and numbers rendered and parity figure written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
+	$(call log_done,baseline table and numbers rendered and parity wrapper written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
 
 .PHONY: baseline
 baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1
@@ -91,3 +91,12 @@ B           ?=
 ledger: ## List the run ledger -- B=<batch> for one batch
 	@$(RUN) python $(LIST_LEDGER) $(STATE) $(if $(B),--batch $(B))
 	$(call log_done,ledger listed from $(LEDGER)/ -- $(words $(wildcard $(LEDGER)/*.json)) entries$(if $(B), in all$(comma) batch $(B) shown))
+
+# Every parity variant as its own PNG under build/figures/51_algorithms/, redrawn from the
+# baseline batch recorded in the ledger; nothing is fitted.
+BASELINE_FIGURES := $(BUILD)/figures
+
+.PHONY: 51_algorithms_figures
+51_algorithms_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every baseline figure variant as its own PNG under build/figures/
+	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) --figures $(BASELINE_FIGURES)
+	$(call log_done,baseline figure variants in $(BASELINE_FIGURES)/51_algorithms/)

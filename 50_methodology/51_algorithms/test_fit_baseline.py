@@ -388,8 +388,8 @@ def test_parity_all_pairs_has_four_axes() -> None:
 
 
 @pytest.mark.view
-def test_the_figure_wrapper_includes_the_parity_image() -> None:
-    assert "{51_algorithms_fig_parity}" in figure_tex()
+def test_the_figure_wrapper_includes_the_picked_parity_variant() -> None:
+    assert "{51_algorithms_fig_parity_all_pairs}" in figure_tex("all_pairs")
 
 
 NS_KEYS = [(1.0, 1.0), (1.0, 2.0), (2.0, 1.0), (2.0, 2.0), (3.0, 1.0)]
@@ -455,6 +455,21 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return folder
 
 
+@pytest.mark.edge
+def test_table_rebuild_writes_the_parity_wrapper(ran: Path, tmp_path: Path) -> None:
+    folder = tmp_path / "assets" / SECTION
+    folder.mkdir(parents=True)
+    (folder / f"{SECTION}_fig_parity.png").write_bytes(b"stale")
+    (folder / f"{SECTION}_num.tex").write_text("kept")
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
+    main(
+        [str(ran / name) for name in ("ns.parquet", "bh.parquet", "split.parquet")]
+        + [str(tmp_path / "assets"), str(ran / "state"), "--tables"],
+        config,
+    )
+    assert {p.name for p in folder.iterdir()} == {f"{SECTION}_num.tex", f"{SECTION}_fig_parity.tex"}
+
+
 @pytest.mark.functional
 def test_the_run_names_make_dashboard_as_it_starts(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
@@ -488,11 +503,10 @@ class TestMain:
         stored = (ran / "state" / SECTION / "tables" / "baseline.json").read_text()
         return render(table_from_json(stored), "small")
 
-    def test_writes_the_parity_figure_into_its_section_and_empties_it_of_the_rest(
+    def test_writes_the_parity_wrapper_alone_into_its_section_and_empties_it_of_the_rest(
         self, ran: Path
     ) -> None:
         assert sorted(p.name for p in (ran / "assets" / SECTION).iterdir()) == [
-            "51_algorithms_fig_parity.png",
             "51_algorithms_fig_parity.tex",
         ]
 
