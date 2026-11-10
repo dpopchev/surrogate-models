@@ -5,7 +5,7 @@ NS_EDA        := 90_appendix/91_neutron_stars/eda_neutron_stars.py
 NS_EDA_TOML   := 90_appendix/91_neutron_stars/91_neutron_stars.toml
 NS_EDA_ASSETS := $(ASSETS)/91_neutron_stars/91_neutron_stars_num.tex
 PAPER_ASSETS  += $(NS_EDA_ASSETS)
-# The EDA probes the split with the split's own folds and seed (95_algorithms.mk); the NS pile-up
+# The EDA probes the split with the split's own folds and seed (51_algorithms.mk); the NS pile-up
 # window in M is the band below a curve's M_max that Section 3.1 counts.
 NS_PILE_UP_WINDOW := 0.09
 

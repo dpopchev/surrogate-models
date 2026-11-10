@@ -1,4 +1,4 @@
-# Section 3.3: the split numbers, from the split file (95_algorithms.mk).
+# Section 3.3: the split numbers, from the split file (51_algorithms.mk).
 PREP_NUMBERS := 90_appendix/93_preprocessing/preprocessing_numbers.py
 PREP_ASSETS  := $(ASSETS)/93_preprocessing/93_preprocessing_num.tex
 PAPER_ASSETS += $(PREP_ASSETS)
