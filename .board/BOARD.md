@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-013 > W-140 > T-373   | blocked: 0 | todo roots: 14 | done: 415 | pruned: 60
+open path: E-013 > W-140 > T-373   | blocked: 0 | todo roots: 15 | done: 415 | pruned: 60
 
 ## Tree
 
@@ -59,6 +59,7 @@ W-143  issue  [todo]     (standalone) A Table refuses a row whose width differs 
 W-144  issue  [todo]     (standalone) The shipped section settings are pinned by tests   (filed during T-359) -- T-383 [todo]
 W-145  issue  [todo]     (standalone) One helper stores a section's tables and numbers   (filed during T-364) -- T-384 [todo]
 W-146  issue  [todo]     (standalone) The settings comments name where the variants are drawn now   (filed during T-368) -- T-386 [todo]
+W-147  issue  [todo]     (standalone) Code comments and the citation notes name the sections the paper now has   (filed during T-373) -- T-388 [todo]
 ```
 
 ## Closed
@@ -884,6 +885,8 @@ flowchart TD
   W145 --> T384["T-384 todo: Promote the store step -> paperlib/tools/render_assets.py store_section"]
   W146["W-146 issue todo, standalone: The settings comments name where the variants are drawn now"]
   W146 --> T386["T-386 todo: Point the settings comments at make figures -> paper.toml and the section tomls"]
+  W147["W-147 issue todo, standalone: Code comments and the citation notes name the sections the paper now has"]
+  W147 --> T388["T-388 todo: Rename the stale section numbers -> comments, help strings, docstrings and 00_metadata/citations.md"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -891,6 +894,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,E009,E013,W140,T373 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,T374,T375,W141,T376,T377,W142,T378,T379,T380,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W146,T386 todo
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,T374,T375,W141,T376,T377,W142,T378,T379,T380,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W146,T386,W147,T388 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
