@@ -43,6 +43,7 @@
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
 - 2026-11-10 E-009: parked -- 4 decisions, 5 deviations -> ledgers/E-009.md
+- 2026-11-10 E-013: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 8 hours) (developer, 2026-11-10)
 - 2026-11-10 E-013: goal: a pipeline that is the algorithm for building surrogates which minimize the relative error, extrapolate beyond the data and flag out-of-domain inputs with feedback, tested on the 2-parameter (BH) and 3-parameter (NS) maps (developer, 2026-11-10)
 - 2026-11-10 E-013: the paper's focus is the physics of compact objects; the data science goes to the appendix; MCMC is future work (developer, 2026-11-10)
 
