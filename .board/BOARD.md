@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 10 | done: 383 | pruned: 60
+open path: none   | blocked: 0 | todo roots: 12 | done: 383 | pruned: 60
 
 ## Tree
 
@@ -43,6 +43,17 @@ E-009         [doing]    The paper follows the revised structure, and the releas
   W-059  spike  [done]     Which refs.bib keys the revised structure's citations name -- T-107 [done], T-108 [pruned]   [pruned: superseded: the real references move to the standalone spike W-061 (T-118); W-059 closes on placeholder keys (T-117)], T-117 [done]
   W-060  issue  [done]     Title and outline bullets aligned to the revised structure -- T-114 [done], T-115 [done], T-116 [done]
   W-100  spike  [todo]     What the paper claims once the search names its winners   (filed during T-206) -- T-233 [todo], T-234 [todo]
+E-012         [todo]     Section modules, paperlib and standalone figures and tables
+  W-134  issue  [todo]     shared/ and the paper-wide tools become the paperlib package -- T-351 [todo], T-352 [todo], T-353 [todo]
+  W-135  issue  [todo]     Tables are built as objects -- T-354 [todo], T-355 [todo], T-356 [todo], T-357 [todo]
+  W-136  issue  [todo]     One section builds on its own -- T-358 [todo], T-359 [todo], T-360 [todo], T-361 [todo]
+  W-137  issue  [todo]     Tables and numbers pass through local/state -- T-362 [todo], T-363 [todo], T-364 [todo], T-365 [todo]
+  W-138  issue  [todo]     Every figure variant is its own file under build/figures -- T-366 [todo], T-367 [todo], T-368 [todo], T-369 [todo]
+  W-139  issue  [todo]     Every table layout and shape is its own file under build/tables -- T-370 [todo], T-371 [todo], T-372 [todo]
+E-013         [todo]     The paper tells the physics, the data science is the appendix
+  W-140  issue  [todo]     The data-science subsections become the appendix -- T-373 [todo], T-374 [todo], T-375 [todo]
+  W-141  issue  [todo]     The body follows the agreed outline -- T-376 [todo], T-377 [todo]
+  W-142  issue  [todo]     The abstract, introduction and conclusion outlines state the pipeline goal -- T-378 [todo], T-379 [todo], T-380 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
 W-119  bug    [todo]     (standalone) The ranges figure crashes on a batch with no network job   (filed during T-294) -- T-295 [todo]
@@ -790,6 +801,47 @@ flowchart TD
   E009 --> W100["W-100 spike todo: What the paper claims once the search names its winners"]
   W100 --> T233["T-233 todo: List every claim of the title block, abstract, introduction, Section 3.4 and Section 7 against Section 5 -> Findings on W-100"]
   W100 --> T234["T-234 todo: Decide the thesis with the developer and the supervisors -> the W-100 spike decision"]
+  E012["E-012 todo: Section modules, paperlib and standalone figures and tables"]
+  E012 --> W134["W-134 issue todo: shared/ and the paper-wide tools become the paperlib package"]
+  W134 --> T351["T-351 todo: Add the assets comparison -> make assets-baseline and make assets-same in mk/paper.mk"]
+  W134 --> T352["T-352 todo: Move shared/ into the package paperlib/ -> paperlib/ with every import rewritten"]
+  W134 --> T353["T-353 todo: Move the tools and LaTeX includes of 00_metadata into paperlib -> paperlib/tools/ and paperlib/latex/"]
+  E012 --> W135["W-135 issue todo: Tables are built as objects"]
+  W135 --> T354["T-354 todo: Write the Table object and its renderer test-first -> paperlib/tables.py"]
+  W135 --> T355["T-355 todo: Port the Section 3 tables to Table -> eda_neutron_stars.py, eda_black_holes.py, paperlib/ceilings.py"]
+  W135 --> T356["T-356 todo: Port the methodology and results tables to Table -> fit_baseline.py and the three results scripts"]
+  W135 --> T357["T-357 todo: Remove the string table renderer -> paperlib/eda.py without booktabs and its parsers"]
+  E012 --> W136["W-136 issue todo: One section builds on its own"]
+  W136 --> T358["T-358 todo: Load the settings of a section from its own toml -> load_section in paperlib/config.py"]
+  W136 --> T359["T-359 todo: Split paper.toml into the section settings files -> <section>/<section>.toml beside each script"]
+  W136 --> T360["T-360 todo: Move the recipes of each section into its folder -> <section>/<section>.mk with a target named after the folder"]
+  W136 --> T361["T-361 todo: Guard the section boundary -> a test that no section imports another"]
+  E012 --> W137["W-137 issue todo: Tables and numbers pass through local/state"]
+  W137 --> T362["T-362 todo: Store a Table as JSON -> to_json and from_json in paperlib/tables.py"]
+  W137 --> T363["T-363 todo: Render stored tables and numbers into assets -> paperlib/tools/render_assets.py"]
+  W137 --> T364["T-364 todo: Hand the Section 3 tables and numbers through local/state -> 41, 42 and 43 write JSON, render_assets writes the assets"]
+  W137 --> T365["T-365 todo: Hand the methodology and results tables and numbers through local/state -> 51, 61, 62 and 63 write JSON"]
+  E012 --> W138["W-138 issue todo: Every figure variant is its own file under build/figures"]
+  W138 --> T366["T-366 todo: Draw every Section 3 figure variant as its own file -> a figures mode in eda_neutron_stars.py and eda_black_holes.py"]
+  W138 --> T367["T-367 todo: Draw every methodology and results figure variant as its own file -> a figures mode in fit_baseline.py, screen_families.py and tune_survivors.py"]
+  W138 --> T368["T-368 todo: Remove the contact sheets -> paperlib/plots.py without contact_sheet, the presets as standalone files"]
+  W138 --> T369["T-369 todo: Wire make figures and the picks of the paper -> a figures target in mk/paper.mk, the paper includes build/figures"]
+  E012 --> W139["W-139 issue todo: Every table layout and shape is its own file under build/tables"]
+  W139 --> T370["T-370 todo: Turn the table shapes into functions over Table -> one Table -> Table function per shape in the four scripts"]
+  W139 --> T371["T-371 todo: Render every table layout and shape as a standalone PDF -> paperlib/tools/table_pages.py and make tables"]
+  W139 --> T372["T-372 todo: Remove the table environment overrides -> no PAPER__TABLES__ left, table-variants gone"]
+  E013["E-013 todo: The paper tells the physics, the data science is the appendix"]
+  E013 --> W140["W-140 issue todo: The data-science subsections become the appendix"]
+  W140 --> T373["T-373 todo: Move the Section 3 folders into the appendix -> 90_appendix/91_neutron_stars to 94_hypotheses"]
+  W140 --> T374["T-374 todo: Move the methodology and results subsections into the appendix -> 90_appendix/95_algorithms to 99_precision"]
+  W140 --> T375["T-375 todo: Finish the appendix entry -> 90_appendix.tex opens the appendix, the model families join 98_families"]
+  E013 --> W141["W-141 issue todo: The body follows the agreed outline"]
+  W141 --> T376["T-376 todo: Write the new body sections as outlines -> 35_domain_boundaries, 40_pipeline, 50_validity, 70_discussion"]
+  W141 --> T377["T-377 todo: Fold MCMC into the conclusion and group the results by dataset -> 80_conclusion.tex future work, 60_results 61 to 64, 70_mcmc removed"]
+  E013 --> W142["W-142 issue todo: The abstract, introduction and conclusion outlines state the pipeline goal"]
+  W142 --> T378["T-378 todo: Rewrite the abstract outline -> 10_abstract/10_abstract.tex states the pipeline goal"]
+  W142 --> T379["T-379 todo: Rewrite the introduction outline -> 20_introduction/20_introduction.tex contributions name the pipeline"]
+  W142 --> T380["T-380 todo: Rewrite the conclusion outline -> 80_conclusion/80_conclusion.tex summarizes the pipeline"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W088["W-088 issue todo, standalone: A running representation screen is followable -- progress, time left and each entry's representation"]
@@ -816,6 +868,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E006,E009 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347 todo
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,E012,W134,T351,T352,T353,W135,T354,T355,T356,T357,W136,T358,T359,T360,T361,W137,T362,T363,T364,T365,W138,T366,T367,T368,T369,W139,T370,T371,T372,E013,W140,T373,T374,T375,W141,T376,T377,W142,T378,T379,T380,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
