@@ -73,17 +73,17 @@ class TestMain:
         split = tmp_path / "s.parquet"
         SPLIT.to_parquet(split)
         state = tmp_path / "state"
-        (state / "41_neutron_stars").mkdir(parents=True)
-        (state / "41_neutron_stars" / "kept.json").write_text("another section's state")
+        (state / "91_neutron_stars").mkdir(parents=True)
+        (state / "91_neutron_stars" / "kept.json").write_text("another section's state")
         main([str(split), str(state), "--seed", "7"])
         return state
 
     def test_stores_the_numbers_in_its_section_folder_alone(self, state) -> None:
-        assert [p.name for p in (state / "43_preprocessing").iterdir()] == ["numbers.json"]
+        assert [p.name for p in (state / "93_preprocessing").iterdir()] == ["numbers.json"]
 
     def test_stores_the_numbers_by_macro_name(self, state) -> None:
-        stored = json.loads((state / "43_preprocessing" / "numbers.json").read_text())
+        stored = json.loads((state / "93_preprocessing" / "numbers.json").read_text())
         assert stored["prepBhTestCurves"] == "1"
 
     def test_leaves_other_sections_alone(self, state) -> None:
-        assert (state / "41_neutron_stars" / "kept.json").is_file()
+        assert (state / "91_neutron_stars" / "kept.json").is_file()

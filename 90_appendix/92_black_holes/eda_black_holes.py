@@ -114,7 +114,7 @@ class BlackHolesSection(BaseModel):
     variants: BlackHoleVariants = BlackHoleVariants()
 
 
-SECTION_TOML = Path(__file__).with_name("42_black_holes.toml")
+SECTION_TOML = Path(__file__).with_name("92_black_holes.toml")
 
 CURVE = ("beta",)
 BH_SPACE = make_curve_space({"beta": "raw", "r_h": "raw"}, CURVE)
@@ -449,7 +449,7 @@ def table_objects(
 
 
 # The section's asset folder, and the prefix that keeps its basenames unique in the flat build.
-SECTION = "42_black_holes"
+SECTION = "92_black_holes"
 DEFAULT_VARIANTS = BlackHoleVariants()
 
 

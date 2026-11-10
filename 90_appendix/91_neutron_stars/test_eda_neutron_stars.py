@@ -120,7 +120,7 @@ def test_numbers_name_the_grid_fill_in_percent() -> None:
 
 @pytest.mark.view
 def test_figure_tex_includes_its_figure() -> None:
-    assert "\\includegraphics[width=\\textwidth]{41_neutron_stars_fig_grid_fill}" in figure_tex(
+    assert "\\includegraphics[width=\\textwidth]{91_neutron_stars_fig_grid_fill}" in figure_tex(
         "grid_fill"
     )
 
@@ -128,7 +128,7 @@ def test_figure_tex_includes_its_figure() -> None:
 @pytest.mark.view
 def test_figure_tex_includes_the_picked_variant_file() -> None:
     variants = NeutronStarVariants(mass_density="by_beta")
-    assert "{41_neutron_stars_fig_mass_density_by_beta}" in figure_tex("mass_density", variants)
+    assert "{91_neutron_stars_fig_mass_density_by_beta}" in figure_tex("mass_density", variants)
 
 
 def grid(betas: range, lambdas: range, missing: tuple[tuple[int, int], ...] = ()) -> pd.DataFrame:
@@ -343,10 +343,10 @@ class TestMain:
         prepared = DENSE.copy()
         prepared.attrs.update({"runs": 5, "empty_runs": 1, "rows": 20})  # as preparation keeps
         prepared.to_parquet(table)
-        (assets / "41_neutron_stars").mkdir(parents=True)
-        (assets / "41_neutron_stars" / "old.pdf").write_text("deselected since the last run")
-        (assets / "42_black_holes").mkdir()
-        (assets / "42_black_holes" / "kept.tex").write_text("another section's asset")
+        (assets / "91_neutron_stars").mkdir(parents=True)
+        (assets / "91_neutron_stars" / "old.pdf").write_text("deselected since the last run")
+        (assets / "92_black_holes").mkdir()
+        (assets / "92_black_holes" / "kept.tex").write_text("another section's asset")
         selection = {"figures": ["grid_fill"], "tables": ["split_strategies"]}
         config = PaperConfig.model_validate({"plot": {"usetex": False}})
         knobs = ["--folds", "2", "--seed", "0", "--window", str(WINDOW)]
@@ -358,22 +358,22 @@ class TestMain:
         return assets
 
     def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:
-        assert sorted(p.name for p in (assets / "41_neutron_stars").iterdir()) == [
-            "41_neutron_stars_fig_ceilings.tex",
-            "41_neutron_stars_fig_grid_fill.png",
-            "41_neutron_stars_fig_grid_fill.tex",
+        assert sorted(p.name for p in (assets / "91_neutron_stars").iterdir()) == [
+            "91_neutron_stars_fig_ceilings.tex",
+            "91_neutron_stars_fig_grid_fill.png",
+            "91_neutron_stars_fig_grid_fill.tex",
         ]
 
     @staticmethod
     def numbers(assets: Path) -> dict[str, str]:
         """The numbers the run stored under the state folder beside the assets."""
-        return json.loads((assets.parent / "state/41_neutron_stars/numbers.json").read_text())
+        return json.loads((assets.parent / "state/91_neutron_stars/numbers.json").read_text())
 
     def test_writes_the_reachable_figures_into_the_numbers(self, assets) -> None:
         assert "nsEdaCeilDFigures" in self.numbers(assets)
 
     def test_leaves_other_sections_alone(self, assets) -> None:
-        assert (assets / "42_black_holes" / "kept.tex").is_file()
+        assert (assets / "92_black_holes" / "kept.tex").is_file()
 
     def test_writes_the_raw_counts_into_the_numbers(self, assets) -> None:
         assert self.numbers(assets)["nsEdaRawRows"] == "20"
@@ -394,7 +394,7 @@ def test_ns_eda_draws_every_variant_as_its_own_file(tmp_path: Path) -> None:
     )
     out = tmp_path / "figures"
     main(["--figures", str(out), "--state", str(state)], config=config)
-    stem = "41_neutron_stars_fig_"
+    stem = "91_neutron_stars_fig_"
     expected = {
         f"{stem}{name}_{variant}.png"
         for name, variants in {
@@ -406,7 +406,7 @@ def test_ns_eda_draws_every_variant_as_its_own_file(tmp_path: Path) -> None:
         }.items()
         for variant in variants
     }
-    assert {p.name for p in (out / "41_neutron_stars").iterdir()} == expected
+    assert {p.name for p in (out / "91_neutron_stars").iterdir()} == expected
 
 
 @pytest.mark.functional
@@ -422,7 +422,7 @@ def test_ns_eda_writes_its_five_tables_as_json(tmp_path: Path) -> None:
         config=config,
         section=NeutronStarsSection.model_validate({"figures": []}),
     )
-    stored = {path.stem for path in (state / "41_neutron_stars" / "tables").glob("*.json")}
+    stored = {path.stem for path in (state / "91_neutron_stars" / "tables").glob("*.json")}
     assert stored == {
         "univariate",
         "charge_correlation",

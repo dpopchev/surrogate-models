@@ -127,7 +127,7 @@ class NeutronStarsSection(BaseModel):
     variants: NeutronStarVariants = NeutronStarVariants()
 
 
-SECTION_TOML = Path(__file__).with_name("41_neutron_stars.toml")
+SECTION_TOML = Path(__file__).with_name("91_neutron_stars.toml")
 
 CURVE = ("beta", "lambda")
 # The probe space: beta and lambda as they are, the central density in log10.
@@ -495,7 +495,7 @@ def _split_error(score: SplitScore) -> str:
 
 
 # The section's asset folder, and the prefix that keeps its basenames unique in the flat build.
-SECTION = "41_neutron_stars"
+SECTION = "91_neutron_stars"
 DEFAULT_VARIANTS = NeutronStarVariants()
 
 

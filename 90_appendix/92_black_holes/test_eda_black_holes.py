@@ -233,7 +233,7 @@ def test_charge_table_has_a_row_per_candidate_target() -> None:
 
 @pytest.mark.view
 def test_figure_tex_includes_the_file_of_the_picked_variant() -> None:
-    assert "{42_black_holes_fig_existence_edge_segments}" in figure_tex("existence_edge")
+    assert "{92_black_holes_fig_existence_edge_segments}" in figure_tex("existence_edge")
 
 
 KNOBS = ["--folds", "3", "--seed", "0"]
@@ -246,10 +246,10 @@ class TestMain:
     def assets(self, tmp_path: Path) -> Path:
         table, assets = tmp_path / "bh.parquet", tmp_path / "assets"
         curves().to_parquet(table)
-        (assets / "42_black_holes").mkdir(parents=True)
-        (assets / "42_black_holes" / "old.pdf").write_text("deselected")
-        (assets / "41_neutron_stars").mkdir()
-        (assets / "41_neutron_stars" / "kept.tex").write_text("another section's asset")
+        (assets / "92_black_holes").mkdir(parents=True)
+        (assets / "92_black_holes" / "old.pdf").write_text("deselected")
+        (assets / "91_neutron_stars").mkdir()
+        (assets / "91_neutron_stars" / "kept.tex").write_text("another section's asset")
         selection = {"figures": ["existence_edge"], "tables": ["split_strategies"]}
         config = PaperConfig.model_validate({"plot": {"usetex": False}})
         main(
@@ -260,21 +260,21 @@ class TestMain:
         return assets
 
     def test_writes_each_selected_asset_into_its_section_folder_alone(self, assets) -> None:
-        assert sorted(p.name for p in (assets / "42_black_holes").iterdir()) == [
-            "42_black_holes_fig_ceilings.tex",
-            "42_black_holes_fig_existence_edge.tex",
+        assert sorted(p.name for p in (assets / "92_black_holes").iterdir()) == [
+            "92_black_holes_fig_ceilings.tex",
+            "92_black_holes_fig_existence_edge.tex",
         ]
 
     def test_writes_the_reachable_figures_into_the_numbers(self, assets) -> None:
-        stored = json.loads((assets.parent / "state/42_black_holes/numbers.json").read_text())
+        stored = json.loads((assets.parent / "state/92_black_holes/numbers.json").read_text())
         assert "bhEdaCeilDFigures" in stored
 
     def test_stores_its_tables_as_json(self, assets) -> None:
-        tables = (assets.parent / "state/42_black_holes/tables").glob("*.json")
+        tables = (assets.parent / "state/92_black_holes/tables").glob("*.json")
         assert sorted(p.stem for p in tables) == ["ceilings", "split_strategies"]
 
     def test_leaves_other_sections_alone(self, assets) -> None:
-        assert (assets / "41_neutron_stars" / "kept.tex").is_file()
+        assert (assets / "91_neutron_stars" / "kept.tex").is_file()
 
     def test_main_writes_the_picked_mass_radius_variant_into_its_wrapper(
         self, tmp_path: Path
@@ -288,7 +288,7 @@ class TestMain:
             config=config,
             section=BlackHolesSection.model_validate(picked),
         )
-        wrapper = assets / "42_black_holes" / "42_black_holes_fig_mass_radius.tex"
+        wrapper = assets / "92_black_holes" / "92_black_holes_fig_mass_radius.tex"
         assert "departure" in wrapper.read_text()
 
 

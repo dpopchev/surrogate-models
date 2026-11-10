@@ -1,4 +1,4 @@
-\subsection{Preprocessing and Feature Decisions}
+\section{Preprocessing and Feature Decisions}
 \label{sec:preprocessing}
 
 Both datasets are prepared the same way: the inputs are standardized on the training folds, the charge target is $\log_{10}(\Dch/M)$, the mass target is $M$ in solar masses, and whole curves are split into a frozen test set and GroupKFold folds. \Cref{tab:decisions-ns,tab:decisions-bh} list each decision with its grounds from Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}; the three choices a table row cannot carry are argued first.
@@ -13,10 +13,10 @@ Rows of one curve are each other's nearest neighbours ($\nsEdaSameCurvePercent\%
 The final model is trained on all curves outside the test set, so it covers the whole sampled domain, and its validity is claimed only there. How it degrades beyond the domain is measured apart: an ablation trains without the curves on the rim of the domain ($\prepNsAblationCurves$ neutron-star curves on the edges of the $(\beta, \lambda)$ grid and along its empty corner; the $\prepBhAblationCurves$ outermost black-hole curves) and tests on them. The data already indicate the outcome: for neutron stars, predicting the rim from the interior costs about six times the error of predicting an interior curve ($\nsEdaSplitRimDM$ against $\nsEdaSplitCurvesDM$), while for black holes the outermost curves cost no more than any other ($\bhEdaSplitOuterCurvesLD$ against $\bhEdaSplitCurvesLD$).
 
 % The decisions tables' layout is paper.toml [tables] decisions (W-124): wide or narrow.
-\input{43_preprocessing_tab_decisions_ns_\prepDecisionsLayout}
+\input{93_preprocessing_tab_decisions_ns_\prepDecisionsLayout}
 \FloatBarrier
 
 The black-hole decisions (\cref{tab:decisions-bh}) differ from the neutron-star ones in three rows: the horizon radius enters linearly, because it is uniform and spans only $\bhEdaRhOrders$ orders of magnitude; the charge target keeps the neutron-star definition although dividing by the mass gains nothing here, so that both datasets share one target; and the domain is bounded by the existence edge instead of a triangle.
 
-\input{43_preprocessing_tab_decisions_bh_\prepDecisionsLayout}
+\input{93_preprocessing_tab_decisions_bh_\prepDecisionsLayout}
 \FloatBarrier

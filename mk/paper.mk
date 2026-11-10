@@ -68,7 +68,7 @@ TABLES      := $(BUILD)/tables
 
 .PHONY: tables
 tables: ## Render every stored table in each layout and shape as its own PDF under build/tables/
-	@rm -rf $(WORK)/table-pages && $(RUN) python $(TABLE_PAGES) $(STATE) 40_data_analysis/43_preprocessing paperlib/latex $(WORK)/table-pages $(TABLES)
+	@rm -rf $(WORK)/table-pages && $(RUN) python $(TABLE_PAGES) $(STATE) 90_appendix/93_preprocessing paperlib/latex $(WORK)/table-pages $(TABLES)
 	$(call log_done,every table page in $(TABLES)/)
 
 # Three representative figures, every variant of each, under each style preset of paper.toml
@@ -78,10 +78,10 @@ tables: ## Render every stored table in each layout and shape as its own PDF und
 # batches, nothing fitted; the three figures' variants are copied to $(FIGURES)/presets/<name>/.
 PRESETS_WORK    := $(WORK)/presets
 PLOT_PRESETS    := paper light large
-PRESET_FIGURES  := 41_neutron_stars/41_neutron_stars_fig_mass_density 62_families/62_families_fig_errors 63_precision/63_precision_fig_history
+PRESET_FIGURES  := 91_neutron_stars/91_neutron_stars_fig_mass_density 62_families/62_families_fig_errors 63_precision/63_precision_fig_history
 
 .PHONY: figures
-figures: 41_neutron_stars_figures 42_black_holes_figures 51_algorithms_figures 62_families_figures 63_precision_figures $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every figure variant as its own PNG under build/figures/, and three figures under each preset
+figures: 91_neutron_stars_figures 92_black_holes_figures 51_algorithms_figures 62_families_figures 63_precision_figures $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every figure variant as its own PNG under build/figures/, and three figures under each preset
 	@for preset in $(PLOT_PRESETS); do \
 	  work=$(PRESETS_WORK)/$$preset; out=$(FIGURES)/presets/$$preset; \
 	  rm -rf $$work $$out && mkdir -p $$work $$out && \

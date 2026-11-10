@@ -5,7 +5,7 @@ the curves in the test set and in each GroupKFold fold, and the curves the extra
 flags. The charge floor these numbers once carried is gone (W-063). \\prepDecisionsLayout names
 the decisions tables' layout of paper.toml [tables] decisions, the file the text inputs (W-124).
 
-Run as `uv run python <this file> <split> <state dir> --seed <n>` (43_preprocessing.mk does);
+Run as `uv run python <this file> <split> <state dir> --seed <n>` (93_preprocessing.mk does);
 the macros are stored as JSON and paperlib/tools/render_assets.py writes the asset.
 """
 
@@ -89,7 +89,7 @@ def numbers(
 # --- shell ------------------------------------------------------------------------------------
 
 # The section's asset folder, and the prefix that keeps its basenames unique in the flat build.
-SECTION = "43_preprocessing"
+SECTION = "93_preprocessing"
 
 
 def _arguments(argv: list[str]) -> argparse.Namespace:
