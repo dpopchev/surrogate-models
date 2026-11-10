@@ -5,7 +5,9 @@ The renderer formats from the cells; it never parses a LaTeX string back.
 
 import math
 from dataclasses import dataclass
-from typing import Literal, assert_never
+from typing import Annotated, Literal, assert_never
+
+from pydantic import BaseModel, Field
 
 from paperlib.config import TableLayout
 
@@ -108,6 +110,116 @@ def number(value: float) -> Plain | Power:
         return power(value)
     decimals = max(2 - math.floor(math.log10(abs(value))), 0)
     return Plain(f"{value:.{decimals}f}", math=True)
+
+
+class _TextJson(BaseModel):
+    kind: Literal["text"]
+    tex: str
+
+
+class _PlainJson(BaseModel):
+    kind: Literal["plain"]
+    mantissa: str
+    bold: bool
+    math: bool
+
+
+class _PowerJson(BaseModel):
+    kind: Literal["power"]
+    mantissa: str
+    exponent: int
+    bold: bool
+
+
+class _SpreadJson(BaseModel):
+    kind: Literal["spread"]
+    mantissa: str
+    spread: str
+    bold: bool
+
+
+class _SpanJson(BaseModel):
+    kind: Literal["span"]
+    width: int
+    align: Literal["l", "c", "r"]
+    tex: str
+
+
+_CellJson = Annotated[
+    _TextJson | _PlainJson | _PowerJson | _SpreadJson | _SpanJson, Field(discriminator="kind")
+]
+
+
+class _ColumnJson(BaseModel):
+    align: Literal["l", "c", "r"]
+    before: str
+    after: str
+
+
+class _TableJson(BaseModel):
+    label: str
+    caption: str
+    columns: list[_ColumnJson]
+    header: list[list[_CellJson]]
+    rows: list[list[_CellJson]]
+    small_spec: str
+
+
+def _cell_json(cell: Cell) -> _CellJson:
+    match cell:
+        case Text(tex):
+            return _TextJson(kind="text", tex=tex)
+        case Plain(mantissa, bold, math):
+            return _PlainJson(kind="plain", mantissa=mantissa, bold=bold, math=math)
+        case Power(mantissa, exponent, bold):
+            return _PowerJson(kind="power", mantissa=mantissa, exponent=exponent, bold=bold)
+        case Spread(mantissa, spread, bold):
+            return _SpreadJson(kind="spread", mantissa=mantissa, spread=spread, bold=bold)
+        case Span(width, align, tex):
+            return _SpanJson(kind="span", width=width, align=align, tex=tex)
+        case _:
+            assert_never(cell)
+
+
+def _cell_of(item: _CellJson) -> Cell:
+    match item:
+        case _TextJson():
+            return Text(item.tex)
+        case _PlainJson():
+            return Plain(item.mantissa, item.bold, item.math)
+        case _PowerJson():
+            return Power(item.mantissa, item.exponent, item.bold)
+        case _SpreadJson():
+            return Spread(item.mantissa, item.spread, item.bold)
+        case _SpanJson():
+            return Span(item.width, item.align, item.tex)
+        case _:
+            assert_never(item)
+
+
+def to_json(table: Table) -> str:
+    """The table as JSON text: primitives only, each cell a tagged object."""
+    return _TableJson(
+        label=table.label,
+        caption=table.caption,
+        columns=[_ColumnJson(align=c.align, before=c.before, after=c.after) for c in table.columns],
+        header=[[_cell_json(c) for c in row] for row in table.header],
+        rows=[[_cell_json(c) for c in row] for row in table.rows],
+        small_spec=table.small_spec,
+    ).model_dump_json()
+
+
+def from_json(text: str) -> Table:
+    """The table of JSON text; raises pydantic.ValidationError when the text is not a table."""
+    raw = _TableJson.model_validate_json(text)
+    return Table(
+        label=raw.label,
+        caption=raw.caption,
+        columns=tuple(Column(c.align, c.before, c.after) for c in raw.columns),
+        header=tuple(tuple(_cell_of(c) for c in row) for row in raw.header),
+        rows=tuple(tuple(_cell_of(c) for c in row) for row in raw.rows),
+        small_spec=raw.small_spec,
+    )
 
 
 def _small_number(number: Number) -> str:
