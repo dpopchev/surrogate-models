@@ -8,9 +8,9 @@ import numpy as np
 import pytest
 from list_ledger import ledger_table, main
 
-from shared.ceilings import Spread
-from shared.harness import Run, Timing
-from shared.runs import (
+from paperlib.ceilings import Spread
+from paperlib.harness import Run, Timing
+from paperlib.runs import (
     Epochs,
     LedgerEntry,
     RunMetadata,
@@ -18,7 +18,7 @@ from shared.runs import (
     entry_name,
     entry_to_json,
 )
-from shared.scorecard import Scorecard
+from paperlib.scorecard import Scorecard
 
 
 def spread_at(p95: float) -> Spread:

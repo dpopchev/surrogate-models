@@ -5,7 +5,7 @@ numbers become \\nsEda... LaTeX macros so the text and the decisions table cite 
 The evidence they carry: which columns want log10, whether log10(D/M) is a better charge target
 than log10 D, whether beta matters at fixed lambda, how full the (beta, lambda) grid is, and
 whether rows of one curve are each other's nearest neighbours (why the split groups by curve).
-The dataset-agnostic machinery lives in shared/eda.py.
+The dataset-agnostic machinery lives in paperlib/eda.py.
 """
 
 import argparse
@@ -25,7 +25,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 
-from shared.ceilings import (
+from paperlib.ceilings import (
     Ceilings,
     ceiling_figure,
     ceiling_macros,
@@ -35,7 +35,7 @@ from shared.ceilings import (
     measure,
     uncertainty_macros,
 )
-from shared.config import (
+from paperlib.config import (
     NOTATION_TEX,
     CeilingsVariant,
     NeutronStarVariants,
@@ -49,7 +49,7 @@ from shared.config import (
     UnivariateVariant,
     load_config,
 )
-from shared.eda import (
+from paperlib.eda import (
     Adjacency,
     ColumnSummary,
     RowsPerCurve,
@@ -75,7 +75,7 @@ from shared.eda import (
     univariate_figure,
     with_charge_targets,
 )
-from shared.plots import (
+from paperlib.plots import (
     SYMBOLS,
     PlotStyle,
     anchor_color,

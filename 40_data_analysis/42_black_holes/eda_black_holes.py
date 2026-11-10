@@ -4,7 +4,7 @@ The BH data are 21 dense beta curves over the horizon radius r_h. The computatio
 NS analysis asked, and find different answers: how closely M follows r_h, how much beta moves M
 and D at fixed r_h, where each curve starts (the existence edge), which charge target the data
 support, and which split the curves support. The mass is raw M throughout (developer). Numbers
-become \\bhEda... macros; the dataset-agnostic machinery lives in shared/eda.py.
+become \\bhEda... macros; the dataset-agnostic machinery lives in paperlib/eda.py.
 """
 
 import argparse
@@ -23,7 +23,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 
-from shared.ceilings import (
+from paperlib.ceilings import (
     Ceilings,
     ceiling_figure,
     ceiling_macros,
@@ -32,7 +32,7 @@ from shared.ceilings import (
     measure,
     uncertainty_macros,
 )
-from shared.config import (
+from paperlib.config import (
     NOTATION_TEX,
     BhChargeTargetVariant,
     BhExistenceEdgeVariant,
@@ -46,7 +46,7 @@ from shared.config import (
     UnivariateVariant,
     load_config,
 )
-from shared.eda import (
+from paperlib.eda import (
     Adjacency,
     ColumnSummary,
     RowsPerCurve,
@@ -68,7 +68,7 @@ from shared.eda import (
     univariate_figure,
     with_charge_targets,
 )
-from shared.plots import (
+from paperlib.plots import (
     SYMBOLS,
     PlotStyle,
     anchor_color,

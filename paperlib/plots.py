@@ -1,0 +1,293 @@
+"""One paper-wide matplotlib and seaborn style, with a color family per dataset.
+
+NS figures use cool colormaps and BH figures warm ones (E-003 Decision), so a colorbar alone
+tells which dataset is shown. The style is a PlotStyle, chosen in paper.toml's [plot] section.
+"""
+
+import logging
+import re
+from collections.abc import Callable, Iterator, Mapping
+from pathlib import Path
+from typing import Literal, assert_never
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+from matplotlib.colors import Colormap
+from matplotlib.figure import Figure
+from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, PositiveInt, model_validator
+
+logger = logging.getLogger(__name__)
+
+# --- vocabulary and types ---------------------------------------------------------------------
+
+Dataset = Literal["neutron_stars", "black_holes"]
+
+# The two families are disjoint: no NS colormap is a BH colormap.
+CoolCmap = Literal["crest", "mako", "Blues", "GnBu", "PuBu"]
+WarmCmap = Literal["flare", "rocket", "Oranges", "YlOrRd", "OrRd"]
+
+# 11pt a4paper article text width and height, measured with \showthe\textwidth (W-014
+# Finding) and \showthe\textheight (W-097).
+ARTICLE_TEXT_WIDTH_PT = 360.0
+ARTICLE_TEXT_HEIGHT_PT = 595.80026
+POINTS_PER_INCH = 72.27
+
+
+class NeutronStarColors(BaseModel):
+    """Colormaps for the NS free parameters, and the palette index of the NS anchor color."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    lambda_cmap: CoolCmap = "crest"
+    beta_cmap: CoolCmap = "mako"
+    anchor: int = 0
+
+
+class BlackHoleColors(BaseModel):
+    """Colormap for the BH free parameter, and the palette index of the BH anchor color."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    beta_cmap: WarmCmap = "flare"
+    anchor: int = 1
+
+
+class Marks(BaseModel):
+    """One preset of the global look: the factors every figure's font size, mark sizes, line
+    widths and alphas are scaled by; the paper preset is all 1.0, the figures as drawn."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    font_scale: PositiveFloat = 1.0
+    mark_scale: PositiveFloat = 1.0
+    line_scale: PositiveFloat = 1.0
+    alpha_scale: PositiveFloat = 1.0
+
+
+class PlotStyle(BaseModel):
+    """The look every figure shares: seaborn context and palette, LaTeX text, article width."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    context: Literal["paper", "notebook", "talk"] = "paper"
+    palette: Literal["colorblind", "deep", "muted"] = "colorblind"
+    font_size: float = 11.0
+    usetex: bool = True
+    text_width_pt: float = ARTICLE_TEXT_WIDTH_PT
+    text_height_pt: float = ARTICLE_TEXT_HEIGHT_PT
+    aspect: float = 0.62
+    # Figures are written as PNG at this resolution (W-029).
+    dpi: PositiveInt = 600
+    # A histogram of a variable with at most this many distinct values bins one per value
+    # (paperlib/eda.py grid_bins): the density figures and the univariate ones.
+    grid_values: PositiveInt = 250
+    univariate_grid_values: PositiveInt = 60
+    # The baseline's diagnostic figures, and its live loss curve redrawn every live_every epochs.
+    diagnostics_dpi: PositiveInt = 150
+    live_every: PositiveInt = 5
+    live_dpi: PositiveInt = 100
+    neutron_stars: NeutronStarColors = NeutronStarColors()
+    black_holes: BlackHoleColors = BlackHoleColors()
+    # The named presets of [plot.presets.<name>] and the one the figures are drawn under (W-115).
+    presets: Mapping[str, Marks] = Field(default_factory=lambda: {"paper": Marks()})
+    preset: str = "paper"
+
+    @model_validator(mode="after")
+    def _preset_is_named(self) -> PlotStyle:
+        if self.preset not in self.presets:
+            raise ValueError(f"preset {self.preset!r} is none of {sorted(self.presets)}")
+        return self
+
+    @property
+    def marks(self) -> Marks:
+        """The active preset."""
+        return self.presets[self.preset]
+
+
+# Every symbol a figure or a table names, by column name, in the paper's notation
+# (paperlib/latex/notation.tex). Tables are LaTeX and take the macros as they are (MACROS); a
+# figure reads SYMBOLS, which hands the macro to usetex and, when LaTeX is off (mathtext, the
+# tests), the macro's body from the notation apply_style received.
+MACROS: Mapping[str, str] = {
+    "rho_c": "$\\rhoc$",
+    "M": "$M$",
+    "M_max": "$\\Mmax$",
+    "M_max_minus_M": "$\\Mmax - M$",
+    "D": "$\\Dch$",
+    "D_over_M": "$\\Dch/M$",
+    "log10_D": "$\\log_{10}\\Dch$",
+    "log10_D_over_M": "$\\log_{10}(\\Dch/M)$",
+    "log10_rho_c": "$\\log_{10}\\rhoc$",
+    "beta": "$\\beta$",
+    "lambda": "$\\lambda$",
+    "r_h": "$\\rh$",
+    "Msun": "$\\Msun$",
+    "Y": "$Y = \\log_{10}(\\Dch/M)$",
+}
+
+
+# The paper's notation macros: input by the preamble, handed to LaTeX by apply_style, read by
+# SYMBOLS when LaTeX is off.
+NOTATION_TEX = Path(__file__).resolve().parents[1] / "paperlib" / "latex" / "notation.tex"
+
+
+class Symbols(Mapping[str, str]):
+    """MACROS, or the named subset of them in that order, as a figure label reads them at the
+    time of the lookup: the macro under usetex, else its body from the notation apply_style
+    received (mathtext knows no macros); built by make_symbols.
+
+    A lookup under mathtext before apply_style handed a notation raises LookupError.
+    """
+
+    def __init__(self, names: tuple[str, ...]) -> None:
+        self._names = names
+
+    def __getitem__(self, key: str) -> str:
+        if key not in self._names:
+            raise KeyError(key)
+        macro = MACROS[key]
+        if plt.rcParams["text.usetex"]:
+            return macro
+        notation = str(plt.rcParams["text.latex.preamble"])
+        if not notation:
+            raise LookupError(f"{key}: no notation to expand {macro}; call apply_style first")
+        return expand(macro, notation)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._names)
+
+    def __len__(self) -> int:
+        return len(self._names)
+
+    def of(self, *names: str) -> Symbols:
+        """The symbols of these columns, in this order."""
+        return make_symbols(names)
+
+
+def make_symbols(names: tuple[str, ...]) -> Symbols:
+    """The Symbols of these names, each one of MACROS.
+
+    Raises ValueError naming the names MACROS does not hold.
+    """
+    if unknown := [name for name in names if name not in MACROS]:
+        raise ValueError(f"unknown symbols: {unknown}")
+    return Symbols(names)
+
+
+SYMBOLS = make_symbols(tuple(MACROS))
+
+_NEWCOMMAND = re.compile(r"\\newcommand\{\\(\w+)\}\{(.*)\}")
+
+
+def expand(text: str, notation: str) -> str:
+    """The text with every argument-free \\newcommand of the notation replaced by its body."""
+    for name, body in _NEWCOMMAND.findall(notation):
+        text = re.sub(rf"\\{name}(?![A-Za-z])", lambda _, body=body: body, text)
+    return text
+
+
+# --- behaviour --------------------------------------------------------------------------------
+
+
+def apply_style(style: PlotStyle, notation: str = "") -> None:
+    """Set the seaborn theme, then the matplotlib rcParams the style fixes; `notation` is the
+    paper's macro file (paperlib/latex/notation.tex), handed to LaTeX as the preamble so a label
+    may use the macros the captions use (W-098)."""
+    width = style.text_width_pt / POINTS_PER_INCH
+    sns.set_theme(context=style.context, style="ticks", palette=style.palette)
+    plt.rcParams.update(
+        {
+            "text.usetex": style.usetex,
+            "text.latex.preamble": notation,
+            "font.family": "serif",
+            "font.size": style.font_size * style.marks.font_scale,
+            "figure.figsize": (width, width * style.aspect),
+        }
+    )
+
+
+def figure_size(
+    style: PlotStyle, rows: int, per_row: float, max_share: float = 0.85
+) -> tuple[float, float]:
+    """The size in inches of a figure of `rows` rows, each `per_row` of the text width tall,
+    capped at `max_share` of the text height so it fits a page."""
+    width = style.text_width_pt / POINTS_PER_INCH
+    height = style.text_height_pt / POINTS_PER_INCH
+    return width, min(per_row * width * rows, max_share * height)
+
+
+def contact_sheet(images: Mapping[str, Path]) -> Figure:
+    """One row of the rendered images, each titled by its label and as wide as the text, so
+    the variants of one figure are compared at the size the paper prints them (W-111)."""
+    pictures = {label: plt.imread(path) for label, path in images.items()}
+    width = ARTICLE_TEXT_WIDTH_PT / POINTS_PER_INCH
+    height = max(width * p.shape[0] / p.shape[1] for p in pictures.values())
+    figure, grid = plt.subplots(
+        1, len(pictures), figsize=(width * len(pictures), height * 1.1), squeeze=False
+    )
+    for axes, (label, picture) in zip(grid[0], pictures.items(), strict=True):
+        axes.imshow(picture)
+        axes.set_title(label)
+        axes.set_axis_off()
+    return figure
+
+
+def write_variant_sheet(
+    out: Path, stem: str, drawers: Mapping[str, Callable[[], Figure]], style: PlotStyle
+) -> None:
+    """Each variant drawn as <stem>_<variant>.png in out and their contact sheet as
+    <stem>_variants.png, at the screen's resolution."""
+    images: dict[str, Path] = {}
+    for variant, drawer in drawers.items():
+        figure = drawer()
+        images[variant] = out / f"{stem}_{variant}.png"
+        figure.savefig(images[variant], dpi=style.dpi)
+        plt.close(figure)
+    sheet = contact_sheet(images)
+    sheet.savefig(out / f"{stem}_variants.png", dpi=style.diagnostics_dpi)
+    plt.close(sheet)
+    logger.info("done: %s variants %s and their sheet -> %s", stem, tuple(images), out)
+
+
+def colormap(name: CoolCmap | WarmCmap) -> Colormap:
+    """Return the named seaborn or matplotlib colormap."""
+    return sns.color_palette(name, as_cmap=True)
+
+
+def anchor_color(style: PlotStyle, dataset: Dataset) -> tuple[float, float, float]:
+    """Return the dataset's single color for marks that carry no parameter (histograms)."""
+    match dataset:
+        case "neutron_stars":
+            index = style.neutron_stars.anchor
+        case "black_holes":
+            index = style.black_holes.anchor
+        case _:
+            assert_never(dataset)
+    return sns.color_palette(style.palette)[index]
+
+
+def mark_size(style: PlotStyle, size: float) -> float:
+    """A figure's marker size under the active preset.
+
+    >>> mark_size(PlotStyle(presets={"big": Marks(mark_scale=2.0)}, preset="big"), 1.5)
+    3.0
+    """
+    return size * style.marks.mark_scale
+
+
+def line_width(style: PlotStyle, width: float) -> float:
+    """A figure's line width under the active preset.
+
+    >>> line_width(PlotStyle(presets={"thin": Marks(line_scale=0.5)}, preset="thin"), 0.8)
+    0.4
+    """
+    return width * style.marks.line_scale
+
+
+def mark_alpha(style: PlotStyle, alpha: float) -> float:
+    """A figure's alpha under the active preset, never above 1.
+
+    >>> mark_alpha(PlotStyle(presets={"bold": Marks(alpha_scale=4.0)}, preset="bold"), 0.3)
+    1.0
+    """
+    return min(1.0, alpha * style.marks.alpha_scale)

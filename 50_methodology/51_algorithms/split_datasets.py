@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
 
-from shared.eda import rim_mask
+from paperlib.eda import rim_mask
 
 logger = logging.getLogger(__name__)
 

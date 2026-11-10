@@ -45,15 +45,15 @@ from tune_survivors import (
     tuning_table,
 )
 
-from shared.batches import write_entry
-from shared.candidates import Candidate
-from shared.ceilings import Spread
-from shared.config import PaperConfig
-from shared.design import Design
-from shared.harness import Run, Timing
-from shared.plots import NOTATION_TEX, PlotStyle, apply_style
-from shared.runs import RunMetadata, entry_from_run
-from shared.scorecard import Scorecard
+from paperlib.batches import write_entry
+from paperlib.candidates import Candidate
+from paperlib.ceilings import Spread
+from paperlib.config import PaperConfig
+from paperlib.design import Design
+from paperlib.harness import Run, Timing
+from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
+from paperlib.runs import RunMetadata, entry_from_run
+from paperlib.scorecard import Scorecard
 
 # The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
 ToyInputs = Callable[[Path], tuple[Path, Path, Path]]

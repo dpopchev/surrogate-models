@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from list_runs import Finished, Listed, Unscored, main, read_runs, run_files, runs_table
 
-from shared.runs import RunRecord, to_json
-from shared.surrogate import Training
+from paperlib.runs import RunRecord, to_json
+from paperlib.surrogate import Training
 
 RECORD = RunRecord(
     dataset="toy",

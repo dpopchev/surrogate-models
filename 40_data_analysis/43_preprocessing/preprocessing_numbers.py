@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from shared.config import DecisionsTableLayout, load_config
-from shared.eda import render_macros
+from paperlib.config import DecisionsTableLayout, load_config
+from paperlib.eda import render_macros
 
 logger = logging.getLogger(__name__)
 

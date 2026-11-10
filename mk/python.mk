@@ -21,9 +21,9 @@ export PYTHONPYCACHEPREFIX          := $(abspath $(LOCAL))/pycache
 export HYPOTHESIS_STORAGE_DIRECTORY := $(abspath $(LOCAL))/.hypothesis
 export MYPY_CACHE_DIR               := $(abspath $(LOCAL))/.mypy_cache
 
-# Colocated level: a module run by path imports shared code as `shared.<m>`,
-# so the repository root goes on PYTHONPATH once shared/ exists.
-ifneq ($(wildcard shared/.),)
+# Colocated level: a module run by path imports the paper-wide code as `paperlib.<m>`,
+# so the repository root goes on PYTHONPATH once paperlib/ exists.
+ifneq ($(wildcard paperlib/.),)
 export PYTHONPATH := $(CURDIR)
 endif
 

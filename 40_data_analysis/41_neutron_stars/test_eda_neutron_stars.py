@@ -28,9 +28,9 @@ from eda_neutron_stars import (
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from shared.config import NeutronStarVariants, PaperConfig
-from shared.eda import RowsPerCurve, with_charge_targets
-from shared.plots import NOTATION_TEX, PlotStyle, anchor_color, apply_style
+from paperlib.config import NeutronStarVariants, PaperConfig
+from paperlib.eda import RowsPerCurve, with_charge_targets
+from paperlib.plots import NOTATION_TEX, PlotStyle, anchor_color, apply_style
 
 
 @pytest.fixture(autouse=True)

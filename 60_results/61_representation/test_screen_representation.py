@@ -33,16 +33,16 @@ from screen_representation import (
     screen_job,
 )
 
-from shared.batches import Batch
-from shared.ceilings import Spread
-from shared.config import PaperConfig
-from shared.design import Design, DesignSpec
-from shared.eda import make_curve_space
-from shared.harness import Run, Timing
-from shared.runs import LedgerEntry, RunMetadata, entry_from_run
-from shared.scorecard import Scorecard
-from shared.surrogate import Training
-from shared.workers import run_jobs
+from paperlib.batches import Batch
+from paperlib.ceilings import Spread
+from paperlib.config import PaperConfig
+from paperlib.design import Design, DesignSpec
+from paperlib.eda import make_curve_space
+from paperlib.harness import Run, Timing
+from paperlib.runs import LedgerEntry, RunMetadata, entry_from_run
+from paperlib.scorecard import Scorecard
+from paperlib.surrogate import Training
+from paperlib.workers import run_jobs
 
 # The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
 ToyInputs = Callable[[Path], tuple[Path, Path, Path]]

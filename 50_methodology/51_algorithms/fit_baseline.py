@@ -2,8 +2,8 @@
 and charge, against the mean and nearest-curve references.
 
 Inputs: the prepared NS and BH tables and the frozen curve split (local/state/). Per pair the
-net is scored on each frozen fold and, trained on every non-test curve through shared/design.py
-and shared/surrogate.py with early stopping on held-out training curves, once on the test
+net is scored on each frozen fold and, trained on every non-test curve through paperlib/design.py
+and paperlib/surrogate.py with early stopping on held-out training curves, once on the test
 curves. Outputs, in the section's asset folder: the baseline table, the \\baseNsMass... macros
 (test MARE, RMSE, fit seconds, epochs) and the NS mass parity figure; in
 <state dir>/51_algorithms/<run>/, one run record and its diagnostics per pair (W-035); in
@@ -33,7 +33,7 @@ import torch
 from matplotlib.figure import Figure
 from sklearn.pipeline import Pipeline
 
-from shared.batches import (
+from paperlib.batches import (
     Batch,
     at_level,
     git_commit,
@@ -45,8 +45,8 @@ from shared.batches import (
     utc_now,
     write_entry,
 )
-from shared.ceilings import Spread
-from shared.config import (
+from paperlib.ceilings import Spread
+from paperlib.config import (
     NOTATION_TEX,
     AlgorithmsSection,
     AlgParityVariant,
@@ -55,7 +55,7 @@ from shared.config import (
     TableLayout,
     load_config,
 )
-from shared.design import (
+from paperlib.design import (
     BLACK_HOLES,
     DATASET_TEX,
     NEUTRON_STARS,
@@ -68,11 +68,11 @@ from shared.design import (
     pair_tex,
     pairs,
 )
-from shared.diagnostics import curve_overlay, error_cdf, loss_curve
-from shared.eda import CurveSpace, booktabs, curve_ids, render_macros, sci_tex, text_width_size
-from shared.families import make_mean_reference, make_nearest_reference
-from shared.harness import FitRows, Fitter, Predictor, Run, Timing, harness
-from shared.plots import (
+from paperlib.diagnostics import curve_overlay, error_cdf, loss_curve
+from paperlib.eda import CurveSpace, booktabs, curve_ids, render_macros, sci_tex, text_width_size
+from paperlib.families import make_mean_reference, make_nearest_reference
+from paperlib.harness import FitRows, Fitter, Predictor, Run, Timing, harness
+from paperlib.plots import (
     SYMBOLS,
     Dataset,
     PlotStyle,
@@ -83,8 +83,8 @@ from shared.plots import (
     mark_size,
     write_variant_sheet,
 )
-from shared.progress import duration_text
-from shared.runs import (
+from paperlib.progress import duration_text
+from paperlib.runs import (
     Epochs,
     LedgerEntry,
     RunMetadata,
@@ -95,8 +95,8 @@ from shared.runs import (
     run_stem,
     to_json,
 )
-from shared.scorecard import significant_figures
-from shared.surrogate import (
+from paperlib.scorecard import significant_figures
+from paperlib.surrogate import (
     LivePlot,
     Training,
     make_training,
@@ -107,8 +107,8 @@ from shared.surrogate import (
     rmse,
     sklearn_fitter,
 )
-from shared.trials import ReportEpochs, open_study, tell_run
-from shared.workers import run_jobs
+from paperlib.trials import ReportEpochs, open_study, tell_run
+from paperlib.workers import run_jobs
 
 logger = logging.getLogger(__name__)
 
@@ -187,7 +187,7 @@ class PairScores:
     scored: tuple[Scored, ...]
 
 
-# The symbol (shared.plots.SYMBOLS) of each dataset's curve coordinate on the diagnostics.
+# The symbol (paperlib.plots.SYMBOLS) of each dataset's curve coordinate on the diagnostics.
 X_SYMBOL = {"neutron_stars": "log10_rho_c", "black_holes": "r_h"}
 
 

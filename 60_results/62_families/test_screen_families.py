@@ -41,9 +41,9 @@ from screen_families import (
     trajectories,
 )
 
-from shared.config import FamiliesParityVariant, PaperConfig
-from shared.design import Design, Target
-from shared.plots import NOTATION_TEX, PlotStyle, apply_style
+from paperlib.config import FamiliesParityVariant, PaperConfig
+from paperlib.design import Design, Target
+from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
 
 # The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
 ToyInputs = Callable[[Path], tuple[Path, Path, Path]]

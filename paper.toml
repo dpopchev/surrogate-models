@@ -1,4 +1,4 @@
-# The paper's choices, read by shared/config.py (the schema: every key and its allowed values).
+# The paper's choices, read by paperlib/config.py (the schema: every key and its allowed values).
 # Edit a choice and re-run `make compile`; PAPER__<SECTION>__<FIELD> env vars override this file.
 
 [plot]

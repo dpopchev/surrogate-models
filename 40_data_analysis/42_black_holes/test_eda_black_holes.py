@@ -26,9 +26,9 @@ from eda_black_holes import (
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from shared.config import BlackHoleVariants, PaperConfig
-from shared.eda import number_tex, with_charge_targets
-from shared.plots import NOTATION_TEX, PlotStyle, apply_style
+from paperlib.config import BlackHoleVariants, PaperConfig
+from paperlib.eda import number_tex, with_charge_targets
+from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
 
 
 @pytest.fixture(autouse=True)

@@ -26,7 +26,7 @@ PAPER_LATEX    := $(abspath $(WORK))/latex/$(PAPER_FLAVOUR)
 # Every .tex and .bib of the chapter folders except the flavour entries. The
 # build is flat, so basenames must be unique -- compile refuses a clash.
 PAPER_SRC = $(filter-out $(PAPER_FLAVOURS:%=00_metadata/%.tex), \
-              $(shell find [0-9][0-9]_* -type f \( -name '*.tex' -o -name '*.bib' \) | sort))
+              $(shell find [0-9][0-9]_* paperlib/latex -type f \( -name '*.tex' -o -name '*.bib' \) | sort))
 
 LATEXMK := latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error -silent
 
@@ -36,16 +36,16 @@ LATEXMK := latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error
 # copies every asset flat next to the sources.
 ASSETS       := $(BUILD)/assets
 PAPER_ASSETS := $(ASSETS)/00_metadata/00_metadata_build_stamp.tex
-# Every asset rule depends on every shared module, so a module a script imports is never
+# Every asset rule depends on every paperlib module, so a module a script imports is never
 # missing from its list; a change to one reruns them all.
-SHARED       := $(filter-out shared/test_%,$(wildcard shared/*.py))
+PAPERLIB     := $(filter-out paperlib/test_%,$(wildcard paperlib/*.py))
 
 # The stamp reads git state (commit, uncommitted changes) that make cannot watch,
 # so it is rebuilt on every run.
 .PHONY: FORCE
 FORCE:
 
-$(ASSETS)/00_metadata/00_metadata_build_stamp.tex: 00_metadata/build_stamp.py FORCE
+$(ASSETS)/00_metadata/00_metadata_build_stamp.tex: paperlib/tools/build_stamp.py FORCE
 	@$(RUN) python $< $@
 	$(call log_done,build stamp written to $@)
 
@@ -59,7 +59,7 @@ PAPER_ASSETS  += $(NS_EDA_ASSETS)
 # window in M is the band below a curve's M_max that Section 3.1 counts.
 NS_PILE_UP_WINDOW := 0.09
 
-$(NS_EDA_ASSETS): $(NS_EDA) paper.toml $(SHARED) $(STATE)/neutron_stars.parquet
+$(NS_EDA_ASSETS): $(NS_EDA) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet
 	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW)
 	$(call log_done,NS EDA figures and numbers written to $(@D)/)
 
@@ -68,7 +68,7 @@ BH_EDA        := 40_data_analysis/42_black_holes/eda_black_holes.py
 BH_EDA_ASSETS := $(ASSETS)/42_black_holes/42_black_holes_num.tex
 PAPER_ASSETS  += $(BH_EDA_ASSETS)
 
-$(BH_EDA_ASSETS): $(BH_EDA) paper.toml $(SHARED) $(STATE)/black_holes.parquet
+$(BH_EDA_ASSETS): $(BH_EDA) paper.toml $(PAPERLIB) $(STATE)/black_holes.parquet
 	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED)
 	$(call log_done,BH EDA figures and numbers written to $(@D)/)
 
@@ -95,7 +95,7 @@ variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/s
 # (W-125) and gs rasterizes it. Then each results table in each of its other [tables] shapes
 # (W-124): the small flat copy with that one table rewritten under PAPER__TABLES__<FIELD>, as
 # <table stem>_<shape>.png. $(ASSETS) itself is never written.
-TABLES_ENTRY  := 00_metadata/tables_entry.py
+TABLES_ENTRY  := paperlib/tools/tables_entry.py
 TABLES_WORK   := $(WORK)/tables
 TABLE_LAYOUTS := small aligned
 # field:shape:section/table stem, one per shape other than the current form.
@@ -144,7 +144,7 @@ table-variants: assets
 # family and tuning figures are redrawn with PAPER__PLOT__PRESET=<name> into
 # $(PRESETS_WORK)/<name>/ from their recorded batches, nothing fitted; the three figures are
 # copied to $(VARIANTS)/presets/<name>/. $(ASSETS) itself is never written.
-PRESETS_SHEET   := 00_metadata/presets_sheet.py
+PRESETS_SHEET   := paperlib/tools/presets_sheet.py
 PRESETS_WORK    := $(WORK)/presets
 PLOT_PRESETS    := paper light large
 PRESET_FIGURES  := 41_neutron_stars/41_neutron_stars_fig_mass_density 62_families/62_families_fig_errors 63_precision/63_precision_fig_history
@@ -179,7 +179,7 @@ $(PREP_ASSETS): $(PREP_NUMBERS) $(STATE)/split.parquet paper.toml
 BASELINE        := 50_methodology/51_algorithms/fit_baseline.py
 BASELINE_ASSETS := $(ASSETS)/51_algorithms/51_algorithms_num.tex
 
-$(BASELINE_ASSETS): $(BASELINE) paper.toml $(SHARED) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+$(BASELINE_ASSETS): $(BASELINE) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,fitting the baseline on NS and BH$(comma) mass and charge -- one line per epoch; make follow shows it from any terminal)
 	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE)
 	$(call log_done,baseline table$(comma) numbers and parity figure written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
@@ -194,7 +194,7 @@ baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1
 BASELINE_TABLE := $(ASSETS)/51_algorithms/51_algorithms_tab_baseline.tex
 PAPER_ASSETS   += $(BASELINE_TABLE)
 
-$(BASELINE_TABLE): $(BASELINE) paper.toml $(SHARED) $(TABLE_DATA) $(wildcard $(STATE)/ledger)
+$(BASELINE_TABLE): $(BASELINE) paper.toml $(PAPERLIB) $(TABLE_DATA) $(wildcard $(STATE)/ledger)
 	@if out=$$($(RUN) python $(BASELINE) $(TABLE_DATA) $(ASSETS) $(STATE) --tables 2>&1); then \
 	  printf "$(BOLD)$(GREEN)%s$(RESET) %s\n" "[DONE]" "baseline table rebuilt from the ledger -> $@" >&2; \
 	elif printf '%s' "$$out" | grep -q 'no baseline batch in the ledger'; then \
@@ -266,7 +266,7 @@ REPRESENTATION_KNOBS  := --k 8 --neighbours 100 --knots 8 --seeds 3
 # make representation REPRESENTATION_BATCH=
 REPRESENTATION_BATCH  ?= 01a11acc-9832-7478-8831-1adfdc78f228
 
-$(REPRESENTATION_ASSETS): $(REPRESENTATION) paper.toml $(SHARED) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+$(REPRESENTATION_ASSETS): $(REPRESENTATION) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(REPRESENTATION_BATCH),rebuilding the representation table from batch $(REPRESENTATION_BATCH),screening the representations ($(REPRESENTATION_KNOBS)) -- follow the trials with make dashboard))
 	@$(RUN) python $(REPRESENTATION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(REPRESENTATION_KNOBS) $(if $(REPRESENTATION_BATCH),--batch $(REPRESENTATION_BATCH))
 	$(call log_done,representation table written to $@)
@@ -294,7 +294,7 @@ FAMILIES_KNOBS  := --k 8 --neighbours 100 --knots 8 --per-curve 10 \
 # Empty it to refit the whole screen (hours): make families FAMILIES_BATCH=
 FAMILIES_BATCH  ?= 01a11be4-6eca-7427-a5dd-a97dd7a0194d
 
-$(FAMILIES_ASSETS): $(FAMILIES) paper.toml $(SHARED) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+$(FAMILIES_ASSETS): $(FAMILIES) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(FAMILIES_BATCH),rebuilding the family table from batch $(FAMILIES_BATCH),screening the families ($(FAMILIES_KNOBS)) -- one line per finished job))
 	@$(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(FAMILIES_KNOBS) $(if $(FAMILIES_BATCH),--batch $(FAMILIES_BATCH))
 	$(call log_done,family table written to $@)
@@ -321,7 +321,7 @@ TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --wor
 # seconds; TUNING_BATCH= (empty) runs the whole tuning again (about 33 hours).
 TUNING_BATCH  ?= 01a11d49-1647-735a-af05-a58e497428f2
 
-$(TUNING_ASSETS): $(TUNING) paper.toml $(SHARED) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+$(TUNING_ASSETS): $(TUNING) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(TUNING_BATCH),rebuilding the tuning table from batch $(TUNING_BATCH),tuning the short list ($(TUNING_KNOBS)) -- one line per finished job))
 	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) $(if $(TUNING_BATCH),--batch $(TUNING_BATCH))
 	$(call log_done,tuning table written to $@)
@@ -335,17 +335,34 @@ tuning: $(TUNING_ASSETS) ## Run the tuning of the short list for Section 5.3
 
 # The knobs the text cites (W-116): the baseline network's settings from paper.toml and the
 # screens' knobs above, which live here only -- so this file is a prerequisite too.
-KNOBS        := 00_metadata/paper_knobs.py
+KNOBS        := paperlib/tools/paper_knobs.py
 KNOBS_ASSETS := $(ASSETS)/00_metadata/00_metadata_knobs_num.tex
 PAPER_ASSETS += $(KNOBS_ASSETS)
 
-$(KNOBS_ASSETS): $(KNOBS) paper.toml $(SHARED) mk/paper.mk
+$(KNOBS_ASSETS): $(KNOBS) paper.toml $(PAPERLIB) mk/paper.mk
 	@$(RUN) python $(KNOBS) $@ --representation "$(REPRESENTATION_KNOBS)" --families "$(FAMILIES_KNOBS)" --tuning "$(TUNING_KNOBS)"
 	$(call log_done,knobs written to $@)
 
 .PHONY: assets
 assets: $(PAPER_ASSETS) ## Generate the section assets under build/assets/
 	$(call log_done,assets in $(ASSETS)/: $(sort $(notdir $(patsubst %/,%,$(dir $(PAPER_ASSETS))))))
+
+# The assets comparison: record the sha256 sums of every asset (the build stamp left out, it
+# carries the commit), then check a later build against them. The baseline lives under
+# $(STATE) because a recipe writes $(LOCAL) only there.
+ASSETS_BASELINE := $(STATE)/assets-baseline.sha
+
+.PHONY: assets-baseline
+assets-baseline: assets ## Record the sha256 sums of the assets as the baseline to compare against
+	@mkdir -p $(STATE)
+	@find $(ASSETS) -type f ! -name '00_metadata_build_stamp.tex' | sort | xargs sha256sum > $(ASSETS_BASELINE)
+	$(call log_done,$(ASSETS_BASELINE) written: $$(wc -l < $(ASSETS_BASELINE)) lines)
+
+.PHONY: assets-same
+assets-same: assets ## Check the assets against the recorded baseline
+	@test -f $(ASSETS_BASELINE) || { echo "no baseline $(ASSETS_BASELINE): run make assets-baseline at the commit to compare against" >&2; exit 1; }
+	@sha256sum --quiet -c $(ASSETS_BASELINE) >&2
+	$(call log_done,assets match $(ASSETS_BASELINE))
 
 .PHONY: compile
 compile: assets ## Build the flat paper and its PDF under build/paper/
@@ -390,7 +407,7 @@ paper-verify: compile ## Compile a copy of the upload folder in isolation
 # $(PAPER_DIR)/ (same names overwrite), then delete by hand the files the run
 # lists as removed. The list of the last run is machine-local and outside
 # $(STATE), so make clean keeps it (CLAUDE.md, Gate deviations).
-OVERLEAF_UPLOAD := 00_metadata/overleaf_upload.py
+OVERLEAF_UPLOAD := paperlib/tools/overleaf_upload.py
 OVERLEAF_LIST   := $(LOCAL)/overleaf/last-upload.txt
 
 .PHONY: overleaf
@@ -402,7 +419,7 @@ overleaf: compile ## Prepare the Overleaf upload and list what changed
 # document body) compiles on its own in $(SECTIONS_WORK)/<section>/, beside a copy
 # of the upload folder and the full build's main.aux, so its references to the
 # rest of the paper resolve through xr-hyper.
-SECTION_ENTRY := 00_metadata/section_entry.py
+SECTION_ENTRY := paperlib/tools/section_entry.py
 SECTIONS      := $(shell sed -n '/begin{document}/,/end{document}/s/^\\input{\(.*\)}$$/\1/p' $(PAPER_ENTRY))
 SECTIONS_WORK := $(WORK)/sections
 SECTIONS_OUT  := $(BUILD)/paper/sections

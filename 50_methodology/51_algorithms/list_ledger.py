@@ -15,10 +15,10 @@ from pathlib import Path
 
 import numpy as np
 
-from shared.batches import read_ledger
-from shared.progress import duration_text
-from shared.runs import LedgerEntry
-from shared.scorecard import significant_figures
+from paperlib.batches import read_ledger
+from paperlib.progress import duration_text
+from paperlib.runs import LedgerEntry
+from paperlib.scorecard import significant_figures
 
 # --- pure functions ---------------------------------------------------------------------------
 

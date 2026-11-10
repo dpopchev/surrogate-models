@@ -1,7 +1,7 @@
 """The family screen behind Section 5.2 (W-067): every model family on W-066's representation,
 pointwise and curve-wise, eliminated by successive halving over the training rows.
 
-Every candidate -- a family in one unit of prediction -- is scored through shared/harness.py on
+Every candidate -- a family in one unit of prediction -- is scored through paperlib/harness.py on
 each pair (dataset and target) at the first budget of training rows, thinned along each curve;
 the best share per pair, ranked on the frozen folds' p95 significant figures, goes on to the
 next budget. A fit past the time budget is stopped in its worker, and a pointwise GPR whose
@@ -29,8 +29,8 @@ import seaborn as sns
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from shared import surrogate
-from shared.batches import (
+from paperlib import surrogate
+from paperlib.batches import (
     Batch,
     WallError,
     at_level,
@@ -45,7 +45,7 @@ from shared.batches import (
     write_checked,
     write_entry,
 )
-from shared.candidates import (
+from paperlib.candidates import (
     FAMILIES,
     UNITS,
     Candidate,
@@ -54,8 +54,8 @@ from shared.candidates import (
     Unit,
     fitter_of,
 )
-from shared.ceilings import PROFILE_BINS, profile
-from shared.config import (
+from paperlib.ceilings import PROFILE_BINS, profile
+from paperlib.config import (
     NOTATION_TEX,
     FamiliesErrorsVariant,
     FamiliesFigure,
@@ -66,7 +66,7 @@ from shared.config import (
     TableLayout,
     load_config,
 )
-from shared.design import (
+from paperlib.design import (
     BLACK_HOLES,
     DATASET_TEX,
     NEUTRON_STARS,
@@ -79,9 +79,9 @@ from shared.design import (
     pairs,
     target_symbol,
 )
-from shared.eda import booktabs, number_tex, render_macros
-from shared.harness import Fitter, Run, harness
-from shared.plots import (
+from paperlib.eda import booktabs, number_tex, render_macros
+from paperlib.harness import Fitter, Run, harness
+from paperlib.plots import (
     SYMBOLS,
     CoolCmap,
     PlotStyle,
@@ -94,10 +94,10 @@ from shared.plots import (
     mark_size,
     write_variant_sheet,
 )
-from shared.runs import RunMetadata, Setting, entry_from_json
-from shared.scorecard import relative_errors, significant_figures
-from shared.surrogate import Training, make_training
-from shared.workers import run_jobs
+from paperlib.runs import RunMetadata, Setting, entry_from_json
+from paperlib.scorecard import relative_errors, significant_figures
+from paperlib.surrogate import Training, make_training
+from paperlib.workers import run_jobs
 
 logger = logging.getLogger(__name__)
 
