@@ -125,6 +125,17 @@ table-variants: assets ## Render every table in each layout and shape as a page 
 	done
 	$(call log_done,every table in each layout ($(TABLE_LAYOUTS)) and each results table in its other shapes in $(VARIANTS)/tables/)
 
+# One standalone PDF per stored table, layout and shape under $(TABLES)/<section>/ (W-139), from
+# the JSON under $(STATE)/<section>/tables/ and the hand-written decisions tables: no section
+# script runs and nothing is fitted.
+TABLE_PAGES := paperlib/tools/table_pages.py
+TABLES      := $(BUILD)/tables
+
+.PHONY: tables
+tables: ## Render every stored table in each layout and shape as its own PDF under build/tables/
+	@rm -rf $(WORK)/table-pages && $(RUN) python $(TABLE_PAGES) $(STATE) 40_data_analysis/43_preprocessing paperlib/latex $(WORK)/table-pages $(TABLES)
+	$(call log_done,every table page in $(TABLES)/)
+
 # Three representative figures, every variant of each, under each style preset of paper.toml
 # [plot.presets], as files of their own under $(FIGURES)/presets/<name>/ (W-115). Per preset,
 # the --figures modes of the NS EDA and the family and tuning scripts redraw them with
