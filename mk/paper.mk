@@ -87,19 +87,29 @@ TABLE_SHAPES  := representation:split:61_representation/61_representation_tab_re
                  tuning:delta:63_precision/63_precision_tab_tuning \
                  baseline:two_tables:51_algorithms/51_algorithms_tab_baseline
 TABLE_DATA    := $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+TABLE_SECTIONS := 41_neutron_stars 42_black_holes 51_algorithms 61_representation 62_families 63_precision
+
+# The sections store their tables and numbers as JSON under a state folder and read the recorded
+# batches from it (W-137). A variant writes its own: $(1)/state links every file of $(STATE) and
+# drops the stored tables and numbers, so a shape pick never touches $(STATE) and the batches are
+# still found. $(RENDER_ASSETS) is read at recipe time (the sections are included after this file).
+state_work = rm -rf $(1)/state && mkdir -p $(1)/state && cp -Ras $(abspath $(STATE))/. $(1)/state/ && \
+  rm -rf $(1)/state/[0-9][0-9]_*/tables $(1)/state/[0-9][0-9]_*/numbers.json
 
 .PHONY: table-variants
 table-variants: assets
 	@for layout in $(TABLE_LAYOUTS); do \
 	  work=$(TABLES_WORK)/$$layout; \
 	  rm -rf $$work && mkdir -p $$work/assets $$work/flat && cp -R $(ASSETS)/. $$work/assets/ && \
+	  $(call state_work,$$work) && \
 	  export PAPER__TABLES__LAYOUT=$$layout && \
-	  $(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $$work/assets --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) && \
-	  $(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $$work/assets --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) && \
-	  $(RUN) python $(REPRESENTATION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $(STATE) $(REPRESENTATION_KNOBS) --batch $(REPRESENTATION_BATCH) && \
-	  $(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) && \
-	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) && \
-	  $(RUN) python $(BASELINE) $(TABLE_DATA) $$work/assets $(STATE) --tables && \
+	  $(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $$work/assets --state $$work/state --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) && \
+	  $(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $$work/assets --state $$work/state --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) && \
+	  $(RUN) python $(REPRESENTATION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $$work/state $(REPRESENTATION_KNOBS) --batch $(REPRESENTATION_BATCH) && \
+	  $(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $$work/state $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) && \
+	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work/assets $$work/state $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) && \
+	  $(RUN) python $(BASELINE) $(TABLE_DATA) $$work/assets $$work/state --tables && \
+	  for section in $(TABLE_SECTIONS); do $(RUN) python $(RENDER_ASSETS) $$work/state/$$section $$work/assets || exit 1; done && \
 	  cp $(PAPER_SRC) $$work/flat/ && find $$work/assets -type f -exec cp {} $$work/flat/ \; && \
 	  $(RUN) python $(TABLES_ENTRY) $(PAPER_ENTRY) $$layout $$work/flat $(VARIANTS)/tables || exit 1; \
 	done
@@ -107,15 +117,16 @@ table-variants: assets
 	  field=$${item%%:*}; rest=$${item#*:}; shape=$${rest%%:*}; table=$${rest#*:}; \
 	  work=$(TABLES_WORK)/$$field-$$shape; \
 	  rm -rf $$work && mkdir -p $$work/assets && cp -R $(TABLES_WORK)/small/flat $$work/flat && \
+	  $(call state_work,$$work) && \
 	  rm -f $$work/flat/tables_small.* && \
 	  field_var=PAPER__TABLES__$$(echo $$field | tr a-z A-Z) && export $$field_var=$$shape && \
 	  case $$field in \
-	    representation) $(RUN) python $(REPRESENTATION) $(TABLE_DATA) $$work/assets $(STATE) $(REPRESENTATION_KNOBS) --batch $(REPRESENTATION_BATCH) ;; \
-	    families) $(RUN) python $(FAMILIES) $(TABLE_DATA) $$work/assets $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) ;; \
-	    tuning) $(RUN) python $(TUNING) $(TABLE_DATA) $$work/assets $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) ;; \
-	    baseline) $(RUN) python $(BASELINE) $(TABLE_DATA) $$work/assets $(STATE) --tables ;; \
+	    representation) $(RUN) python $(REPRESENTATION) $(TABLE_DATA) $$work/assets $$work/state $(REPRESENTATION_KNOBS) --batch $(REPRESENTATION_BATCH) && $(RUN) python $(RENDER_ASSETS) $$work/state/61_representation $$work/assets ;; \
+	    families) $(RUN) python $(FAMILIES) $(TABLE_DATA) $$work/assets $$work/state $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) && $(RUN) python $(RENDER_ASSETS) $$work/state/62_families $$work/assets ;; \
+	    tuning) $(RUN) python $(TUNING) $(TABLE_DATA) $$work/assets $$work/state $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) && $(RUN) python $(RENDER_ASSETS) $$work/state/63_precision $$work/assets ;; \
+	    baseline) $(RUN) python $(BASELINE) $(TABLE_DATA) $$work/assets $$work/state --tables && $(RUN) python $(RENDER_ASSETS) $$work/state/51_algorithms $$work/assets ;; \
 	  esac && unset $$field_var && \
-	  cp $$work/assets/$$table.tex $$work/flat/ && \
+	  { cat $$work/assets/$$table.tex; for more in $$work/assets/$${table}_*.tex; do if [ -f $$more ]; then cat $$more; fi; done; } > $$work/flat/$$(basename $$table).tex && \
 	  $(RUN) python $(TABLES_ENTRY) $(PAPER_ENTRY) $$shape $$work/flat $(VARIANTS)/tables --only $$(basename $$table) || exit 1; \
 	done
 	$(call log_done,every table in each layout ($(TABLE_LAYOUTS)) and each results table in its other shapes in $(VARIANTS)/tables/)
@@ -135,10 +146,12 @@ preset-variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(S
 	@for preset in $(PLOT_PRESETS); do \
 	  work=$(PRESETS_WORK)/$$preset; out=$(VARIANTS)/presets/$$preset; \
 	  rm -rf $$work $$out && mkdir -p $$work $$out && \
+	  $(call state_work,$$work) && \
 	  export PAPER__PLOT__PRESET=$$preset && \
-	  $(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $$work --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) && \
-	  $(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) && \
-	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) && \
+	  $(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $$work --state $$work/state --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) && \
+	  $(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $$work/state $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) && \
+	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $$work/state $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) && \
+	  for section in 41_neutron_stars 62_families 63_precision; do $(RUN) python $(RENDER_ASSETS) $$work/state/$$section $$work || exit 1; done && \
 	  for figure in $(PRESET_FIGURES); do cp $$work/$$figure.png $$out/ || exit 1; done || exit 1; \
 	done
 	@$(RUN) python $(PRESETS_SHEET) $(VARIANTS)/presets $(subst $() ,$(comma),$(PLOT_PRESETS)) $(subst $() ,$(comma),$(notdir $(PRESET_FIGURES)))
