@@ -970,6 +970,17 @@ def read_back(
     return found
 
 
+def _write_figures(out: Path, found: Mapping[tuple[str, str], Predicted], style: PlotStyle) -> None:
+    """Every parity variant as <stem>_<variant>.png in out, each a file of its own at the
+    style's dpi, no contact sheet."""
+    out.mkdir(parents=True, exist_ok=True)
+    for variant in get_args(AlgParityVariant):
+        fig = parity_figure(found, style, variant)
+        fig.savefig(out / f"{PARITY}_{variant}.png", dpi=style.dpi)
+        plt.close(fig)
+    logger.info("done: %d baseline figure variants -> %s", len(get_args(AlgParityVariant)), out)
+
+
 def _write_variants(
     out: Path, found: Mapping[tuple[str, str], Predicted], style: PlotStyle
 ) -> None:
@@ -1034,15 +1045,18 @@ def main(
     in a folder named after its run under the state dir. Given --variants <dir>, fit nothing:
     draw every parity variant from the latest baseline batch's ledger entries into <dir>.
     Given --tables, fit nothing: rewrite the baseline table alone from those entries."""
-    variants_dir = None
+    variants_dir = figures_dir = None
     if "--variants" in argv:
         at = argv.index("--variants")
         variants_dir, argv = Path(argv[at + 1]), argv[:at] + argv[at + 2 :]
+    if "--figures" in argv:
+        at = argv.index("--figures")
+        figures_dir, argv = Path(argv[at + 1]), argv[:at] + argv[at + 2 :]
     tables_only = "--tables" in argv
     argv = [arg for arg in argv if arg != "--tables"]
     assert len(argv) == 5, (
         "usage: fit_baseline.py <ns.parquet> <bh.parquet> <split.parquet> <asset dir> "
-        f"<state dir> [--variants <dir>] [--tables], got {argv}"
+        f"<state dir> [--variants <dir>] [--figures <dir>] [--tables], got {argv}"
     )
     ns, bh, split_file = Path(argv[0]), Path(argv[1]), Path(argv[2])
     out, state = Path(argv[3]) / SECTION, Path(argv[4]) / SECTION
@@ -1058,10 +1072,14 @@ def main(
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
     split = pd.read_parquet(split_file)
     found_pairs = pairs(tables, split, SPECS, TARGETS)
-    if variants_dir is not None:
+    if variants_dir is not None or figures_dir is not None:
         designs = {(p.dataset, p.target): p.design for p in found_pairs}
         found = read_back(read_ledger(Path(argv[4]) / "ledger"), designs)
-        _write_variants(variants_dir / SECTION, found, config.plot)
+        if figures_dir is not None:
+            _write_figures(figures_dir / SECTION, found, config.plot)
+        else:
+            assert variants_dir is not None
+            _write_variants(variants_dir / SECTION, found, config.plot)
         return
     if tables_only:
         keys = [(p.dataset, p.target) for p in found_pairs]

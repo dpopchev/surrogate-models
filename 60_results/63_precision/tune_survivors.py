@@ -1103,11 +1103,14 @@ def main(
             logger.info("rebuilding the tuning table from batch %s; nothing is fitted", batch)
         saved = outcomes_path(args.state, SECTION, batch)
         outcomes = outcomes_from_json(saved.read_text())
-        if args.variants is not None:
+        if args.variants is not None or args.figures is not None:
             ran = tuple(outcome.job for outcome in outcomes)
             points = journal_points(saved.with_suffix(".journal"), batch, ran)
             apply_style(config.plot, NOTATION_TEX.read_text())
-            _write_variants(args.variants / SECTION, points, config.plot)
+            if args.figures is not None:
+                _write_figures(args.figures / SECTION, points, config.plot)
+            elif args.variants is not None:
+                _write_variants(args.variants / SECTION, points, config.plot)
             return
         screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
         out = args.assets / SECTION
@@ -1324,17 +1327,22 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
         type=Path,
         help="with --batch: draw every figure variant into this dir to pick from; assets untouched",
     )
+    parser.add_argument(
+        "--figures",
+        type=Path,
+        help="with --batch: draw every figure variant as its own PNG into this dir",
+    )
     args = parser.parse_args(argv)
-    if args.variants is not None and args.batch is None:
-        parser.error("--variants draws from a recorded batch: give --batch too")
+    if (args.variants is not None or args.figures is not None) and args.batch is None:
+        parser.error("--variants and --figures draw from a recorded batch: give --batch too")
     return args
 
 
-def _write_variants(out: Path, points: Sequence[TrialPoint], style: PlotStyle) -> None:
-    """Every variant of the history and ranges figures as <stem>_<variant>.png in out and per
-    figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
-    out.mkdir(parents=True, exist_ok=True)
-    sheets: dict[str, dict[str, Callable[[], Figure]]] = {
+def _variant_drawers(
+    points: Sequence[TrialPoint], style: PlotStyle
+) -> dict[str, dict[str, Callable[[], Figure]]]:
+    """The drawers of every variant of the history and ranges figures, per figure stem."""
+    return {
         HISTORY: {
             v: partial(history_figure, points, style, v) for v in get_args(PrecisionHistoryVariant)
         },
@@ -1342,7 +1350,27 @@ def _write_variants(out: Path, points: Sequence[TrialPoint], style: PlotStyle) -
             v: partial(ranges_figure, points, style, v) for v in get_args(PrecisionRangesVariant)
         },
     }
-    for stem, drawers in sheets.items():
+
+
+def _write_figures(out: Path, points: Sequence[TrialPoint], style: PlotStyle) -> None:
+    """Every variant of the history and ranges figures as <stem>_<variant>.png in out, each a
+    file of its own at the style's dpi, no contact sheet."""
+    out.mkdir(parents=True, exist_ok=True)
+    drawn = 0
+    for stem, drawers in _variant_drawers(points, style).items():
+        for variant, drawer in drawers.items():
+            fig = drawer()
+            fig.savefig(out / f"{stem}_{variant}.png", dpi=style.dpi)
+            plt.close(fig)
+            drawn += 1
+    logger.info("done: %d tuning figure variants -> %s", drawn, out)
+
+
+def _write_variants(out: Path, points: Sequence[TrialPoint], style: PlotStyle) -> None:
+    """Every variant of the history and ranges figures as <stem>_<variant>.png in out and per
+    figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
+    out.mkdir(parents=True, exist_ok=True)
+    for stem, drawers in _variant_drawers(points, style).items():
         write_variant_sheet(out, stem, drawers, style)
 
 

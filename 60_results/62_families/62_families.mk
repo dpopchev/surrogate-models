@@ -36,3 +36,13 @@ families: $(FAMILIES_ASSETS) ## Run the family screen for Section 5.2
 	$(call log_done,family assets current in $(dir $(FAMILIES_ASSETS)))
 
 62_families: families ## Build the Section 5.2 assets -- the same as make families
+
+# Every figure variant as its own PNG under build/figures/62_families/, redrawn from the
+# recorded batch; nothing is screened. FAMILIES_BATCH must name a recorded batch.
+FAMILIES_FIGURES := $(BUILD)/figures
+
+.PHONY: 62_families_figures
+62_families_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every family figure variant as its own PNG under build/figures/
+	@test -n "$(FAMILIES_BATCH)" || { printf 'FAMILIES_BATCH is empty: no recorded batch to draw from\n' >&2; exit 1; }
+	@$(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) --figures $(FAMILIES_FIGURES)
+	$(call log_done,family figure variants in $(FAMILIES_FIGURES)/62_families/)
