@@ -5,22 +5,22 @@
 # (Decision on W-067), on 3 workers. Hours, so its own target, in make assets only from its
 # recorded batch (W-130); one line per finished job in the log. Its knobs are written here
 # only. The k-NN, RBF and spline knobs are the representation screen's.
-FAMILIES        := 60_results/62_families/screen_families.py
-FAMILIES_TOML   := 60_results/62_families/62_families.toml
-FAMILIES_ASSETS := $(ASSETS)/62_families/62_families_tab_families.tex
+FAMILIES        := 90_appendix/98_families/screen_families.py
+FAMILIES_TOML   := 90_appendix/98_families/98_families.toml
+FAMILIES_ASSETS := $(ASSETS)/98_families/98_families_tab_families.tex
 FAMILIES_KNOBS  := --k 8 --neighbours 100 --knots 8 --per-curve 10 \
                    --budgets 1000 10000 100000 --keeps 3 2 --minutes 30 --memory-gb 4 --workers 3
 # The recorded batch Section 5.2 reports (2026-10-08, clean at 037443f; 88 outcomes): its saved
-# outcomes (local/state/62_families/<batch>.json) rebuild the table and figures in seconds.
+# outcomes (local/state/98_families/<batch>.json) rebuild the table and figures in seconds.
 # Empty it to refit the whole screen (hours): make families FAMILIES_BATCH=
 FAMILIES_BATCH  ?= 01a11be4-6eca-7427-a5dd-a97dd7a0194d
 
-# The script stores the table and numbers as JSON under $(STATE)/62_families/ and still writes
+# The script stores the table and numbers as JSON under $(STATE)/98_families/ and still writes
 # the figures; render_assets.py writes the table and numbers assets from the JSON, after the
 # script has emptied the folder. One grouped rule, so a build that lost the table reruns the
 # script, as one that lost the numbers does.
 RENDER_ASSETS  := paperlib/tools/render_assets.py
-FAMILIES_STATE := $(STATE)/62_families
+FAMILIES_STATE := $(STATE)/98_families
 
 $(FAMILIES_STATE)/numbers.json $(FAMILIES_ASSETS) &: $(FAMILIES) $(RENDER_ASSETS) paper.toml $(FAMILIES_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(FAMILIES_BATCH),rebuilding the family table from batch $(FAMILIES_BATCH),screening the families ($(FAMILIES_KNOBS)) -- one line per finished job))
@@ -31,18 +31,18 @@ $(FAMILIES_STATE)/numbers.json $(FAMILIES_ASSETS) &: $(FAMILIES) $(RENDER_ASSETS
 # A paper asset while its batch is recorded: make assets rebuilds it in seconds, never a screen.
 PAPER_ASSETS += $(if $(FAMILIES_BATCH),$(FAMILIES_ASSETS))
 
-.PHONY: families 62_families
+.PHONY: families 98_families
 families: $(FAMILIES_ASSETS) ## Run the family screen for Section 5.2
 	$(call log_done,family assets current in $(dir $(FAMILIES_ASSETS)))
 
-62_families: families ## Build the Section 5.2 assets -- the same as make families
+98_families: families ## Build the Section 5.2 assets -- the same as make families
 
-# Every figure variant as its own PNG under build/figures/62_families/, redrawn from the
+# Every figure variant as its own PNG under build/figures/98_families/, redrawn from the
 # recorded batch; nothing is screened. FAMILIES_BATCH must name a recorded batch.
 FAMILIES_FIGURES := $(BUILD)/figures
 
-.PHONY: 62_families_figures
-62_families_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every family figure variant as its own PNG under build/figures/
+.PHONY: 98_families_figures
+98_families_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every family figure variant as its own PNG under build/figures/
 	@test -n "$(FAMILIES_BATCH)" || { printf 'FAMILIES_BATCH is empty: no recorded batch to draw from\n' >&2; exit 1; }
 	@$(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) --figures $(FAMILIES_FIGURES)
-	$(call log_done,family figure variants in $(FAMILIES_FIGURES)/62_families/)
+	$(call log_done,family figure variants in $(FAMILIES_FIGURES)/98_families/)

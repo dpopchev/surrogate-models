@@ -3,7 +3,7 @@
 
 # The frozen curve-grouped split of both tables (W-019): its seed, test fraction and folds are
 # written once here (Section 3.3 reports them; the EDA probes of the sections reuse them).
-SPLIT_SCRIPT        := 50_methodology/51_algorithms/split_datasets.py
+SPLIT_SCRIPT        := 90_appendix/95_algorithms/split_datasets.py
 SPLIT_SEED          := 20261005
 SPLIT_FOLDS         := 5
 SPLIT_TEST_FRACTION := 0.15
@@ -16,21 +16,21 @@ $(STATE)/split.parquet: $(SPLIT_SCRIPT) paperlib/eda.py $(STATE)/neutron_stars.p
 # target and not in PAPER_ASSETS -- make check (paper-verify) would retrain it on every change
 # of a shared module (T-080). The numbers file stands for the whole set; the epoch lines stream
 # while it trains.
-BASELINE        := 50_methodology/51_algorithms/fit_baseline.py
-BASELINE_TOML   := 50_methodology/51_algorithms/51_algorithms.toml
-BASELINE_ASSETS := $(ASSETS)/51_algorithms/51_algorithms_num.tex
+BASELINE        := 90_appendix/95_algorithms/fit_baseline.py
+BASELINE_TOML   := 90_appendix/95_algorithms/95_algorithms.toml
+BASELINE_ASSETS := $(ASSETS)/95_algorithms/95_algorithms_num.tex
 
-# The script stores the table and numbers as JSON under $(STATE)/51_algorithms/ and still writes
+# The script stores the table and numbers as JSON under $(STATE)/95_algorithms/ and still writes
 # the parity figure (after emptying the asset folder); render_assets.py writes the table and
 # numbers assets from the JSON. One grouped rule, so a build that lost the numbers reruns the fit.
 RENDER_ASSETS  := paperlib/tools/render_assets.py
-BASELINE_STATE := $(STATE)/51_algorithms
+BASELINE_STATE := $(STATE)/95_algorithms
 
 $(BASELINE_STATE)/numbers.json $(BASELINE_ASSETS) &: $(BASELINE) $(RENDER_ASSETS) paper.toml $(BASELINE_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,fitting the baseline on NS and BH$(comma) mass and charge -- one line per epoch; make follow shows it from any terminal)
 	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE)
 	@$(RUN) python $(RENDER_ASSETS) $(BASELINE_STATE) $(ASSETS)
-	$(call log_done,baseline table and numbers rendered and parity wrapper written to $(@D)/ -- run diagnostics under $(STATE)/51_algorithms/)
+	$(call log_done,baseline table and numbers rendered and parity wrapper written to $(@D)/ -- run diagnostics under $(STATE)/95_algorithms/)
 
 .PHONY: baseline
 baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1
@@ -39,7 +39,7 @@ baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1
 # The baseline table alone is a paper asset: rebuilt from the latest baseline batch of the
 # ledger in seconds, nothing fitted, so a change to baseline_table reaches the paper without a
 # refit (W-128). A ledger without a baseline batch keeps the table as make baseline last wrote it.
-BASELINE_TABLE := $(ASSETS)/51_algorithms/51_algorithms_tab_baseline.tex
+BASELINE_TABLE := $(ASSETS)/95_algorithms/95_algorithms_tab_baseline.tex
 BASELINE_DATA  := $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 PAPER_ASSETS   += $(BASELINE_TABLE)
 
@@ -52,14 +52,14 @@ $(BASELINE_TABLE): $(BASELINE) $(RENDER_ASSETS) paper.toml $(BASELINE_TOML) $(PA
 	else printf '%s\n' "$$out" >&2; exit 1; fi
 
 # The section's assets are the split and the baseline table; the fit itself is make baseline.
-.PHONY: 51_algorithms
-51_algorithms: $(STATE)/split.parquet $(BASELINE_TABLE) ## Build the split and the baseline table for Section 4.1 -- nothing fitted
+.PHONY: 95_algorithms
+95_algorithms: $(STATE)/split.parquet $(BASELINE_TABLE) ## Build the split and the baseline table for Section 4.1 -- nothing fitted
 	$(call log_done,Section 4.1 assets current in $(dir $(BASELINE_TABLE)))
 
 # Each baseline run logs into its own <run>/train.log and repoints latest.log at it (W-054);
 # tail -F follows the name, so one make follow keeps up across runs. It ends with Ctrl-C, so
 # its log_done never prints.
-BASELINE_LOG := $(STATE)/51_algorithms/latest.log
+BASELINE_LOG := $(STATE)/95_algorithms/latest.log
 
 .PHONY: follow
 follow: ## Follow the running baseline's log live
@@ -69,13 +69,13 @@ follow: ## Follow the running baseline's log live
 
 # The runs at a glance (W-057): one line per run from its run.json, newest first; make run
 # lists one run's files, the latest unless R names a run folder.
-LIST_RUNS := 50_methodology/51_algorithms/list_runs.py
+LIST_RUNS := 90_appendix/95_algorithms/list_runs.py
 R         ?= latest
 
 .PHONY: runs
 runs: ## List the baseline runs, newest first
 	@$(RUN) python $(LIST_RUNS) $(STATE)
-	$(call log_done,baseline runs listed from $(STATE)/51_algorithms/)
+	$(call log_done,baseline runs listed from $(STATE)/95_algorithms/)
 
 .PHONY: run
 run: ## Show one baseline run's files -- R=<run>, default latest
@@ -84,7 +84,7 @@ run: ## Show one baseline run's files -- R=<run>, default latest
 
 # The run ledger (W-077): one line per harness run of every make baseline, newest first; B=<batch
 # id or its first characters> lists one batch.
-LIST_LEDGER := 50_methodology/51_algorithms/list_ledger.py
+LIST_LEDGER := 90_appendix/95_algorithms/list_ledger.py
 LEDGER      := $(STATE)/ledger
 B           ?=
 
@@ -93,11 +93,11 @@ ledger: ## List the run ledger -- B=<batch> for one batch
 	@$(RUN) python $(LIST_LEDGER) $(STATE) $(if $(B),--batch $(B))
 	$(call log_done,ledger listed from $(LEDGER)/ -- $(words $(wildcard $(LEDGER)/*.json)) entries$(if $(B), in all$(comma) batch $(B) shown))
 
-# Every parity variant as its own PNG under build/figures/51_algorithms/, redrawn from the
+# Every parity variant as its own PNG under build/figures/95_algorithms/, redrawn from the
 # baseline batch recorded in the ledger; nothing is fitted.
 BASELINE_FIGURES := $(BUILD)/figures
 
-.PHONY: 51_algorithms_figures
-51_algorithms_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every baseline figure variant as its own PNG under build/figures/
+.PHONY: 95_algorithms_figures
+95_algorithms_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every baseline figure variant as its own PNG under build/figures/
 	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) --figures $(BASELINE_FIGURES)
-	$(call log_done,baseline figure variants in $(BASELINE_FIGURES)/51_algorithms/)
+	$(call log_done,baseline figure variants in $(BASELINE_FIGURES)/95_algorithms/)

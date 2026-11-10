@@ -101,7 +101,7 @@ class TestMain:
     @pytest.fixture
     def state(self, tmp_path: Path) -> Path:
         """A state dir holding one finished run."""
-        run = tmp_path / "51_algorithms" / EARLY.name
+        run = tmp_path / "95_algorithms" / EARLY.name
         run.mkdir(parents=True)
         (run / "run.json").write_text(to_json(RECORD))
         return tmp_path

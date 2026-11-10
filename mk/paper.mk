@@ -78,10 +78,10 @@ tables: ## Render every stored table in each layout and shape as its own PDF und
 # batches, nothing fitted; the three figures' variants are copied to $(FIGURES)/presets/<name>/.
 PRESETS_WORK    := $(WORK)/presets
 PLOT_PRESETS    := paper light large
-PRESET_FIGURES  := 91_neutron_stars/91_neutron_stars_fig_mass_density 62_families/62_families_fig_errors 63_precision/63_precision_fig_history
+PRESET_FIGURES  := 91_neutron_stars/91_neutron_stars_fig_mass_density 98_families/98_families_fig_errors 99_precision/99_precision_fig_history
 
 .PHONY: figures
-figures: 91_neutron_stars_figures 92_black_holes_figures 51_algorithms_figures 62_families_figures 63_precision_figures $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every figure variant as its own PNG under build/figures/, and three figures under each preset
+figures: 91_neutron_stars_figures 92_black_holes_figures 95_algorithms_figures 98_families_figures 99_precision_figures $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every figure variant as its own PNG under build/figures/, and three figures under each preset
 	@for preset in $(PLOT_PRESETS); do \
 	  work=$(PRESETS_WORK)/$$preset; out=$(FIGURES)/presets/$$preset; \
 	  rm -rf $$work $$out && mkdir -p $$work $$out && \
@@ -114,7 +114,7 @@ KNOBS        := paperlib/tools/paper_knobs.py
 KNOBS_ASSETS := $(ASSETS)/00_metadata/00_metadata_knobs_num.tex
 PAPER_ASSETS += $(KNOBS_ASSETS)
 
-$(KNOBS_ASSETS): $(KNOBS) paper.toml $(PAPERLIB) 60_results/61_representation/61_representation.mk 60_results/62_families/62_families.mk 60_results/63_precision/63_precision.mk
+$(KNOBS_ASSETS): $(KNOBS) paper.toml $(PAPERLIB) 90_appendix/97_representation/97_representation.mk 90_appendix/98_families/98_families.mk 90_appendix/99_precision/99_precision.mk
 	@$(RUN) python $(KNOBS) $@ --representation "$(REPRESENTATION_KNOBS)" --families "$(FAMILIES_KNOBS)" --tuning "$(TUNING_KNOBS)"
 	$(call log_done,knobs written to $@)
 

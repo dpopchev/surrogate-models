@@ -51,7 +51,7 @@ from paperlib.design import Design, Target
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
 from paperlib.tables import from_json, render
 
-# The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
+# The writer of the toy NS and BH tables and their split, the fixture of 90_appendix/conftest.py.
 ToyInputs = Callable[[Path], tuple[Path, Path, Path]]
 
 # Five curves of ten rows, y = p + x: curves 0-3 train (two frozen folds), curve 4 is test.
@@ -268,7 +268,7 @@ def test_the_outcomes_round_trip_through_json() -> None:
 
 @pytest.fixture(scope="module")
 def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path:
-    """One main run on the toy tables (60_results/conftest.py), one worker, the commit and clock
+    """One main run on the toy tables (90_appendix/conftest.py), one worker, the commit and clock
     injected; returns its working folder (assets/ and state/ inside)."""
     folder = tmp_path_factory.mktemp("screen")
     ns, bh, split_file = toy_inputs(folder)

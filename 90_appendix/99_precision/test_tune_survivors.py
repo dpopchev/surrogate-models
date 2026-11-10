@@ -59,7 +59,7 @@ from paperlib.runs import RunMetadata, entry_from_run
 from paperlib.scorecard import Scorecard
 from paperlib.tables import from_json, render
 
-# The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
+# The writer of the toy NS and BH tables and their split, the fixture of 90_appendix/conftest.py.
 ToyInputs = Callable[[Path], tuple[Path, Path, Path]]
 
 # Eight curves of five rows, y = 1 + 0.1 p + x: curves 6 and 7 are test; the six training
@@ -287,7 +287,7 @@ def toy_paths(folder: Path, assets: str = "assets") -> list[str]:
 
 @pytest.fixture(scope="module")
 def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path:
-    """One main run on the toy tables (60_results/conftest.py) over the toy screen batch's short
+    """One main run on the toy tables (90_appendix/conftest.py) over the toy screen batch's short
     list, two trials a job, one worker, the commit and clock injected; returns its working folder
     (assets/ and state/ inside)."""
     folder = tmp_path_factory.mktemp("tuning")

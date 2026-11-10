@@ -17,7 +17,7 @@ DATA_STATE := $(STATE)/black_holes.parquet $(STATE)/neutron_stars.parquet $(STAT
 
 # The rules that write them live with their sections: the black-hole table in
 # 33_black_holes.mk, the neutron-star table in 34_neutron_stars.mk and the split in
-# 51_algorithms.mk, included by the Makefile after mk/*.mk.
+# 95_algorithms.mk, included by the Makefile after mk/*.mk.
 
 .PHONY: data
 data: $(DATA_STATE) ## Prepare the datasets into local/state/

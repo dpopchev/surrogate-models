@@ -1,6 +1,6 @@
 """The baseline runs at a glance (W-057): make runs lists them, make run shows one run's files.
 
-Every folder under <state dir>/51_algorithms/ is a run (fit_baseline.py names it); its run.json
+Every folder under <state dir>/95_algorithms/ is a run (fit_baseline.py names it); its run.json
 gives the line. A folder without a readable run.json is listed with the reason -- still running,
 failed, or written before the record had its current fields -- never skipped.
 
@@ -15,7 +15,7 @@ from pathlib import Path
 from paperlib.progress import duration_text
 from paperlib.runs import RunRecord, from_json
 
-SECTION = "51_algorithms"
+SECTION = "95_algorithms"
 
 # --- vocabulary and types ---------------------------------------------------------------------
 

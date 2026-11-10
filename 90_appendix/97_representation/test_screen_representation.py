@@ -47,7 +47,7 @@ from paperlib.surrogate import Training
 from paperlib.tables import from_json, render
 from paperlib.workers import run_jobs
 
-# The writer of the toy NS and BH tables and their split, the fixture of 60_results/conftest.py.
+# The writer of the toy NS and BH tables and their split, the fixture of 90_appendix/conftest.py.
 ToyInputs = Callable[[Path], tuple[Path, Path, Path]]
 
 # Ten curves keyed by p along x, all y = 1 + x^2; the test curve p = 2 is sampled between the
@@ -309,7 +309,7 @@ def test_a_job_logs_its_done_line_at_the_runs_level_in_a_fresh_process(
 
 @pytest.fixture(scope="module")
 def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path:
-    """One main run on the toy tables (60_results/conftest.py), one seed and one worker, the
+    """One main run on the toy tables (90_appendix/conftest.py), one seed and one worker, the
     commit and clock injected; returns its working folder (assets/ and state/ inside)."""
     folder = tmp_path_factory.mktemp("screen")
     ns, bh, split_file = toy_inputs(folder)

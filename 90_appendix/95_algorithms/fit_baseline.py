@@ -6,7 +6,7 @@ net is scored on each frozen fold and, trained on every non-test curve through p
 and paperlib/surrogate.py with early stopping on held-out training curves, once on the test
 curves. Outputs, in the section's asset folder: the baseline table, the \\baseNsMass... macros
 (test MARE, RMSE, fit seconds, epochs) and the NS mass parity figure; in
-<state dir>/51_algorithms/<run>/, one run record and its diagnostics per pair (W-035); in
+<state dir>/95_algorithms/<run>/, one run record and its diagnostics per pair (W-035); in
 <state dir>/ledger/, one ledger entry per predictor, pair and seed, written as each ends (W-077).
 
 Run as `uv run python <this file> <ns.parquet> <bh.parquet> <split.parquet> <asset dir>
@@ -115,8 +115,8 @@ from paperlib.workers import run_jobs
 
 logger = logging.getLogger(__name__)
 
-SECTION = "51_algorithms"
-SECTION_TOML = Path(__file__).with_name("51_algorithms.toml")
+SECTION = "95_algorithms"
+SECTION_TOML = Path(__file__).with_name("95_algorithms.toml")
 
 # --- vocabulary and types ---------------------------------------------------------------------
 

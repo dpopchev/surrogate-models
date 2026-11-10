@@ -114,8 +114,8 @@ logger = logging.getLogger(__name__)
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
-SECTION = "62_families"
-SECTION_TOML = Path(__file__).with_name("62_families.toml")
+SECTION = "98_families"
+SECTION_TOML = Path(__file__).with_name("98_families.toml")
 
 FamiliesFigure = Literal["parity", "errors", "scaling"]
 # parity: predicted against true; residual: predicted minus true against true (W-113).

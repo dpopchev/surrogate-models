@@ -1,7 +1,7 @@
-\subsection{Candidate Algorithms and Preprocessing}
+\section{Candidate Algorithms and Preprocessing}
 \label{sec:algorithms}
 
-% The baseline's numbers (51_algorithms_num.tex, written by make baseline); a placeholder
+% The baseline's numbers (95_algorithms_num.tex, written by make baseline); a placeholder
 % shows when no baseline has run, so the paper compiles without one.
 \providecommand{\baseNsMassMare}{\placeholder{run make baseline}}
 \providecommand{\baseNsMassRmse}{\placeholder{run make baseline}}
@@ -57,6 +57,6 @@ The same pipeline fits all four pairs: the mass $M$ and the charge target $Y = \
 \paragraph{The charge is judged with the true mass, and end to end with the predicted one.}
 The charge model predicts $Y$, so the charge itself, $\Dch = M\,10^{Y}$, needs a mass. Rebuilt with the true $M$, the error isolates the charge model, and it is the number $H_1$ is judged by: a MARE in $\Dch$ of $\baseNsChargeMareTrueM$ for neutron stars and $\baseBhChargeMareTrueM$ for black holes on the test curves. Rebuilt with the mass model's prediction, as the inference of Section~\ref{sec:mcmc} will use it, the MARE becomes $\baseNsChargeMarePredM$ and $\baseBhChargeMarePredM$.
 
-\InputIfFileExists{51_algorithms_fig_parity}{}{}
-\InputIfFileExists{51_algorithms_tab_baseline}{}{}
+\InputIfFileExists{95_algorithms_fig_parity}{}{}
+\InputIfFileExists{95_algorithms_tab_baseline}{}{}
 \FloatBarrier

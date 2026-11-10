@@ -117,8 +117,8 @@ logger = logging.getLogger(__name__)
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
-SECTION = "63_precision"
-SECTION_TOML = Path(__file__).with_name("63_precision.toml")
+SECTION = "99_precision"
+SECTION_TOML = Path(__file__).with_name("99_precision.toml")
 
 # dots_and_best: every trial and the best so far; best_only: the best so far alone; regret: the
 # best so far minus each trial, log-scaled (W-113).

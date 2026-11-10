@@ -292,7 +292,7 @@ class TestStartBanner:
     def lines(self) -> list[str]:
         return start_banner(
             Path("state/run-1"),
-            Path("assets/51_algorithms"),
+            Path("assets/95_algorithms"),
             BOUNDED,
             rows=(100, 20),
             curves=(10, 2),
@@ -325,13 +325,13 @@ class TestStartBanner:
         assert "  - state/run-1/loss_curve.png (redrawn every 5 epochs)" in lines
 
     def test_lists_the_paper_assets_written_at_the_end(self, lines: list[str]) -> None:
-        assert "  - assets/51_algorithms/ (Section 4.1 numbers, parity figure)" in lines
+        assert "  - assets/95_algorithms/ (Section 4.1 numbers, parity figure)" in lines
 
     def test_says_how_to_follow_the_run(self, lines: list[str]) -> None:
         assert "follow live: make follow" in lines
 
 
-FILES = [Path("assets/51_algorithms/51_algorithms_num.tex"), Path("state/run-1/run.json")]
+FILES = [Path("assets/95_algorithms/95_algorithms_num.tex"), Path("state/run-1/run.json")]
 
 
 class TestEndBanner:
@@ -399,7 +399,7 @@ def test_parity_all_pairs_has_four_axes() -> None:
 
 @pytest.mark.view
 def test_the_figure_wrapper_includes_the_picked_parity_variant() -> None:
-    assert "{51_algorithms_fig_parity_all_pairs}" in figure_tex("all_pairs")
+    assert "{95_algorithms_fig_parity_all_pairs}" in figure_tex("all_pairs")
 
 
 NS_KEYS = [(1.0, 1.0), (1.0, 2.0), (2.0, 1.0), (2.0, 2.0), (3.0, 1.0)]
@@ -517,7 +517,7 @@ class TestMain:
         self, ran: Path
     ) -> None:
         assert sorted(p.name for p in (ran / "assets" / SECTION).iterdir()) == [
-            "51_algorithms_fig_parity.tex",
+            "95_algorithms_fig_parity.tex",
         ]
 
     def test_stores_the_baseline_table_as_json(self, ran: Path) -> None:
