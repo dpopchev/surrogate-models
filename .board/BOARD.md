@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-013   | blocked: 0 | todo roots: 17 | done: 422 | pruned: 60
+open path: E-013 > W-142 > T-378   | blocked: 0 | todo roots: 17 | done: 422 | pruned: 60
 
 ## Tree
 
@@ -46,7 +46,7 @@ E-009         [doing]    The paper follows the revised structure, and the releas
 E-013         [doing]    The paper tells the physics, the data science is the appendix
   W-140  issue  [done]     The data-science subsections become the appendix -- T-373 [done], T-374 [done], T-375 [done]
   W-141  issue  [done]     The body follows the agreed outline -- T-376 [done], T-377 [done]
-  W-142  issue  [todo]     The abstract, introduction and conclusion outlines state the pipeline goal -- T-378 [todo], T-379 [todo], T-380 [todo]
+  W-142  issue  [doing]    The abstract, introduction and conclusion outlines state the pipeline goal -- T-378 [doing]   <- ACTIVE LEAF, T-379 [todo], T-380 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
 W-119  bug    [todo]     (standalone) The ranges figure crashes on a batch with no network job   (filed during T-294) -- T-295 [todo]
@@ -856,8 +856,8 @@ flowchart TD
   E013 --> W141["W-141 issue done: The body follows the agreed outline"]
   W141 --> T376["T-376 done: Write the new body sections as outlines -> 35_domain_boundaries, 40_pipeline, 50_validity, 70_discussion"]
   W141 --> T377["T-377 done: Fold MCMC into the conclusion and group the results by dataset -> 80_conclusion.tex future work, 60_results 61 to 64, 70_mcmc removed"]
-  E013 --> W142["W-142 issue todo: The abstract, introduction and conclusion outlines state the pipeline goal"]
-  W142 --> T378["T-378 todo: Rewrite the abstract outline -> 10_abstract/10_abstract.tex states the pipeline goal"]
+  E013 --> W142["W-142 issue doing: The abstract, introduction and conclusion outlines state the pipeline goal"]
+  W142 --> T378["T-378 doing: Rewrite the abstract outline -> 10_abstract/10_abstract.tex states the pipeline goal -- ACTIVE LEAF"]
   W142 --> T379["T-379 todo: Rewrite the introduction outline -> 20_introduction/20_introduction.tex contributions name the pipeline"]
   W142 --> T380["T-380 todo: Rewrite the conclusion outline -> 80_conclusion/80_conclusion.tex summarizes the pipeline"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
@@ -898,8 +898,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E013 doing
+  class E006,E009,E013,W142,T378 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W140,T373,T374,T375,W141,T376,T377 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W142,T378,T379,T380,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W146,T386,W147,T388,W148,T389,W149,T390 todo
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,T379,T380,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W146,T386,W147,T388,W148,T389,W149,T390 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
