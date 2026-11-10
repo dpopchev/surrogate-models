@@ -113,6 +113,12 @@ CLEANS := clean-build clean-state
 # Each entry builds one artifact (makefile.md, Deliverables).
 DELIVERABLES :=
 include $(wildcard mk/*.mk)
+# Each asset-generating section holds its own rules, variables and one target named after its
+# folder: <chapter>/<section>/<section>.mk (sorted, so the order is the paper's).
+include $(sort $(wildcard [0-9][0-9]_*/[0-9][0-9]_*/*.mk))
+# The sections have appended their assets: the prerequisites of mk/paper.mk's assets rule,
+# expanded only now (make expands prerequisites when it reads a rule).
+assets: $(PAPER_ASSETS)
 
 .PHONY: clean
 clean: $(CLEANS) ## Run every clean -- inputs, keys, settings, scratch, .board/ .venv/ untouched
