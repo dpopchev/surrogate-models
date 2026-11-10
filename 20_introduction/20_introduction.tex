@@ -6,11 +6,13 @@
   \item \textbf{Astrophysical context:} probing strong-field modifications of general relativity with compact objects -- black holes and neutron stars -- in scalar-tensor-Gauss--Bonnet gravity.~\citep{TODO_StrongFieldTests}
   \item \textbf{Spontaneous scalarization:} matter-induced against curvature-induced scalarization; in extreme curvature the Gauss--Bonnet invariant $\RGB$ acts as an effective mass term for the scalar field~\citep{Doneva2017_BH,Doneva2017_NS,DamourEspositoFarese1993}.
   \item \textbf{Computational bottleneck:} high-fidelity ODE integration -- shooting on the non-linear field equations with boundary conditions at $r \to \infty$ -- takes seconds to minutes per evaluation~\citep{TODO_SolverCost}, which makes large-scale Bayesian parameter estimation impractically slow~\citep{Reed2024}.
-  \item \textbf{Literature gap:} previous surrogates~\citep{Liodis2024,Kaushikk2026,Liu2026} treat training-data generation as a black box and overlook target skewness, sampling artifacts near $\Mmax$ and the suppression of a wide-dynamic-range target's scale.
+  \item \textbf{Literature gap:} previous surrogates~\citep{Liodis2024,Kaushikk2026,Liu2026} give no procedure for building a surrogate and no domain of validity: they do not say where a prediction can be trusted.
   \item \textbf{Core contributions:}
   \begin{enumerate}
-    \item A unified neural surrogate predicting the mass $M$ and the dilaton charge $\Dch$ for both the black-hole and the neutron-star sector of ESTGB gravity.
-    \item A data-guided feature-engineering framework backed by three testable architectural hypotheses ($H_1$, $H_2$, $H_3$).
-    \item A rigorous ``scheme of elimination'' benchmarking classical machine learning -- Gaussian processes, XGBoost -- against deep residual networks.
+    \item A processing pipeline as the algorithm for building surrogates of compact-object maps, minimizing the relative error against the data ceiling (Section~\ref{sec:pipeline}).
+    \item Effective extrapolation beyond the sampled curves, with an out-of-domain filter that flags an input and feeds back the nearest valid one (Section~\ref{sec:validity}).
+    \item Its validation on a two-parameter (black holes) and a three-parameter (neutron stars) map of ESTGB gravity (Section~\ref{sec:results}).
   \end{enumerate}
+  \item \textbf{Appendix:} the scheme of elimination and the three testable hypotheses ($H_1$, $H_2$, $H_3$) behind the design are the data science of the appendix (Section~\ref{sec:hypotheses}).
+  \item \textbf{Layout:} Section~\ref{sec:physical-framework} sets the physical framework and the data generation; Section~\ref{sec:pipeline} the surrogate pipeline; Section~\ref{sec:validity} the validity check of an input and its feedback; Section~\ref{sec:results} the results; Section~\ref{sec:discussion} the physical implications; Section~\ref{sec:conclusion} concludes and releases the repository.
 \end{itemize}
