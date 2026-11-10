@@ -98,7 +98,18 @@ from paperlib.search import (
     space_of,
 )
 from paperlib.surrogate import Training, make_training
-from paperlib.tables import Cell, Column, Plain, Span, Table, Text, render, to_json
+from paperlib.tables import (
+    Cell,
+    Column,
+    Plain,
+    Shape,
+    Span,
+    Table,
+    Text,
+    render,
+    shape_files,
+    to_json,
+)
 from paperlib.trials import open_study
 from paperlib.workers import run_jobs
 
@@ -427,45 +438,51 @@ def tuning_object(
     screen: Mapping[Job, float],
     shape: TuningTableLayout = "screen_tuned_test",
 ) -> Table:
-    """The tuning table as an object, to store as JSON: per pair and candidate the screen's
-    figures, the tuned fold and test figures, and the pair's data ceiling; without the screen
-    (no_screen), or with the tuned minus the screen figures beside the tuned ones (delta)."""
+    """The tuning table in its shape as an object, to store as JSON: the stored table
+    (screen_tuned_test), or a shape applied to it (no_screen, delta)."""
+    table = _screen_tuned_test(outcomes, screen)
+    return table if shape == "screen_tuned_test" else SHAPES[shape](table)[0]
+
+
+def tuning_stored(
+    outcomes: Sequence[Outcome],
+    screen: Mapping[Job, float],
+    shape: TuningTableLayout = "screen_tuned_test",
+) -> dict[str, Table]:
+    """The tables to store as JSON: the paper's pick as tuning, and every shape of the table
+    beside it as tuning.<shape>."""
+    return {"tuning": tuning_object(outcomes, screen, shape)} | shape_files(
+        "tuning", SHAPES, _screen_tuned_test(outcomes, screen)
+    )
+
+
+def _screen_tuned_test(outcomes: Sequence[Outcome], screen: Mapping[Job, float]) -> Table:
+    """Per pair and candidate the screen's figures, the tuned fold and test figures, and the
+    pair's data ceiling."""
     rows = []
     for outcome in outcomes:
         job = outcome.job
         before = screen.get(job)
         match outcome:
             case Tuned():
-                gain = (
-                    Text("--") if before is None else _math_cell(f"{outcome.folds - before:+.2f}")
-                )
-                folds, test = _math_cell(f"{outcome.folds:.2f}"), _math_cell(f"{outcome.test:.2f}")
-                tuned = (folds, gain, test) if shape == "delta" else (folds, test)
+                tuned = (_math_cell(f"{outcome.folds:.2f}"), _math_cell(f"{outcome.test:.2f}"))
             case Walled():
-                tuned = (Span(3 if shape == "delta" else 2, "c", "wall"),)
+                tuned = (Span(2, "c", "wall"),)
             case _:
                 assert_never(outcome)
         screen_cell = Text("--") if before is None else _math_cell(f"{before:.2f}")
-        screened = () if shape == "no_screen" else (screen_cell,)
         rows.append(
             (
                 Text(pair_tex(job.dataset, job.target)),
                 Text(job.candidate.family),
                 Text(job.candidate.unit),
-                *screened,
+                screen_cell,
                 *tuned,
                 Text(f"${CEILING_TEX[(job.dataset, job.target)]}$"),
             )
         )
-    match shape:
-        case "screen_tuned_test":
-            heads, spec = ("Screen", "Tuned", "Test"), "@{}lll*{4}{r}@{}"
-        case "no_screen":
-            heads, spec = ("Tuned", "Test"), "@{}lll*{3}{r}@{}"
-        case "delta":
-            heads, spec = ("Screen", "Tuned", "$\\Delta$", "Test"), "@{}lll*{5}{r}@{}"
-        case _:
-            assert_never(shape)
+    heads = ("Screen", "Tuned", "Test")
+    spec = "@{}lll*{4}{r}@{}"
     fitted = [Column("l", before="@{}"), Column("l"), Column("l"), *(Column("r") for _ in heads)]
     fitted.append(Column("r"))
     return Table(
@@ -480,6 +497,51 @@ def tuning_object(
         tuple(rows),
         spec,
     )
+
+
+def no_screen(table: Table) -> tuple[Table, ...]:
+    """The table without the screen column."""
+    return (
+        replace(
+            table,
+            columns=(*table.columns[:3], *table.columns[4:]),
+            header=tuple((*row[:3], *row[4:]) for row in table.header),
+            rows=tuple((*row[:3], *row[4:]) for row in table.rows),
+            small_spec="@{}lll*{3}{r}@{}",
+        ),
+    )
+
+
+def _gain(screen: Cell, tuned: Cell) -> Cell:
+    """The tuned figure minus the screen's as printed, signed; dashes where either is none."""
+    if not (isinstance(screen, Plain) and isinstance(tuned, Plain)):
+        return Text("--")
+    return _math_cell(f"{float(tuned.mantissa) - float(screen.mantissa):+.2f}")
+
+
+def delta(table: Table) -> tuple[Table, ...]:
+    """The table with the tuned minus the screen figures beside the tuned ones, a wall
+    spanning three columns."""
+
+    def widened(row: tuple[Cell, ...]) -> tuple[Cell, ...]:
+        if isinstance(row[4], Span):
+            return (*row[:4], replace(row[4], width=3), *row[5:])
+        return (*row[:5], _gain(row[3], row[4]), *row[5:])
+
+    return (
+        replace(
+            table,
+            columns=(*table.columns[:5], Column("r"), *table.columns[5:]),
+            header=tuple((*row[:5], Text("$\\Delta$"), *row[5:]) for row in table.header),
+            rows=tuple(widened(row) for row in table.rows),
+            small_spec="@{}lll*{5}{r}@{}",
+        ),
+    )
+
+
+# The shapes of the tuning table besides screen, tuned and test, by the name the pick of
+# paper.toml gives them; each is applied to the stored table.
+SHAPES: Mapping[str, Shape] = {"no_screen": no_screen, "delta": delta}
 
 
 def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
@@ -1118,8 +1180,7 @@ def main(
         points = journal_points(saved.with_suffix(".journal"), batch, ran)
         found = numbers(outcomes, points, screen)
         found |= analysis(outcomes, points, screen, settings.seed)
-        table = tuning_object(outcomes, screen, config.tables.tuning)
-        _store(args.state, {"tuning": table}, found)
+        _store(args.state, tuning_stored(outcomes, screen, config.tables.tuning), found)
         logger.info(
             "done: tuning table and numbers of batch %s, %d jobs -> %s",
             batch,

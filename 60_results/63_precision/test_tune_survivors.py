@@ -21,6 +21,7 @@ from optuna.storages.journal import JournalFileBackend
 from optuna.trial import TrialState
 from tune_survivors import (
     SECTION,
+    SHAPES,
     Job,
     ShortList,
     TrialPoint,
@@ -43,6 +44,7 @@ from tune_survivors import (
     short_list,
     study_name,
     trial_points,
+    tuning_object,
     tuning_table,
 )
 
@@ -225,6 +227,18 @@ def test_tuning_table_delta_column_is_tuned_minus_screen() -> None:
 
 
 @pytest.mark.view
+@pytest.mark.parametrize("shape", sorted(SHAPES))
+def test_every_table_shape_renders(shape: str) -> None:
+    outcomes = [
+        Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 2, 0, "entry"),
+        Walled(NS_MASS_RBF_CW, "all 2 trials past 30 min"),
+    ]
+    tables = SHAPES[shape](tuning_object(outcomes, {NS_MASS_RBF: 3.28}))
+    texts = [render(table, layout) for table in tables for layout in ("small", "aligned")]
+    assert all(text.startswith("\\begin{table}") for text in texts)
+
+
+@pytest.mark.view
 def test_tuning_numbers_name_each_candidate() -> None:
     outcomes = [Tuned(NS_MASS_RBF, {"neighbours": 80, "weights": "uniform"}, 3.4, 3.3, 2, 1, "e")]
     points = [
@@ -298,7 +312,7 @@ def saved_batch(state: Path) -> Path:
 @pytest.mark.functional
 def test_tuning_writes_its_table_as_json(ran: Path) -> None:
     stored = {path.stem for path in (ran / "state" / SECTION / "tables").glob("*.json")}
-    assert stored == {"tuning"}
+    assert stored == {"tuning", "tuning.no_screen", "tuning.delta"}
 
 
 @pytest.mark.functional

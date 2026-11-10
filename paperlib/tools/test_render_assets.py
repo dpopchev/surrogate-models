@@ -31,3 +31,15 @@ def test_render_assets_writes_the_table_and_the_numbers(tmp_path: Path) -> None:
     written = {path.name for path in (tmp_path / "assets" / "41_demo").iterdir()}
 
     assert written == {"41_demo_tab_demo.tex", "41_demo_num.tex"}
+
+
+@pytest.mark.view
+def test_render_assets_skips_a_stored_shape_named_with_a_dot(tmp_path: Path) -> None:
+    state = _state(tmp_path)
+    (state / "tables" / "demo.wide.json").write_text(to_json(TABLE))
+
+    main([str(state), str(tmp_path / "assets")])
+
+    written = {path.name for path in (tmp_path / "assets" / "41_demo").iterdir()}
+
+    assert written == {"41_demo_tab_demo.tex", "41_demo_num.tex"}

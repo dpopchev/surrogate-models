@@ -1,5 +1,5 @@
 # Section 4.1: the frozen split, the baseline surrogate, its table and the tools that read its
-# runs and ledger. Uses the base's STATE and log helpers and TABLE_DATA, PAPERLIB (mk/paper.mk).
+# runs and ledger. Uses the base's STATE and log helpers and PAPERLIB (mk/paper.mk).
 
 # The frozen curve-grouped split of both tables (W-019): its seed, test fraction and folds are
 # written once here (Section 3.3 reports them; the EDA probes of the sections reuse them).
@@ -40,10 +40,11 @@ baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1
 # ledger in seconds, nothing fitted, so a change to baseline_table reaches the paper without a
 # refit (W-128). A ledger without a baseline batch keeps the table as make baseline last wrote it.
 BASELINE_TABLE := $(ASSETS)/51_algorithms/51_algorithms_tab_baseline.tex
+BASELINE_DATA  := $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 PAPER_ASSETS   += $(BASELINE_TABLE)
 
-$(BASELINE_TABLE): $(BASELINE) $(RENDER_ASSETS) paper.toml $(BASELINE_TOML) $(PAPERLIB) $(TABLE_DATA) $(wildcard $(STATE)/ledger)
-	@if out=$$($(RUN) python $(BASELINE) $(TABLE_DATA) $(ASSETS) $(STATE) --tables 2>&1) \
+$(BASELINE_TABLE): $(BASELINE) $(RENDER_ASSETS) paper.toml $(BASELINE_TOML) $(PAPERLIB) $(BASELINE_DATA) $(wildcard $(STATE)/ledger)
+	@if out=$$($(RUN) python $(BASELINE) $(BASELINE_DATA) $(ASSETS) $(STATE) --tables 2>&1) \
 	  && out=$$($(RUN) python $(RENDER_ASSETS) $(BASELINE_STATE) $(ASSETS) 2>&1); then \
 	  printf "$(BOLD)$(GREEN)%s$(RESET) %s\n" "[DONE]" "baseline table rebuilt from the ledger -> $@" >&2; \
 	elif printf '%s' "$$out" | grep -q 'no baseline batch in the ledger'; then \

@@ -23,12 +23,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from fit_baseline import (
     SECTION,
+    SHAPES,
     ChargeMares,
     Fit,
     PairScores,
     Predicted,
     Scored,
     ask_trial,
+    baseline_objects,
     baseline_table,
     charge_mares,
     charge_numbers,
@@ -219,6 +221,14 @@ class TestBaselineTable:
             ["tab:baseline", "tab:baseline-folds"],
             ["Pair & Predictor & Test & Figures & Fit s & Call s", "Pair & Predictor & Folds"],
         )
+
+
+@pytest.mark.view
+@pytest.mark.parametrize("shape", sorted(SHAPES))
+def test_every_table_shape_renders(shape: str) -> None:
+    tables = SHAPES[shape](baseline_objects([NS_MASS])["baseline"])
+    texts = [render(table, layout) for table in tables for layout in ("small", "aligned")]
+    assert all(text.startswith("\\begin{table}") for text in texts)
 
 
 class TestNumbers:
@@ -512,7 +522,11 @@ class TestMain:
 
     def test_stores_the_baseline_table_as_json(self, ran: Path) -> None:
         folder = ran / "state" / SECTION / "tables"
-        assert {path.stem for path in folder.glob("*.json")} == {"baseline"}
+        assert {path.stem for path in folder.glob("*.json")} == {
+            "baseline",
+            "baseline.two_tables.1",
+            "baseline.two_tables.2",
+        }
 
     def test_stores_the_charge_mare_with_true_and_predicted_mass_per_dataset(
         self, ran: Path

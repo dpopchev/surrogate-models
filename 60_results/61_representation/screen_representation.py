@@ -59,7 +59,18 @@ from paperlib.runs import LedgerEntry, RunMetadata, Setting
 from paperlib.scorecard import significant_figures
 from paperlib.surrogate import Training, make_training, network_fitter, sklearn_fitter
 from paperlib.tables import Cell as TableCell
-from paperlib.tables import Column, Plain, Span, Spread, Table, Text, render, to_json
+from paperlib.tables import (
+    Column,
+    Plain,
+    Shape,
+    Span,
+    Spread,
+    Table,
+    Text,
+    render,
+    shape_files,
+    to_json,
+)
 from paperlib.trials import ReportEpochs, open_study, tell_run
 from paperlib.workers import run_jobs
 
@@ -336,56 +347,83 @@ def representation_objects(
     table, or the NS and the BH tables (split, the BH one as representation_bh). The caption
     names the spread as the layout writes it."""
     caption = REPRESENTATION_CAPTION.replace(SPREAD_TEX["small"], SPREAD_TEX[layout])
-    match shape:
-        case "eight_columns":
-            return {"representation": _eight_columns(found, "representation", caption)}
-        case "split":
-            ns = [s for s in found if s.dataset == NEUTRON_STARS.dataset]
-            bh = [s for s in found if s.dataset != NEUTRON_STARS.dataset]
-            return {
-                "representation": _eight_columns(ns, "representation", f"Neutron stars. {caption}"),
-                "representation_bh": _eight_columns(
-                    bh, "representation-bh", "Black holes, as above."
-                ),
-            }
-        case "transposed":
-            return {"representation": _transposed(found)}
+    table = _eight_columns(found, "representation", caption)
+    if shape == "eight_columns":
+        return {"representation": table}
+    return dict(zip(("representation", "representation_bh"), SHAPES[shape](table), strict=False))
+
+
+def representation_stored(
+    found: Sequence[Score],
+    layout: TableLayout = "small",
+    shape: RepresentationTableLayout = "eight_columns",
+) -> dict[str, Table]:
+    """The tables to store as JSON: the paper's pick by its names, and every shape of the table
+    beside it as representation.<shape> (representation.split.1 and .2)."""
+    caption = REPRESENTATION_CAPTION.replace(SPREAD_TEX["small"], SPREAD_TEX[layout])
+    table = _eight_columns(found, "representation", caption)
+    return representation_objects(found, layout, shape) | shape_files(
+        "representation", SHAPES, table
+    )
+
+
+def _cell_tex(cell: TableCell) -> str:
+    """A cell of the eight-column table as LaTeX text, as it prints."""
+    match cell:
+        case Text(tex):
+            return tex
+        case Plain(mantissa):
+            return f"${mantissa}$"
+        case Spread(mantissa, spread, bold):
+            folds = f"{mantissa}_{{\\pm {spread}}}"
+            return f"$\\mathbf{{{folds}}}$" if bold else f"${folds}$"
         case _:
-            assert_never(shape)
+            raise AssertionError(f"a cell the eight-column table does not hold: {cell}")
 
 
-def _transposed(found: Sequence[Score]) -> Table:
+def split(table: Table) -> tuple[Table, ...]:
+    """The table as the NS pairs and the BH pairs apart, the BH one labelled representation-bh."""
+    ns_tex = DATASET_TEX[NEUTRON_STARS.dataset]
+    ns = tuple(row for row in table.rows if _cell_tex(row[0]).startswith(ns_tex))
+    bh = tuple(row for row in table.rows if not _cell_tex(row[0]).startswith(ns_tex))
+    return (
+        replace(table, caption=f"Neutron stars. {table.caption}", rows=ns),
+        replace(table, label="representation-bh", caption="Black holes, as above.", rows=bh),
+    )
+
+
+def transposed(table: Table) -> tuple[Table, ...]:
     """One row per pair and model, a column per representation, each cell test / folds; a
     cell is text in either layout, so the caption keeps the spread as the subscript."""
-    by_key = {(s.dataset, s.target, s.representation, s.model): s for s in found}
-    shown = [r for r in REPRESENTATION_TEX if any(key[2] == r for key in by_key)]
+    shown = [
+        tex
+        for tex in REPRESENTATION_TEX.values()
+        if any(_cell_tex(row[1]) == tex for row in table.rows)
+    ]
+    dashes = (Text("--"), Text("--"))
+    by_key = {(_cell_tex(row[0]), _cell_tex(row[1])): row for row in table.rows}
     rows = []
-    for dataset, target in dict.fromkeys(key[:2] for key in by_key):
-        for model in MODELS:
-            if not any(key[:2] == (dataset, target) and key[3] == model for key in by_key):
-                continue
-            cells = [
-                Text(
-                    " / ".join(
-                        _entry_tex(
-                            by_key.get((dataset, target, r, model)),
-                            by_key.get((dataset, target, "baseline", model)),
-                        )
-                    )
-                )
-                for r in shown
-            ]
-            rows.append((Text(pair_tex(dataset, target)), Text(MODEL_TEX[model]), *cells))
+    for pair in dict.fromkeys(_cell_tex(row[0]) for row in table.rows):
+        for at, model in enumerate(MODELS):
+            mine = slice(2 + 2 * at, 4 + 2 * at)
+            figures = {
+                tex: by_key[pair, tex][mine] if (pair, tex) in by_key else dashes for tex in shown
+            }
+            if all(cells == dashes for cells in figures.values()):
+                continue  # the pair never ran this model
+            joined = [Text(" / ".join(_cell_tex(c) for c in cells)) for cells in figures.values()]
+            rows.append((Text(pair), Text(MODEL_TEX[model]), *joined))
     fitted = [Column("l", before="@{}"), Column("l"), *(Column("r") for _ in shown)]
     columns = (*fitted[:-1], replace(fitted[-1], after="@{}"))
-    header = (tuple(Text(h) for h in ("Pair", "Model", *(REPRESENTATION_TEX[r] for r in shown))),)
-    return Table(
-        "representation",
-        f"{REPRESENTATION_CAPTION} Each cell: test / folds.",
-        columns,
-        header,
-        tuple(rows),
-    )
+    header = (tuple(Text(h) for h in ("Pair", "Model", *shown)),)
+    caption = table.caption.replace(SPREAD_TEX["aligned"], SPREAD_TEX["small"])
+    caption = f"{caption} Each cell: test / folds."
+    return (Table("representation", caption, columns, header, tuple(rows)),)
+
+
+# The shapes of the representation table besides the eight columns, by the name the pick of
+# paper.toml gives them; each is applied to the stored table.
+SHAPES: Mapping[str, Shape] = {"split": split, "transposed": transposed}
 
 
 def _eight_columns(found: Sequence[Score], label: str, caption: str) -> Table:
@@ -632,7 +670,7 @@ def main(
         entries = [entry for entry in read_ledger(ledger) if entry.meta.batch == batch]
         assert len(entries) == jobs, f"batch {batch}: {len(entries)} ledger entries for {jobs} jobs"
         found = scores(entries)
-        tables = representation_objects(found, config.tables.layout, config.tables.representation)
+        tables = representation_stored(found, config.tables.layout, config.tables.representation)
         _empty(args.assets / SECTION)
         _store(args.state, tables, numbers(found))
         logger.info(

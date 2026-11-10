@@ -4,6 +4,7 @@ The renderer formats from the cells; it never parses a LaTeX string back.
 """
 
 import math
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Annotated, Literal, assert_never
 
@@ -346,6 +347,23 @@ def _aligned_line(table: Table, row: tuple[Cell, ...], body: bool) -> str:
         else:
             cells.append(_small(cell))
     return " & ".join(cells)
+
+
+Shape = Callable[[Table], tuple[Table, ...]]
+
+
+def shape_files(name: str, shapes: Mapping[str, Shape], table: Table) -> dict[str, Table]:
+    """Every shape of a table by stored name: <name>.<shape>, or <name>.<shape>.1 and
+    <name>.<shape>.2 and so on for a shape of several tables. The dot keeps them from being
+    rendered as the paper's table."""
+    found: dict[str, Table] = {}
+    for shape, apply in shapes.items():
+        shaped = apply(table)
+        if len(shaped) == 1:
+            found[f"{name}.{shape}"] = shaped[0]
+        else:
+            found |= {f"{name}.{shape}.{at}": one for at, one in enumerate(shaped, start=1)}
+    return found
 
 
 def render(table: Table, layout: TableLayout) -> str:
