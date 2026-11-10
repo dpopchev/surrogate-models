@@ -375,6 +375,36 @@ class TestMain:
 
 
 @pytest.mark.functional
+def test_ns_eda_draws_every_variant_as_its_own_file(tmp_path: Path) -> None:
+    table, assets, state = tmp_path / "ns.parquet", tmp_path / "assets", tmp_path / "state"
+    prepared = DENSE.copy()
+    prepared.attrs.update({"runs": 5, "empty_runs": 1, "rows": 20})
+    prepared.to_parquet(table)
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
+    knobs = ["--folds", "2", "--seed", "0", "--window", str(WINDOW)]
+    main(
+        [str(table), str(assets), "--state", str(state), *knobs],
+        config=config,
+        section=NeutronStarsSection.model_validate({"figures": []}),
+    )
+    out = tmp_path / "figures"
+    main(["--figures", str(out), "--state", str(state)], config=config)
+    stem = "41_neutron_stars_fig_"
+    expected = {
+        f"{stem}{name}_{variant}.png"
+        for name, variants in {
+            "ceilings": ("annotated", "figures_axis", "one_panel"),
+            "charge_target": ("scatter", "lines", "lambda_inset"),
+            "mass_density": ("by_lambda", "by_beta", "two_panels"),
+            "mass_max": ("histogram_heatmap", "heatmap_contours", "log_histogram"),
+            "univariate_continuous": ("histograms", "log_counts", "transposed"),
+        }.items()
+        for variant in variants
+    }
+    assert {p.name for p in (out / "41_neutron_stars").iterdir()} == expected
+
+
+@pytest.mark.functional
 def test_ns_eda_writes_its_five_tables_as_json(tmp_path: Path) -> None:
     table, assets, state = tmp_path / "ns.parquet", tmp_path / "assets", tmp_path / "state"
     prepared = DENSE.copy()
