@@ -83,7 +83,6 @@ from paperlib.plots import (
     line_width,
     mark_alpha,
     mark_size,
-    write_variant_sheet,
 )
 from paperlib.progress import duration_text
 from paperlib.runs import (
@@ -981,16 +980,6 @@ def _write_figures(out: Path, found: Mapping[tuple[str, str], Predicted], style:
     logger.info("done: %d baseline figure variants -> %s", len(get_args(AlgParityVariant)), out)
 
 
-def _write_variants(
-    out: Path, found: Mapping[tuple[str, str], Predicted], style: PlotStyle
-) -> None:
-    """Every parity variant as <stem>_<variant>.png in out and their contact sheet as
-    <stem>_variants.png, at the screen's resolution."""
-    out.mkdir(parents=True, exist_ok=True)
-    drawers = {v: partial(parity_figure, found, style, v) for v in get_args(AlgParityVariant)}
-    write_variant_sheet(out, PARITY, drawers, style)
-
-
 def write_diagnostics(
     fit: Fit, record: RunRecord, run: Path, names: dict[int, str], x_label: str, dpi: int
 ) -> None:
@@ -1042,13 +1031,10 @@ def main(
     """Score the baseline and its references on every dataset and target; write the baseline
     table, the NS mass numbers and parity figure into the section's folder of the asset dir,
     after emptying that folder of an earlier run; leave each pair's run record and diagnostics
-    in a folder named after its run under the state dir. Given --variants <dir>, fit nothing:
+    in a folder named after its run under the state dir. Given --figures <dir>, fit nothing:
     draw every parity variant from the latest baseline batch's ledger entries into <dir>.
     Given --tables, fit nothing: rewrite the baseline table alone from those entries."""
-    variants_dir = figures_dir = None
-    if "--variants" in argv:
-        at = argv.index("--variants")
-        variants_dir, argv = Path(argv[at + 1]), argv[:at] + argv[at + 2 :]
+    figures_dir = None
     if "--figures" in argv:
         at = argv.index("--figures")
         figures_dir, argv = Path(argv[at + 1]), argv[:at] + argv[at + 2 :]
@@ -1056,7 +1042,7 @@ def main(
     argv = [arg for arg in argv if arg != "--tables"]
     assert len(argv) == 5, (
         "usage: fit_baseline.py <ns.parquet> <bh.parquet> <split.parquet> <asset dir> "
-        f"<state dir> [--variants <dir>] [--figures <dir>] [--tables], got {argv}"
+        f"<state dir> [--figures <dir>] [--tables], got {argv}"
     )
     ns, bh, split_file = Path(argv[0]), Path(argv[1]), Path(argv[2])
     out, state = Path(argv[3]) / SECTION, Path(argv[4]) / SECTION
@@ -1072,14 +1058,10 @@ def main(
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(ns), BLACK_HOLES.dataset: pd.read_parquet(bh)}
     split = pd.read_parquet(split_file)
     found_pairs = pairs(tables, split, SPECS, TARGETS)
-    if variants_dir is not None or figures_dir is not None:
+    if figures_dir is not None:
         designs = {(p.dataset, p.target): p.design for p in found_pairs}
         found = read_back(read_ledger(Path(argv[4]) / "ledger"), designs)
-        if figures_dir is not None:
-            _write_figures(figures_dir / SECTION, found, config.plot)
-        else:
-            assert variants_dir is not None
-            _write_variants(variants_dir / SECTION, found, config.plot)
+        _write_figures(figures_dir / SECTION, found, config.plot)
         return
     if tables_only:
         keys = [(p.dataset, p.target) for p in found_pairs]

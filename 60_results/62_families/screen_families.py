@@ -90,7 +90,6 @@ from paperlib.plots import (
     line_width,
     mark_alpha,
     mark_size,
-    write_variant_sheet,
 )
 from paperlib.runs import RunMetadata, Setting, entry_from_json
 from paperlib.scorecard import relative_errors, significant_figures
@@ -1133,14 +1132,11 @@ def main(
             logger.info("rebuilding the assets from batch %s; nothing is fitted", batch)
         saved = outcomes_path(args.state, SECTION, batch)
         outcomes = outcomes_from_json(saved.read_text())
-        if args.variants is not None or args.figures is not None:
+        if args.figures is not None:
             apply_style(config.plot, NOTATION_TEX.read_text())
             panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
             paths = trajectories(outcomes)
-            if args.figures is not None:
-                _write_figures(args.figures / SECTION, panels, paths, config.plot, args.minutes)
-            elif args.variants is not None:
-                _write_variants(args.variants / SECTION, panels, paths, config.plot, args.minutes)
+            _write_figures(args.figures / SECTION, panels, paths, config.plot, args.minutes)
             return
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
@@ -1363,18 +1359,13 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--workers", type=int, required=True, help="fits at once")
     parser.add_argument("--batch", help="fit nothing; rebuild the assets from this saved batch")
     parser.add_argument(
-        "--variants",
-        type=Path,
-        help="with --batch: draw every figure variant into this dir to pick from; assets untouched",
-    )
-    parser.add_argument(
         "--figures",
         type=Path,
         help="with --batch: draw every figure variant as its own PNG into this dir",
     )
     args = parser.parse_args(argv)
-    if (args.variants is not None or args.figures is not None) and args.batch is None:
-        parser.error("--variants and --figures draw from a recorded batch: give --batch too")
+    if args.figures is not None and args.batch is None:
+        parser.error("--figures draws from a recorded batch: give --batch too")
     return args
 
 
@@ -1396,20 +1387,6 @@ def _write_figures(
             plt.close(fig)
             drawn += 1
     logger.info("done: %d family figure variants -> %s", drawn, out)
-
-
-def _write_variants(
-    out: Path,
-    panels: Sequence[Panel],
-    paths: Sequence[Trajectory],
-    style: PlotStyle,
-    minutes: float,
-) -> None:
-    """Every variant of the parity, error and scaling figures as <stem>_<variant>.png in out
-    and per figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
-    out.mkdir(parents=True, exist_ok=True)
-    for stem, drawers in _variant_drawers(panels, paths, style, minutes).items():
-        write_variant_sheet(out, stem, drawers, style)
 
 
 def _variant_drawers(

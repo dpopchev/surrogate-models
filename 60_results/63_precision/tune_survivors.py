@@ -84,7 +84,6 @@ from paperlib.plots import (
     line_width,
     mark_alpha,
     mark_size,
-    write_variant_sheet,
 )
 from paperlib.runs import LedgerEntry, RunMetadata, Setting
 from paperlib.scorecard import significant_figures
@@ -1103,14 +1102,11 @@ def main(
             logger.info("rebuilding the tuning table from batch %s; nothing is fitted", batch)
         saved = outcomes_path(args.state, SECTION, batch)
         outcomes = outcomes_from_json(saved.read_text())
-        if args.variants is not None or args.figures is not None:
+        if args.figures is not None:
             ran = tuple(outcome.job for outcome in outcomes)
             points = journal_points(saved.with_suffix(".journal"), batch, ran)
             apply_style(config.plot, NOTATION_TEX.read_text())
-            if args.figures is not None:
-                _write_figures(args.figures / SECTION, points, config.plot)
-            elif args.variants is not None:
-                _write_variants(args.variants / SECTION, points, config.plot)
+            _write_figures(args.figures / SECTION, points, config.plot)
             return
         screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
         out = args.assets / SECTION
@@ -1323,18 +1319,13 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
         help="the short list keeps the candidates this many figures behind the pair's best",
     )
     parser.add_argument(
-        "--variants",
-        type=Path,
-        help="with --batch: draw every figure variant into this dir to pick from; assets untouched",
-    )
-    parser.add_argument(
         "--figures",
         type=Path,
         help="with --batch: draw every figure variant as its own PNG into this dir",
     )
     args = parser.parse_args(argv)
-    if (args.variants is not None or args.figures is not None) and args.batch is None:
-        parser.error("--variants and --figures draw from a recorded batch: give --batch too")
+    if args.figures is not None and args.batch is None:
+        parser.error("--figures draws from a recorded batch: give --batch too")
     return args
 
 
@@ -1364,14 +1355,6 @@ def _write_figures(out: Path, points: Sequence[TrialPoint], style: PlotStyle) ->
             plt.close(fig)
             drawn += 1
     logger.info("done: %d tuning figure variants -> %s", drawn, out)
-
-
-def _write_variants(out: Path, points: Sequence[TrialPoint], style: PlotStyle) -> None:
-    """Every variant of the history and ranges figures as <stem>_<variant>.png in out and per
-    figure their contact sheet as <stem>_variants.png, at the screen's resolution."""
-    out.mkdir(parents=True, exist_ok=True)
-    for stem, drawers in _variant_drawers(points, style).items():
-        write_variant_sheet(out, stem, drawers, style)
 
 
 if __name__ == "__main__":

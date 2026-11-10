@@ -53,20 +53,15 @@ $(ASSETS)/00_metadata/00_metadata_build_stamp.tex: paperlib/tools/build_stamp.py
 # folder -- live in <chapter>/<section>/<section>.mk, included by the Makefile after mk/*.mk;
 # each appends its assets to PAPER_ASSETS. The recipes below read their variables at recipe time.
 
-# Every variant of each figure that has them, with one contact sheet per figure, drawn to
+# Every variant of each figure that has them, each a file of its own, drawn to
 # pick from: paper.toml records the pick, make compile places it (W-111). Never an asset. The
 # results figures are drawn from the recorded runs -- the baseline's ledger entries and the
 # batches below -- and nothing is fitted (W-113).
 VARIANTS := $(BUILD)/variants
 
 .PHONY: variants
-variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet table-variants preset-variants ## Draw every figure variant and its contact sheet under build/variants/
-	@$(RUN) python $(NS_EDA) $(STATE)/neutron_stars.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --window $(NS_PILE_UP_WINDOW) --variants $(VARIANTS)
-	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED) --variants $(VARIANTS)
-	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) --variants $(VARIANTS)
-	@$(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) --variants $(VARIANTS)
-	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --variants $(VARIANTS)
-	$(call log_done,figure variants and contact sheets in $(VARIANTS)/)
+variants: 41_neutron_stars_figures 42_black_holes_figures 51_algorithms_figures 62_families_figures 63_precision_figures table-variants preset-variants ## Draw every figure variant as its own PNG under build/figures/, every table layout and every preset
+	$(call log_done,figure variants in $(BUILD)/figures/ with the table layouts and presets)
 
 # Every table in each layout of paper.toml [tables], one page image per table and layout under
 # $(VARIANTS)/tables/ (W-114). Per layout, a copy of the assets in $(TABLES_WORK)/<layout>/ gets
@@ -131,12 +126,11 @@ table-variants: assets
 	done
 	$(call log_done,every table in each layout ($(TABLE_LAYOUTS)) and each results table in its other shapes in $(VARIANTS)/tables/)
 
-# Three representative figures under each style preset of paper.toml [plot.presets], on one
-# contact sheet $(VARIANTS)/presets/presets_variants.png (W-115). Per preset, the NS EDA and the
+# Three representative figures under each style preset of paper.toml [plot.presets], as files
+# of their own under $(BUILD)/figures/presets/<name>/ (W-115). Per preset, the NS EDA and the
 # family and tuning figures are redrawn with PAPER__PLOT__PRESET=<name> into
 # $(PRESETS_WORK)/<name>/ from their recorded batches, nothing fitted; the three figures are
-# copied to $(VARIANTS)/presets/<name>/. $(ASSETS) itself is never written.
-PRESETS_SHEET   := paperlib/tools/presets_sheet.py
+# copied to $(BUILD)/figures/presets/<name>/. $(ASSETS) itself is never written.
 PRESETS_WORK    := $(WORK)/presets
 PLOT_PRESETS    := paper light large
 PRESET_FIGURES  := 41_neutron_stars/41_neutron_stars_fig_mass_density 62_families/62_families_fig_errors 63_precision/63_precision_fig_history
@@ -144,7 +138,7 @@ PRESET_FIGURES  := 41_neutron_stars/41_neutron_stars_fig_mass_density 62_familie
 .PHONY: preset-variants
 preset-variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	@for preset in $(PLOT_PRESETS); do \
-	  work=$(PRESETS_WORK)/$$preset; out=$(VARIANTS)/presets/$$preset; \
+	  work=$(PRESETS_WORK)/$$preset; out=$(BUILD)/figures/presets/$$preset; \
 	  rm -rf $$work $$out && mkdir -p $$work $$out && \
 	  $(call state_work,$$work) && \
 	  export PAPER__PLOT__PRESET=$$preset && \
@@ -154,8 +148,7 @@ preset-variants: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(S
 	  for section in 41_neutron_stars 62_families 63_precision; do $(RUN) python $(RENDER_ASSETS) $$work/state/$$section $$work || exit 1; done && \
 	  for figure in $(PRESET_FIGURES); do cp $$work/$$figure.png $$out/ || exit 1; done || exit 1; \
 	done
-	@$(RUN) python $(PRESETS_SHEET) $(VARIANTS)/presets $(subst $() ,$(comma),$(PLOT_PRESETS)) $(subst $() ,$(comma),$(notdir $(PRESET_FIGURES)))
-	$(call log_done,three figures under each preset ($(PLOT_PRESETS)) in $(VARIANTS)/presets/presets_variants.png)
+	$(call log_done,three figures under each preset ($(PLOT_PRESETS)) in $(BUILD)/figures/presets/)
 
 # The fits as live trials (W-081): optuna-dashboard on a study journal -- make baseline's, or a
 # screen's or tuning's batch journal under $(STATE)/<section>/ (W-092). By default the one

@@ -6,14 +6,13 @@ tells which dataset is shown. The style is a PlotStyle, chosen in paper.toml's [
 
 import logging
 import re
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Literal, assert_never
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.colors import Colormap
-from matplotlib.figure import Figure
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, PositiveInt, model_validator
 
 logger = logging.getLogger(__name__)
@@ -214,39 +213,6 @@ def figure_size(
     width = style.text_width_pt / POINTS_PER_INCH
     height = style.text_height_pt / POINTS_PER_INCH
     return width, min(per_row * width * rows, max_share * height)
-
-
-def contact_sheet(images: Mapping[str, Path]) -> Figure:
-    """One row of the rendered images, each titled by its label and as wide as the text, so
-    the variants of one figure are compared at the size the paper prints them (W-111)."""
-    pictures = {label: plt.imread(path) for label, path in images.items()}
-    width = ARTICLE_TEXT_WIDTH_PT / POINTS_PER_INCH
-    height = max(width * p.shape[0] / p.shape[1] for p in pictures.values())
-    figure, grid = plt.subplots(
-        1, len(pictures), figsize=(width * len(pictures), height * 1.1), squeeze=False
-    )
-    for axes, (label, picture) in zip(grid[0], pictures.items(), strict=True):
-        axes.imshow(picture)
-        axes.set_title(label)
-        axes.set_axis_off()
-    return figure
-
-
-def write_variant_sheet(
-    out: Path, stem: str, drawers: Mapping[str, Callable[[], Figure]], style: PlotStyle
-) -> None:
-    """Each variant drawn as <stem>_<variant>.png in out and their contact sheet as
-    <stem>_variants.png, at the screen's resolution."""
-    images: dict[str, Path] = {}
-    for variant, drawer in drawers.items():
-        figure = drawer()
-        images[variant] = out / f"{stem}_{variant}.png"
-        figure.savefig(images[variant], dpi=style.dpi)
-        plt.close(figure)
-    sheet = contact_sheet(images)
-    sheet.savefig(out / f"{stem}_variants.png", dpi=style.diagnostics_dpi)
-    plt.close(sheet)
-    logger.info("done: %s variants %s and their sheet -> %s", stem, tuple(images), out)
 
 
 def colormap(name: CoolCmap | WarmCmap) -> Colormap:

@@ -73,7 +73,6 @@ from paperlib.plots import (
     colormap,
     line_width,
     mark_size,
-    write_variant_sheet,
 )
 from paperlib.tables import Table, Text, aligns, fixed, number, render, to_json
 
@@ -763,34 +762,7 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
         type=Path,
         help="the state dir: the tables and numbers are stored as JSON under <state>/<section>/",
     )
-    parser.add_argument(
-        "--variants",
-        type=Path,
-        help="draw every variant of each figure into this dir to pick from; assets untouched",
-    )
     return parser.parse_args(argv)
-
-
-def _write_variants(out: Path, table: pd.DataFrame, style: PlotStyle) -> None:
-    """Every variant of each figure with variants, the ceilings figure's included, and per
-    figure their contact sheet, into out."""
-    out.mkdir(parents=True, exist_ok=True)
-    for name, field in BlackHoleVariants.model_fields.items():
-        if name == "ceilings":
-            continue
-        if name not in get_args(BhFigure):
-            raise ValueError(f"variants field {name} names no BH figure")
-        figure = cast(BhFigure, name)
-        drawers = {
-            variant: partial(
-                draw, figure, table, style, BlackHoleVariants.model_validate({name: variant})
-            )
-            for variant in get_args(field.annotation)
-        }
-        write_variant_sheet(out, asset(figure), drawers, style)
-    bounds = _bounds(table)
-    ceilings = {v: partial(_ceilings, bounds, style, v) for v in get_args(CeilingsVariant)}
-    write_variant_sheet(out, f"{SECTION}_fig_ceilings", ceilings, style)
 
 
 def _bounds(table: pd.DataFrame) -> Ceilings:
@@ -883,9 +855,8 @@ def main(
     section: BlackHolesSection | None = None,
 ) -> None:
     """Write the selected figures and tables and the numbers into the section's folder of the
-    asset dir, after emptying that folder of an earlier run -- or, given --variants, only
-    every figure variant and its contact sheet into that dir's section folder -- or, given
-    --figures, every variant as its own PNG from the data the main run stored."""
+    asset dir, after emptying that folder of an earlier run -- or, given --figures, every
+    variant as its own PNG from the data the main run stored."""
     if "--figures" in argv:
         figure_args = _figure_arguments(argv)
         config = config or load_config()
@@ -899,9 +870,6 @@ def main(
     config = config or load_config()
     apply_style(config.plot, NOTATION_TEX.read_text())
     table = with_charge_targets(pd.read_parquet(source))
-    if args.variants is not None:
-        _write_variants(args.variants / SECTION, table, config.plot)
-        return
     out.mkdir(parents=True, exist_ok=True)
     for stale in out.iterdir():
         stale.unlink()
@@ -920,7 +888,7 @@ def main(
         | ceiling_macros("bhEda", bounds, CEILING_TAGS)
         | uncertainty_macros("bhEda", bounds, CEILING_TAGS, typical, "D")
     )
-    assert args.state is not None, "--state is required unless --variants is given"
+    assert args.state is not None, "--state is required"
     _store(args.state, table_objects(found, section.tables, bounds), macros)
     _figure_data_path(args.state).write_bytes(pickle.dumps(FigureData(table, bounds)))
     _write_ceilings(out, bounds, config.plot, section.variants.ceilings)
