@@ -44,7 +44,7 @@
 - 2026-11-10 W-139: open: a non-default split or two_tables pick stores two tables -- does the paper then show both? (unchecked at the E-012 close) supersedes: W-139#2
 
 ## Decisions
-- 2026-11-11 E-014: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 12 hours) (developer, 2026-11-11) supersedes: E-014#d7
+- 2026-11-11 E-014: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 16 hours) (developer, 2026-11-11) supersedes: E-014#d8
 - 2026-11-11 E-014: goal (developer, 2026-11-11): a framework whose algorithm is a data pipeline for surrogates reaching the minimal relative error the dataset allows, the physical framework kept intact -- no extrapolation beyond stable solutions; replaces E-013's extrapolation goal
 - 2026-11-11 E-014: layout (developer, 2026-11-11): paperlib holds the paper-wide Python; each section is a module make rebuilds alone; local/ holds interim results; build/ the paper, the sections with their artifacts and alternative figures; no table artifact, only figures
 - 2026-11-11 E-014: physics before data science; the main body short, anything longer in an appendix (developer, 2026-11-11)
