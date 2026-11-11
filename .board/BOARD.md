@@ -25,7 +25,7 @@ W-147  issue  [todo]     (standalone) Code comments and the citation notes name 
 W-157  issue  [todo]     (standalone) The figures mode of the black-hole, baseline and precision scripts is tested   (filed during T-398) -- T-422 [todo]
 W-158  issue  [todo]     (standalone) cloudpickle is a declared dependency of the project   (filed during T-404) -- T-423 [todo]
 W-159  issue  [todo]     (standalone) A saved curve-wise surrogate predicts as fitted   (filed during T-404) -- T-424 [todo]
-W-160  issue  [todo]     (standalone) make pipeline takes its knobs from the tuning's own knobs   (filed during T-405) -- T-425 [todo]
+W-160  issue  [todo]     (standalone) make pipeline takes its knobs from the tuning's own knobs   (filed during T-405) -- T-425 [todo], T-431 [todo]
 W-161  bug    [todo]     (standalone) make precision after a one-pair smoke run skips the full run as current   (filed during T-212) -- T-428 [todo]
 W-162  issue  [todo]     (standalone) The session context fits the hook cap again   (filed during T-212) -- T-429 [todo]
 ```
@@ -1013,6 +1013,7 @@ flowchart TD
   W159 --> T424["T-424 todo: Test the curve-wise round trip of a saved surrogate -> paperlib/test_final.py"]
   W160["W-160 issue todo, standalone: make pipeline takes its knobs from the tuning's own knobs"]
   W160 --> T425["T-425 todo: Read the pipeline knobs from TUNING_KNOBS -> 40_pipeline/41_algorithm/41_algorithm.mk"]
+  W160 --> T431["T-431 todo: Name the saved domains in the pipeline header -> 40_pipeline/41_algorithm/41_algorithm.mk"]
   W161["W-161 bug todo, standalone: make precision after a one-pair smoke run skips the full run as current"]
   W161 --> T428["T-428 todo: Make the precision rule depend on PRECISION_PAIRS -> 90_appendix/99_precision/99_precision.mk"]
   W162["W-162 issue todo, standalone: The session context fits the hook cap again"]
@@ -1024,6 +1025,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E014,W153,T406 doing
   class W093,T210,T211,T212,T427,T430,W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,T426 done
-  class W052,T418,T419,T420,T421,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,W161,T428,W162,T429 todo
+  class W052,T418,T419,T420,T421,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429 todo
   class T209 pruned
 ```
