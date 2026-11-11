@@ -23,7 +23,7 @@ TUNING_BATCH  ?= 01a11d49-1647-735a-af05-a58e497428f2
 RENDER_ASSETS := paperlib/tools/render_assets.py
 TUNING_STATE  := $(STATE)/99_precision
 
-$(TUNING_STATE)/numbers.json $(TUNING_ASSETS) &: $(TUNING) $(RENDER_ASSETS) paper.toml $(TUNING_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
+$(TUNING_STATE)/numbers.json $(TUNING_STATE)/winners.json $(TUNING_ASSETS) &: $(TUNING) $(RENDER_ASSETS) paper.toml $(TUNING_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(TUNING_BATCH),rebuilding the tuning table from batch $(TUNING_BATCH),tuning the short list ($(TUNING_KNOBS)) -- one line per finished job))
 	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) $(if $(TUNING_BATCH),--batch $(TUNING_BATCH))
 	@$(RUN) python $(RENDER_ASSETS) $(TUNING_STATE) $(ASSETS)

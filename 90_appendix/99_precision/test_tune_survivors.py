@@ -46,6 +46,7 @@ from tune_survivors import (
     trial_points,
     tuning_object,
     tuning_table,
+    winners,
 )
 
 from paperlib.batches import write_entry
@@ -199,6 +200,14 @@ def test_short_list_keeps_the_candidates_within_one_figure_of_the_best() -> None
 
 NS_MASS_RBF = Job("neutron_stars", "mass", Candidate("local RBF", "pointwise"))
 NS_MASS_RBF_CW = Job("neutron_stars", "mass", Candidate("local RBF", "curve-wise"))
+
+
+@pytest.mark.model
+def test_winners_are_the_best_tuned_outcome_per_pair() -> None:
+    first = Tuned(NS_MASS_RBF, {"neighbours": 80}, 1.0, 9.0, 2, 0, "a")
+    best = Tuned(NS_MASS_RBF_CW, {"knots": 8}, 2.0, 1.0, 2, 0, "b")
+    walled = Walled(Job("neutron_stars", "mass", Candidate("k-NN", "pointwise")), "walled")
+    assert winners([first, walled, best]) == (best,)
 
 
 @pytest.mark.view

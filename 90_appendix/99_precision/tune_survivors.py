@@ -544,6 +544,36 @@ def delta(table: Table) -> tuple[Table, ...]:
 SHAPES: Mapping[str, Shape] = {"no_screen": no_screen, "delta": delta}
 
 
+def winners(outcomes: Sequence[Outcome]) -> tuple[Tuned, ...]:
+    """Per pair the tuned outcome with the highest fold figures, the pairs in the order they
+    first appear; a walled outcome is skipped and the test figures never choose."""
+    best: dict[tuple[str, str], Tuned] = {}
+    for outcome in outcomes:
+        if isinstance(outcome, Walled):
+            continue
+        key = (outcome.job.dataset, outcome.job.target)
+        if key not in best or outcome.folds > best[key].folds:
+            best[key] = outcome
+    return tuple(best.values())
+
+
+def winners_json(outcomes: Sequence[Outcome]) -> str:
+    """The winners as plain JSON a section reads without importing this one."""
+    found = [
+        {
+            "dataset": w.job.dataset,
+            "target": w.job.target,
+            "family": w.job.candidate.family,
+            "unit": w.job.candidate.unit,
+            "params": dict(w.params),
+            "folds": w.folds,
+            "test": w.test,
+        }
+        for w in winners(outcomes)
+    ]
+    return json.dumps(found, indent=2) + "\n"
+
+
 def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
     """Store the tables as JSON by name and the numbers under the section's state folder, for
     paperlib/tools/render_assets.py to write the assets from; an earlier run's tables go."""
@@ -1181,6 +1211,8 @@ def main(
         points = journal_points(saved.with_suffix(".journal"), batch, ran)
         found = numbers(outcomes, points, screen)
         found |= analysis(outcomes, points, screen, settings.seed)
+        (args.state / SECTION).mkdir(parents=True, exist_ok=True)
+        (args.state / SECTION / "winners.json").write_text(winners_json(outcomes))
         _store(args.state, tuning_stored(outcomes, screen, config.tables.tuning), found)
         logger.info(
             "done: tuning table and numbers of batch %s, %d jobs -> %s",
