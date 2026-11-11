@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-014 > W-152 > T-402   | blocked: 0 | todo roots: 10 | done: 447 | pruned: 98
+open path: E-014 > W-152 > T-402   | blocked: 0 | todo roots: 11 | done: 447 | pruned: 98
 
 ## Tree
 
@@ -25,6 +25,7 @@ W-147  issue  [todo]     (standalone) Code comments and the citation notes name 
 W-157  issue  [todo]     (standalone) The figures mode of the black-hole, baseline and precision scripts is tested   (filed during T-398) -- T-422 [todo]
 W-158  issue  [todo]     (standalone) cloudpickle is a declared dependency of the project   (filed during T-404) -- T-423 [todo]
 W-159  issue  [todo]     (standalone) A saved curve-wise surrogate predicts as fitted   (filed during T-404) -- T-424 [todo]
+W-160  issue  [todo]     (standalone) make pipeline takes its knobs from the tuning's own knobs   (filed during T-405) -- T-425 [todo]
 ```
 
 ## Closed
@@ -1005,6 +1006,8 @@ flowchart TD
   W158 --> T423["T-423 todo: Declare cloudpickle as a dependency -> pyproject.toml"]
   W159["W-159 issue todo, standalone: A saved curve-wise surrogate predicts as fitted"]
   W159 --> T424["T-424 todo: Test the curve-wise round trip of a saved surrogate -> paperlib/test_final.py"]
+  W160["W-160 issue todo, standalone: make pipeline takes its knobs from the tuning's own knobs"]
+  W160 --> T425["T-425 todo: Read the pipeline knobs from TUNING_KNOBS -> 40_pipeline/41_algorithm/41_algorithm.mk"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -1012,5 +1015,5 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E014,W152,T402 doing
   class W150,T396,T397,T398,T399,W151,T400,T401 done
-  class W052,T418,T419,T420,T421,W093,T209,T210,T211,T212,T403,T404,T405,W153,T406,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424 todo
+  class W052,T418,T419,T420,T421,W093,T209,T210,T211,T212,T403,T404,T405,W153,T406,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425 todo
 ```
