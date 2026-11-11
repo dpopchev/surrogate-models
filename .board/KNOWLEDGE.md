@@ -42,6 +42,7 @@
 - 2026-11-10 E-013: T-375: open: make section S=90_appendix prints about 80 'Label multiply defined' warnings (e.g. tab:ns-univariate) while the full article prints none -- a standalone-preview artifact, or new with the appendix move?
 - 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
 - 2026-11-10 W-139: open: a non-default split or two_tables pick stores two tables -- does the paper then show both? (unchecked at the E-012 close) supersedes: W-139#2
+- 2026-11-11 W-093: open: winners all local RBF -> float64, L-BFGS, H2 untested; NS-charge ResNet run (about +6 h) a new item?
 
 ## Decisions
 - 2026-11-11 E-014: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 16 hours) (developer, 2026-11-11) supersedes: E-014#d8
