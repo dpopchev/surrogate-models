@@ -1,14 +1,8 @@
-\section{Out-of-Domain Filter and Feedback}
+\section{Domain of Validity}
 \label{sec:validity}
 
-\todo{Draft from the outline.}
-\begin{itemize}
-  \item The ensemble spread and the physical boundaries (Section~\ref{sec:domain-boundaries}) flag an input outside the domain and suggest the nearest valid one.
-\end{itemize}
+A surrogate of a compact-object map is meaningful only where stable solutions exist. For black holes that is a horizon radius $\rh$ at or above the existence edge $r_{h,\min}(\beta)$; for neutron stars it is the stable branch, up to the maximum mass of each $(\beta, \lambda)$; for both, the sampled coupling ranges (Section~\ref{sec:domain-boundaries}). Outside this domain the surrogate does not extrapolate: it refuses the query and returns the nearest valid input.
 
-\subsection{Uncertainty Quantification}
-\label{sec:uncertainty}
+Figure~\ref{fig:validity-domain} sends a regular grid of probes, reaching beyond the sampled ranges, through the saved surrogates. The black-hole map answers \validityBhAnswered{} probes and refuses \validityBhRefused{}; the neutron-star map answers \validityNsAnswered{} and refuses \validityNsRefused{}. A neutron-star probe inside the sampled $(\beta, \lambda)$ region can still be refused: its $\rhoc$ may lie beyond the maximum mass of that curve, or its couplings between sampled curves, off their hull. Every held-out row lies inside the domain: \validityBhTestInside\% of the \validityBhTestRows{} black-hole and \validityNsTestInside\% of the \validityNsTestRows{} neutron-star test rows.
 
-\begin{itemize}
-  \item \textbf{Ensemble bagging:} $N = 20$--$50$ independent networks~\citep{Breiman1996_Bagging}, trained on bootstrap resamples of whole curves, give the ensemble mean $\bar{Y}$ and the ensemble standard deviation $\sigma_{\mathrm{surr}}$ as an epistemic emulator-uncertainty measure.
-\end{itemize}
+\InputIfFileExists{50_validity_fig_domain}{}{}
