@@ -13,6 +13,7 @@ import pandas as pd
 import pytest
 from check_domain import (
     DomainSection,
+    DomainVariant,
     MapInput,
     draw,
     figure_tex,
@@ -118,6 +119,23 @@ def test_each_refused_probe_has_an_arrow_to_its_nearest_valid_input() -> None:
 def test_planes_no_arrows_draws_no_arrow() -> None:
     figure = draw(run((bh_map(), ns_map())), PlotStyle(usetex=False), "planes_no_arrows")
     assert sum(len(ax.texts) for ax in figure.axes) == 0
+
+
+@pytest.mark.functional
+@pytest.mark.parametrize("variant", ["planes", "planes_no_arrows"])
+def test_the_legend_is_one_figure_legend_below_every_panel(variant: DomainVariant) -> None:
+    figure = draw(run((bh_map(), ns_map())), PlotStyle(usetex=False), variant)
+    figure.canvas.draw()
+    top = (
+        figure.legends[0].get_window_extent().transformed(figure.transFigure.inverted()).y1
+        if figure.legends
+        else 1.0
+    )
+    assert (
+        sum(ax.get_legend() is not None for ax in figure.axes),
+        len(figure.legends),
+        top < min(ax.get_position().y0 for ax in figure.axes),
+    ) == (0, 1, True)
 
 
 @pytest.mark.model

@@ -393,8 +393,16 @@ def draw(found: Sequence[MapEvidence], style: PlotStyle, variant: DomainVariant)
     fig, axes = plt.subplots(1, len(panels), figsize=text_width_size(0.4), squeeze=False)
     for ax, (panel, evidence) in zip(axes[0], panels, strict=True):
         panel(ax, evidence, style, arrows)
-    axes[0][0].legend(frameon=False, loc="best")
-    fig.tight_layout()
+    handles, labels = axes[0][0].get_legend_handles_labels()
+    fig.tight_layout(rect=(0, 0.14, 1, 1))
+    fig.legend(
+        handles,
+        labels,
+        loc="lower center",
+        ncol=max(len(labels), 1),
+        frameon=False,
+        bbox_to_anchor=(0.5, 0.0),
+    )
     return fig
 
 
