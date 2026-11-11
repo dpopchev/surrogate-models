@@ -562,6 +562,14 @@ def test_the_ranges_figure_dashes_the_ends_of_the_knots_range() -> None:
 
 
 @pytest.mark.view
+def test_the_ranges_figure_of_a_batch_without_a_network_saves(tmp_path: Path) -> None:
+    points = [p for p in TOY_POINTS if p.job != RESNET]
+    figure = ranges_figure(points, PlotStyle(usetex=False))
+    figure.savefig(tmp_path / "ranges.png")
+    assert (tmp_path / "ranges.png").exists()
+
+
+@pytest.mark.view
 def test_a_walled_network_trial_is_a_cross_at_its_width_and_rate_on_the_ranges_figure() -> None:
     figure = ranges_figure(TOY_POINTS, PlotStyle(usetex=False))
     (crosses,) = [line for line in figure.axes[2].lines if line.get_marker() == "x"]
