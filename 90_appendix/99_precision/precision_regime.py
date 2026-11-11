@@ -247,7 +247,11 @@ def _figures(value: float) -> str:
 
 
 def _text(word: str) -> str:
-    return f"\\mathrm{{{word}}}"
+    return f"\\ensuremath{{\\mathrm{{{word}}}}}"
+
+
+# The option's word in a macro name: letters only, since digits end a control-sequence name.
+OPTION_WORD = {"tuned": "Tuned", "float64": "Double", "lbfgs": "Lbfgs", "residual": "Residual"}
 
 
 def precision_numbers(scores: Sequence[Scored]) -> dict[str, str]:
@@ -259,7 +263,7 @@ def precision_numbers(scores: Sequence[Scored]) -> dict[str, str]:
         stem = pair_prefix(dataset, target)
         scored = {s.option: s for s in found}
         for option in OPTIONS:
-            name = f"{stem}{option.capitalize()}"
+            name = f"{stem}{OPTION_WORD[option]}"
             if option in scored:
                 numbers[f"{name}Folds"] = _figures(mean_folds(scored[option]))
                 numbers[f"{name}Test"] = _figures(float(np.mean(scored[option].test)))

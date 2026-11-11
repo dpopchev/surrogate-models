@@ -2,6 +2,7 @@
 k-NN pointwise winners: nothing here fits a real surrogate."""
 
 import json
+import re
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -9,7 +10,7 @@ from typing import Any
 
 import pytest
 from precision_options import Option
-from precision_regime import SECTION, Scored, kept_option, main, read_saved
+from precision_regime import SECTION, Scored, kept_option, main, precision_numbers, read_saved
 
 from paperlib.batches import read_ledger
 from paperlib.config import PaperConfig
@@ -127,7 +128,7 @@ def test_the_wrapper_labels_the_figure(ran: Path) -> None:
 def test_the_macros_name_each_pair_and_option(ran: Path) -> None:
     macros = (ran / "assets" / SECTION / f"{SECTION}_precision_num.tex").read_text()
     pairs = ("NsMass", "NsCharge", "BhMass", "BhCharge")
-    options = ("Tuned", "Float64", "Lbfgs", "Residual")
+    options = ("Tuned", "Double", "Lbfgs", "Residual")
     names = [
         f"\\newcommand{{\\prec{pair}{option}{kind}}}"
         for pair in pairs
@@ -174,6 +175,19 @@ def test_an_option_whose_gain_exceeds_the_spread_is_kept() -> None:
 def test_tuned_is_kept_when_no_gain_exceeds_the_spread() -> None:
     barely = scored("residual", (3.1, 3.2), (3.1, 3.2))  # gain 0.05, under the spread
     assert kept_option([TUNED, barely]) == "tuned"
+
+
+@pytest.mark.model
+def test_every_macro_name_is_letters_only() -> None:
+    numbers = precision_numbers([TUNED, scored("residual", (3.5, 3.7), (3.5, 3.7))])
+    assert all(re.fullmatch(r"prec[A-Za-z]+", name) for name in numbers)
+
+
+@pytest.mark.model
+def test_every_na_body_is_wrapped_in_ensuremath() -> None:
+    numbers = precision_numbers([TUNED, scored("residual", (3.5, 3.7), (3.5, 3.7))])
+    na = [body for body in numbers.values() if "n/a" in body]
+    assert na == ["\\ensuremath{\\mathrm{n/a}}"] * len(na) != []
 
 
 @pytest.mark.edge
