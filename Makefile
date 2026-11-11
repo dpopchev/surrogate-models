@@ -106,11 +106,11 @@ clean-state: ## Remove local/state/ -- the interim results
 	$(call log_done,removed $(STATE)/)
 
 # Layers (mk/python.mk, ...) add their targets and append to CHECKS, CLEANS and
-# DELIVERABLES. Included here, before `check`, `clean` and `deliverable`, because
+# DELIVERABLES. Included here, before `check`, `clean` and `deliverables`, because
 # make expands prerequisites when it reads a rule.
 CHECKS :=
 CLEANS := clean-build clean-state
-# Each entry builds one artifact (makefile.md, Deliverables).
+# Each entry is a target named after its artifact (wheel, talk) -- makefile.md, Deliverables.
 DELIVERABLES :=
 include $(wildcard mk/*.mk)
 # Each asset-generating section holds its own rules, variables and one target named after its
@@ -132,10 +132,10 @@ clean: $(CLEANS) ## Run every clean -- inputs, keys, settings, scratch, .board/ 
 check: board-check $(CHECKS) ## Run every check -- the board and each layer
 	$(call log_done,all checks passed)
 
-.PHONY: deliverable
-deliverable: $(DELIVERABLES) ## Build every deliverable -- every Task close runs it
+.PHONY: deliverables
+deliverables: $(DELIVERABLES) ## Build every deliverable -- every Task close runs it
 ifeq ($(strip $(DELIVERABLES)),)
-	$(call log_warn,no deliverable declared -- append a build target to DELIVERABLES)
+	$(call log_warn,no deliverable declared -- add one with DELIVERABLES += <target>)
 else
 	$(call log_done,deliverables built: $(DELIVERABLES))
 endif
