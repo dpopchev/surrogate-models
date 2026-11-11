@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-013   | blocked: 0 | todo roots: 17 | done: 426 | pruned: 60
+open path: none   | blocked: 0 | todo roots: 17 | done: 427 | pruned: 60
 
 ## Tree
 
@@ -43,10 +43,6 @@ E-009         [doing]    The paper follows the revised structure, and the releas
   W-059  spike  [done]     Which refs.bib keys the revised structure's citations name -- T-107 [done], T-108 [pruned]   [pruned: superseded: the real references move to the standalone spike W-061 (T-118); W-059 closes on placeholder keys (T-117)], T-117 [done]
   W-060  issue  [done]     Title and outline bullets aligned to the revised structure -- T-114 [done], T-115 [done], T-116 [done]
   W-100  spike  [todo]     What the paper claims once the search names its winners   (filed during T-206) -- T-233 [todo], T-234 [todo]
-E-013         [doing]    The paper tells the physics, the data science is the appendix
-  W-140  issue  [done]     The data-science subsections become the appendix -- T-373 [done], T-374 [done], T-375 [done]
-  W-141  issue  [done]     The body follows the agreed outline -- T-376 [done], T-377 [done]
-  W-142  issue  [done]     The abstract, introduction and conclusion outlines state the pipeline goal -- T-378 [done], T-379 [done], T-380 [done]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
 W-119  bug    [todo]     (standalone) The ranges figure crashes on a batch with no network job   (filed during T-294) -- T-295 [todo]
@@ -548,6 +544,27 @@ closed 2026-11-10 -- outcome: Each section folder is a module with its own make 
 - T-371 [done] Render every table layout and shape as a standalone PDF -> paperlib/tools/table_pages.py and make tables
 - T-372 [done] Remove the table environment overrides -> no PAPER__TABLES__ left, table-variants gone
 
+### E-013 [done] The paper tells the physics, the data science is the appendix
+
+closed 2026-11-11 -- outcome: article.pdf follows the outline agreed on 2026-11-10: 1 Introduction, 2 Physical framework with the domain boundaries, 3 The surrogate pipeline, 4 Out-of-domain filter and feedback, 5 Results, 6 Physical implications, 7 Conclusion with MCMC as future work; the appendix holds the exploratory analysis, the preprocessing, the search and the model families; the abstract, introduction and conclusion outlines state the pipeline goal. -- ledger: ledgers/E-013.md
+
+#### W-140 issue [done] The data-science subsections become the appendix
+
+- T-373 [done] Move the Section 3 folders into the appendix -> 90_appendix/91_neutron_stars to 94_hypotheses
+- T-374 [done] Move the methodology and results subsections into the appendix -> 90_appendix/95_algorithms to 99_precision
+- T-375 [done] Finish the appendix entry -> 90_appendix.tex opens the appendix, the model families join 98_families
+
+#### W-141 issue [done] The body follows the agreed outline
+
+- T-376 [done] Write the new body sections as outlines -> 35_domain_boundaries, 40_pipeline, 50_validity, 70_discussion
+- T-377 [done] Fold MCMC into the conclusion and group the results by dataset -> 80_conclusion.tex future work, 60_results 61 to 64, 70_mcmc removed
+
+#### W-142 issue [done] The abstract, introduction and conclusion outlines state the pipeline goal
+
+- T-378 [done] Rewrite the abstract outline -> 10_abstract/10_abstract.tex states the pipeline goal
+- T-379 [done] Rewrite the introduction outline -> 20_introduction/20_introduction.tex contributions name the pipeline
+- T-380 [done] Rewrite the conclusion outline -> 80_conclusion/80_conclusion.tex summarizes the pipeline
+
 ### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
 
 closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/python.md, When make check runs, Then it passes with the repository root on pytest pythonpath and the python files matching the add-python COLOCATED templates. -- ledger: ledgers/W-005.md
@@ -848,18 +865,6 @@ flowchart TD
   E009 --> W100["W-100 spike todo: What the paper claims once the search names its winners"]
   W100 --> T233["T-233 todo: List every claim of the title block, abstract, introduction, Section 3.4 and Section 7 against Section 5 -> Findings on W-100"]
   W100 --> T234["T-234 todo: Decide the thesis with the developer and the supervisors -> the W-100 spike decision"]
-  E013["E-013 doing: The paper tells the physics, the data science is the appendix"]
-  E013 --> W140["W-140 issue done: The data-science subsections become the appendix"]
-  W140 --> T373["T-373 done: Move the Section 3 folders into the appendix -> 90_appendix/91_neutron_stars to 94_hypotheses"]
-  W140 --> T374["T-374 done: Move the methodology and results subsections into the appendix -> 90_appendix/95_algorithms to 99_precision"]
-  W140 --> T375["T-375 done: Finish the appendix entry -> 90_appendix.tex opens the appendix, the model families join 98_families"]
-  E013 --> W141["W-141 issue done: The body follows the agreed outline"]
-  W141 --> T376["T-376 done: Write the new body sections as outlines -> 35_domain_boundaries, 40_pipeline, 50_validity, 70_discussion"]
-  W141 --> T377["T-377 done: Fold MCMC into the conclusion and group the results by dataset -> 80_conclusion.tex future work, 60_results 61 to 64, 70_mcmc removed"]
-  E013 --> W142["W-142 issue done: The abstract, introduction and conclusion outlines state the pipeline goal"]
-  W142 --> T378["T-378 done: Rewrite the abstract outline -> 10_abstract/10_abstract.tex states the pipeline goal"]
-  W142 --> T379["T-379 done: Rewrite the introduction outline -> 20_introduction/20_introduction.tex contributions name the pipeline"]
-  W142 --> T380["T-380 done: Rewrite the conclusion outline -> 80_conclusion/80_conclusion.tex summarizes the pipeline"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W088["W-088 issue todo, standalone: A running representation screen is followable -- progress, time left and each entry's representation"]
@@ -898,8 +903,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,E013 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,W140,T373,T374,T375,W141,T376,T377,W142,T378,T379,T380 done
+  class E006,E009 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W146,T386,W147,T388,W148,T389,W149,T390 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```
