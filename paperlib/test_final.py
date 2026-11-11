@@ -18,6 +18,7 @@ from paperlib.final import (
     SavedSurrogateError,
     Winner,
     fit_winner,
+    held_out_errors,
     load_domain,
     load_surrogate,
     predict,
@@ -146,6 +147,11 @@ def test_guarded_predict_refuses_outside_the_domain() -> None:
     # Columns r_h, beta: the first row is below the existence edge 2.0, the second inside.
     result = predict(toy, domain, np.array([[1.0, 0.0], [4.0, 0.0]]))
     assert result == (Refused("existence edge", {"beta": 0.0, "r_h": 2.0}), 8.0)
+
+
+def test_held_out_errors_cover_only_test_rows() -> None:
+    held = held_out_errors(fitted(), PAIR, None)
+    assert len(held.errors) == int(TOY.test.sum())
 
 
 def test_a_domain_is_saved_and_loaded_back(tmp_path: Path) -> None:
