@@ -313,8 +313,9 @@ def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path
 
 
 def saved_batch(state: Path) -> Path:
-    """The one batch file under a section's state folder, the stored numbers aside."""
-    (saved,) = (path for path in (state / SECTION).glob("*.json") if path.name != "numbers.json")
+    """The one batch file under a section's state folder, the stored numbers and winners aside."""
+    stored = {"numbers.json", "winners.json"}
+    (saved,) = (path for path in (state / SECTION).glob("*.json") if path.name not in stored)
     return saved
 
 
