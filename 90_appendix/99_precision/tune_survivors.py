@@ -1169,12 +1169,12 @@ def main(
             ran = tuple(outcome.job for outcome in outcomes)
             points = journal_points(saved.with_suffix(".journal"), batch, ran)
             apply_style(config.plot, NOTATION_TEX.read_text())
-            _write_figures(args.figures / SECTION, points, config.plot)
+            _write_figures(args.figures / SECTION / "figures", points, config.plot)
             return
         screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
-        for stale in out.iterdir():  # a figure PNG or wrapper of an earlier run
+        for stale in (p for p in out.iterdir() if p.is_file()):  # not figures/
             stale.unlink()
         # A batch's figures show its own jobs, in the order it ran them.
         ran = tuple(outcome.job for outcome in outcomes)

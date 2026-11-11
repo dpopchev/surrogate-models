@@ -406,7 +406,7 @@ def test_ns_eda_draws_every_variant_as_its_own_file(tmp_path: Path) -> None:
         }.items()
         for variant in variants
     }
-    assert {p.name for p in (out / "91_neutron_stars").iterdir()} == expected
+    assert {p.name for p in (out / "91_neutron_stars" / "figures").iterdir()} == expected
 
 
 @pytest.mark.functional

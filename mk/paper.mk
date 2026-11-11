@@ -53,34 +53,37 @@ $(ASSETS)/00_metadata/00_metadata_build_stamp.tex: paperlib/tools/build_stamp.py
 # folder -- live in <chapter>/<section>/<section>.mk, included by the Makefile after mk/*.mk;
 # each appends its assets to PAPER_ASSETS. The recipes below read their variables at recipe time.
 
-# Every variant of each figure that has them is a file of its own under $(FIGURES)/<section>/
-# (make figures): paper.toml records the pick, the figure's .tex wrapper includes the picked
-# variant's file and make compile copies it beside the sources (W-138). Never an asset. The
-# results figures are drawn from the recorded runs -- the baseline's ledger entries and the
-# batches below -- and nothing is fitted (W-113).
-FIGURES  := $(BUILD)/figures
+# Every variant of each figure that has them is a file of its own under
+# $(ASSETS)/<section>/figures/ (make figures): paper.toml records the pick, the figure's .tex
+# wrapper includes the picked variant's file and make compile copies it beside the sources
+# (W-138). Never an asset. The results figures are drawn from the recorded runs -- the
+# baseline's ledger entries and the batches below -- and nothing is fitted (W-113).
 
 # Three representative figures, every variant of each, under each style preset of paper.toml
-# [plot.presets], as files of their own under $(FIGURES)/presets/<name>/ (W-115). Per preset,
-# the --figures modes of the NS EDA and the family and tuning scripts redraw them with
-# PAPER__PLOT__PRESET=<name> into $(PRESETS_WORK)/<name>/ from the stored data and the recorded
-# batches, nothing fitted; the three figures' variants are copied to $(FIGURES)/presets/<name>/.
+# [plot.presets], as files of their own under $(ASSETS)/<section>/figures/presets/<name>/
+# (W-115). Per preset, the --figures modes of the NS EDA and the family and tuning scripts redraw
+# them with PAPER__PLOT__PRESET=<name> into $(PRESETS_WORK)/<name>/<section>/figures/ from the
+# stored data and the recorded batches, nothing fitted; the three figures' variants are copied
+# to the presets folder of the section that owns the figure.
 PRESETS_WORK    := $(WORK)/presets
 PLOT_PRESETS    := paper light large
 PRESET_FIGURES  := 91_neutron_stars/91_neutron_stars_fig_mass_density 98_families/98_families_fig_errors 99_precision/99_precision_fig_history
 
 .PHONY: figures
-figures: 91_neutron_stars_figures 92_black_holes_figures 95_algorithms_figures 98_families_figures 99_precision_figures $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every figure variant as its own PNG under build/figures/, and three figures under each preset
+figures: 91_neutron_stars_figures 92_black_holes_figures 95_algorithms_figures 98_families_figures 99_precision_figures $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every figure variant as its own PNG under build/sections/<section>/figures/, and three figures under each preset
 	@for preset in $(PLOT_PRESETS); do \
-	  work=$(PRESETS_WORK)/$$preset; out=$(FIGURES)/presets/$$preset; \
-	  rm -rf $$work $$out && mkdir -p $$work $$out && \
+	  work=$(PRESETS_WORK)/$$preset; \
+	  rm -rf $$work && mkdir -p $$work && \
 	  export PAPER__PLOT__PRESET=$$preset && \
 	  $(RUN) python $(NS_EDA) --figures $$work --state $(STATE) && \
 	  $(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) --figures $$work && \
 	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --figures $$work && \
-	  for figure in $(PRESET_FIGURES); do cp $$work/$${figure}_*.png $$out/ || exit 1; done || exit 1; \
+	  for figure in $(PRESET_FIGURES); do \
+	    section=$${figure%%/*}; stem=$${figure##*/}; out=$(ASSETS)/$$section/figures/presets/$$preset; \
+	    rm -rf $$out && mkdir -p $$out && cp $$work/$$section/figures/$${stem}_*.png $$out/ || exit 1; \
+	  done || exit 1; \
 	done
-	$(call log_done,figure variants in $(FIGURES)/ and three figures under each preset ($(PLOT_PRESETS)) in $(FIGURES)/presets/)
+	$(call log_done,figure variants in $(ASSETS)/<section>/figures/ and three figures under each preset ($(PLOT_PRESETS)) in $(ASSETS)/<section>/figures/presets/)
 
 # The fits as live trials (W-081): optuna-dashboard on a study journal -- make baseline's, or a
 # screen's or tuning's batch journal under $(STATE)/<section>/ (W-092). By default the one
@@ -119,7 +122,7 @@ ASSETS_BASELINE := $(STATE)/assets-baseline.sha
 .PHONY: assets-baseline
 assets-baseline: assets ## Record the sha256 sums of the assets as the baseline to compare against
 	@mkdir -p $(STATE)
-	@find $(ASSETS) -type f ! -name '00_metadata_build_stamp.tex' | sort | xargs sha256sum > $(ASSETS_BASELINE)
+	@find $(ASSETS) -maxdepth 2 -type f ! -name '00_metadata_build_stamp.tex' | sort | xargs sha256sum > $(ASSETS_BASELINE)
 	$(call log_done,$(ASSETS_BASELINE) written: $$(wc -l < $(ASSETS_BASELINE)) lines)
 
 .PHONY: assets-same
@@ -131,18 +134,18 @@ assets-same: assets ## Check the assets against the recorded baseline
 .PHONY: compile
 compile: assets figures ## Build the flat paper and its PDF under build/paper/
 	@picked=$$(grep -ho 'includegraphics\[[^]]*\]{[^}]*}' $(ASSETS)/*/*.tex | sed 's/.*{\(.*\)}/\1/' | sort -u); \
-	  dups=$$({ printf '%s\n' $(notdir $(PAPER_SRC)); find $(ASSETS) -type f -printf '%f\n'; \
+	  dups=$$({ printf '%s\n' $(notdir $(PAPER_SRC)); find $(ASSETS) -maxdepth 2 -type f -printf '%f\n'; \
 	            for stem in $$picked; do printf '%s.png\n' $$stem; done; } | sort | uniq -d); \
 	  if [ -n "$$dups" ]; then \
 	    printf 'duplicate source or asset basenames (the build is flat): %s\n' "$$dups" >&2; exit 1; \
 	  fi
 	@rm -rf $(PAPER_DIR) && mkdir -p $(PAPER_DIR)
 	@cp $(PAPER_SRC) $(PAPER_DIR)/
-	@find $(ASSETS) -type f -exec cp {} $(PAPER_DIR)/ \;
-	@# The picked variants: the PNG each figure wrapper includes, from build/figures/<section>/.
+	@find $(ASSETS) -maxdepth 2 -type f -name '*.tex' -exec cp {} $(PAPER_DIR)/ \;
+	@# The picked variants: the PNG each figure wrapper includes, from build/sections/<section>/figures/.
 	@for stem in $$(grep -ho 'includegraphics\[[^]]*\]{[^}]*}' $(ASSETS)/*/*.tex | sed 's/.*{\(.*\)}/\1/' | sort -u); do \
-	  test -f $(FIGURES)/*/$$stem.png || { printf 'no figure %s.png under %s: make figures draws it\n' $$stem $(FIGURES) >&2; exit 1; }; \
-	  cp $(FIGURES)/*/$$stem.png $(PAPER_DIR)/; \
+	  test -f $(ASSETS)/*/figures/$$stem.png || { printf 'no figure %s.png under %s/<section>/figures/: make figures draws it\n' $$stem $(ASSETS) >&2; exit 1; }; \
+	  cp $(ASSETS)/*/figures/$$stem.png $(PAPER_DIR)/; \
 	done
 	@cp $(PAPER_ENTRY) $(PAPER_DIR)/main.tex
 	$(call log_info,assembled $(words $(PAPER_SRC)) sources and the assets of $(ASSETS)/ into $(PAPER_DIR)/ -- compiling)

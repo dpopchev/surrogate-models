@@ -383,7 +383,7 @@ def test_family_figures_are_drawn_one_file_per_variant(
         }.items()
         for variant in variants
     }
-    assert {p.name for p in (out / SECTION).iterdir()} == expected
+    assert {p.name for p in (out / SECTION / "figures").iterdir()} == expected
 
 
 @pytest.mark.functional

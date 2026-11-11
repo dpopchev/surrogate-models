@@ -1048,7 +1048,7 @@ def main(
         config = config or load_config()
         apply_style(config.plot, NOTATION_TEX.read_text())
         data = pickle.loads(_figure_data_path(figure_args.state).read_bytes())
-        _draw_figures(figure_args.figures / SECTION, data, config.plot)
+        _draw_figures(figure_args.figures / SECTION / "figures", data, config.plot)
         return
     args = _arguments(argv)
     source, out = args.table, args.assets / SECTION
@@ -1062,7 +1062,7 @@ def main(
     )
     table = with_charge_targets(prepared)
     out.mkdir(parents=True, exist_ok=True)
-    for stale in out.iterdir():
+    for stale in (p for p in out.iterdir() if p.is_file()):  # not figures/
         stale.unlink()
     section = section or load_section(NeutronStarsSection, SECTION_TOML)
     for figure in section.figures:

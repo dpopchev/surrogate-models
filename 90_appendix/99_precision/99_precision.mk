@@ -35,12 +35,12 @@ tuning: $(TUNING_ASSETS) ## Run the tuning of the short list for Section 5.3
 
 99_precision: tuning ## Build the Section 5.3 assets -- the same as make tuning
 
-# Every figure variant as its own PNG under build/figures/99_precision/, redrawn from the
-# recorded batch and its journal; nothing is tuned. TUNING_BATCH must name a recorded batch.
-TUNING_FIGURES := $(BUILD)/figures
+# Every figure variant as its own PNG under build/sections/99_precision/figures/, redrawn from
+# the recorded batch and its journal; nothing is tuned. TUNING_BATCH must name a recorded batch.
+TUNING_FIGURES := $(ASSETS)/99_precision/figures
 
 .PHONY: 99_precision_figures
-99_precision_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every tuning figure variant as its own PNG under build/figures/
+99_precision_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every tuning figure variant as its own PNG under build/sections/99_precision/figures/
 	@test -n "$(TUNING_BATCH)" || { printf 'TUNING_BATCH is empty: no recorded batch to draw from\n' >&2; exit 1; }
-	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --figures $(TUNING_FIGURES)
-	$(call log_done,tuning figure variants in $(TUNING_FIGURES)/99_precision/)
+	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --figures $(ASSETS)
+	$(call log_done,tuning figure variants in $(TUNING_FIGURES)/)
