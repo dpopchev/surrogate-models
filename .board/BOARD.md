@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-014 > W-152 > T-402   | blocked: 0 | todo roots: 8 | done: 447 | pruned: 98
+open path: E-014 > W-152 > T-403   | blocked: 0 | todo roots: 8 | done: 448 | pruned: 98
 
 ## Tree
 
@@ -10,7 +10,7 @@ E-014         [doing]    One pipeline, two maps -- the data ceiling inside the p
   W-093  issue  [todo]     Precision regime on the tuned short list   (filed during T-206) -- T-209 [todo], T-210 [todo], T-211 [todo], T-212 [todo]
   W-150  issue  [done]     Each section's artifacts build under build/sections -- T-396 [done], T-397 [done], T-398 [done], T-399 [done]
   W-151  issue  [done]     The root make layer holds configuration only -- T-400 [done], T-401 [done]
-  W-152  issue  [doing]    make pipeline builds and saves the surrogate of each map and target -- T-402 [doing]   <- ACTIVE LEAF, T-403 [todo], T-404 [todo], T-405 [todo]
+  W-152  issue  [doing]    make pipeline builds and saves the surrogate of each map and target -- T-402 [done], T-403 [doing]   <- ACTIVE LEAF, T-404 [todo], T-405 [todo]
   W-153  issue  [todo]     The surrogate refuses an input outside the physical domain, shown in Section 4 -- T-406 [todo], T-407 [todo], T-408 [todo], T-409 [todo]
   W-154  issue  [todo]     Section 5.1 shows the black-hole surrogates against the data ceiling -- T-410 [todo], T-411 [todo], T-412 [todo]
   W-155  issue  [todo]     Section 5.2 shows the neutron-star surrogates against the data ceiling -- T-413 [todo], T-414 [todo]
@@ -963,8 +963,8 @@ flowchart TD
   W151 --> T400["T-400 done: Move the preset figures into the sections that draw them -> 91_neutron_stars.mk, 98_families.mk and 99_precision.mk"]
   W151 --> T401["T-401 done: Hand the cited knobs from each screen's own .mk -> mk/paper.mk names no section"]
   E014 --> W152["W-152 issue doing: make pipeline builds and saves the surrogate of each map and target"]
-  W152 --> T402["T-402 doing: Store the audit's reachable figures as data -> local/state/91_neutron_stars/reachable_figures.json and local/state/92_black_holes/reachable_figures.json -- ACTIVE LEAF"]
-  W152 --> T403["T-403 todo: Store the tuning's winners as data -> local/state/99_precision/winners.json"]
+  W152 --> T402["T-402 done: Store the audit's reachable figures as data -> local/state/91_neutron_stars/reachable_figures.json and local/state/92_black_holes/reachable_figures.json"]
+  W152 --> T403["T-403 doing: Store the tuning's winners as data -> local/state/99_precision/winners.json -- ACTIVE LEAF"]
   W152 --> T404["T-404 todo: Save and load a fitted surrogate -> paperlib/final.py"]
   W152 --> T405["T-405 todo: Run the pipeline for every pair -> 40_pipeline/41_algorithm/build_surrogates.py and make pipeline"]
   E014 --> W153["W-153 issue todo: The surrogate refuses an input outside the physical domain, shown in Section 4"]
@@ -1004,7 +1004,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E014,W152,T402 doing
-  class W150,T396,T397,T398,T399,W151,T400,T401 done
-  class W052,T418,T419,T420,T421,W093,T209,T210,T211,T212,T403,T404,T405,W153,T406,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422 todo
+  class E014,W152,T403 doing
+  class W150,T396,T397,T398,T399,W151,T400,T401,T402 done
+  class W052,T418,T419,T420,T421,W093,T209,T210,T211,T212,T404,T405,W153,T406,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422 todo
 ```
