@@ -347,6 +347,19 @@ def test_main_stores_a_table_row_per_job(ran: Path) -> None:
 
 
 @pytest.mark.functional
+def test_the_sweep_spares_a_sibling_asset_and_removes_a_stale_tuning_stem(ran: Path) -> None:
+    out = ran / "sweep" / SECTION
+    out.mkdir(parents=True)
+    sibling = out / f"{SECTION}_fig_precision.tex"
+    stale = out / f"{SECTION}_tab_tuning_old.tex"
+    sibling.write_text("sibling")
+    stale.write_text("stale")
+    saved = saved_batch(ran / "state")
+    main([*toy_paths(ran, "sweep"), *TOY_KNOBS, "--batch", saved.stem], TOY_CONFIG)
+    assert (sibling.exists(), stale.exists()) == (True, False)
+
+
+@pytest.mark.functional
 def test_main_history_wrapper_includes_the_picked_variant_file(ran: Path) -> None:
     wrapper = (ran / "assets" / SECTION / f"{SECTION}_fig_history.tex").read_text()
     assert f"{{{SECTION}_fig_history_dots_and_best}}" in wrapper

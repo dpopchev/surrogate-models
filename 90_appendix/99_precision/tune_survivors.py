@@ -1161,6 +1161,11 @@ class Work:
     context: Context
 
 
+def _is_tuning_stem(path: Path) -> bool:
+    """Whether the file is one the tuning run writes: its table, history or ranges wrapper."""
+    return path.stem.startswith(f"{SECTION}_tab_tuning") or path.stem in (HISTORY, RANGES)
+
+
 def main(
     argv: list[str],
     config: PaperConfig | None = None,
@@ -1204,8 +1209,8 @@ def main(
         screen = screen_figures(read_ledger(args.state / "ledger"), args.screen_batch)
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
-        for stale in (p for p in out.iterdir() if p.is_file()):  # not figures/
-            stale.unlink()
+        for stale in (p for p in out.iterdir() if p.is_file() and _is_tuning_stem(p)):
+            stale.unlink()  # a sibling asset and figures/ stay
         # A batch's figures show its own jobs, in the order it ran them.
         ran = tuple(outcome.job for outcome in outcomes)
         points = journal_points(saved.with_suffix(".journal"), batch, ran)
