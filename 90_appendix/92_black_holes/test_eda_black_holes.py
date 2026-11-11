@@ -269,6 +269,10 @@ class TestMain:
         stored = json.loads((assets.parent / "state/92_black_holes/numbers.json").read_text())
         assert "bhEdaCeilDFigures" in stored
 
+    def test_bh_eda_stores_reachable_figures(self, assets) -> None:
+        path = assets.parent / "state/92_black_holes/reachable_figures.json"
+        assert set(json.loads(path.read_text())) == {"mass", "charge"}
+
     def test_stores_its_tables_as_json(self, assets) -> None:
         tables = (assets.parent / "state/92_black_holes/tables").glob("*.json")
         assert sorted(p.stem for p in tables) == ["ceilings", "split_strategies"]

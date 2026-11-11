@@ -46,6 +46,7 @@ from tune_survivors import (
     trial_points,
     tuning_object,
     tuning_table,
+    winners,
 )
 
 from paperlib.batches import write_entry
@@ -201,6 +202,14 @@ NS_MASS_RBF = Job("neutron_stars", "mass", Candidate("local RBF", "pointwise"))
 NS_MASS_RBF_CW = Job("neutron_stars", "mass", Candidate("local RBF", "curve-wise"))
 
 
+@pytest.mark.model
+def test_winners_are_the_best_tuned_outcome_per_pair() -> None:
+    first = Tuned(NS_MASS_RBF, {"neighbours": 80}, 1.0, 9.0, 2, 0, "a")
+    best = Tuned(NS_MASS_RBF_CW, {"knots": 8}, 2.0, 1.0, 2, 0, "b")
+    walled = Walled(Job("neutron_stars", "mass", Candidate("k-NN", "pointwise")), "walled")
+    assert winners([first, walled, best]) == (best,)
+
+
 @pytest.mark.view
 def test_the_tuning_table_holds_one_row_per_job() -> None:
     outcomes = [
@@ -304,8 +313,9 @@ def ran(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> Path
 
 
 def saved_batch(state: Path) -> Path:
-    """The one batch file under a section's state folder, the stored numbers aside."""
-    (saved,) = (path for path in (state / SECTION).glob("*.json") if path.name != "numbers.json")
+    """The one batch file under a section's state folder, the stored numbers and winners aside."""
+    stored = {"numbers.json", "winners.json"}
+    (saved,) = (path for path in (state / SECTION).glob("*.json") if path.name not in stored)
     return saved
 
 

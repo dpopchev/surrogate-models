@@ -372,6 +372,10 @@ class TestMain:
     def test_writes_the_reachable_figures_into_the_numbers(self, assets) -> None:
         assert "nsEdaCeilDFigures" in self.numbers(assets)
 
+    def test_ns_eda_stores_reachable_figures(self, assets) -> None:
+        path = assets.parent / "state/91_neutron_stars/reachable_figures.json"
+        assert set(json.loads(path.read_text())) == {"mass", "charge"}
+
     def test_leaves_other_sections_alone(self, assets) -> None:
         assert (assets / "92_black_holes" / "kept.tex").is_file()
 
