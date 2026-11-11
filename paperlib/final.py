@@ -17,6 +17,14 @@ import numpy as np
 
 from paperlib.candidates import FAMILIES, UNITS, Candidate, Family, Knobs, Unit, tuned_fitter
 from paperlib.design import TARGETS, Pair, Target
+from paperlib.domain import (
+    BlackHoleDomain,
+    Domain,
+    Inside,
+    NeutronStarDomain,
+    Reason,
+    check,
+)
 from paperlib.harness import Predictor, fit_on, one_thread
 from paperlib.scorecard import relative_errors, significant_figures
 from paperlib.surrogate import Training
@@ -79,7 +87,40 @@ class FinalSurrogate:
         return self.predictor(x)
 
 
+@dataclass(frozen=True)
+class Refused:
+    """A query outside the physical domain: why, and the nearest valid input."""
+
+    reason: Reason
+    nearest: Mapping[str, float]
+
+
+# The columns of an input row by domain, in the order of the dataset's curve space; a neutron-star
+# rho_c is the physical value, the surrogate reads its log10.
+BLACK_HOLE_COLUMNS = ("r_h", "beta")
+NEUTRON_STAR_COLUMNS = ("rho_c", "beta", "lambda")
+
 # --- pure functions ---------------------------------------------------------------------------
+
+
+def predict(
+    surrogate: FinalSurrogate, domain: Domain, x: np.ndarray
+) -> tuple[float | Refused, ...]:
+    """Per input row the prediction when the row lies inside the domain, else Refused; the
+    surrogate is never evaluated on a refused row."""
+    columns = BLACK_HOLE_COLUMNS if isinstance(domain, BlackHoleDomain) else NEUTRON_STAR_COLUMNS
+    verdicts = [check(domain, dict(zip(columns, map(float, row), strict=True))) for row in x]
+    inside = np.array([isinstance(v, Inside) for v in verdicts], dtype=bool)
+    values = np.empty(len(x))
+    if inside.any():
+        rows = np.array(x[inside], dtype=np.float64)
+        if isinstance(domain, NeutronStarDomain):
+            rows[:, 0] = np.log10(rows[:, 0])
+        values[inside] = surrogate.predict(rows)
+    return tuple(
+        float(values[i]) if isinstance(v, Inside) else Refused(v.reason, v.nearest)
+        for i, v in enumerate(verdicts)
+    )
 
 
 def fit_winner(
@@ -149,6 +190,53 @@ def save_surrogate(path: Path, surrogate: FinalSurrogate) -> None:
         else:
             path.write_bytes(before)
         raise SavedSurrogateError(f"{path} does not read back: {error}") from error
+
+
+def domain_json(domain: Domain) -> str:
+    """The domain as plain JSON, tagged by its kind."""
+    if isinstance(domain, BlackHoleDomain):
+        body: dict[str, Any] = {
+            "kind": "black_hole",
+            "betas": domain.betas,
+            "r_min": domain.r_min,
+            "r_max": domain.r_max,
+        }
+    else:
+        body = {
+            "kind": "neutron_star",
+            "keys": domain.keys,
+            "rho_min": domain.rho_min,
+            "rho_max": domain.rho_max,
+        }
+    return json.dumps(body, indent=2) + "\n"
+
+
+def save_domain(path: Path, domain: Domain) -> None:
+    """Write the domain as JSON and read it back; a difference removes the file (or restores what
+    it held) and raises SavedSurrogateError."""
+    before = path.read_text() if path.exists() else None
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(domain_json(domain))
+    if load_domain(path) != domain:
+        if before is None:
+            path.unlink()
+        else:
+            path.write_text(before)
+        raise SavedSurrogateError(f"{path} does not read back as the domain written")
+
+
+def load_domain(path: Path) -> Domain:
+    """The domain saved at path; a missing file raises naming the path."""
+    if not path.is_file():
+        raise FileNotFoundError(f"no domain at {path}: run make pipeline first")
+    body = json.loads(path.read_text())
+    if body["kind"] == "black_hole":
+        return BlackHoleDomain(tuple(body["betas"]), tuple(body["r_min"]), tuple(body["r_max"]))
+    return NeutronStarDomain(
+        tuple((float(b), float(lam)) for b, lam in body["keys"]),
+        tuple(body["rho_min"]),
+        tuple(body["rho_max"]),
+    )
 
 
 def load_surrogate(path: Path) -> FinalSurrogate:

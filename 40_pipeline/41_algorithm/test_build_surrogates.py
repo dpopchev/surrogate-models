@@ -9,6 +9,7 @@ from build_surrogates import Sources, run
 
 from paperlib.candidates import Knobs
 from paperlib.config import NetworkSettings
+from paperlib.domain import Domain
 from paperlib.final import FinalSurrogate
 from paperlib.surrogate import make_training
 
@@ -28,6 +29,7 @@ class Recorded:
     def __init__(self) -> None:
         self.saved: dict[Path, FinalSurrogate] = {}
         self.written: dict[Path, str] = {}
+        self.domains: dict[Path, Domain] = {}
         self.lines: list[str] = []
 
 
@@ -62,6 +64,7 @@ def run_toy(folder: Path, toy_inputs: ToyInputs) -> Recorded:
         make_training(NetworkSettings()),
         seed=1,
         save=done.saved.__setitem__,
+        save_domain=done.domains.__setitem__,
         write=done.written.__setitem__,
         say=done.lines.append,
     )
@@ -76,6 +79,14 @@ def toy_run(tmp_path_factory: pytest.TempPathFactory, toy_inputs: ToyInputs) -> 
 @pytest.mark.functional
 def test_run_saves_one_surrogate_per_pair(toy_run: Recorded) -> None:
     assert sorted(path.name for path in toy_run.saved) == sorted(f"{d}-{t}.pkl" for d, t in PAIRS)
+
+
+@pytest.mark.functional
+def test_run_saves_the_domain_of_each_map(toy_run: Recorded) -> None:
+    assert sorted(path.name for path in toy_run.domains) == [
+        "black_holes-domain.json",
+        "neutron_stars-domain.json",
+    ]
 
 
 @pytest.mark.functional
@@ -102,6 +113,7 @@ def test_a_missing_input_fails_naming_its_path(tmp_path: Path, toy_inputs: ToyIn
             make_training(NetworkSettings()),
             seed=1,
             save=lambda path, surrogate: None,
+            save_domain=lambda path, domain: None,
             write=lambda path, text: None,
             say=lambda line: None,
         )
