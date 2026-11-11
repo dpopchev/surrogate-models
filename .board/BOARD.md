@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-123 > T-393   | blocked: 0 | todo roots: 14 | done: 431 | pruned: 63
+open path: W-123   | blocked: 0 | todo roots: 14 | done: 432 | pruned: 63
 
 ## Tree
 
@@ -48,7 +48,7 @@ W-088  issue  [todo]     (standalone) A running representation screen is followa
 W-119  bug    [todo]     (standalone) The ranges figure crashes on a batch with no network job   (filed during T-294) -- T-295 [todo]
 W-120  bug    [todo]     (standalone) The tuning figure tests pass only after main styled the plots   (filed during T-294) -- T-296 [todo]
 W-121  spike  [todo]     (standalone) Where the run time of the screens and the tuning goes   (filed during T-259) -- T-303 [todo], T-304 [todo], T-305 [todo]
-W-123  bug    [doing]    (standalone) Three 5.2 scaling tests fail when run alone   (filed during T-317) -- T-320 [pruned]   [pruned: its brief names 60_results/62_families and 40_data_analysis/41_neutron_stars, which E-013 moved to 90_appendix; superseded by T-393 with the current paths], T-393 [doing]   <- ACTIVE LEAF
+W-123  bug    [doing]    (standalone) Three 5.2 scaling tests fail when run alone   (filed during T-317) -- T-320 [pruned]   [pruned: its brief names 60_results/62_families and 40_data_analysis/41_neutron_stars, which E-013 moved to 90_appendix; superseded by T-393 with the current paths], T-393 [done]
 W-129  bug    [todo]     (standalone) A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
 W-132  issue  [todo]     (standalone) One home for the family and unit macro tags   (filed during T-346) -- T-347 [todo]
 W-143  issue  [todo]     (standalone) A Table refuses a row whose width differs from its columns   (filed during T-354) -- T-382 [todo]
@@ -892,7 +892,7 @@ flowchart TD
   W121 --> T305["T-305 todo: Record the run-time decision -> W-121 spike.decision"]
   W123["W-123 bug doing, standalone: Three 5.2 scaling tests fail when run alone"]
   W123 --> T320["T-320 pruned: Apply the notation to every 5.2 view test -> 60_results/62_families/test_screen_families.py"]
-  W123 --> T393["T-393 doing: Apply the notation to every families view test -> 90_appendix/98_families/test_screen_families.py -- ACTIVE LEAF"]
+  W123 --> T393["T-393 done: Apply the notation to every families view test -> 90_appendix/98_families/test_screen_families.py"]
   W129["W-129 bug todo, standalone: A table caption above its table touches the top rule"]
   W129 --> T341["T-341 todo: Give a table caption its skip above the top rule -> 00_metadata/preamble.tex"]
   W132["W-132 issue todo, standalone: One home for the family and unit macro tags"]
@@ -912,8 +912,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W123,T393 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
+  class E006,E009,W123 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T393 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W146,T386,W147,T388 todo
   class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T320 pruned
 ```
