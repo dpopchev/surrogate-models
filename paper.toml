@@ -59,8 +59,8 @@ log_level = "INFO"        # INFO: stage and epoch lines | DEBUG: more detail
 threads = 1               # torch threads per fit: 1 is fastest here (2.6 s vs 11.4 s an epoch at 7)
 workers = 6               # fits at once on one-thread processes (3.2x at 6); 1 when fit seconds are reported
 
-# The layout of every table, and of each results table; `make variants` renders every layout
-# to a page image under build/variants/tables/ to pick from (W-114).
+# The layout of every table, and of each results table, as the generated .tex of the section
+# assets renders it (paperlib/tools/render_assets.py).
 [tables]
 layout = "small"                     # small: booktabs in the small font
                                      # aligned: siunitx columns aligning the decimals

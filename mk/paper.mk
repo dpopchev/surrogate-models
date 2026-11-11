@@ -60,17 +60,6 @@ $(ASSETS)/00_metadata/00_metadata_build_stamp.tex: paperlib/tools/build_stamp.py
 # batches below -- and nothing is fitted (W-113).
 FIGURES  := $(BUILD)/figures
 
-# One standalone PDF per stored table, layout and shape under $(TABLES)/<section>/ (W-139), from
-# the JSON under $(STATE)/<section>/tables/ and the hand-written decisions tables: no section
-# script runs and nothing is fitted.
-TABLE_PAGES := paperlib/tools/table_pages.py
-TABLES      := $(BUILD)/tables
-
-.PHONY: tables
-tables: ## Render every stored table in each layout and shape as its own PDF under build/tables/
-	@rm -rf $(WORK)/table-pages && $(RUN) python $(TABLE_PAGES) $(STATE) 90_appendix/93_preprocessing paperlib/latex $(WORK)/table-pages $(TABLES)
-	$(call log_done,every table page in $(TABLES)/)
-
 # Three representative figures, every variant of each, under each style preset of paper.toml
 # [plot.presets], as files of their own under $(FIGURES)/presets/<name>/ (W-115). Per preset,
 # the --figures modes of the NS EDA and the family and tuning scripts redraw them with
