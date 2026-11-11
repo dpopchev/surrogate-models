@@ -46,8 +46,6 @@
 - 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
 - 2026-11-10 E-009: parked -- 4 decisions, 5 deviations -> ledgers/E-009.md
-- 2026-11-11 W-119: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 3 hours) (developer, 2026-11-11)
-- 2026-11-11 W-119: criterion amended (developer, 2026-11-11): its run is the figure test, not make tuning on a batch with no network job -- the only recorded batch 01a11d49 holds a ResNet job, and a new one is about 33 h
 
 ## Deviations
-- 2026-11-11 W-119: T-295 pruned, replaced by T-395: E-013 moved its files to 90_appendix/99_precision
+- none recorded
