@@ -13,6 +13,6 @@ PIPELINE_JSON  := $(STATE)/91_neutron_stars/reachable_figures.json $(STATE)/92_b
 .PHONY: pipeline 41_algorithm
 pipeline: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(PIPELINE_JSON) $(PAPERLIB) ## Fit and save the surrogate of each map and target under local/state/41_algorithm/ (minutes)
 	@$(RUN) python $(PIPELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(STATE) $(PIPELINE_KNOBS) --seed $(PIPELINE_SEED)
-	$(call log_done,4 surrogates saved under $(PIPELINE_DIR)/)
+	$(call log_done,4 surrogates saved under $(notdir $(LOCAL))/state/41_algorithm/)
 
 41_algorithm: pipeline ## Run the Section 4.1 pipeline -- the same as make pipeline
