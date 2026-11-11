@@ -6,8 +6,8 @@
 ### Paper
 # ------------------------------------------------------------------------------
 
-# The paper PDF is a deliverable: make deliverable compiles it and proves it opens.
-DELIVERABLES += deliverable-paper
+# The paper PDF is a deliverable: make paper builds it, and make deliverables builds it with the rest.
+DELIVERABLES += paper
 
 # A flavour is an entry file 00_metadata/<flavour>.tex (documentclass + inputs);
 # it becomes main.tex of the upload folder $(BUILD)/paper/overleaf/. Add a
@@ -167,8 +167,8 @@ compile: assets figures ## Build the flat paper and its PDF under build/paper/
 
 # The deliverable is the compiled PDF; compile's own exit status is the proof (developer,
 # W-099: opening it would test the PDF tools, not the paper).
-.PHONY: deliverable-paper
-deliverable-paper: compile ## Compile the paper -- the deliverable is $(PAPER_PDF)
+.PHONY: paper
+paper: compile ## Compile the paper -> $(PAPER_PDF)
 	$(call log_done,deliverable built: $(PAPER_PDF))
 
 # Clean room: the upload folder alone must compile, as Overleaf will see it.
