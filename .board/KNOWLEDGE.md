@@ -51,4 +51,4 @@
 - 2026-11-11 W-149: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 3 hours) (developer, 2026-11-11)
 
 ## Deviations
-- none recorded
+- 2026-11-11 W-148: T-389 pruned, replaced by T-391: the scope gate reads config tokens as committed files (reported to \~/.claude)
