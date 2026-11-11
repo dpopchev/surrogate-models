@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-014 > W-150   | blocked: 0 | todo roots: 8 | done: 443 | pruned: 98
+open path: E-014   | blocked: 0 | todo roots: 8 | done: 444 | pruned: 98
 
 ## Tree
 
@@ -8,7 +8,7 @@ open path: E-014 > W-150   | blocked: 0 | todo roots: 8 | done: 443 | pruned: 98
 E-014         [doing]    One pipeline, two maps -- the data ceiling inside the physical domain
   W-052  issue  [todo]     The body is written: domain edges, pipeline, abstract, introduction and conclusion -- T-418 [todo], T-419 [todo], T-420 [todo], T-421 [todo]
   W-093  issue  [todo]     Precision regime on the tuned short list   (filed during T-206) -- T-209 [todo], T-210 [todo], T-211 [todo], T-212 [todo]
-  W-150  issue  [doing]    Each section's artifacts build under build/sections -- T-396 [done], T-397 [done], T-398 [done], T-399 [done]
+  W-150  issue  [done]     Each section's artifacts build under build/sections -- T-396 [done], T-397 [done], T-398 [done], T-399 [done]
   W-151  issue  [todo]     The root make layer holds configuration only -- T-400 [todo], T-401 [todo]
   W-152  issue  [todo]     make pipeline builds and saves the surrogate of each map and target -- T-402 [todo], T-403 [todo], T-404 [todo], T-405 [todo]
   W-153  issue  [todo]     The surrogate refuses an input outside the physical domain, shown in Section 4 -- T-406 [todo], T-407 [todo], T-408 [todo], T-409 [todo]
@@ -954,7 +954,7 @@ flowchart TD
   W093 --> T210["T-210 todo: Write the precision options test-first -> shared/surrogate.py and shared/candidates.py"]
   W093 --> T211["T-211 todo: Write the precision run test-first -> 60_results/63_precision/precision_survivors.py"]
   W093 --> T212["T-212 todo: Run the precision regime on the short list -> build/assets/63_precision/63_precision_tab_precision.tex"]
-  E014 --> W150["W-150 issue doing: Each section's artifacts build under build/sections"]
+  E014 --> W150["W-150 issue done: Each section's artifacts build under build/sections"]
   W150 --> T396["T-396 done: Remove the standalone table pages -> mk/paper.mk without the tables target"]
   W150 --> T397["T-397 done: Write each section's assets under build/sections -> ASSETS is build/sections"]
   W150 --> T398["T-398 done: Draw each section's figure variants beside its assets -> build/sections/<section>/figures/"]
@@ -1004,7 +1004,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E014,W150 doing
-  class T396,T397,T398,T399 done
+  class E014 doing
+  class W150,T396,T397,T398,T399 done
   class W052,T418,T419,T420,T421,W093,T209,T210,T211,T212,W151,T400,T401,W152,T402,T403,T404,T405,W153,T406,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422 todo
 ```
