@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-148   | blocked: 0 | todo roots: 16 | done: 428 | pruned: 61
+open path: none   | blocked: 0 | todo roots: 16 | done: 429 | pruned: 61
 
 ## Tree
 
@@ -56,7 +56,6 @@ W-144  issue  [todo]     (standalone) The shipped section settings are pinned by
 W-145  issue  [todo]     (standalone) One helper stores a section's tables and numbers   (filed during T-364) -- T-384 [todo]
 W-146  issue  [todo]     (standalone) The settings comments name where the variants are drawn now   (filed during T-368) -- T-386 [todo]
 W-147  issue  [todo]     (standalone) Code comments and the citation notes name the sections the paper now has   (filed during T-373) -- T-388 [todo]
-W-148  issue  [doing]    (standalone) The commit-msg hook refuses an attribution in this repository   (filed during T-373) -- T-389 [pruned]   [pruned: board close scope gate reads the config key and .git path in its Output as committed files (no commit can cite them); superseded by its successor], T-391 [done]
 W-149  issue  [todo]     (standalone) The paper is built by make paper, and make deliverables builds every deliverable   (filed during T-375) -- T-390 [todo]
 ```
 
@@ -759,6 +758,13 @@ closed 2026-10-12 -- pruned: its steps pass on main 9e2c60a (T-290); pruned as f
 
 - T-287 [pruned] Restore the surrogate logger level after a screen run test-first -> the two screen modules   [pruned: its steps pass on main 9e2c60a (T-290); pruned as fixed (developer, 2026-10-12)]
 
+### W-148 issue [done] (standalone) The commit-msg hook refuses an attribution in this repository
+
+closed 2026-11-11 -- outcome: Given core.hooksPath set to the board hooks, When the developer commits with a Co-Authored-By: Claude trailer, Then git refuses the commit with the board lint-msg message -- ledger: ledgers/W-148.md
+
+- T-389 [pruned] Point core.hooksPath at the board hooks -> .git/config core.hooksPath   [pruned: board close scope gate reads the config key and .git path in its Output as committed files (no commit can cite them); superseded by its successor]
+- T-391 [done] Set the hooks path to the board hooks -> the local git config hooks path
+
 ## Diagram
 ```mermaid
 flowchart TD
@@ -894,9 +900,6 @@ flowchart TD
   W146 --> T386["T-386 todo: Point the settings comments at make figures -> paper.toml and the section tomls"]
   W147["W-147 issue todo, standalone: Code comments and the citation notes name the sections the paper now has"]
   W147 --> T388["T-388 todo: Rename the stale section numbers -> comments, help strings, docstrings and 00_metadata/citations.md"]
-  W148["W-148 issue doing, standalone: The commit-msg hook refuses an attribution in this repository"]
-  W148 --> T389["T-389 pruned: Point core.hooksPath at the board hooks -> .git/config core.hooksPath"]
-  W148 --> T391["T-391 done: Set the hooks path to the board hooks -> the local git config hooks path"]
   W149["W-149 issue todo, standalone: The paper is built by make paper, and make deliverables builds every deliverable"]
   W149 --> T390["T-390 todo: Rename the aggregate and the paper target -> Makefile deliverables, mk/paper.mk paper"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
@@ -904,8 +907,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009,W148 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116,T391 done
+  class E006,E009 doing
+  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
   class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W123,T320,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W146,T386,W147,T388,W149,T390 todo
-  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T389 pruned
+  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
 ```

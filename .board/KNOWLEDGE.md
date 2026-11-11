@@ -47,8 +47,7 @@
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
 - 2026-11-10 E-009: parked -- 4 decisions, 5 deviations -> ledgers/E-009.md
 - 2026-11-11 W-123: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 3 hours) (developer, 2026-11-11)
-- 2026-11-11 W-148: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 3 hours) (developer, 2026-11-11)
 - 2026-11-11 W-149: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 3 hours) (developer, 2026-11-11)
 
 ## Deviations
-- 2026-11-11 W-148: T-389 pruned, replaced by T-391: the scope gate reads config tokens as committed files (reported to \~/.claude)
+- none recorded
