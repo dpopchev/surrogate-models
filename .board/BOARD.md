@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 14 | done: 433 | pruned: 63
+open path: W-120 > T-394   | blocked: 0 | todo roots: 13 | done: 433 | pruned: 65
 
 ## Tree
 
@@ -45,8 +45,8 @@ E-009         [doing]    The paper follows the revised structure, and the releas
   W-100  spike  [todo]     What the paper claims once the search names its winners   (filed during T-206) -- T-233 [todo], T-234 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
-W-119  bug    [todo]     (standalone) The ranges figure crashes on a batch with no network job   (filed during T-294) -- T-295 [todo]
-W-120  bug    [todo]     (standalone) The tuning figure tests pass only after main styled the plots   (filed during T-294) -- T-296 [todo]
+W-119  bug    [todo]     (standalone) The ranges figure crashes on a batch with no network job   (filed during T-294) -- T-295 [pruned]   [pruned: its brief names 60_results/63_precision, which E-013 moved to 90_appendix/99_precision; superseded by T-395 at the current paths], T-395 [todo]
+W-120  bug    [doing]    (standalone) The tuning figure tests pass only after main styled the plots   (filed during T-294) -- T-296 [pruned]   [pruned: its brief names 60_results/63_precision, which E-013 moved to 90_appendix/99_precision; superseded by T-394 at the current path, the fix as T-393's], T-394 [doing]   <- ACTIVE LEAF
 W-121  spike  [todo]     (standalone) Where the run time of the screens and the tuning goes   (filed during T-259) -- T-303 [todo], T-304 [todo], T-305 [todo]
 W-129  bug    [todo]     (standalone) A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
 W-132  issue  [todo]     (standalone) One home for the family and unit macro tags   (filed during T-346) -- T-347 [todo]
@@ -889,9 +889,11 @@ flowchart TD
   W088 --> T196["T-196 todo: Log the screen's jobs done and time left test-first -> 60_results/61_representation/screen_representation.py"]
   W088 --> T197["T-197 todo: Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py"]
   W119["W-119 bug todo, standalone: The ranges figure crashes on a batch with no network job"]
-  W119 --> T295["T-295 todo: Draw an empty panel of the ranges figure test-first -> 60_results/63_precision/tune_survivors.py"]
-  W120["W-120 bug todo, standalone: The tuning figure tests pass only after main styled the plots"]
-  W120 --> T296["T-296 todo: Style the toy plots in a fixture of the figure tests -> 60_results/63_precision/test_tune_survivors.py"]
+  W119 --> T295["T-295 pruned: Draw an empty panel of the ranges figure test-first -> 60_results/63_precision/tune_survivors.py"]
+  W119 --> T395["T-395 todo: Draw an empty panel of the ranges figure test-first -> 90_appendix/99_precision/tune_survivors.py"]
+  W120["W-120 bug doing, standalone: The tuning figure tests pass only after main styled the plots"]
+  W120 --> T296["T-296 pruned: Style the toy plots in a fixture of the figure tests -> 60_results/63_precision/test_tune_survivors.py"]
+  W120 --> T394["T-394 doing: Apply the notation to every tuning figure test -> 90_appendix/99_precision/test_tune_survivors.py -- ACTIVE LEAF"]
   W121["W-121 spike todo, standalone: Where the run time of the screens and the tuning goes"]
   W121 --> T303["T-303 todo: Profile one pointwise local-RBF trial -> local/scratch/profile_rbf_trial.txt"]
   W121 --> T304["T-304 todo: Profile one tuning job -> local/scratch/profile_tuning_job.txt"]
@@ -915,8 +917,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009 doing
+  class E006,E009,W120,T394 doing
   class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W088,T196,T197,W119,T295,W120,T296,W121,T303,T304,T305,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W146,T386,W147,T388 todo
-  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
+  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W088,T196,T197,W119,T395,W121,T303,T304,T305,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W146,T386,W147,T388 todo
+  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108,T295,T296 pruned
 ```
