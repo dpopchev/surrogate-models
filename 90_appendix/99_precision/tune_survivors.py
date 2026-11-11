@@ -962,9 +962,10 @@ def ranges_figure(
         markersize=mark_size(style, 4),
         color="black",
     )
-    network_axes.set_xscale("log")
-    _plain_log_ticks(network_axes.xaxis, (32, 128, 512))
-    network_axes.set_yscale("log")
+    if network:
+        network_axes.set_xscale("log")
+        _plain_log_ticks(network_axes.xaxis, (32, 128, 512))
+        network_axes.set_yscale("log")
     network_axes.set_xlabel("width")
     network_axes.set_ylabel("learning rate")
     figure.colorbar(shown, ax=network_axes, label="folds' figures")
