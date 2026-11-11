@@ -212,7 +212,7 @@ $(SECTIONS_OUT)/%.pdf: compile
 	@$(RUN) python $(SECTION_ENTRY) $(PAPER_ENTRY) $(*F) $(SECTIONS_WORK)/$(*F)
 	@$(LATEXMK) -cd $(SECTIONS_WORK)/$(*F)/section_$(*F).tex
 	@cp $(SECTIONS_WORK)/$(*F)/section_$(*F).pdf $@
-	$(call log_done,section $(*F) compiled on its own to $@)
+	$(call log_done,compiled on its own to $@)
 
 .PHONY: section
 section: $(SECTIONS_OUT)/$(S)/$(S).pdf ## Compile one section alone, e.g. S=40_pipeline
