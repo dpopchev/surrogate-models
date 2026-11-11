@@ -88,6 +88,17 @@ class FinalSurrogate:
 
 
 @dataclass(frozen=True)
+class HeldOut:
+    """The test rows of a pair scored one by one: inputs, curve ids, relative errors and, when
+    given, the true charge D of each row."""
+
+    inputs: np.ndarray
+    curves: np.ndarray
+    errors: np.ndarray
+    charge: np.ndarray | None
+
+
+@dataclass(frozen=True)
 class Refused:
     """A query outside the physical domain: why, and the nearest valid input."""
 
@@ -120,6 +131,17 @@ def predict(
     return tuple(
         float(values[i]) if isinstance(v, Inside) else Refused(v.reason, v.nearest)
         for i, v in enumerate(verdicts)
+    )
+
+
+def held_out_errors(surrogate: FinalSurrogate, pair: Pair, charge: np.ndarray | None) -> HeldOut:
+    """The relative error of each test row of the pair's design (the charge in D rebuilt with the
+    true M); `charge` is the true D of every design row, kept for the test rows."""
+    design = pair.design
+    test = design.test
+    errors = relative_errors(design.y[test], surrogate.predict(design.X[test]), pair.target)
+    return HeldOut(
+        design.X[test], design.groups[test], errors, None if charge is None else charge[test]
     )
 
 
