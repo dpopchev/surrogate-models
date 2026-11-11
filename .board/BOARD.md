@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-014 > W-150 > T-396   | blocked: 0 | todo roots: 7 | done: 439 | pruned: 98
+open path: E-014 > W-150 > T-396   | blocked: 0 | todo roots: 8 | done: 439 | pruned: 98
 
 ## Tree
 
@@ -22,6 +22,7 @@ W-143  issue  [todo]     (standalone) A Table refuses a row whose width differs 
 W-144  issue  [todo]     (standalone) The shipped section settings are pinned by tests   (filed during T-359) -- T-383 [todo]
 W-145  issue  [todo]     (standalone) One helper stores a section's tables and numbers   (filed during T-364) -- T-384 [todo]
 W-147  issue  [todo]     (standalone) Code comments and the citation notes name the sections the paper now has   (filed during T-373) -- T-388 [todo]
+W-157  issue  [todo]     (standalone) The figures mode of the black-hole, baseline and precision scripts is tested   (filed during T-398) -- T-422 [todo]
 ```
 
 ## Closed
@@ -996,11 +997,13 @@ flowchart TD
   W145 --> T384["T-384 todo: Promote the store step -> paperlib/tools/render_assets.py store_section"]
   W147["W-147 issue todo, standalone: Code comments and the citation notes name the sections the paper now has"]
   W147 --> T388["T-388 todo: Rename the stale section numbers -> comments, help strings, docstrings and 00_metadata/citations.md"]
+  W157["W-157 issue todo, standalone: The figures mode of the black-hole, baseline and precision scripts is tested"]
+  W157 --> T422["T-422 todo: Pin the figures folder of three scripts test-first -> three test_*_figures_folder tests"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E014,W150,T396 doing
-  class W052,T418,T419,T420,T421,W093,T209,T210,T211,T212,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,W153,T406,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388 todo
+  class W052,T418,T419,T420,T421,W093,T209,T210,T211,T212,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,W153,T406,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422 todo
 ```
