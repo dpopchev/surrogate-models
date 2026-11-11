@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-014 > W-154 > T-411   | blocked: 0 | todo roots: 13 | done: 466 | pruned: 99
+open path: E-014 > W-154 > T-412   | blocked: 0 | todo roots: 13 | done: 467 | pruned: 99
 
 ## Tree
 
@@ -12,7 +12,7 @@ E-014         [doing]    One pipeline, two maps -- the data ceiling inside the p
   W-151  issue  [done]     The root make layer holds configuration only -- T-400 [done], T-401 [done]
   W-152  issue  [done]     make pipeline builds and saves the surrogate of each map and target -- T-402 [done], T-403 [done], T-404 [done], T-405 [done], T-426 [done]
   W-153  issue  [done]     The surrogate refuses an input outside the physical domain, shown in Section 4 -- T-406 [done], T-407 [done], T-408 [done], T-409 [done], T-432 [done]
-  W-154  issue  [doing]    Section 5.1 shows the black-hole surrogates against the data ceiling -- T-410 [done], T-411 [doing]   <- ACTIVE LEAF, T-412 [todo]
+  W-154  issue  [doing]    Section 5.1 shows the black-hole surrogates against the data ceiling -- T-410 [done], T-411 [done], T-412 [doing]   <- ACTIVE LEAF
   W-155  issue  [todo]     Section 5.2 shows the neutron-star surrogates against the data ceiling -- T-413 [todo], T-414 [todo]
   W-156  issue  [todo]     Section 6 shows the maximum neutron-star mass the surrogate predicts -- T-415 [todo], T-416 [todo], T-417 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
@@ -983,8 +983,8 @@ flowchart TD
   W153 --> T432["T-432 done: Move the domain figure legend off the panels -> 50_validity/check_domain.py"]
   E014 --> W154["W-154 issue doing: Section 5.1 shows the black-hole surrogates against the data ceiling"]
   W154 --> T410["T-410 done: Score a saved surrogate row by row on the held-out curves -> paperlib/final.py held_out_errors"]
-  W154 --> T411["T-411 doing: Draw Section 5.1's error figure -> 60_results/61_black_holes/results_black_holes.py and make 61_black_holes -- ACTIVE LEAF"]
-  W154 --> T412["T-412 todo: Write Section 5.1 -> 60_results/61_black_holes/61_black_holes.tex"]
+  W154 --> T411["T-411 done: Draw Section 5.1's error figure -> 60_results/61_black_holes/results_black_holes.py and make 61_black_holes"]
+  W154 --> T412["T-412 doing: Write Section 5.1 -> 60_results/61_black_holes/61_black_holes.tex -- ACTIVE LEAF"]
   E014 --> W155["W-155 issue todo: Section 5.2 shows the neutron-star surrogates against the data ceiling"]
   W155 --> T413["T-413 todo: Draw Section 5.2's error figure -> 60_results/62_neutron_stars/results_neutron_stars.py and make 62_neutron_stars"]
   W155 --> T414["T-414 todo: Write Section 5.2 -> 60_results/62_neutron_stars/62_neutron_stars.tex"]
@@ -1024,8 +1024,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E014,W154,T411 doing
-  class W093,T210,T211,T212,T427,T430,W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,T426,W153,T406,T407,T408,T409,T432,T410 done
-  class W052,T418,T419,T420,T421,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429 todo
+  class E014,W154,T412 doing
+  class W093,T210,T211,T212,T427,T430,W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,T426,W153,T406,T407,T408,T409,T432,T410,T411 done
+  class W052,T418,T419,T420,T421,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429 todo
   class T209 pruned
 ```
