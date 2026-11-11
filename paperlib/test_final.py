@@ -4,19 +4,25 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from paperlib.candidates import Candidate, Knobs
 from paperlib.design import Design, Pair
+from paperlib.domain import make_black_hole_domain
 from paperlib.eda import make_curve_space
 from paperlib.final import (
     FinalSurrogate,
     InvalidWinnerError,
+    Refused,
     SavedSurrogateError,
     Winner,
     fit_winner,
+    load_domain,
     load_surrogate,
+    predict,
     read_winners,
+    save_domain,
     save_surrogate,
 )
 from paperlib.surrogate import Training
@@ -123,3 +129,26 @@ def test_a_failed_reload_restores_the_earlier_file(
     with pytest.raises(SavedSurrogateError, match=r"toy\.pkl"):
         save_surrogate(path, fitted())
     assert path.read_bytes() == before
+
+
+BH_TABLE = pd.DataFrame({"beta": [0.0, 0.0, 1.0, 1.0], "r_h": [2.0, 5.0, 3.0, 6.0]})
+
+
+def test_guarded_predict_refuses_outside_the_domain() -> None:
+    domain = make_black_hole_domain(BH_TABLE)
+
+    def predictor(x: np.ndarray) -> np.ndarray:
+        if (x[:, 0] < 2.0).any():
+            raise RuntimeError("the surrogate was evaluated on a refused row")
+        return x[:, 0] * 2.0
+
+    toy = FinalSurrogate("bh", "mass", "k-NN", "pointwise", {}, 1.0, 1.0, predictor)
+    # Columns r_h, beta: the first row is below the existence edge 2.0, the second inside.
+    result = predict(toy, domain, np.array([[1.0, 0.0], [4.0, 0.0]]))
+    assert result == (Refused("existence edge", {"beta": 0.0, "r_h": 2.0}), 8.0)
+
+
+def test_a_domain_is_saved_and_loaded_back(tmp_path: Path) -> None:
+    domain = make_black_hole_domain(BH_TABLE)
+    save_domain(tmp_path / "bh-domain.json", domain)
+    assert load_domain(tmp_path / "bh-domain.json") == domain

@@ -1,0 +1,5 @@
+# Section 4 -- which variant of the domain figure check_domain.py draws; `make figures` draws both
+# side by side under build/sections/50_validity/figures/ to pick from.
+[variants]
+domain = "planes"  # planes: the probes, each refused one with an arrow to its nearest valid input
+                   # planes_no_arrows: the same probes without the arrows

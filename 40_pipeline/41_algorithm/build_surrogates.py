@@ -19,11 +19,13 @@ import pandas as pd
 from paperlib.candidates import Knobs
 from paperlib.config import load_config
 from paperlib.design import BLACK_HOLES, NEUTRON_STARS, SPECS, TARGETS, pairs
+from paperlib.domain import Domain, make_black_hole_domain, make_neutron_star_domain
 from paperlib.final import (
     FinalSurrogate,
     Winner,
     fit_winner,
     read_winners,
+    save_domain,
     save_surrogate,
 )
 from paperlib.surrogate import Training, make_training
@@ -53,6 +55,11 @@ class Sources:
 def surrogate_path(state: Path, dataset: str, target: str) -> Path:
     """Where the surrogate of a pair is saved."""
     return state / SECTION / f"{dataset}-{target}.pkl"
+
+
+def domain_path(state: Path, dataset: str) -> Path:
+    """Where the physical domain of a dataset is saved."""
+    return state / SECTION / f"{dataset}-domain.json"
 
 
 def ceiling_path(state: Path, dataset: str) -> Path:
@@ -105,11 +112,12 @@ def run(
     training: Training,
     seed: int,
     save: Callable[[Path, FinalSurrogate], None],
+    save_domain: Callable[[Path, Domain], None],
     write: Callable[[Path, str], None],
     say: Callable[[str], None],
 ) -> tuple[FinalSurrogate, ...]:
-    """Fit, save and print the winner of every pair, then write the summary; every effect past
-    reading the inputs is injected."""
+    """Fit, save and print the winner of every pair, save the physical domain of each map, then
+    write the summary; every effect past reading the inputs is injected."""
     state = sources.state
     winners = {
         (w.dataset, w.target): w for w in read_winners(state / "99_precision" / "winners.json")
@@ -118,6 +126,13 @@ def run(
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(sources.ns)}
     tables[BLACK_HOLES.dataset] = pd.read_parquet(sources.bh)
     split = pd.read_parquet(sources.split)
+    save_domain(
+        domain_path(state, NEUTRON_STARS.dataset),
+        make_neutron_star_domain(tables[NEUTRON_STARS.dataset]),
+    )
+    save_domain(
+        domain_path(state, BLACK_HOLES.dataset), make_black_hole_domain(tables[BLACK_HOLES.dataset])
+    )
     fitted: list[FinalSurrogate] = []
     for pair in pairs(tables, split, SPECS, TARGETS):
         winner: Winner = winners[(pair.dataset, pair.target)]
@@ -155,7 +170,7 @@ def main(argv: Sequence[str]) -> None:
     training = make_training(load_config().network)
     knobs = Knobs(args.k, args.neighbours, args.knots, per_curve=0)
     sources = Sources(args.ns, args.bh, args.split, args.state)
-    run(sources, knobs, training, args.seed, save_surrogate, _write_text, print)
+    run(sources, knobs, training, args.seed, save_surrogate, save_domain, _write_text, print)
 
 
 if __name__ == "__main__":
