@@ -6,7 +6,7 @@ figures = [
   "scaling",                # folds' figures and the final fit's seconds against the training rows
 ]
 
-# Which variant of each Section 5.2 figure the paper places; `make variants` draws them from
+# Which variant of each Section 5.2 figure the paper places; `make figures` draws them from
 # FAMILIES_BATCH, nothing fitted (W-113).
 [variants]
 parity = "parity"            # parity: predicted against true | residual: predicted minus true

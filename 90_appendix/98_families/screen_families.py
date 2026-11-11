@@ -1191,11 +1191,12 @@ def main(
             apply_style(config.plot, NOTATION_TEX.read_text())
             panels = _parity_panels(parity_picks(outcomes), by_key, args.state / "ledger")
             paths = trajectories(outcomes)
-            _write_figures(args.figures / SECTION, panels, paths, config.plot, args.minutes)
+            out = args.figures / SECTION / "figures"
+            _write_figures(out, panels, paths, config.plot, args.minutes)
             return
         out = args.assets / SECTION
         out.mkdir(parents=True, exist_ok=True)
-        for stale in out.iterdir():  # a deselected figure's wrapper of an earlier run (W-102)
+        for stale in (p for p in out.iterdir() if p.is_file()):  # W-102; not figures/
             stale.unlink()
         _store(args.state, families_stored(outcomes, config.tables.families), numbers(outcomes))
         logger.info(
@@ -1204,7 +1205,8 @@ def main(
             len(outcomes),
             args.state / SECTION,
         )
-        # The wrappers include the picked variant's PNG, which --figures draws under build/figures.
+        # The wrappers include the picked variant's PNG, which --figures draws under
+        # build/sections/<section>/figures/.
         picks = section.variants
         wrappers: dict[FamiliesFigure, tuple[str, str]] = {
             "parity": (PARITY, parity_tex(picks.parity)),

@@ -17,11 +17,11 @@ $(BH_EDA_STATE)/numbers.json $(BH_EDA_ASSETS) &: $(BH_EDA) $(RENDER_ASSETS) pape
 92_black_holes: $(BH_EDA_ASSETS) ## Build the black-hole EDA assets for Section 3.2
 	$(call log_done,Section 3.2 assets current in $(dir $(BH_EDA_ASSETS)))
 
-# Every figure variant as its own PNG under build/figures/92_black_holes/, drawn from the
-# figure data the main run stored; nothing is computed.
-BH_EDA_FIGURES := $(BUILD)/figures
+# Every figure variant as its own PNG under build/sections/92_black_holes/figures/, drawn from
+# the figure data the main run stored; nothing is computed.
+BH_EDA_FIGURES := $(ASSETS)/92_black_holes/figures
 
 .PHONY: 92_black_holes_figures
-92_black_holes_figures: $(BH_EDA_STATE)/numbers.json ## Draw every BH EDA figure variant as its own PNG under build/figures/
-	@$(RUN) python $(BH_EDA) --figures $(BH_EDA_FIGURES) --state $(STATE)
-	$(call log_done,BH EDA figure variants in $(BH_EDA_FIGURES)/92_black_holes/)
+92_black_holes_figures: $(BH_EDA_STATE)/numbers.json ## Draw every BH EDA figure variant as its own PNG under build/sections/92_black_holes/figures/
+	@$(RUN) python $(BH_EDA) --figures $(ASSETS) --state $(STATE)
+	$(call log_done,BH EDA figure variants in $(BH_EDA_FIGURES)/)

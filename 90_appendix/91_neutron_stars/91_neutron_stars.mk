@@ -25,11 +25,11 @@ $(NS_EDA_STATE)/numbers.json $(NS_EDA_ASSETS) &: $(NS_EDA) $(RENDER_ASSETS) pape
 91_neutron_stars: $(NS_EDA_ASSETS) ## Build the neutron-star EDA assets for Section 3.1
 	$(call log_done,Section 3.1 assets current in $(dir $(NS_EDA_ASSETS)))
 
-# Every figure variant as its own PNG under build/figures/91_neutron_stars/, drawn from the
-# figure data the main run stored; nothing is computed.
-NS_EDA_FIGURES := $(BUILD)/figures
+# Every figure variant as its own PNG under build/sections/91_neutron_stars/figures/, drawn from
+# the figure data the main run stored; nothing is computed.
+NS_EDA_FIGURES := $(ASSETS)/91_neutron_stars/figures
 
 .PHONY: 91_neutron_stars_figures
-91_neutron_stars_figures: $(NS_EDA_STATE)/numbers.json ## Draw every NS EDA figure variant as its own PNG under build/figures/
-	@$(RUN) python $(NS_EDA) --figures $(NS_EDA_FIGURES) --state $(STATE)
-	$(call log_done,NS EDA figure variants in $(NS_EDA_FIGURES)/91_neutron_stars/)
+91_neutron_stars_figures: $(NS_EDA_STATE)/numbers.json ## Draw every NS EDA figure variant as its own PNG under build/sections/91_neutron_stars/figures/
+	@$(RUN) python $(NS_EDA) --figures $(ASSETS) --state $(STATE)
+	$(call log_done,NS EDA figure variants in $(NS_EDA_FIGURES)/)

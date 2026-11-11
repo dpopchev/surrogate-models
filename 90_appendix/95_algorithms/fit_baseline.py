@@ -914,7 +914,7 @@ def _write_section(
     """Empty the section's asset folder, then write the parity figure in its picked variant and
     store the baseline table and the NS mass numbers with the charge MAREs of each dataset."""
     out.mkdir(parents=True, exist_ok=True)
-    for stale in out.iterdir():
+    for stale in (p for p in out.iterdir() if p.is_file()):  # not figures/
         stale.unlink()
     (out / f"{PARITY}.tex").write_text(figure_tex(variants.parity))
     macros = numbers(fits[NEUTRON_STARS.dataset, "mass"]) | charge_numbers(mares)
@@ -1068,7 +1068,7 @@ def main(
     if figures_dir is not None:
         designs = {(p.dataset, p.target): p.design for p in found_pairs}
         found = read_back(read_ledger(Path(argv[4]) / "ledger"), designs)
-        _write_figures(figures_dir / SECTION, found, config.plot)
+        _write_figures(figures_dir / SECTION / "figures", found, config.plot)
         return
     if tables_only:
         keys = [(p.dataset, p.target) for p in found_pairs]
