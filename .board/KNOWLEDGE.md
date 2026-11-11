@@ -33,7 +33,6 @@
 - 2026-11-10 W-139: standing: Table.small_spec holds a *{n}{x} repeat spec -> the small layout writes it as given, aligned reads the columns supersedes: W-139#1
 - 2026-11-11 E-013: standing: an attribution trailer was rewritten out on 2026-11-10 -> T-373 cites pre-rewrite shas: 388f1c8 is fa76073, de324d2 is ad290b4, cdb0e87 is 6b166c0 supersedes: E-013#2
 - 2026-11-11 E-013: standing: the scope gate reads a path only from a token with a slash or an extension -> a brief names each moved file by its full path, never a bare folder name supersedes: E-013#1
-- 2026-11-11 W-149: fact: the make log helpers write to stderr -> a Check that greps make's log needs 2>&1
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
@@ -48,7 +47,6 @@
 - 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
 - 2026-11-10 E-009: parked -- 4 decisions, 5 deviations -> ledgers/E-009.md
 - 2026-11-11 W-123: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 3 hours) (developer, 2026-11-11)
-- 2026-11-11 W-149: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 3 hours) (developer, 2026-11-11)
 
 ## Deviations
-- 2026-11-11 W-149: T-390 pruned, replaced by T-392: its Check missed stderr, where log_done writes
+- none recorded
