@@ -97,6 +97,8 @@ ledger: ## List the run ledger -- B=<batch> for one batch
 # the baseline batch recorded in the ledger; nothing is fitted.
 BASELINE_FIGURES := $(ASSETS)/95_algorithms/figures
 
+SECTION_FIGURES += 95_algorithms_figures
+
 .PHONY: 95_algorithms_figures
 95_algorithms_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every baseline figure variant as its own PNG under build/sections/95_algorithms/figures/
 	@$(RUN) python $(BASELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) --figures $(ASSETS)

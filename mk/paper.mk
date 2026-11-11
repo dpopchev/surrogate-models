@@ -61,28 +61,19 @@ $(ASSETS)/00_metadata/00_metadata_build_stamp.tex: paperlib/tools/build_stamp.py
 
 # Three representative figures, every variant of each, under each style preset of paper.toml
 # [plot.presets], as files of their own under $(ASSETS)/<section>/figures/presets/<name>/
-# (W-115). Per preset, the --figures modes of the NS EDA and the family and tuning scripts redraw
-# them with PAPER__PLOT__PRESET=<name> into $(PRESETS_WORK)/<name>/<section>/figures/ from the
-# stored data and the recorded batches, nothing fitted; the three figures' variants are copied
-# to the presets folder of the section that owns the figure.
+# (W-115). The presets are configuration: the sections that show a figure under each one (91, 98,
+# 99) redraw it in their own <section>_figures recipe, for each preset of PLOT_PRESETS, with
+# PAPER__PLOT__PRESET=<name> into $(PRESETS_WORK)/<name>/<section>/figures/ from the stored data
+# and the recorded batches, nothing fitted, and copy its variants to the presets folder.
 PRESETS_WORK    := $(WORK)/presets
 PLOT_PRESETS    := paper light large
-PRESET_FIGURES  := 91_neutron_stars/91_neutron_stars_fig_mass_density 98_families/98_families_fig_errors 99_precision/99_precision_fig_history
+
+# Each section with a <section>_figures target appends it here; the Makefile gives the figures
+# target these prerequisites after the includes, as it gives assets PAPER_ASSETS.
+SECTION_FIGURES :=
 
 .PHONY: figures
-figures: 91_neutron_stars_figures 92_black_holes_figures 95_algorithms_figures 98_families_figures 99_precision_figures $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every figure variant as its own PNG under build/sections/<section>/figures/, and three figures under each preset
-	@for preset in $(PLOT_PRESETS); do \
-	  work=$(PRESETS_WORK)/$$preset; \
-	  rm -rf $$work && mkdir -p $$work && \
-	  export PAPER__PLOT__PRESET=$$preset && \
-	  $(RUN) python $(NS_EDA) --figures $$work --state $(STATE) && \
-	  $(RUN) python $(FAMILIES) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(FAMILIES_KNOBS) --batch $(FAMILIES_BATCH) --figures $$work && \
-	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --figures $$work && \
-	  for figure in $(PRESET_FIGURES); do \
-	    section=$${figure%%/*}; stem=$${figure##*/}; out=$(ASSETS)/$$section/figures/presets/$$preset; \
-	    rm -rf $$out && mkdir -p $$out && cp $$work/$$section/figures/$${stem}_*.png $$out/ || exit 1; \
-	  done || exit 1; \
-	done
+figures: ## Draw every figure variant as its own PNG under build/sections/<section>/figures/, and three figures under each preset
 	$(call log_done,figure variants in $(ASSETS)/<section>/figures/ and three figures under each preset ($(PLOT_PRESETS)) in $(ASSETS)/<section>/figures/presets/)
 
 # The fits as live trials (W-081): optuna-dashboard on a study journal -- make baseline's, or a

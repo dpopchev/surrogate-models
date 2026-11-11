@@ -39,8 +39,18 @@ tuning: $(TUNING_ASSETS) ## Run the tuning of the short list for Section 5.3
 # the recorded batch and its journal; nothing is tuned. TUNING_BATCH must name a recorded batch.
 TUNING_FIGURES := $(ASSETS)/99_precision/figures
 
+SECTION_FIGURES += 99_precision_figures
+
+# The history figure's variants under each preset of PLOT_PRESETS, redrawn from the same batch.
 .PHONY: 99_precision_figures
-99_precision_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every tuning figure variant as its own PNG under build/sections/99_precision/figures/
+99_precision_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every tuning figure variant as its own PNG under build/sections/99_precision/figures/, and the history figure under each preset
 	@test -n "$(TUNING_BATCH)" || { printf 'TUNING_BATCH is empty: no recorded batch to draw from\n' >&2; exit 1; }
 	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --figures $(ASSETS)
+	@for preset in $(PLOT_PRESETS); do \
+	  work=$(PRESETS_WORK)/$$preset; out=$(TUNING_FIGURES)/presets/$$preset; \
+	  rm -rf $$work/99_precision $$out && mkdir -p $$work $$out && \
+	  export PAPER__PLOT__PRESET=$$preset && \
+	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --figures $$work && \
+	  cp $$work/99_precision/figures/99_precision_fig_history_*.png $$out/ || exit 1; \
+	done
 	$(call log_done,tuning figure variants in $(TUNING_FIGURES)/)

@@ -29,7 +29,17 @@ $(NS_EDA_STATE)/numbers.json $(NS_EDA_ASSETS) &: $(NS_EDA) $(RENDER_ASSETS) pape
 # the figure data the main run stored; nothing is computed.
 NS_EDA_FIGURES := $(ASSETS)/91_neutron_stars/figures
 
+SECTION_FIGURES += 91_neutron_stars_figures
+
+# The mass-density figure's variants under each preset of PLOT_PRESETS, redrawn from the same data.
 .PHONY: 91_neutron_stars_figures
-91_neutron_stars_figures: $(NS_EDA_STATE)/numbers.json ## Draw every NS EDA figure variant as its own PNG under build/sections/91_neutron_stars/figures/
+91_neutron_stars_figures: $(NS_EDA_STATE)/numbers.json ## Draw every NS EDA figure variant as its own PNG under build/sections/91_neutron_stars/figures/, and the mass-density figure under each preset
 	@$(RUN) python $(NS_EDA) --figures $(ASSETS) --state $(STATE)
+	@for preset in $(PLOT_PRESETS); do \
+	  work=$(PRESETS_WORK)/$$preset; out=$(NS_EDA_FIGURES)/presets/$$preset; \
+	  rm -rf $$work/91_neutron_stars $$out && mkdir -p $$work $$out && \
+	  export PAPER__PLOT__PRESET=$$preset && \
+	  $(RUN) python $(NS_EDA) --figures $$work --state $(STATE) && \
+	  cp $$work/91_neutron_stars/figures/91_neutron_stars_fig_mass_density_*.png $$out/ || exit 1; \
+	done
 	$(call log_done,NS EDA figure variants in $(NS_EDA_FIGURES)/)
