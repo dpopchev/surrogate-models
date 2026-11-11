@@ -7,8 +7,8 @@ figures = [
 ]
 tables = ["univariate", "charge_correlation", "split_strategies"]
 
-# Which variant of each Section 3.2 figure the paper places; `make variants` draws them all
-# side by side under build/variants/92_black_holes/ to pick from (W-111).
+# Which variant of each Section 3.2 figure the paper places; `make figures` draws them all
+# side by side under build/sections/92_black_holes/figures/ to pick from (W-111).
 [variants]
 mass_radius = "inset"     # inset: M against r_h, the departure from GR in an inset
                           # departure: M - r_h/2 against r_h, the GR relation as the zero line

@@ -1188,7 +1188,8 @@ def main(
             len(outcomes),
             args.state / SECTION,
         )
-        # The wrappers include the picked variant's PNG, which --figures draws under build/figures.
+        # The wrappers include the picked variant's PNG, which --figures draws under
+        # build/sections/<section>/figures/.
         picks = section.variants
         wrappers = (
             (HISTORY, history_tex(args.minutes, picks.history)),

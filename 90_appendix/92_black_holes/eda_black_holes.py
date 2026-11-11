@@ -459,7 +459,8 @@ def asset(figure: BhFigure) -> str:
 
 
 def picked_stem(figure: BhFigure, variants: BlackHoleVariants = DEFAULT_VARIANTS) -> str:
-    """The stem of the file the paper includes: the picked variant's PNG under build/figures/."""
+    """The stem of the file the paper includes: the picked variant's PNG under
+    build/sections/<section>/figures/."""
     return f"{asset(figure)}_{getattr(variants, figure)}"
 
 

@@ -195,7 +195,7 @@ overleaf: compile ## Prepare the Overleaf upload and list what changed
 SECTION_ENTRY := paperlib/tools/section_entry.py
 SECTIONS      := $(shell sed -n '/begin{document}/,/end{document}/s/^\\input{\(.*\)}$$/\1/p' $(PAPER_ENTRY))
 SECTIONS_WORK := $(WORK)/sections
-SECTIONS_OUT  := $(BUILD)/paper/sections
+SECTIONS_OUT  := $(BUILD)/sections
 S ?=
 
 ifneq ($(filter section,$(MAKECMDGOALS)),)
@@ -204,19 +204,21 @@ $(error make section S=<section> -- one of $(SECTIONS))
 endif
 endif
 
+# The preview of a section is $(SECTIONS_OUT)/<section>/<section>.pdf, beside its assets: the
+# stem of the pattern is <section>/<section>, so $(*F) is the section.
 $(SECTIONS_OUT)/%.pdf: compile
-	@rm -rf $(SECTIONS_WORK)/$* && mkdir -p $(SECTIONS_WORK)/$* $(@D)
-	@cp -R $(PAPER_DIR)/. $(PAPER_LATEX)/main.aux $(SECTIONS_WORK)/$*/
-	@$(RUN) python $(SECTION_ENTRY) $(PAPER_ENTRY) $* $(SECTIONS_WORK)/$*
-	@$(LATEXMK) -cd $(SECTIONS_WORK)/$*/section_$*.tex
-	@cp $(SECTIONS_WORK)/$*/section_$*.pdf $@
-	$(call log_done,section $* compiled on its own to $@)
+	@rm -rf $(SECTIONS_WORK)/$(*F) && mkdir -p $(SECTIONS_WORK)/$(*F) $(@D)
+	@cp -R $(PAPER_DIR)/. $(PAPER_LATEX)/main.aux $(SECTIONS_WORK)/$(*F)/
+	@$(RUN) python $(SECTION_ENTRY) $(PAPER_ENTRY) $(*F) $(SECTIONS_WORK)/$(*F)
+	@$(LATEXMK) -cd $(SECTIONS_WORK)/$(*F)/section_$(*F).tex
+	@cp $(SECTIONS_WORK)/$(*F)/section_$(*F).pdf $@
+	$(call log_done,section $(*F) compiled on its own to $@)
 
 .PHONY: section
-section: $(SECTIONS_OUT)/$(S).pdf ## Compile one section alone, e.g. S=40_pipeline
+section: $(SECTIONS_OUT)/$(S)/$(S).pdf ## Compile one section alone, e.g. S=40_pipeline
 
 .PHONY: sections
-sections: $(SECTIONS:%=$(SECTIONS_OUT)/%.pdf) ## Compile each section alone into build/paper/sections/
+sections: $(foreach s,$(SECTIONS),$(SECTIONS_OUT)/$(s)/$(s).pdf) ## Compile each section alone into build/sections/<section>/
 	$(call log_done,$(words $(SECTIONS)) sections compiled to $(SECTIONS_OUT)/)
 
 # The help menu holds one short line per target (rules/makefile.md); the worked examples of the
@@ -232,8 +234,8 @@ examples: ## Show common commands with examples
 	  '  make run R=<run folder>         one older run, its folder name taken from make runs' \
 	  '' \
 	  'The paper' \
-	  '  make section S=40_pipeline      one section as its own PDF -> $(SECTIONS_OUT)/40_pipeline.pdf' \
-	  '  make sections                   every section as its own PDF -> $(SECTIONS_OUT)/' \
+	  '  make section S=40_pipeline      one section as its own PDF -> $(SECTIONS_OUT)/40_pipeline/40_pipeline.pdf' \
+	  '  make sections                   every section as its own PDF -> $(SECTIONS_OUT)/<section>/' \
 	  '  make compile                    the whole paper -> $(PAPER_PDF)' \
 	  '  make overleaf                   the upload folder and what changed since the last upload' \
 	  '  sections for S: $(SECTIONS)' \

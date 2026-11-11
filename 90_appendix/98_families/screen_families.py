@@ -1205,7 +1205,8 @@ def main(
             len(outcomes),
             args.state / SECTION,
         )
-        # The wrappers include the picked variant's PNG, which --figures draws under build/figures.
+        # The wrappers include the picked variant's PNG, which --figures draws under
+        # build/sections/<section>/figures/.
         picks = section.variants
         wrappers: dict[FamiliesFigure, tuple[str, str]] = {
             "parity": (PARITY, parity_tex(picks.parity)),

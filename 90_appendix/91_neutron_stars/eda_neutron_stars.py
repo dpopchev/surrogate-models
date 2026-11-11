@@ -505,8 +505,8 @@ def asset(figure: NsFigure) -> str:
 
 
 def picked_stem(figure: NsFigure, variants: NeutronStarVariants = DEFAULT_VARIANTS) -> str:
-    """The stem of the file the paper includes: the picked variant's PNG under build/figures/,
-    or the figure's own stem when it has no variants."""
+    """The stem of the file the paper includes: the picked variant's PNG under
+    build/sections/<section>/figures/, or the figure's own stem when it has no variants."""
     variant = getattr(variants, figure, None)
     return asset(figure) if variant is None else f"{asset(figure)}_{variant}"
 
@@ -1067,7 +1067,8 @@ def main(
     section = section or load_section(NeutronStarsSection, SECTION_TOML)
     for figure in section.figures:
         if picked_stem(figure, section.variants) == asset(figure):
-            # No variants: the figure has no file under build/figures, so it is drawn here.
+            # No variants: the figure has no file under build/sections/<section>/figures/,
+            # so it is drawn here.
             fig = draw(figure, table, config.plot, args.window, section.variants)
             fig.savefig(out / f"{asset(figure)}.png", dpi=config.plot.dpi)
             plt.close(fig)

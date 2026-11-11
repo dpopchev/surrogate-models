@@ -19,7 +19,7 @@ live_dpi = 100            # at this resolution
 preset = "paper"          # the [plot.presets.<name>] the figures are drawn under: paper | light | large
 
 # Each preset scales every figure's font size, mark sizes, line widths and alphas (alpha capped
-# at 1); paper is the figures as drawn. make variants renders three figures under each (W-115).
+# at 1); paper is the figures as drawn. make figures renders three figures under each (W-115).
 [plot.presets.paper]
 
 [plot.presets.light]
