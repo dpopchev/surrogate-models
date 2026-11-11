@@ -1,13 +1,13 @@
 # Board -- surrogate-models
 record: local
-open path: E-014 > W-093 > T-210   | blocked: 0 | todo roots: 11 | done: 453 | pruned: 99
+open path: E-014 > W-093 > T-427   | blocked: 0 | todo roots: 11 | done: 454 | pruned: 99
 
 ## Tree
 
 ```text
 E-014         [doing]    One pipeline, two maps -- the data ceiling inside the physical domain
   W-052  issue  [todo]     The body is written: domain edges, pipeline, abstract, introduction and conclusion -- T-418 [todo], T-419 [todo], T-420 [todo], T-421 [todo]
-  W-093  issue  [doing]    Precision regime on the tuned short list   (filed during T-206) -- T-209 [pruned]   [pruned: superseded by W-152: make pipeline (40_pipeline/41_algorithm/build_surrogates.py) already fits and scores each pair winner in minutes, and the precision run reads its local/state/41_algorithm/summary.json; the extrapolation probe and budget comparison it was the skeleton for left with E-013; its one-pair smoke run is folded into the precision run as --pair / PRECISION_PAIRS (coordinator re-brief, 2026-11-11)], T-210 [doing]   <- ACTIVE LEAF, T-211 [todo], T-212 [todo], T-427 [todo]
+  W-093  issue  [doing]    Precision regime on the tuned short list   (filed during T-206) -- T-209 [pruned]   [pruned: superseded by W-152: make pipeline (40_pipeline/41_algorithm/build_surrogates.py) already fits and scores each pair winner in minutes, and the precision run reads its local/state/41_algorithm/summary.json; the extrapolation probe and budget comparison it was the skeleton for left with E-013; its one-pair smoke run is folded into the precision run as --pair / PRECISION_PAIRS (coordinator re-brief, 2026-11-11)], T-210 [done], T-211 [todo], T-212 [todo], T-427 [doing]   <- ACTIVE LEAF
   W-150  issue  [done]     Each section's artifacts build under build/sections -- T-396 [done], T-397 [done], T-398 [done], T-399 [done]
   W-151  issue  [done]     The root make layer holds configuration only -- T-400 [done], T-401 [done]
   W-152  issue  [done]     make pipeline builds and saves the surrogate of each map and target -- T-402 [done], T-403 [done], T-404 [done], T-405 [done], T-426 [done]
@@ -954,10 +954,10 @@ flowchart TD
   W052 --> T421["T-421 todo: Write the abstract, introduction and conclusion -> 10_abstract, 20_introduction and 80_conclusion"]
   E014 --> W093["W-093 issue doing: Precision regime on the tuned short list"]
   W093 --> T209["T-209 pruned: Fit one candidate on one pair -> make fit P= C= U= prints its scorecard"]
-  W093 --> T210["T-210 doing: Write the residual stage and the option table test-first -> 90_appendix/99_precision/precision_options.py -- ACTIVE LEAF"]
+  W093 --> T210["T-210 done: Write the residual stage and the option table test-first -> 90_appendix/99_precision/precision_options.py"]
   W093 --> T211["T-211 todo: Write the precision run test-first -> 90_appendix/99_precision/precision_regime.py and make precision"]
   W093 --> T212["T-212 todo: Run the precision regime on the saved surrogates -> build/sections/99_precision/99_precision_fig_precision.tex"]
-  W093 --> T427["T-427 todo: Narrow the tuning run sweep to its own stems -> 90_appendix/99_precision/tune_survivors.py"]
+  W093 --> T427["T-427 doing: Narrow the tuning run sweep to its own stems -> 90_appendix/99_precision/tune_survivors.py -- ACTIVE LEAF"]
   E014 --> W150["W-150 issue done: Each section's artifacts build under build/sections"]
   W150 --> T396["T-396 done: Remove the standalone table pages -> mk/paper.mk without the tables target"]
   W150 --> T397["T-397 done: Write each section's assets under build/sections -> ASSETS is build/sections"]
@@ -1015,8 +1015,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E014,W093,T210 doing
-  class W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,T426 done
-  class W052,T418,T419,T420,T421,T211,T212,T427,W153,T406,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425 todo
+  class E014,W093,T427 doing
+  class T210,W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,T426 done
+  class W052,T418,T419,T420,T421,T211,T212,W153,T406,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425 todo
   class T209 pruned
 ```
