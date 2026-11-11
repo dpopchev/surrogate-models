@@ -33,6 +33,7 @@
 - 2026-11-10 W-139: standing: Table.small_spec holds a *{n}{x} repeat spec -> the small layout writes it as given, aligned reads the columns supersedes: W-139#1
 - 2026-11-11 E-013: standing: an attribution trailer was rewritten out on 2026-11-10 -> T-373 cites pre-rewrite shas: 388f1c8 is fa76073, de324d2 is ad290b4, cdb0e87 is 6b166c0 supersedes: E-013#2
 - 2026-11-11 E-013: standing: the scope gate reads a path only from a token with a slash or an extension -> a brief names each moved file by its full path, never a bare folder name supersedes: E-013#1
+- 2026-11-11 E-014: fact: at filing only NS M is within one figure of its ceiling (3.6 vs 4.1); NS D 1.1 vs 2.4, BH M 3.8 vs 7.1, BH D 3.0 vs 6.0 (W-068) -> Sections 5.1 and 5.2 report each gap; W-093 is the path to close it
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
@@ -43,9 +44,12 @@
 - 2026-11-10 W-139: open: a non-default split or two_tables pick stores two tables -- does the paper then show both? (unchecked at the E-012 close) supersedes: W-139#2
 
 ## Decisions
-- 2026-10-08 E-007: the training recipe moves to Section 4.3 beside the ensemble; 4.2 stays the search procedure (developer)
-- 2026-10-10 E-006: parked -- 10 decisions, 5 deviations -> ledgers/E-006.md
-- 2026-11-10 E-009: parked -- 4 decisions, 5 deviations -> ledgers/E-009.md
+- 2026-11-11 E-014: goal (developer, 2026-11-11): a framework whose algorithm is a data pipeline for surrogates reaching the minimal relative error the dataset allows, the physical framework kept intact -- no extrapolation beyond stable solutions; replaces E-013's extrapolation goal
+- 2026-11-11 E-014: layout (developer, 2026-11-11): paperlib holds the paper-wide Python; each section is a module make rebuilds alone; local/ holds interim results; build/ the paper, the sections with their artifacts and alternative figures; no table artifact, only figures
+- 2026-11-11 E-014: physics before data science; the main body short, anything longer in an appendix (developer, 2026-11-11)
+- 2026-11-11 E-014: plan agreed 2026-11-11: W-150..W-156 new, W-052 and W-093 adopted; pruned W-069, W-070, W-075, W-088, W-100, W-101, W-121, W-046, W-146, E-007, E-008; E-006, E-009 close; W-061, W-129, W-132, W-143..W-145, W-147 stay todo
+- 2026-11-11 E-014: shown on neutron stars (three to two parameters) and black holes (two to two) with the same properties; a dataset's minimal relative error is a function of the incoming dataset, an input, not part of the automated process (developer, 2026-11-11)
+- 2026-11-11 E-014: things are local to a section or subsection; the global layer -- read as the root Makefile, mk/ and paper.toml -- is configuration or data to import; paperlib keeps code two or more sections import (developer agreed, 2026-11-11)
 
 ## Deviations
 - none recorded

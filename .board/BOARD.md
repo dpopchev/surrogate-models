@@ -1,57 +1,26 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 12 | done: 437 | pruned: 65
+open path: none   | blocked: 0 | todo roots: 8 | done: 439 | pruned: 98
 
 ## Tree
 
 ```text
-E-006         [doing]    Search space and the best surrogate per dataset
-  W-038  issue  [pruned]   rho_c input check -- raw against log10   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): rho_c input form becomes part of the S2 representation screen (W-066)]
-  W-039  issue  [pruned]   H1 -- log against linear charge target   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): log vs linear charge target becomes part of the S2 representation screen (W-066)]
-  W-040  issue  [pruned]   H2 -- loss x activation at the M_max turning point   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): loss x activation becomes part of S4-S5 tuning and precision (W-068)]
-  W-041  issue  [pruned]   H3a -- model pool GPR, XGBoost, MLP and ResNet   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the model pool becomes the S3 family screen with interpolators added (W-067)]
-  W-042  issue  [pruned]   H3b -- ripple metric of MLP against ResNet   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the ripple metric becomes a scorecard column for every model (W-065)]
-  W-043  issue  [pruned]   H3c -- GPR scaling wall   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the GPR scaling wall becomes the data-budget axis of the S3 screen (W-067)]
-  W-064  issue  [done]     Sections 3.1 and 3.2 state the reachable relative error -- T-126 [done], T-127 [done], T-128 [done]
-  W-065  issue  [done]     One scorecard and a fair harness for every candidate -- T-129 [done], T-130 [done], T-131 [done], T-146 [done], T-169 [done]
-  W-066  issue  [done]     Representation screen -- inputs, targets, pointwise or curve-wise -- T-132 [pruned]   [pruned: split (developer, 2026-10-07): the target options into T-189, the curve-wise representation into T-190 as a harness fitter rather than a design], T-133 [done], T-189 [done], T-190 [done], T-191 [done], T-192 [done]   (filed during T-189), T-198 [done]   (filed during T-133)
-  W-067  issue  [done]     Family screen -- interpolators, GPR, XGBoost and networks -- T-134 [done], T-135 [done], T-170 [done], T-193 [done]   (filed during T-133), T-200 [done]   (filed during T-135), T-201 [done]   (filed during T-135), T-202 [done]   (filed during T-135)
-  W-068  issue  [done]     Tuning and precision of the surviving families -- T-136 [done], T-137 [pruned]   [pruned: re-planned (developer, 2026-10-09): the precision regime moves to W-093 so W-068 lands on the tuning table within the one-day branch], T-138 [pruned]   [pruned: re-planned (developer, 2026-10-09): the precision run moves to W-093 (T-211, T-212); W-068 closes on T-206's table], T-204 [done]   (filed during T-136), T-205 [done]   (filed during T-136), T-206 [done]   (filed during T-136), T-207 [done]   (filed during T-205), T-240 [done]   (filed during T-206)
-  W-069  issue  [todo]     Extrapolation error against the distance from the training hull -- T-139 [todo], T-140 [todo]
-  W-070  issue  [todo]     Pareto front and the best approach per pair -- T-141 [todo], T-142 [todo], T-143 [todo]
-  W-071  issue  [done]     Section 3.4 and Section 5 follow the search space -- T-144 [done], T-145 [done]
-  W-075  spike  [todo]     Can the surrogate predict the maximum neutron-star mass for given couplings   (filed during T-131) -- T-157 [todo], T-158 [todo], T-159 [todo]
-  W-076  issue  [done]     Sections 3.1 and 3.2 state the data ceilings as absolute uncertainties   (filed during T-131) -- T-160 [done], T-161 [done]
-  W-086  bug    [done]     The local RBF fails with a singular matrix when its neighbours span fewer than three curves   (filed during T-133) -- T-194 [done]
-  W-087  bug    [done]     The curve-wise fitter fails on a curve with fewer rows than spline coefficients   (filed during T-133) -- T-195 [done]
-  W-089  bug    [done]     ripple() scores a linear residual as rough on unevenly spaced curves   (filed during T-170) -- T-199 [done]
+E-014         [todo]     One pipeline, two maps -- the data ceiling inside the physical domain
+  W-052  issue  [todo]     The body is written: domain edges, pipeline, abstract, introduction and conclusion -- T-418 [todo], T-419 [todo], T-420 [todo], T-421 [todo]
   W-093  issue  [todo]     Precision regime on the tuned short list   (filed during T-206) -- T-209 [todo], T-210 [todo], T-211 [todo], T-212 [todo]
-  W-101  issue  [todo]     The tuning prunes bad trials at fold boundaries and starts from the screen's settings   (filed during T-206) -- T-235 [todo], T-236 [todo]
-E-007         [todo]     Ensemble uncertainty and the final surrogate
-  W-044  spike  [pruned]   Is L-BFGS fine-tuning worth keeping   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): L-BFGS becomes part of the S5 precision regime (W-068)]
-  W-045  issue  [todo]     Ensemble uncertainty over curve-bootstrap resamples
-  W-046  issue  [todo]     Final surrogate saved and loadable
-E-008         [todo]     Speedup and the MCMC application
-  W-047  spike  [todo]     Speedup baseline and reference posterior without the solver
-  W-048  issue  [pruned]   Pareto front of error against inference time   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the Pareto front of error against cost becomes S7 (W-070)]
-  W-049  issue  [todo]     Mock MCMC recovery with emcee
-  W-050  issue  [todo]     Surrogate posterior validated against the reference
-E-009         [doing]    The paper follows the revised structure, and the release
-  W-051  issue  [done]     Sections 2.1 to 2.4 written from the revised structure -- T-109 [done], T-110 [done], T-111 [done], T-112 [done], T-113 [done]
-  W-052  issue  [todo]     Abstract, introduction, conclusion and title block
-  W-053  spike  [done]     What the open-source release publishes -- T-119 [done]
-  W-059  spike  [done]     Which refs.bib keys the revised structure's citations name -- T-107 [done], T-108 [pruned]   [pruned: superseded: the real references move to the standalone spike W-061 (T-118); W-059 closes on placeholder keys (T-117)], T-117 [done]
-  W-060  issue  [done]     Title and outline bullets aligned to the revised structure -- T-114 [done], T-115 [done], T-116 [done]
-  W-100  spike  [todo]     What the paper claims once the search names its winners   (filed during T-206) -- T-233 [todo], T-234 [todo]
+  W-150  issue  [todo]     Each section's artifacts build under build/sections -- T-396 [todo], T-397 [todo], T-398 [todo], T-399 [todo]
+  W-151  issue  [todo]     The root make layer holds configuration only -- T-400 [todo], T-401 [todo]
+  W-152  issue  [todo]     make pipeline builds and saves the surrogate of each map and target -- T-402 [todo], T-403 [todo], T-404 [todo], T-405 [todo]
+  W-153  issue  [todo]     The surrogate refuses an input outside the physical domain, shown in Section 4 -- T-406 [todo], T-407 [todo], T-408 [todo], T-409 [todo]
+  W-154  issue  [todo]     Section 5.1 shows the black-hole surrogates against the data ceiling -- T-410 [todo], T-411 [todo], T-412 [todo]
+  W-155  issue  [todo]     Section 5.2 shows the neutron-star surrogates against the data ceiling -- T-413 [todo], T-414 [todo]
+  W-156  issue  [todo]     Section 6 shows the maximum neutron-star mass the surrogate predicts -- T-415 [todo], T-416 [todo], T-417 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
-W-088  issue  [todo]     (standalone) A running representation screen is followable -- progress, time left and each entry's representation   (filed during T-133) -- T-196 [todo], T-197 [todo]
-W-121  spike  [todo]     (standalone) Where the run time of the screens and the tuning goes   (filed during T-259) -- T-303 [todo], T-304 [todo], T-305 [todo]
 W-129  bug    [todo]     (standalone) A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
 W-132  issue  [todo]     (standalone) One home for the family and unit macro tags   (filed during T-346) -- T-347 [todo]
 W-143  issue  [todo]     (standalone) A Table refuses a row whose width differs from its columns   (filed during T-354) -- T-382 [todo]
 W-144  issue  [todo]     (standalone) The shipped section settings are pinned by tests   (filed during T-359) -- T-383 [todo]
 W-145  issue  [todo]     (standalone) One helper stores a section's tables and numbers   (filed during T-364) -- T-384 [todo]
-W-146  issue  [todo]     (standalone) The settings comments name where the variants are drawn now   (filed during T-368) -- T-386 [todo]
 W-147  issue  [todo]     (standalone) Code comments and the citation notes name the sections the paper now has   (filed during T-373) -- T-388 [todo]
 ```
 
@@ -287,6 +256,166 @@ closed 2026-10-07 -- outcome: make baseline fits the four dataset x target pairs
 
 - T-155 [done] Label the charge rows by D test-first -> 50_methodology/51_algorithms/fit_baseline.py
 - T-156 [done] Rerun the four pairs with the D label -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
+
+### E-006 [done] Search space and the best surrogate per dataset
+
+closed 2026-11-11 -- outcome: For the two maps the paper learns -- black holes (beta, r_h) -> (M, D) and neutron stars (rho_c, beta, lambda) -> (M, D), one model per target, D rebuilt as M 10^Y -- make targets write the reachable relative error per dataset into Sections 3.1 and 3.2, score every candidate on one scorecard (significant figures at median, p95 and max per zone and per decade of D, ripple, fit and inference seconds at one thread), and end in Section 5's Pareto front naming the best approach per pair, with its extrapolation error against the distance from the training hull. -- ledger: ledgers/E-006.md
+
+#### W-038 issue [pruned] rho_c input check -- raw against log10   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): rho_c input form becomes part of the S2 representation screen (W-066)]
+
+#### W-039 issue [pruned] H1 -- log against linear charge target   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): log vs linear charge target becomes part of the S2 representation screen (W-066)]
+
+#### W-040 issue [pruned] H2 -- loss x activation at the M_max turning point   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): loss x activation becomes part of S4-S5 tuning and precision (W-068)]
+
+#### W-041 issue [pruned] H3a -- model pool GPR, XGBoost, MLP and ResNet   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the model pool becomes the S3 family screen with interpolators added (W-067)]
+
+#### W-042 issue [pruned] H3b -- ripple metric of MLP against ResNet   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the ripple metric becomes a scorecard column for every model (W-065)]
+
+#### W-043 issue [pruned] H3c -- GPR scaling wall   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the GPR scaling wall becomes the data-budget axis of the S3 screen (W-067)]
+
+#### W-064 issue [done] Sections 3.1 and 3.2 state the reachable relative error
+
+- T-126 [done] Write the data-ceiling functions test-first -> shared/ceilings.py
+- T-127 [done] Wire the ceilings into both EDA scripts -> 41_neutron_stars_num.tex and 42_black_holes_num.tex
+- T-128 [done] Write paragraph 6 on the reachable error -> 41_neutron_stars.tex and 42_black_holes.tex
+
+#### W-065 issue [done] One scorecard and a fair harness for every candidate
+
+- T-129 [done] Write the scorecard test-first -> shared/scorecard.py
+- T-130 [done] Write the fair harness test-first -> shared/harness.py
+- T-131 [done] Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex
+- T-146 [done] Describe the search procedure in Section 4.2 -> 50_methodology/52_optimization/52_optimization.tex
+- T-169 [done] Correct the NS charge fold margin -> 50_methodology/51_algorithms/51_algorithms.tex
+
+#### W-066 issue [done] Representation screen -- inputs, targets, pointwise or curve-wise
+
+- T-132 [pruned] Add the curve-wise representation test-first -> shared/design.py   [pruned: split (developer, 2026-10-07): the target options into T-189, the curve-wise representation into T-190 as a harness fitter rather than a design]
+- T-133 [done] Run the representation screen -> 60_results/61_representation/61_representation.tex
+- T-189 [done] Add the target options test-first -> shared/design.py and shared/scorecard.py
+- T-190 [done] Write the curve-wise fitter test-first -> shared/curvewise.py
+- T-191 [done] Write the weighted k-NN and local-RBF fitters test-first -> shared/families.py
+- T-192 [done] Let the harness take any target form -> shared/harness.py   (filed during T-189)
+- T-198 [done] Point Section 3.1's rho_c todo at Section 5.1's result -> 40_data_analysis/41_neutron_stars/41_neutron_stars.tex   (filed during T-133)
+
+#### W-067 issue [done] Family screen -- interpolators, GPR, XGBoost and networks
+
+- T-134 [done] Write the family factories test-first -> shared/families.py
+- T-135 [done] Run the family screen with successive halving -> 60_results/62_families/62_families.tex
+- T-170 [done] Score every candidate's ripple through the harness -> shared/harness.py
+- T-193 [done] Let the MLP fit several outputs test-first -> shared/surrogate.py   (filed during T-133)
+- T-200 [done] Draw the family screen's parity plots test-first -> build/assets/62_families/62_families_fig_parity.png   (filed during T-135)
+- T-201 [done] Draw the family screen's scaling figure test-first -> build/assets/62_families/62_families_fig_scaling.png   (filed during T-135)
+- T-202 [done] Write the appendix on the model families -> 90_appendix/90_appendix.tex   (filed during T-135)
+
+#### W-068 issue [done] Tuning and precision of the surviving families
+
+- T-136 [done] Write the equal-budget search test-first -> shared/search.py
+- T-137 [pruned] Write the precision regime test-first -> shared/surrogate.py   [pruned: re-planned (developer, 2026-10-09): the precision regime moves to W-093 so W-068 lands on the tuning table within the one-day branch]
+- T-138 [pruned] Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex   [pruned: re-planned (developer, 2026-10-09): the precision run moves to W-093 (T-211, T-212); W-068 closes on T-206's table]
+- T-204 [done] Move the screen's candidate fitters to shared/ test-first -> shared/candidates.py   (filed during T-136)
+- T-205 [done] Write the tuning run of the short list test-first -> 60_results/63_precision/tune_survivors.py   (filed during T-136)
+- T-206 [done] Run the tuning of the short list -> build/assets/63_precision/63_precision_tab_tuning.tex   (filed during T-136)
+- T-207 [done] Pin every search trial to one thread test-first -> shared/search.py   (filed during T-205)
+- T-240 [done] Draw the tuning's search histories and searched ranges test-first -> 60_results/63_precision/tune_survivors.py   (filed during T-206)
+
+#### W-069 issue [pruned] Extrapolation error against the distance from the training hull   [pruned: re-planned 2026-11-11 (developer): the paper never extrapolates beyond stable physical solutions; the domain guard replaces the extrapolation probe]
+
+- T-139 [pruned] Write the distance from the training hull test-first -> shared/scorecard.py   [pruned: W-069 pruned: re-planned 2026-11-11 (developer): the paper never extrapolates beyond stable physical solutions; the domain guard replaces the extrapolation probe]
+- T-140 [pruned] Run the extrapolation probe on the rim and outer curves -> 60_results/64_extrapolation/64_extrapolation.tex   [pruned: W-069 pruned: re-planned 2026-11-11 (developer): the paper never extrapolates beyond stable physical solutions; the domain guard replaces the extrapolation probe]
+
+#### W-070 issue [pruned] Pareto front and the best approach per pair   [pruned: out of the paper path (developer, 2026-11-11): cost leaves the body and no solver exists to measure a speedup against]
+
+- T-141 [pruned] Write the Pareto front test-first -> shared/scorecard.py   [pruned: W-070 pruned: out of the paper path (developer, 2026-11-11): cost leaves the body and no solver exists to measure a speedup against]
+- T-142 [pruned] Run the budget comparison -> 60_results/65_budget/65_budget.tex   [pruned: W-070 pruned: out of the paper path (developer, 2026-11-11): cost leaves the body and no solver exists to measure a speedup against]
+- T-143 [pruned] State the best approach per pair in the conclusion -> 80_conclusion/80_conclusion.tex   [pruned: W-070 pruned: out of the paper path (developer, 2026-11-11): cost leaves the body and no solver exists to measure a speedup against]
+
+#### W-071 issue [done] Section 3.4 and Section 5 follow the search space
+
+- T-144 [done] Rewrite Section 3.4 as the search-space question -> 40_data_analysis/44_hypotheses/44_hypotheses.tex
+- T-145 [done] Rename and reorder the Section 5 folders -> 60_results/61_representation to 65_budget
+
+#### W-075 spike [pruned] Can the surrogate predict the maximum neutron-star mass for given couplings   [pruned: absorbed (developer, 2026-11-11): Section 6 shows the predicted maximum mass]   (filed during T-131)
+
+- T-157 [pruned] Measure the M_max ceiling across curves -> a probe in local/scratch and a Finding on W-075   [pruned: absorbed (developer, 2026-11-11): Section 6 shows the predicted maximum mass]
+- T-158 [pruned] Compare the derived and the direct M_max on the held-out curves -> a probe in local/scratch and a Finding on W-075   [pruned: absorbed (developer, 2026-11-11): Section 6 shows the predicted maximum mass]
+- T-159 [pruned] Decide how the surrogate predicts M_max with the developer -> the W-075 spike decision   [pruned: absorbed (developer, 2026-11-11): Section 6 shows the predicted maximum mass]
+
+#### W-076 issue [done] Sections 3.1 and 3.2 state the data ceilings as absolute uncertainties   (filed during T-131)
+
+- T-160 [done] Write the ceiling uncertainty macros test-first -> shared/ceilings.py
+- T-161 [done] State the ceilings as uncertainties in paragraph 6 -> 41_neutron_stars.tex and 42_black_holes.tex
+
+#### W-086 bug [done] The local RBF fails with a singular matrix when its neighbours span fewer than three curves   (filed during T-133)
+
+- T-194 [done] Make the local RBF robust to a planar neighbourhood test-first -> shared/families.py
+
+#### W-087 bug [done] The curve-wise fitter fails on a curve with fewer rows than spline coefficients   (filed during T-133)
+
+- T-195 [done] Fit a short curve's spline by minimum-norm least squares test-first -> shared/curvewise.py
+
+#### W-089 bug [done] ripple() scores a linear residual as rough on unevenly spaced curves   (filed during T-170)
+
+- T-199 [done] Score the ripple by second divided differences test-first -> shared/scorecard.py
+
+#### W-101 issue [pruned] The tuning prunes bad trials at fold boundaries and starts from the screen's settings   [pruned: out of the paper path (developer, 2026-11-11): a tuning cost optimization, and no new tuning is planned]   (filed during T-206)
+
+- T-235 [pruned] Report the running fold mean and prune test-first -> shared/search.py and shared/trials.py   [pruned: W-101 pruned: out of the paper path (developer, 2026-11-11): a tuning cost optimization, and no new tuning is planned]
+- T-236 [pruned] Enqueue the screen's settings as trial 0 and a grid for the GPR space test-first -> shared/search.py and tune_survivors.py   [pruned: out of the paper path (developer, 2026-11-11): a tuning cost optimization, and no new tuning is planned]
+
+### E-007 [pruned] Ensemble uncertainty and the final surrogate
+
+closed 2026-11-11 -- pruned: re-planned 2026-11-11 (developer): the guard is the physical domain, not an ensemble; the saved surrogate is W-152 -- ledger: ledgers/E-007.md
+
+#### W-044 spike [pruned] Is L-BFGS fine-tuning worth keeping   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): L-BFGS becomes part of the S5 precision regime (W-068)]
+
+#### W-045 issue [pruned] Ensemble uncertainty over curve-bootstrap resamples   [pruned: re-planned 2026-11-11 (developer): the guard is the physical domain, not an ensemble spread]
+
+#### W-046 issue [pruned] Final surrogate saved and loadable   [pruned: absorbed (developer, 2026-11-11): make pipeline saves the loadable surrogates, without an ensemble]
+
+### E-008 [pruned] Speedup and the MCMC application
+
+closed 2026-11-11 -- pruned: MCMC is future work (E-013 Decision, confirmed by the developer 2026-11-11) -- ledger: ledgers/E-008.md
+
+#### W-047 spike [pruned] Speedup baseline and reference posterior without the solver   [pruned: MCMC is future work (E-013 Decision, confirmed by the developer 2026-11-11)]
+
+#### W-048 issue [pruned] Pareto front of error against inference time   [pruned: absorbed by the E-006 search-space re-plan (developer, 2026-10-07): the Pareto front of error against cost becomes S7 (W-070)]
+
+#### W-049 issue [pruned] Mock MCMC recovery with emcee   [pruned: MCMC is future work (E-013 Decision, confirmed by the developer 2026-11-11)]
+
+#### W-050 issue [pruned] Surrogate posterior validated against the reference   [pruned: MCMC is future work (E-013 Decision, confirmed by the developer 2026-11-11)]
+
+### E-009 [done] The paper follows the revised structure, and the release
+
+closed 2026-11-11 -- outcome: make compile builds build/paper/article.pdf under the new title, with Sections 2.1 to 2.4 written from the revised structure, every citation a refs.bib key, the remaining sections' outline bullets aligned to it, the abstract, introduction and conclusion written once the results exist, and the release scope decided. -- ledger: ledgers/E-009.md
+
+#### W-051 issue [done] Sections 2.1 to 2.4 written from the revised structure
+
+- T-109 [done] Add Section 2.2's folder and renumber the dataset sections -> 30_physical_framework/32_scalarization, 33_black_holes, 34_neutron_stars
+- T-110 [done] Write Section 2.1, the action and field equations -> 30_physical_framework/31_action/31_action.tex
+- T-111 [done] Write Section 2.2, the scalarization mechanism -> 30_physical_framework/32_scalarization/32_scalarization.tex
+- T-112 [done] Write Section 2.3, the black-hole dataset -> 30_physical_framework/33_black_holes/33_black_holes.tex
+- T-113 [done] Write Section 2.4, the neutron-star dataset -> 30_physical_framework/34_neutron_stars/34_neutron_stars.tex
+
+#### W-053 spike [done] What the open-source release publishes
+
+- T-119 [done] Write the code and data availability statement -> 00_metadata/metadata.tex and 80_conclusion/80_conclusion.tex
+
+#### W-059 spike [done] Which refs.bib keys the revised structure's citations name
+
+- T-107 [done] Map the numbered citations to refs.bib keys -> 00_metadata/citations.md
+- T-108 [pruned] Add the missing references to refs.bib -> 00_metadata/refs.bib   [pruned: superseded: the real references move to the standalone spike W-061 (T-118); W-059 closes on placeholder keys (T-117)]
+- T-117 [done] Cite placeholder entries for the missing references -> 00_metadata/refs.bib and the 13 cite markers
+
+#### W-060 issue [done] Title and outline bullets aligned to the revised structure
+
+- T-114 [done] Set the revised title -> 00_metadata/metadata.tex
+- T-115 [done] Align the remaining outline bullets to the revised structure -> the todo bullets of 10, 20, 41, 44, 51-53, 61-64, 70, 80
+- T-116 [done] Name paper sections by their compiled number in code and make -> mk/, paper.toml, the colocated modules
+
+#### W-100 spike [pruned] What the paper claims once the search names its winners   [pruned: answered (developer, 2026-11-11): the thesis is the goal recorded as E-014's Decisions]   (filed during T-206)
+
+- T-233 [pruned] List every claim of the title block, abstract, introduction, Section 3.4 and Section 7 against Section 5 -> Findings on W-100   [pruned: answered (developer, 2026-11-11): the thesis is the goal recorded as E-014's Decisions]
+- T-234 [pruned] Decide the thesis with the developer and the supervisors -> the W-100 spike decision   [pruned: answered (developer, 2026-11-11): the thesis is the goal recorded as E-014's Decisions]
 
 ### E-010 [done] Every module meets the Python gates
 
@@ -697,6 +826,13 @@ closed 2026-10-07 -- outcome: Given a running trial finished from outside, When 
 
 - T-188 [done] Treat a trial finished elsewhere as a closed view -> shared/trials.py
 
+### W-088 issue [pruned] (standalone) A running representation screen is followable -- progress, time left and each entry's representation
+
+closed 2026-11-11 -- pruned: out of the paper path (developer, 2026-11-11): screen tooling, and no new screen is planned -- ledger: ledgers/W-088.md
+
+- T-196 [pruned] Log the screen's jobs done and time left test-first -> 60_results/61_representation/screen_representation.py   [pruned: out of the paper path (developer, 2026-11-11): screen tooling, and no new screen is planned]
+- T-197 [pruned] Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py   [pruned: out of the paper path (developer, 2026-11-11): screen tooling, and no new screen is planned]
+
 ### W-090 bug [done] (standalone) Citing SciPy2020 stops the paper build -- a math accent in refs.bib
 
 closed 2026-10-08 -- outcome: Given a section that cites SciPy2020, When make compile runs, Then the paper PDF builds. -- ledger: ledgers/W-090.md
@@ -768,12 +904,26 @@ closed 2026-11-11 -- outcome: Given test_tune_survivors.py, When the developer r
 - T-296 [pruned] Style the toy plots in a fixture of the figure tests -> 60_results/63_precision/test_tune_survivors.py   [pruned: its brief names 60_results/63_precision, which E-013 moved to 90_appendix/99_precision; superseded by T-394 at the current path, the fix as T-393's]
 - T-394 [done] Apply the notation to every tuning figure test -> 90_appendix/99_precision/test_tune_survivors.py
 
+### W-121 spike [pruned] (standalone) Where the run time of the screens and the tuning goes
+
+closed 2026-11-11 -- pruned: out of the paper path (developer, 2026-11-11): the run times of the screens are not a question of the paper -- ledger: ledgers/W-121.md
+
+- T-303 [pruned] Profile one pointwise local-RBF trial -> local/scratch/profile_rbf_trial.txt   [pruned: out of the paper path (developer, 2026-11-11): the run times of the screens are not a question of the paper]
+- T-304 [pruned] Profile one tuning job -> local/scratch/profile_tuning_job.txt   [pruned: out of the paper path (developer, 2026-11-11): the run times of the screens are not a question of the paper]
+- T-305 [pruned] Record the run-time decision -> W-121 spike.decision   [pruned: out of the paper path (developer, 2026-11-11): the run times of the screens are not a question of the paper]
+
 ### W-123 bug [done] (standalone) Three 5.2 scaling tests fail when run alone
 
 closed 2026-11-11 -- outcome: Given test_screen_families.py, When each of its view tests runs alone, Then every one passes. -- ledger: ledgers/W-123.md
 
 - T-320 [pruned] Apply the notation to every 5.2 view test -> 60_results/62_families/test_screen_families.py   [pruned: its brief names 60_results/62_families and 40_data_analysis/41_neutron_stars, which E-013 moved to 90_appendix; superseded by T-393 with the current paths]
 - T-393 [done] Apply the notation to every families view test -> 90_appendix/98_families/test_screen_families.py
+
+### W-146 issue [pruned] (standalone) The settings comments name where the variants are drawn now
+
+closed 2026-11-11 -- pruned: absorbed (developer, 2026-11-11): the layout step rewords the settings comments -- ledger: ledgers/W-146.md
+
+- T-386 [pruned] Point the settings comments at make figures -> paper.toml and the section tomls   [pruned: absorbed (developer, 2026-11-11): the layout step rewords the settings comments]
 
 ### W-148 issue [done] (standalone) The commit-msg hook refuses an attribution in this repository
 
@@ -792,118 +942,48 @@ closed 2026-11-11 -- outcome: Given the Makefile follows the \~/.claude template
 ## Diagram
 ```mermaid
 flowchart TD
-  E006["E-006 doing: Search space and the best surrogate per dataset"]
-  E006 --> W038["W-038 issue pruned: rho_c input check -- raw against log10"]
-  E006 --> W039["W-039 issue pruned: H1 -- log against linear charge target"]
-  E006 --> W040["W-040 issue pruned: H2 -- loss x activation at the M_max turning point"]
-  E006 --> W041["W-041 issue pruned: H3a -- model pool GPR, XGBoost, MLP and ResNet"]
-  E006 --> W042["W-042 issue pruned: H3b -- ripple metric of MLP against ResNet"]
-  E006 --> W043["W-043 issue pruned: H3c -- GPR scaling wall"]
-  E006 --> W064["W-064 issue done: Sections 3.1 and 3.2 state the reachable relative error"]
-  W064 --> T126["T-126 done: Write the data-ceiling functions test-first -> shared/ceilings.py"]
-  W064 --> T127["T-127 done: Wire the ceilings into both EDA scripts -> 41_neutron_stars_num.tex and 42_black_holes_num.tex"]
-  W064 --> T128["T-128 done: Write paragraph 6 on the reachable error -> 41_neutron_stars.tex and 42_black_holes.tex"]
-  E006 --> W065["W-065 issue done: One scorecard and a fair harness for every candidate"]
-  W065 --> T129["T-129 done: Write the scorecard test-first -> shared/scorecard.py"]
-  W065 --> T130["T-130 done: Write the fair harness test-first -> shared/harness.py"]
-  W065 --> T131["T-131 done: Move make baseline onto the harness -> build/assets/51_algorithms/51_algorithms_tab_baseline.tex"]
-  W065 --> T146["T-146 done: Describe the search procedure in Section 4.2 -> 50_methodology/52_optimization/52_optimization.tex"]
-  W065 --> T169["T-169 done: Correct the NS charge fold margin -> 50_methodology/51_algorithms/51_algorithms.tex"]
-  E006 --> W066["W-066 issue done: Representation screen -- inputs, targets, pointwise or curve-wise"]
-  W066 --> T132["T-132 pruned: Add the curve-wise representation test-first -> shared/design.py"]
-  W066 --> T133["T-133 done: Run the representation screen -> 60_results/61_representation/61_representation.tex"]
-  W066 --> T189["T-189 done: Add the target options test-first -> shared/design.py and shared/scorecard.py"]
-  W066 --> T190["T-190 done: Write the curve-wise fitter test-first -> shared/curvewise.py"]
-  W066 --> T191["T-191 done: Write the weighted k-NN and local-RBF fitters test-first -> shared/families.py"]
-  W066 --> T192["T-192 done: Let the harness take any target form -> shared/harness.py"]
-  W066 --> T198["T-198 done: Point Section 3.1's rho_c todo at Section 5.1's result -> 40_data_analysis/41_neutron_stars/41_neutron_stars.tex"]
-  E006 --> W067["W-067 issue done: Family screen -- interpolators, GPR, XGBoost and networks"]
-  W067 --> T134["T-134 done: Write the family factories test-first -> shared/families.py"]
-  W067 --> T135["T-135 done: Run the family screen with successive halving -> 60_results/62_families/62_families.tex"]
-  W067 --> T170["T-170 done: Score every candidate's ripple through the harness -> shared/harness.py"]
-  W067 --> T193["T-193 done: Let the MLP fit several outputs test-first -> shared/surrogate.py"]
-  W067 --> T200["T-200 done: Draw the family screen's parity plots test-first -> build/assets/62_families/62_families_fig_parity.png"]
-  W067 --> T201["T-201 done: Draw the family screen's scaling figure test-first -> build/assets/62_families/62_families_fig_scaling.png"]
-  W067 --> T202["T-202 done: Write the appendix on the model families -> 90_appendix/90_appendix.tex"]
-  E006 --> W068["W-068 issue done: Tuning and precision of the surviving families"]
-  W068 --> T136["T-136 done: Write the equal-budget search test-first -> shared/search.py"]
-  W068 --> T137["T-137 pruned: Write the precision regime test-first -> shared/surrogate.py"]
-  W068 --> T138["T-138 pruned: Run tuning and precision on the survivors -> 60_results/63_precision/63_precision.tex"]
-  W068 --> T204["T-204 done: Move the screen's candidate fitters to shared/ test-first -> shared/candidates.py"]
-  W068 --> T205["T-205 done: Write the tuning run of the short list test-first -> 60_results/63_precision/tune_survivors.py"]
-  W068 --> T206["T-206 done: Run the tuning of the short list -> build/assets/63_precision/63_precision_tab_tuning.tex"]
-  W068 --> T207["T-207 done: Pin every search trial to one thread test-first -> shared/search.py"]
-  W068 --> T240["T-240 done: Draw the tuning's search histories and searched ranges test-first -> 60_results/63_precision/tune_survivors.py"]
-  E006 --> W069["W-069 issue todo: Extrapolation error against the distance from the training hull"]
-  W069 --> T139["T-139 todo: Write the distance from the training hull test-first -> shared/scorecard.py"]
-  W069 --> T140["T-140 todo: Run the extrapolation probe on the rim and outer curves -> 60_results/64_extrapolation/64_extrapolation.tex"]
-  E006 --> W070["W-070 issue todo: Pareto front and the best approach per pair"]
-  W070 --> T141["T-141 todo: Write the Pareto front test-first -> shared/scorecard.py"]
-  W070 --> T142["T-142 todo: Run the budget comparison -> 60_results/65_budget/65_budget.tex"]
-  W070 --> T143["T-143 todo: State the best approach per pair in the conclusion -> 80_conclusion/80_conclusion.tex"]
-  E006 --> W071["W-071 issue done: Section 3.4 and Section 5 follow the search space"]
-  W071 --> T144["T-144 done: Rewrite Section 3.4 as the search-space question -> 40_data_analysis/44_hypotheses/44_hypotheses.tex"]
-  W071 --> T145["T-145 done: Rename and reorder the Section 5 folders -> 60_results/61_representation to 65_budget"]
-  E006 --> W075["W-075 spike todo: Can the surrogate predict the maximum neutron-star mass for given couplings"]
-  W075 --> T157["T-157 todo: Measure the M_max ceiling across curves -> a probe in local/scratch and a Finding on W-075"]
-  W075 --> T158["T-158 todo: Compare the derived and the direct M_max on the held-out curves -> a probe in local/scratch and a Finding on W-075"]
-  W075 --> T159["T-159 todo: Decide how the surrogate predicts M_max with the developer -> the W-075 spike decision"]
-  E006 --> W076["W-076 issue done: Sections 3.1 and 3.2 state the data ceilings as absolute uncertainties"]
-  W076 --> T160["T-160 done: Write the ceiling uncertainty macros test-first -> shared/ceilings.py"]
-  W076 --> T161["T-161 done: State the ceilings as uncertainties in paragraph 6 -> 41_neutron_stars.tex and 42_black_holes.tex"]
-  E006 --> W086["W-086 bug done: The local RBF fails with a singular matrix when its neighbours span fewer than three curves"]
-  W086 --> T194["T-194 done: Make the local RBF robust to a planar neighbourhood test-first -> shared/families.py"]
-  E006 --> W087["W-087 bug done: The curve-wise fitter fails on a curve with fewer rows than spline coefficients"]
-  W087 --> T195["T-195 done: Fit a short curve's spline by minimum-norm least squares test-first -> shared/curvewise.py"]
-  E006 --> W089["W-089 bug done: ripple() scores a linear residual as rough on unevenly spaced curves"]
-  W089 --> T199["T-199 done: Score the ripple by second divided differences test-first -> shared/scorecard.py"]
-  E006 --> W093["W-093 issue todo: Precision regime on the tuned short list"]
+  E014["E-014 todo: One pipeline, two maps -- the data ceiling inside the physical domain"]
+  E014 --> W052["W-052 issue todo: The body is written: domain edges, pipeline, abstract, introduction and conclusion"]
+  W052 --> T418["T-418 todo: Trim the results to the two maps -> 60_results without 63_extrapolation and 64_cost"]
+  W052 --> T419["T-419 todo: Write the physical edges of the domains -> 30_physical_framework/35_domain_boundaries/35_domain_boundaries.tex"]
+  W052 --> T420["T-420 todo: Write the pipeline as an algorithm -> 40_pipeline/41_algorithm/41_algorithm.tex and 40_pipeline/42_error_metric/42_error_metric.tex"]
+  W052 --> T421["T-421 todo: Write the abstract, introduction and conclusion -> 10_abstract, 20_introduction and 80_conclusion"]
+  E014 --> W093["W-093 issue todo: Precision regime on the tuned short list"]
   W093 --> T209["T-209 todo: Fit one candidate on one pair -> make fit P= C= U= prints its scorecard"]
   W093 --> T210["T-210 todo: Write the precision options test-first -> shared/surrogate.py and shared/candidates.py"]
   W093 --> T211["T-211 todo: Write the precision run test-first -> 60_results/63_precision/precision_survivors.py"]
   W093 --> T212["T-212 todo: Run the precision regime on the short list -> build/assets/63_precision/63_precision_tab_precision.tex"]
-  E006 --> W101["W-101 issue todo: The tuning prunes bad trials at fold boundaries and starts from the screen's settings"]
-  W101 --> T235["T-235 todo: Report the running fold mean and prune test-first -> shared/search.py and shared/trials.py"]
-  W101 --> T236["T-236 todo: Enqueue the screen's settings as trial 0 and a grid for the GPR space test-first -> shared/search.py and tune_survivors.py"]
-  E007["E-007 todo: Ensemble uncertainty and the final surrogate"]
-  E007 --> W044["W-044 spike pruned: Is L-BFGS fine-tuning worth keeping"]
-  E007 --> W045["W-045 issue todo: Ensemble uncertainty over curve-bootstrap resamples"]
-  E007 --> W046["W-046 issue todo: Final surrogate saved and loadable"]
-  E008["E-008 todo: Speedup and the MCMC application"]
-  E008 --> W047["W-047 spike todo: Speedup baseline and reference posterior without the solver"]
-  E008 --> W048["W-048 issue pruned: Pareto front of error against inference time"]
-  E008 --> W049["W-049 issue todo: Mock MCMC recovery with emcee"]
-  E008 --> W050["W-050 issue todo: Surrogate posterior validated against the reference"]
-  E009["E-009 doing: The paper follows the revised structure, and the release"]
-  E009 --> W051["W-051 issue done: Sections 2.1 to 2.4 written from the revised structure"]
-  W051 --> T109["T-109 done: Add Section 2.2's folder and renumber the dataset sections -> 30_physical_framework/32_scalarization, 33_black_holes, 34_neutron_stars"]
-  W051 --> T110["T-110 done: Write Section 2.1, the action and field equations -> 30_physical_framework/31_action/31_action.tex"]
-  W051 --> T111["T-111 done: Write Section 2.2, the scalarization mechanism -> 30_physical_framework/32_scalarization/32_scalarization.tex"]
-  W051 --> T112["T-112 done: Write Section 2.3, the black-hole dataset -> 30_physical_framework/33_black_holes/33_black_holes.tex"]
-  W051 --> T113["T-113 done: Write Section 2.4, the neutron-star dataset -> 30_physical_framework/34_neutron_stars/34_neutron_stars.tex"]
-  E009 --> W052["W-052 issue todo: Abstract, introduction, conclusion and title block"]
-  E009 --> W053["W-053 spike done: What the open-source release publishes"]
-  W053 --> T119["T-119 done: Write the code and data availability statement -> 00_metadata/metadata.tex and 80_conclusion/80_conclusion.tex"]
-  E009 --> W059["W-059 spike done: Which refs.bib keys the revised structure's citations name"]
-  W059 --> T107["T-107 done: Map the numbered citations to refs.bib keys -> 00_metadata/citations.md"]
-  W059 --> T108["T-108 pruned: Add the missing references to refs.bib -> 00_metadata/refs.bib"]
-  W059 --> T117["T-117 done: Cite placeholder entries for the missing references -> 00_metadata/refs.bib and the 13 cite markers"]
-  E009 --> W060["W-060 issue done: Title and outline bullets aligned to the revised structure"]
-  W060 --> T114["T-114 done: Set the revised title -> 00_metadata/metadata.tex"]
-  W060 --> T115["T-115 done: Align the remaining outline bullets to the revised structure -> the todo bullets of 10, 20, 41, 44, 51-53, 61-64, 70, 80"]
-  W060 --> T116["T-116 done: Name paper sections by their compiled number in code and make -> mk/, paper.toml, the colocated modules"]
-  E009 --> W100["W-100 spike todo: What the paper claims once the search names its winners"]
-  W100 --> T233["T-233 todo: List every claim of the title block, abstract, introduction, Section 3.4 and Section 7 against Section 5 -> Findings on W-100"]
-  W100 --> T234["T-234 todo: Decide the thesis with the developer and the supervisors -> the W-100 spike decision"]
+  E014 --> W150["W-150 issue todo: Each section's artifacts build under build/sections"]
+  W150 --> T396["T-396 todo: Remove the standalone table pages -> mk/paper.mk without the tables target"]
+  W150 --> T397["T-397 todo: Write each section's assets under build/sections -> ASSETS is build/sections"]
+  W150 --> T398["T-398 todo: Draw each section's figure variants beside its assets -> build/sections/<section>/figures/"]
+  W150 --> T399["T-399 todo: Compile the section previews beside the section artifacts -> build/sections/<section>/<section>.pdf"]
+  E014 --> W151["W-151 issue todo: The root make layer holds configuration only"]
+  W151 --> T400["T-400 todo: Move the preset figures into the sections that draw them -> 91_neutron_stars.mk, 98_families.mk and 99_precision.mk"]
+  W151 --> T401["T-401 todo: Hand the cited knobs from each screen's own .mk -> mk/paper.mk names no section"]
+  E014 --> W152["W-152 issue todo: make pipeline builds and saves the surrogate of each map and target"]
+  W152 --> T402["T-402 todo: Store the audit's reachable figures as data -> local/state/91_neutron_stars/reachable_figures.json and local/state/92_black_holes/reachable_figures.json"]
+  W152 --> T403["T-403 todo: Store the tuning's winners as data -> local/state/99_precision/winners.json"]
+  W152 --> T404["T-404 todo: Save and load a fitted surrogate -> paperlib/final.py"]
+  W152 --> T405["T-405 todo: Run the pipeline for every pair -> 40_pipeline/41_algorithm/build_surrogates.py and make pipeline"]
+  E014 --> W153["W-153 issue todo: The surrogate refuses an input outside the physical domain, shown in Section 4"]
+  W153 --> T406["T-406 todo: Model the physical domain of each map -> paperlib/domain.py"]
+  W153 --> T407["T-407 todo: Guard the saved surrogates with their domain -> paperlib/final.py predict"]
+  W153 --> T408["T-408 todo: Draw Section 4's domain figure -> 50_validity/check_domain.py and make 50_validity"]
+  W153 --> T409["T-409 todo: Write Section 4 as the domain of validity -> 50_validity/50_validity.tex"]
+  E014 --> W154["W-154 issue todo: Section 5.1 shows the black-hole surrogates against the data ceiling"]
+  W154 --> T410["T-410 todo: Score a saved surrogate row by row on the held-out curves -> paperlib/final.py held_out_errors"]
+  W154 --> T411["T-411 todo: Draw Section 5.1's error figure -> 60_results/61_black_holes/results_black_holes.py and make 61_black_holes"]
+  W154 --> T412["T-412 todo: Write Section 5.1 -> 60_results/61_black_holes/61_black_holes.tex"]
+  E014 --> W155["W-155 issue todo: Section 5.2 shows the neutron-star surrogates against the data ceiling"]
+  W155 --> T413["T-413 todo: Draw Section 5.2's error figure -> 60_results/62_neutron_stars/results_neutron_stars.py and make 62_neutron_stars"]
+  W155 --> T414["T-414 todo: Write Section 5.2 -> 60_results/62_neutron_stars/62_neutron_stars.tex"]
+  E014 --> W156["W-156 issue todo: Section 6 shows the maximum neutron-star mass the surrogate predicts"]
+  W156 --> T415["T-415 todo: Predict the maximum mass of each held-out curve -> 70_discussion/mass_max.py"]
+  W156 --> T416["T-416 todo: Draw Section 6's maximum-mass figure -> make 70_discussion"]
+  W156 --> T417["T-417 todo: Write Section 6 -> 70_discussion/70_discussion.tex"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
-  W088["W-088 issue todo, standalone: A running representation screen is followable -- progress, time left and each entry's representation"]
-  W088 --> T196["T-196 todo: Log the screen's jobs done and time left test-first -> 60_results/61_representation/screen_representation.py"]
-  W088 --> T197["T-197 todo: Show each ledger entry's representation test-first -> 50_methodology/51_algorithms/list_ledger.py"]
-  W121["W-121 spike todo, standalone: Where the run time of the screens and the tuning goes"]
-  W121 --> T303["T-303 todo: Profile one pointwise local-RBF trial -> local/scratch/profile_rbf_trial.txt"]
-  W121 --> T304["T-304 todo: Profile one tuning job -> local/scratch/profile_tuning_job.txt"]
-  W121 --> T305["T-305 todo: Record the run-time decision -> W-121 spike.decision"]
   W129["W-129 bug todo, standalone: A table caption above its table touches the top rule"]
   W129 --> T341["T-341 todo: Give a table caption its skip above the top rule -> 00_metadata/preamble.tex"]
   W132["W-132 issue todo, standalone: One home for the family and unit macro tags"]
@@ -914,8 +994,6 @@ flowchart TD
   W144 --> T383["T-383 todo: Pin the picks of each shipped section toml -> one test per section beside its script"]
   W145["W-145 issue todo, standalone: One helper stores a section's tables and numbers"]
   W145 --> T384["T-384 todo: Promote the store step -> paperlib/tools/render_assets.py store_section"]
-  W146["W-146 issue todo, standalone: The settings comments name where the variants are drawn now"]
-  W146 --> T386["T-386 todo: Point the settings comments at make figures -> paper.toml and the section tomls"]
   W147["W-147 issue todo, standalone: Code comments and the citation notes name the sections the paper now has"]
   W147 --> T388["T-388 todo: Rename the stale section numbers -> comments, help strings, docstrings and 00_metadata/citations.md"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
@@ -923,8 +1001,5 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E006,E009 doing
-  class W064,T126,T127,T128,W065,T129,T130,T131,T146,T169,W066,T133,T189,T190,T191,T192,T198,W067,T134,T135,T170,T193,T200,T201,T202,W068,T136,T204,T205,T206,T207,T240,W071,T144,T145,W076,T160,T161,W086,T194,W087,T195,W089,T199,W051,T109,T110,T111,T112,T113,W053,T119,W059,T107,T117,W060,T114,T115,T116 done
-  class W069,T139,T140,W070,T141,T142,T143,W075,T157,T158,T159,W093,T209,T210,T211,T212,W101,T235,T236,E007,W045,W046,E008,W047,W049,W050,W052,W100,T233,T234,W061,T118,W088,T196,T197,W121,T303,T304,T305,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W146,T386,W147,T388 todo
-  class W038,W039,W040,W041,W042,W043,T132,T137,T138,W044,W048,T108 pruned
+  class E014,W052,T418,T419,T420,T421,W093,T209,T210,T211,T212,W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,W153,T406,T407,T408,T409,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388 todo
 ```
