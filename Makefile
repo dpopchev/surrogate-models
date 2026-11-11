@@ -120,6 +120,7 @@ include $(sort $(wildcard [0-9][0-9]_*/[0-9][0-9]_*/*.mk))
 # expanded only now (make expands prerequisites when it reads a rule).
 assets: $(PAPER_ASSETS)
 figures: $(SECTION_FIGURES)
+$(KNOBS_ASSETS): $(KNOBS_DEPS)
 
 .PHONY: clean
 clean: $(CLEANS) ## Run every clean -- inputs, keys, settings, scratch, .board/ .venv/ untouched

@@ -91,14 +91,17 @@ dashboard: ## Follow the fits live in optuna-dashboard -- the newest study journ
 	$(call log_done,stopped optuna-dashboard)
 
 # The knobs the text cites (W-116): the baseline network's settings from paper.toml and the
-# screens' knobs, which live in the three results .mk files -- so those are prerequisites too
-# (literal paths: the sections are included after this file).
+# screens' knobs. Each screen's .mk appends its flag to KNOBS_FLAGS and its own path to
+# KNOBS_DEPS, so the knobs are rebuilt when a screen's knobs change; the Makefile gives the
+# rule those dependencies after the includes, as it gives assets PAPER_ASSETS.
 KNOBS        := paperlib/tools/paper_knobs.py
 KNOBS_ASSETS := $(ASSETS)/00_metadata/00_metadata_knobs_num.tex
+KNOBS_FLAGS  :=
+KNOBS_DEPS   :=
 PAPER_ASSETS += $(KNOBS_ASSETS)
 
-$(KNOBS_ASSETS): $(KNOBS) paper.toml $(PAPERLIB) 90_appendix/97_representation/97_representation.mk 90_appendix/98_families/98_families.mk 90_appendix/99_precision/99_precision.mk
-	@$(RUN) python $(KNOBS) $@ --representation "$(REPRESENTATION_KNOBS)" --families "$(FAMILIES_KNOBS)" --tuning "$(TUNING_KNOBS)"
+$(KNOBS_ASSETS): $(KNOBS) paper.toml $(PAPERLIB)
+	@$(RUN) python $(KNOBS) $@ $(KNOBS_FLAGS)
 	$(call log_done,knobs written to $@)
 
 .PHONY: assets

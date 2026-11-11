@@ -10,6 +10,9 @@ FAMILIES_TOML   := 90_appendix/98_families/98_families.toml
 FAMILIES_ASSETS := $(ASSETS)/98_families/98_families_tab_families.tex
 FAMILIES_KNOBS  := --k 8 --neighbours 100 --knots 8 --per-curve 10 \
                    --budgets 1000 10000 100000 --keeps 3 2 --minutes 30 --memory-gb 4 --workers 3
+# The text cites them: paper_knobs.py reads the flag, and a change here rebuilds the knobs asset.
+KNOBS_FLAGS     += --families "$(FAMILIES_KNOBS)"
+KNOBS_DEPS      += 90_appendix/98_families/98_families.mk
 # The recorded batch Section 5.2 reports (2026-10-08, clean at 037443f; 88 outcomes): its saved
 # outcomes (local/state/98_families/<batch>.json) rebuild the table and figures in seconds.
 # Empty it to refit the whole screen (hours): make families FAMILIES_BATCH=

@@ -7,6 +7,9 @@ REPRESENTATION        := 90_appendix/97_representation/screen_representation.py
 REPRESENTATION_ASSETS := $(ASSETS)/97_representation/97_representation_tab_representation.tex
 # 100 neighbours: 50 leave the RBF singular on NS folds whose neighbourhoods span two curves (W-086).
 REPRESENTATION_KNOBS  := --k 8 --neighbours 100 --knots 8 --seeds 3
+# The text cites them: paper_knobs.py reads the flag, and a change here rebuilds the knobs asset.
+KNOBS_FLAGS           += --representation "$(REPRESENTATION_KNOBS)"
+KNOBS_DEPS            += 90_appendix/97_representation/97_representation.mk
 # The recorded batch Section 5.1 reports (2026-10-08, clean at 700c05e): the table is rebuilt from
 # its ledger entries in seconds. Empty it to refit the whole screen (hours):
 # make representation REPRESENTATION_BATCH=

@@ -10,6 +10,9 @@ TUNING        := 90_appendix/99_precision/tune_survivors.py
 TUNING_TOML   := 90_appendix/99_precision/99_precision.toml
 TUNING_ASSETS := $(ASSETS)/99_precision/99_precision_tab_tuning.tex
 TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --workers 3 --within 1.0
+# The text cites them: paper_knobs.py reads the flag, and a change here rebuilds the knobs asset.
+KNOBS_FLAGS   += --tuning "$(TUNING_KNOBS)"
+KNOBS_DEPS    += 90_appendix/99_precision/99_precision.mk
 # The recorded batch (T-206, 2026-10-10): make tuning rebuilds the table from its outcomes in
 # seconds; TUNING_BATCH= (empty) runs the whole tuning again (about 33 hours).
 TUNING_BATCH  ?= 01a11d49-1647-735a-af05-a58e497428f2
