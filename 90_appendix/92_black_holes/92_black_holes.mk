@@ -8,7 +8,7 @@ RENDER_ASSETS := paperlib/tools/render_assets.py
 BH_EDA_STATE  := $(STATE)/92_black_holes
 
 # As Section 3.1: the script stores the JSON and writes the figures, the render step the assets.
-$(BH_EDA_STATE)/numbers.json $(BH_EDA_ASSETS) &: $(BH_EDA) $(RENDER_ASSETS) paper.toml $(BH_EDA_TOML) $(PAPERLIB) $(STATE)/black_holes.parquet
+$(BH_EDA_STATE)/numbers.json $(BH_EDA_STATE)/reachable_figures.json $(BH_EDA_ASSETS) &: $(BH_EDA) $(RENDER_ASSETS) paper.toml $(BH_EDA_TOML) $(PAPERLIB) $(STATE)/black_holes.parquet
 	@$(RUN) python $(BH_EDA) $(STATE)/black_holes.parquet $(ASSETS) --state $(STATE) --folds $(SPLIT_FOLDS) --seed $(SPLIT_SEED)
 	@$(RUN) python $(RENDER_ASSETS) $(BH_EDA_STATE) $(ASSETS)
 	$(call log_done,BH EDA figure wrappers written to $(@D)/ and tables and numbers to $(BH_EDA_STATE)/; make figures draws the PNGs)

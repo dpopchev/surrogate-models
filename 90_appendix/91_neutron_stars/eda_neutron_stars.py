@@ -36,6 +36,7 @@ from paperlib.ceilings import (
     ceilings_caption,
     decade_object,
     measure,
+    reachable_figures,
     uncertainty_macros,
 )
 from paperlib.config import (
@@ -1023,6 +1024,13 @@ def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) 
     (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
 
 
+def _store_reachable_figures(state: Path, bounds: Ceilings) -> None:
+    """Store the data ceiling of the mass and of the charge target as significant figures, the
+    input the pipeline reads as plain JSON."""
+    figures = {"mass": reachable_figures(bounds, "M"), "charge": reachable_figures(bounds, "D")}
+    (state / SECTION / "reachable_figures.json").write_text(json.dumps(figures))
+
+
 def _write_ceilings(
     out: Path, bounds: Ceilings, style: PlotStyle, variant: CeilingsVariant
 ) -> None:
@@ -1088,6 +1096,7 @@ def main(
     )
     assert args.state is not None, "--state is required"
     _store(args.state, table_objects(found, section.tables, bounds), macros)
+    _store_reachable_figures(args.state, bounds)
     _figure_data_path(args.state).write_bytes(pickle.dumps(FigureData(table, args.window, bounds)))
     _write_ceilings(out, bounds, config.plot, section.variants.ceilings)
     logger.info(
