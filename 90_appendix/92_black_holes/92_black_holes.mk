@@ -21,6 +21,8 @@ $(BH_EDA_STATE)/numbers.json $(BH_EDA_ASSETS) &: $(BH_EDA) $(RENDER_ASSETS) pape
 # the figure data the main run stored; nothing is computed.
 BH_EDA_FIGURES := $(ASSETS)/92_black_holes/figures
 
+SECTION_FIGURES += 92_black_holes_figures
+
 .PHONY: 92_black_holes_figures
 92_black_holes_figures: $(BH_EDA_STATE)/numbers.json ## Draw every BH EDA figure variant as its own PNG under build/sections/92_black_holes/figures/
 	@$(RUN) python $(BH_EDA) --figures $(ASSETS) --state $(STATE)

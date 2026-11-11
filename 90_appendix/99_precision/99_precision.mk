@@ -10,6 +10,9 @@ TUNING        := 90_appendix/99_precision/tune_survivors.py
 TUNING_TOML   := 90_appendix/99_precision/99_precision.toml
 TUNING_ASSETS := $(ASSETS)/99_precision/99_precision_tab_tuning.tex
 TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --workers 3 --within 1.0
+# The text cites them: paper_knobs.py reads the flag, and a change here rebuilds the knobs asset.
+KNOBS_FLAGS   += --tuning "$(TUNING_KNOBS)"
+KNOBS_DEPS    += 90_appendix/99_precision/99_precision.mk
 # The recorded batch (T-206, 2026-10-10): make tuning rebuilds the table from its outcomes in
 # seconds; TUNING_BATCH= (empty) runs the whole tuning again (about 33 hours).
 TUNING_BATCH  ?= 01a11d49-1647-735a-af05-a58e497428f2
@@ -39,8 +42,18 @@ tuning: $(TUNING_ASSETS) ## Run the tuning of the short list for Section 5.3
 # the recorded batch and its journal; nothing is tuned. TUNING_BATCH must name a recorded batch.
 TUNING_FIGURES := $(ASSETS)/99_precision/figures
 
+SECTION_FIGURES += 99_precision_figures
+
+# The history figure's variants under each preset of PLOT_PRESETS, redrawn from the same batch.
 .PHONY: 99_precision_figures
-99_precision_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every tuning figure variant as its own PNG under build/sections/99_precision/figures/
+99_precision_figures: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet ## Draw every tuning figure variant as its own PNG under build/sections/99_precision/figures/, and the history figure under each preset
 	@test -n "$(TUNING_BATCH)" || { printf 'TUNING_BATCH is empty: no recorded batch to draw from\n' >&2; exit 1; }
 	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --figures $(ASSETS)
+	@for preset in $(PLOT_PRESETS); do \
+	  work=$(PRESETS_WORK)/$$preset; out=$(TUNING_FIGURES)/presets/$$preset; \
+	  rm -rf $$work/99_precision $$out && mkdir -p $$work $$out && \
+	  export PAPER__PLOT__PRESET=$$preset && \
+	  $(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $$work $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) --batch $(TUNING_BATCH) --figures $$work && \
+	  cp $$work/99_precision/figures/99_precision_fig_history_*.png $$out/ || exit 1; \
+	done
 	$(call log_done,tuning figure variants in $(TUNING_FIGURES)/)
