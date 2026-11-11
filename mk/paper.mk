@@ -34,7 +34,7 @@ LATEXMK := latexmk -pdf -interaction=nonstopmode -halt-on-error -file-line-error
 # <section>_<kind>_<name>.<ext> (fig, tab; num for the numbers) -- a figure's PNG and its
 # .tex wrapper share one stem. The section prefix keeps basenames unique once compile
 # copies every asset flat next to the sources.
-ASSETS       := $(BUILD)/assets
+ASSETS       := $(BUILD)/sections
 PAPER_ASSETS := $(ASSETS)/00_metadata/00_metadata_build_stamp.tex
 # Every asset rule depends on every paperlib module, so a module a script imports is never
 # missing from its list; a change to one reruns them all.
@@ -108,7 +108,7 @@ $(KNOBS_ASSETS): $(KNOBS) paper.toml $(PAPERLIB) 90_appendix/97_representation/9
 	$(call log_done,knobs written to $@)
 
 .PHONY: assets
-assets: ## Generate the section assets under build/assets/
+assets: ## Generate the section assets under build/sections/
 	$(call log_done,assets in $(ASSETS)/: $(sort $(notdir $(patsubst %/,%,$(dir $(PAPER_ASSETS))))))
 
 # The assets comparison: record the sha256 sums of every asset (the build stamp left out, it
