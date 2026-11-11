@@ -49,4 +49,4 @@
 - 2026-11-11 W-123: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 3 hours) (developer, 2026-11-11)
 
 ## Deviations
-- none recorded
+- 2026-11-11 W-123: T-320 pruned, replaced by T-393: E-013 moved its files to 90_appendix/98_families
