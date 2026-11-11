@@ -510,24 +510,22 @@ def test_a_failed_trial_reads_back_as_a_point_without_figures() -> None:
     assert trial_points(study, BH_RBF) == (TrialPoint(BH_RBF, 0, None, {"neighbours": 60}),)
 
 
-@pytest.fixture
-def notation():
+@pytest.fixture(autouse=True)
+def _notation():
     """The style with the paper's notation, so the panel titles' symbols expand; restored
-    after the test."""
+    after each test."""
     with plt.rc_context():
         apply_style(PlotStyle(usetex=False), NOTATION_TEX.read_text())
         yield
 
 
 @pytest.mark.view
-@pytest.mark.usefixtures("notation")
 def test_history_figure_best_only_draws_no_dots() -> None:
     figure = history_figure(TOY_POINTS, PlotStyle(usetex=False), "best_only")
     assert [line for axes in figure.axes for line in axes.lines if line.get_marker() == "o"] == []
 
 
 @pytest.mark.view
-@pytest.mark.usefixtures("notation")
 def test_history_figure_regret_is_log_scaled() -> None:
     figure = history_figure(TOY_POINTS, PlotStyle(usetex=False), "regret")
     assert figure.axes[0].get_yscale() == "log"
@@ -539,14 +537,12 @@ def panels(figure: Figure) -> list[Axes]:
 
 
 @pytest.mark.view
-@pytest.mark.usefixtures("notation")
 def test_ranges_figure_grid_has_four_axes() -> None:
     figure = ranges_figure(TOY_POINTS, PlotStyle(usetex=False), "grid")
     assert len(panels(figure)) == 4
 
 
 @pytest.mark.view
-@pytest.mark.usefixtures("notation")
 def test_ranges_figure_without_network_has_two_axes() -> None:
     figure = ranges_figure(TOY_POINTS, PlotStyle(usetex=False), "no_network")
     assert len(figure.axes) == 2
