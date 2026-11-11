@@ -68,7 +68,9 @@ PRECISION         := 90_appendix/99_precision/precision_regime.py
 PRECISION_OPTIONS := 90_appendix/99_precision/precision_options.py
 PRECISION_KNOBS   := --k 8 --neighbours 100 --knots 8 --residual-neighbours 100 --seeds 3 --minutes 30 --workers 3
 PRECISION_PAIRS   ?=
-PRECISION_BATCH   ?=
+# The recorded batch (T-212, 2026-11-11): make precision rebuilds the figure and macros from its
+# outcomes in seconds; PRECISION_BATCH= (empty) runs the whole regime again (about 22 minutes).
+PRECISION_BATCH   ?= 01a1cc48-ef02-731a-a429-8911759c81a9
 PRECISION_DIR     := $(ASSETS)/99_precision
 PRECISION_ASSETS  := $(PRECISION_DIR)/99_precision_fig_precision.tex
 
