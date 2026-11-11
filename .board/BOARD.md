@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-014 > W-153   | blocked: 0 | todo roots: 13 | done: 464 | pruned: 99
+open path: E-014   | blocked: 0 | todo roots: 13 | done: 465 | pruned: 99
 
 ## Tree
 
@@ -11,7 +11,7 @@ E-014         [doing]    One pipeline, two maps -- the data ceiling inside the p
   W-150  issue  [done]     Each section's artifacts build under build/sections -- T-396 [done], T-397 [done], T-398 [done], T-399 [done]
   W-151  issue  [done]     The root make layer holds configuration only -- T-400 [done], T-401 [done]
   W-152  issue  [done]     make pipeline builds and saves the surrogate of each map and target -- T-402 [done], T-403 [done], T-404 [done], T-405 [done], T-426 [done]
-  W-153  issue  [doing]    The surrogate refuses an input outside the physical domain, shown in Section 4 -- T-406 [done], T-407 [done], T-408 [done], T-409 [done], T-432 [done]
+  W-153  issue  [done]     The surrogate refuses an input outside the physical domain, shown in Section 4 -- T-406 [done], T-407 [done], T-408 [done], T-409 [done], T-432 [done]
   W-154  issue  [todo]     Section 5.1 shows the black-hole surrogates against the data ceiling -- T-410 [todo], T-411 [todo], T-412 [todo]
   W-155  issue  [todo]     Section 5.2 shows the neutron-star surrogates against the data ceiling -- T-413 [todo], T-414 [todo]
   W-156  issue  [todo]     Section 6 shows the maximum neutron-star mass the surrogate predicts -- T-415 [todo], T-416 [todo], T-417 [todo]
@@ -975,7 +975,7 @@ flowchart TD
   W152 --> T404["T-404 done: Save and load a fitted surrogate -> paperlib/final.py"]
   W152 --> T405["T-405 done: Run the pipeline for every pair -> 40_pipeline/41_algorithm/build_surrogates.py and make pipeline"]
   W152 --> T426["T-426 done: Skip winners.json when a test reads the saved batch -> 90_appendix/99_precision/test_tune_survivors.py"]
-  E014 --> W153["W-153 issue doing: The surrogate refuses an input outside the physical domain, shown in Section 4"]
+  E014 --> W153["W-153 issue done: The surrogate refuses an input outside the physical domain, shown in Section 4"]
   W153 --> T406["T-406 done: Model the physical domain of each map -> paperlib/domain.py"]
   W153 --> T407["T-407 done: Guard the saved surrogates with their domain -> paperlib/final.py predict"]
   W153 --> T408["T-408 done: Draw Section 4's domain figure -> 50_validity/check_domain.py and make 50_validity"]
@@ -1024,8 +1024,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E014,W153 doing
-  class W093,T210,T211,T212,T427,T430,W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,T426,T406,T407,T408,T409,T432 done
+  class E014 doing
+  class W093,T210,T211,T212,T427,T430,W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,T426,W153,T406,T407,T408,T409,T432 done
   class W052,T418,T419,T420,T421,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429 todo
   class T209 pruned
 ```
