@@ -1,13 +1,13 @@
 # Board -- surrogate-models
 record: local
-open path: E-015 > W-159 > T-424   | blocked: 0 | todo roots: 3 | done: 485 | pruned: 99
+open path: E-015 > W-159   | blocked: 0 | todo roots: 3 | done: 486 | pruned: 99
 
 ## Tree
 
 ```text
 E-015         [doing]    A clean checkout rebuilds the four surrogates as they were tuned
   W-158  issue  [done]     cloudpickle is a declared dependency of the project   (filed during T-404) -- T-423 [done]
-  W-159  issue  [doing]    A saved curve-wise surrogate predicts as fitted   (filed during T-404) -- T-424 [doing]   <- ACTIVE LEAF
+  W-159  issue  [doing]    A saved curve-wise surrogate predicts as fitted   (filed during T-404) -- T-424 [done]
   W-160  issue  [todo]     make pipeline takes its knobs from the tuning's own knobs   (filed during T-405) -- T-425 [todo], T-431 [todo]
   W-161  bug    [todo]     make precision after a one-pair smoke run skips the full run as current   (filed during T-212) -- T-428 [todo]
 E-016         [todo]     The section scripts keep each rule once and each shipped setting under test
@@ -1013,7 +1013,7 @@ flowchart TD
   E015 --> W158["W-158 issue done: cloudpickle is a declared dependency of the project"]
   W158 --> T423["T-423 done: Declare cloudpickle as a dependency -> pyproject.toml"]
   E015 --> W159["W-159 issue doing: A saved curve-wise surrogate predicts as fitted"]
-  W159 --> T424["T-424 doing: Test the curve-wise round trip of a saved surrogate -> paperlib/test_final.py -- ACTIVE LEAF"]
+  W159 --> T424["T-424 done: Test the curve-wise round trip of a saved surrogate -> paperlib/test_final.py"]
   E015 --> W160["W-160 issue todo: make pipeline takes its knobs from the tuning's own knobs"]
   W160 --> T425["T-425 todo: Read the pipeline knobs from TUNING_KNOBS -> 40_pipeline/41_algorithm/41_algorithm.mk"]
   W160 --> T431["T-431 todo: Name the saved domains in the pipeline header -> 40_pipeline/41_algorithm/41_algorithm.mk"]
@@ -1048,7 +1048,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E015,W159,T424 doing
-  class W158,T423 done
+  class E015,W159 doing
+  class W158,T423,T424 done
   class W160,T425,T431,W161,T428,E016,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W163,T433,E017,W061,T118,W129,T341,W164,T435,W162,T429 todo
 ```
