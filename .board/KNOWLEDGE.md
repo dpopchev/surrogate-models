@@ -33,7 +33,7 @@
 - 2026-11-10 W-139: standing: Table.small_spec holds a *{n}{x} repeat spec -> the small layout writes it as given, aligned reads the columns supersedes: W-139#1
 - 2026-11-11 E-013: standing: an attribution trailer was rewritten out on 2026-11-10 -> T-373 cites pre-rewrite shas: 388f1c8 is fa76073, de324d2 is ad290b4, cdb0e87 is 6b166c0 supersedes: E-013#2
 - 2026-11-11 E-013: standing: the scope gate reads a path only from a token with a slash or an extension -> a brief names each moved file by its full path, never a bare folder name supersedes: E-013#1
-- 2026-11-12 E-014: fact: verified on main: NS M 3.6 vs 4.1 figures, NS D 1.1 vs 2.4, BH M 3.8 vs 7.1, BH D 3.0 vs 6.0; W-093 ran on the tuned winners, edges unwidened -> 5.1, 5.2 report each gap supersedes: E-014#1, W-068#4
+- 2026-11-12 E-014: standing: verified on main: NS M 3.6 vs 4.1 figures, NS D 1.1 vs 2.4, BH M 3.8 vs 7.1, BH D 3.0 vs 6.0; W-093 ran on the tuned winners, edges unwidened -> 5.1, 5.2 report each gap supersedes: E-014#2
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
@@ -44,13 +44,7 @@
 - 2026-11-11 W-093: open: winners all local RBF -> float64, L-BFGS, H2 untested; NS-charge ResNet run (about +6 h) a new item?
 
 ## Decisions
-- 2026-11-11 E-014: goal (developer, 2026-11-11): a framework whose algorithm is a data pipeline for surrogates reaching the minimal relative error the dataset allows, the physical framework kept intact -- no extrapolation beyond stable solutions; replaces E-013's extrapolation goal
-- 2026-11-11 E-014: layout (developer, 2026-11-11): paperlib holds the paper-wide Python; each section is a module make rebuilds alone; local/ holds interim results; build/ the paper, the sections with their artifacts and alternative figures; no table artifact, only figures
-- 2026-11-11 E-014: physics before data science; the main body short, anything longer in an appendix (developer, 2026-11-11)
-- 2026-11-11 E-014: plan agreed 2026-11-11: W-150..W-156 new, W-052 and W-093 adopted; pruned W-069, W-070, W-075, W-088, W-100, W-101, W-121, W-046, W-146, E-007, E-008; E-006, E-009 close; W-061, W-129, W-132, W-143..W-145, W-147 stay todo
-- 2026-11-11 E-014: shown on neutron stars (three to two parameters) and black holes (two to two) with the same properties; a dataset's minimal relative error is a function of the incoming dataset, an input, not part of the automated process (developer, 2026-11-11)
-- 2026-11-11 E-014: things are local to a section or subsection; the global layer -- read as the root Makefile, mk/ and paper.toml -- is configuration or data to import; paperlib keeps code two or more sections import (developer agreed, 2026-11-11)
-- 2026-11-12 E-014: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 30 hours) (developer, 2026-11-12) supersedes: E-014#d9
+- none recorded
 
 ## Deviations
-- 2026-11-12 E-014: W-052's Then names seven body titles that four section headers do not carry -> T-434 filed on W-052 to retitle them (title case, labels kept); the criterion is unchanged
+- none recorded

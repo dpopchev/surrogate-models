@@ -1,20 +1,10 @@
 # Board -- surrogate-models
 record: local
-open path: E-014   | blocked: 0 | todo roots: 15 | done: 482 | pruned: 99
+open path: none   | blocked: 0 | todo roots: 15 | done: 483 | pruned: 99
 
 ## Tree
 
 ```text
-E-014         [doing]    One pipeline, two maps -- the data ceiling inside the physical domain
-  W-052  issue  [done]     The body is written: domain edges, pipeline, abstract, introduction and conclusion -- T-418 [done], T-419 [done], T-420 [done], T-421 [done], T-434 [done]
-  W-093  issue  [done]     Precision regime on the tuned short list   (filed during T-206) -- T-209 [pruned]   [pruned: superseded by W-152: make pipeline (40_pipeline/41_algorithm/build_surrogates.py) already fits and scores each pair winner in minutes, and the precision run reads its local/state/41_algorithm/summary.json; the extrapolation probe and budget comparison it was the skeleton for left with E-013; its one-pair smoke run is folded into the precision run as --pair / PRECISION_PAIRS (coordinator re-brief, 2026-11-11)], T-210 [done], T-211 [done], T-212 [done], T-427 [done], T-430 [done]
-  W-150  issue  [done]     Each section's artifacts build under build/sections -- T-396 [done], T-397 [done], T-398 [done], T-399 [done]
-  W-151  issue  [done]     The root make layer holds configuration only -- T-400 [done], T-401 [done]
-  W-152  issue  [done]     make pipeline builds and saves the surrogate of each map and target -- T-402 [done], T-403 [done], T-404 [done], T-405 [done], T-426 [done]
-  W-153  issue  [done]     The surrogate refuses an input outside the physical domain, shown in Section 4 -- T-406 [done], T-407 [done], T-408 [done], T-409 [done], T-432 [done]
-  W-154  issue  [done]     Section 5.1 shows the black-hole surrogates against the data ceiling -- T-410 [done], T-411 [done], T-412 [done]
-  W-155  issue  [done]     Section 5.2 shows the neutron-star surrogates against the data ceiling -- T-413 [done], T-414 [done]
-  W-156  issue  [done]     Section 6 shows the maximum neutron-star mass the surrogate predicts -- T-415 [done], T-416 [done], T-417 [done]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-129  bug    [todo]     (standalone) A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
 W-132  issue  [todo]     (standalone) One home for the family and unit macro tags   (filed during T-346) -- T-347 [todo]
@@ -697,6 +687,72 @@ closed 2026-11-11 -- outcome: article.pdf follows the outline agreed on 2026-11-
 - T-379 [done] Rewrite the introduction outline -> 20_introduction/20_introduction.tex contributions name the pipeline
 - T-380 [done] Rewrite the conclusion outline -> 80_conclusion/80_conclusion.tex summarizes the pipeline
 
+### E-014 [done] One pipeline, two maps -- the data ceiling inside the physical domain
+
+closed 2026-11-12 -- outcome: article.pdf is a short physics-first paper -- the framework, the pipeline as an algorithm, the domain of validity, the results on both maps, their physical implications -- with the data science in the appendix; every section is a module that make rebuilds on its own into build/sections/<section>/, the interim results under local/state/, the root make layer configuration only. -- ledger: ledgers/E-014.md
+
+#### W-052 issue [done] The body is written: domain edges, pipeline, abstract, introduction and conclusion
+
+- T-418 [done] Trim the results to the two maps -> 60_results without 63_extrapolation and 64_cost
+- T-419 [done] Write the physical edges of the domains -> 30_physical_framework/35_domain_boundaries/35_domain_boundaries.tex
+- T-420 [done] Write the pipeline as an algorithm -> 40_pipeline/41_algorithm/41_algorithm.tex and 40_pipeline/42_error_metric/42_error_metric.tex
+- T-421 [done] Write the abstract, introduction and conclusion -> 10_abstract, 20_introduction and 80_conclusion
+- T-434 [done] Retitle the body sections -> the section lines of 30_physical_framework, 40_pipeline, 60_results and 80_conclusion
+
+#### W-093 issue [done] Precision regime on the tuned short list   (filed during T-206)
+
+- T-209 [pruned] Fit one candidate on one pair -> make fit P= C= U= prints its scorecard   [pruned: superseded by W-152: make pipeline (40_pipeline/41_algorithm/build_surrogates.py) already fits and scores each pair winner in minutes, and the precision run reads its local/state/41_algorithm/summary.json; the extrapolation probe and budget comparison it was the skeleton for left with E-013; its one-pair smoke run is folded into the precision run as --pair / PRECISION_PAIRS (coordinator re-brief, 2026-11-11)]
+- T-210 [done] Write the residual stage and the option table test-first -> 90_appendix/99_precision/precision_options.py
+- T-211 [done] Write the precision run test-first -> 90_appendix/99_precision/precision_regime.py and make precision
+- T-212 [done] Run the precision regime on the saved surrogates -> build/sections/99_precision/99_precision_fig_precision.tex
+- T-427 [done] Narrow the tuning run sweep to its own stems -> 90_appendix/99_precision/tune_survivors.py
+- T-430 [done] Name the precision macros with letters only -> 90_appendix/99_precision/precision_regime.py
+
+#### W-150 issue [done] Each section's artifacts build under build/sections
+
+- T-396 [done] Remove the standalone table pages -> mk/paper.mk without the tables target
+- T-397 [done] Write each section's assets under build/sections -> ASSETS is build/sections
+- T-398 [done] Draw each section's figure variants beside its assets -> build/sections/<section>/figures/
+- T-399 [done] Compile the section previews beside the section artifacts -> build/sections/<section>/<section>.pdf
+
+#### W-151 issue [done] The root make layer holds configuration only
+
+- T-400 [done] Move the preset figures into the sections that draw them -> 91_neutron_stars.mk, 98_families.mk and 99_precision.mk
+- T-401 [done] Hand the cited knobs from each screen's own .mk -> mk/paper.mk names no section
+
+#### W-152 issue [done] make pipeline builds and saves the surrogate of each map and target
+
+- T-402 [done] Store the audit's reachable figures as data -> local/state/91_neutron_stars/reachable_figures.json and local/state/92_black_holes/reachable_figures.json
+- T-403 [done] Store the tuning's winners as data -> local/state/99_precision/winners.json
+- T-404 [done] Save and load a fitted surrogate -> paperlib/final.py
+- T-405 [done] Run the pipeline for every pair -> 40_pipeline/41_algorithm/build_surrogates.py and make pipeline
+- T-426 [done] Skip winners.json when a test reads the saved batch -> 90_appendix/99_precision/test_tune_survivors.py
+
+#### W-153 issue [done] The surrogate refuses an input outside the physical domain, shown in Section 4
+
+- T-406 [done] Model the physical domain of each map -> paperlib/domain.py
+- T-407 [done] Guard the saved surrogates with their domain -> paperlib/final.py predict
+- T-408 [done] Draw Section 4's domain figure -> 50_validity/check_domain.py and make 50_validity
+- T-409 [done] Write Section 4 as the domain of validity -> 50_validity/50_validity.tex
+- T-432 [done] Move the domain figure legend off the panels -> 50_validity/check_domain.py
+
+#### W-154 issue [done] Section 5.1 shows the black-hole surrogates against the data ceiling
+
+- T-410 [done] Score a saved surrogate row by row on the held-out curves -> paperlib/final.py held_out_errors
+- T-411 [done] Draw Section 5.1's error figure -> 60_results/61_black_holes/results_black_holes.py and make 61_black_holes
+- T-412 [done] Write Section 5.1 -> 60_results/61_black_holes/61_black_holes.tex
+
+#### W-155 issue [done] Section 5.2 shows the neutron-star surrogates against the data ceiling
+
+- T-413 [done] Draw Section 5.2's error figure -> 60_results/62_neutron_stars/results_neutron_stars.py and make 62_neutron_stars
+- T-414 [done] Write Section 5.2 -> 60_results/62_neutron_stars/62_neutron_stars.tex
+
+#### W-156 issue [done] Section 6 shows the maximum neutron-star mass the surrogate predicts
+
+- T-415 [done] Predict the maximum mass of each held-out curve -> 70_discussion/mass_max.py
+- T-416 [done] Draw Section 6's maximum-mass figure -> make 70_discussion
+- T-417 [done] Write Section 6 -> 70_discussion/70_discussion.tex
+
 ### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
 
 closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/python.md, When make check runs, Then it passes with the repository root on pytest pythonpath and the python files matching the add-python COLOCATED templates. -- ledger: ledgers/W-005.md
@@ -950,51 +1006,6 @@ closed 2026-11-11 -- outcome: Given the Makefile follows the \~/.claude template
 ## Diagram
 ```mermaid
 flowchart TD
-  E014["E-014 doing: One pipeline, two maps -- the data ceiling inside the physical domain"]
-  E014 --> W052["W-052 issue done: The body is written: domain edges, pipeline, abstract, introduction and conclusion"]
-  W052 --> T418["T-418 done: Trim the results to the two maps -> 60_results without 63_extrapolation and 64_cost"]
-  W052 --> T419["T-419 done: Write the physical edges of the domains -> 30_physical_framework/35_domain_boundaries/35_domain_boundaries.tex"]
-  W052 --> T420["T-420 done: Write the pipeline as an algorithm -> 40_pipeline/41_algorithm/41_algorithm.tex and 40_pipeline/42_error_metric/42_error_metric.tex"]
-  W052 --> T421["T-421 done: Write the abstract, introduction and conclusion -> 10_abstract, 20_introduction and 80_conclusion"]
-  W052 --> T434["T-434 done: Retitle the body sections -> the section lines of 30_physical_framework, 40_pipeline, 60_results and 80_conclusion"]
-  E014 --> W093["W-093 issue done: Precision regime on the tuned short list"]
-  W093 --> T209["T-209 pruned: Fit one candidate on one pair -> make fit P= C= U= prints its scorecard"]
-  W093 --> T210["T-210 done: Write the residual stage and the option table test-first -> 90_appendix/99_precision/precision_options.py"]
-  W093 --> T211["T-211 done: Write the precision run test-first -> 90_appendix/99_precision/precision_regime.py and make precision"]
-  W093 --> T212["T-212 done: Run the precision regime on the saved surrogates -> build/sections/99_precision/99_precision_fig_precision.tex"]
-  W093 --> T427["T-427 done: Narrow the tuning run sweep to its own stems -> 90_appendix/99_precision/tune_survivors.py"]
-  W093 --> T430["T-430 done: Name the precision macros with letters only -> 90_appendix/99_precision/precision_regime.py"]
-  E014 --> W150["W-150 issue done: Each section's artifacts build under build/sections"]
-  W150 --> T396["T-396 done: Remove the standalone table pages -> mk/paper.mk without the tables target"]
-  W150 --> T397["T-397 done: Write each section's assets under build/sections -> ASSETS is build/sections"]
-  W150 --> T398["T-398 done: Draw each section's figure variants beside its assets -> build/sections/<section>/figures/"]
-  W150 --> T399["T-399 done: Compile the section previews beside the section artifacts -> build/sections/<section>/<section>.pdf"]
-  E014 --> W151["W-151 issue done: The root make layer holds configuration only"]
-  W151 --> T400["T-400 done: Move the preset figures into the sections that draw them -> 91_neutron_stars.mk, 98_families.mk and 99_precision.mk"]
-  W151 --> T401["T-401 done: Hand the cited knobs from each screen's own .mk -> mk/paper.mk names no section"]
-  E014 --> W152["W-152 issue done: make pipeline builds and saves the surrogate of each map and target"]
-  W152 --> T402["T-402 done: Store the audit's reachable figures as data -> local/state/91_neutron_stars/reachable_figures.json and local/state/92_black_holes/reachable_figures.json"]
-  W152 --> T403["T-403 done: Store the tuning's winners as data -> local/state/99_precision/winners.json"]
-  W152 --> T404["T-404 done: Save and load a fitted surrogate -> paperlib/final.py"]
-  W152 --> T405["T-405 done: Run the pipeline for every pair -> 40_pipeline/41_algorithm/build_surrogates.py and make pipeline"]
-  W152 --> T426["T-426 done: Skip winners.json when a test reads the saved batch -> 90_appendix/99_precision/test_tune_survivors.py"]
-  E014 --> W153["W-153 issue done: The surrogate refuses an input outside the physical domain, shown in Section 4"]
-  W153 --> T406["T-406 done: Model the physical domain of each map -> paperlib/domain.py"]
-  W153 --> T407["T-407 done: Guard the saved surrogates with their domain -> paperlib/final.py predict"]
-  W153 --> T408["T-408 done: Draw Section 4's domain figure -> 50_validity/check_domain.py and make 50_validity"]
-  W153 --> T409["T-409 done: Write Section 4 as the domain of validity -> 50_validity/50_validity.tex"]
-  W153 --> T432["T-432 done: Move the domain figure legend off the panels -> 50_validity/check_domain.py"]
-  E014 --> W154["W-154 issue done: Section 5.1 shows the black-hole surrogates against the data ceiling"]
-  W154 --> T410["T-410 done: Score a saved surrogate row by row on the held-out curves -> paperlib/final.py held_out_errors"]
-  W154 --> T411["T-411 done: Draw Section 5.1's error figure -> 60_results/61_black_holes/results_black_holes.py and make 61_black_holes"]
-  W154 --> T412["T-412 done: Write Section 5.1 -> 60_results/61_black_holes/61_black_holes.tex"]
-  E014 --> W155["W-155 issue done: Section 5.2 shows the neutron-star surrogates against the data ceiling"]
-  W155 --> T413["T-413 done: Draw Section 5.2's error figure -> 60_results/62_neutron_stars/results_neutron_stars.py and make 62_neutron_stars"]
-  W155 --> T414["T-414 done: Write Section 5.2 -> 60_results/62_neutron_stars/62_neutron_stars.tex"]
-  E014 --> W156["W-156 issue done: Section 6 shows the maximum neutron-star mass the surrogate predicts"]
-  W156 --> T415["T-415 done: Predict the maximum mass of each held-out curve -> 70_discussion/mass_max.py"]
-  W156 --> T416["T-416 done: Draw Section 6's maximum-mass figure -> make 70_discussion"]
-  W156 --> T417["T-417 done: Write Section 6 -> 70_discussion/70_discussion.tex"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W129["W-129 bug todo, standalone: A table caption above its table touches the top rule"]
@@ -1031,8 +1042,5 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E014 doing
-  class W052,T418,T419,T420,T421,T434,W093,T210,T211,T212,T427,T430,W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,T426,W153,T406,T407,T408,T409,T432,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417 done
   class W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429,W163,T433,W164,T435 todo
-  class T209 pruned
 ```
