@@ -54,4 +54,4 @@
 - 2026-11-12 E-014: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 30 hours) (developer, 2026-11-12) supersedes: E-014#d9
 
 ## Deviations
-- none recorded
+- 2026-11-12 E-014: W-052's Then names seven body titles that four section headers do not carry -> T-434 filed on W-052 to retitle them (title case, labels kept); the criterion is unchanged
