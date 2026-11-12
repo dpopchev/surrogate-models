@@ -9,6 +9,7 @@ name = "surrogate_models"
 version = "0"
 requires-python = ">=3.14"
 dependencies = [
+    "cloudpickle>=3.1.2",
     "matplotlib>=3.11.2",
     "optuna>=5.0.0",
     "pandas>=3.0.6",
