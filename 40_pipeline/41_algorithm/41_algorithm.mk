@@ -6,7 +6,7 @@
 # winner's params are laid; the seed is paper.toml's.
 PIPELINE       := 40_pipeline/41_algorithm/build_surrogates.py
 PIPELINE_DIR   := $(STATE)/41_algorithm
-PIPELINE_KNOBS := --k 8 --neighbours 100 --knots 8
+PIPELINE_KNOBS = $(foreach f,--k --neighbours --knots,$(subst @, ,$(filter $(f)@%,$(subst $(f) ,$(f)@,$(TUNING_KNOBS)))))
 PIPELINE_SEED  := $(shell sed -n 's/^seed = \([0-9]*\).*/\1/p' paper.toml)
 PIPELINE_JSON  := $(STATE)/91_neutron_stars/reachable_figures.json $(STATE)/92_black_holes/reachable_figures.json $(STATE)/99_precision/winners.json
 
