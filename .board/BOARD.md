@@ -1,25 +1,28 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 15 | done: 483 | pruned: 99
+open path: none   | blocked: 0 | todo roots: 4 | done: 483 | pruned: 99
 
 ## Tree
 
 ```text
-W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
-W-129  bug    [todo]     (standalone) A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
-W-132  issue  [todo]     (standalone) One home for the family and unit macro tags   (filed during T-346) -- T-347 [todo]
-W-143  issue  [todo]     (standalone) A Table refuses a row whose width differs from its columns   (filed during T-354) -- T-382 [todo]
-W-144  issue  [todo]     (standalone) The shipped section settings are pinned by tests   (filed during T-359) -- T-383 [todo]
-W-145  issue  [todo]     (standalone) One helper stores a section's tables and numbers   (filed during T-364) -- T-384 [todo]
-W-147  issue  [todo]     (standalone) Code comments and the citation notes name the sections the paper now has   (filed during T-373) -- T-388 [todo]
-W-157  issue  [todo]     (standalone) The figures mode of the black-hole, baseline and precision scripts is tested   (filed during T-398) -- T-422 [todo]
-W-158  issue  [todo]     (standalone) cloudpickle is a declared dependency of the project   (filed during T-404) -- T-423 [todo]
-W-159  issue  [todo]     (standalone) A saved curve-wise surrogate predicts as fitted   (filed during T-404) -- T-424 [todo]
-W-160  issue  [todo]     (standalone) make pipeline takes its knobs from the tuning's own knobs   (filed during T-405) -- T-425 [todo], T-431 [todo]
-W-161  bug    [todo]     (standalone) make precision after a one-pair smoke run skips the full run as current   (filed during T-212) -- T-428 [todo]
+E-015         [todo]     A clean checkout rebuilds the four surrogates as they were tuned
+  W-158  issue  [todo]     cloudpickle is a declared dependency of the project   (filed during T-404) -- T-423 [todo]
+  W-159  issue  [todo]     A saved curve-wise surrogate predicts as fitted   (filed during T-404) -- T-424 [todo]
+  W-160  issue  [todo]     make pipeline takes its knobs from the tuning's own knobs   (filed during T-405) -- T-425 [todo], T-431 [todo]
+  W-161  bug    [todo]     make precision after a one-pair smoke run skips the full run as current   (filed during T-212) -- T-428 [todo]
+E-016         [todo]     The section scripts keep each rule once and each shipped setting under test
+  W-132  issue  [todo]     One home for the family and unit macro tags   (filed during T-346) -- T-347 [todo]
+  W-143  issue  [todo]     A Table refuses a row whose width differs from its columns   (filed during T-354) -- T-382 [todo]
+  W-144  issue  [todo]     The shipped section settings are pinned by tests   (filed during T-359) -- T-383 [todo]
+  W-145  issue  [todo]     One helper stores a section's tables and numbers   (filed during T-364) -- T-384 [todo]
+  W-147  issue  [todo]     Code comments and the citation notes name the sections the paper now has   (filed during T-373) -- T-388 [todo]
+  W-157  issue  [todo]     The figures mode of the black-hole, baseline and precision scripts is tested   (filed during T-398) -- T-422 [todo]
+  W-163  issue  [todo]     The stable edge of a coupling pair is read from paperlib/domain.py alone   (filed during T-415) -- T-433 [todo]
+E-017         [todo]     The article is ready for the supervisors' read
+  W-061  spike  [todo]     Which real references replace the placeholder citations -- T-118 [todo]
+  W-129  bug    [todo]     A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
+  W-164  issue  [todo]     Section 2.5 states the sampled neutron-star coupling ranges   (filed during T-419) -- T-435 [todo]
 W-162  issue  [todo]     (standalone) The session context fits the hook cap again   (filed during T-212) -- T-429 [todo]
-W-163  issue  [todo]     (standalone) The stable edge of a coupling pair is read from paperlib/domain.py alone   (filed during T-415) -- T-433 [todo]
-W-164  issue  [todo]     (standalone) Section 2.5 states the sampled neutron-star coupling ranges   (filed during T-419) -- T-435 [todo]
 ```
 
 ## Closed
@@ -1006,41 +1009,44 @@ closed 2026-11-11 -- outcome: Given the Makefile follows the \~/.claude template
 ## Diagram
 ```mermaid
 flowchart TD
-  W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
-  W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
-  W129["W-129 bug todo, standalone: A table caption above its table touches the top rule"]
-  W129 --> T341["T-341 todo: Give a table caption its skip above the top rule -> 00_metadata/preamble.tex"]
-  W132["W-132 issue todo, standalone: One home for the family and unit macro tags"]
-  W132 --> T347["T-347 todo: Move the family and unit macro tags into shared/candidates.py -> shared/candidates.py, screen_families.py, tune_survivors.py"]
-  W143["W-143 issue todo, standalone: A Table refuses a row whose width differs from its columns"]
-  W143 --> T382["T-382 todo: Add the Table smart constructor -> make_table in paperlib/tables.py"]
-  W144["W-144 issue todo, standalone: The shipped section settings are pinned by tests"]
-  W144 --> T383["T-383 todo: Pin the picks of each shipped section toml -> one test per section beside its script"]
-  W145["W-145 issue todo, standalone: One helper stores a section's tables and numbers"]
-  W145 --> T384["T-384 todo: Promote the store step -> paperlib/tools/render_assets.py store_section"]
-  W147["W-147 issue todo, standalone: Code comments and the citation notes name the sections the paper now has"]
-  W147 --> T388["T-388 todo: Rename the stale section numbers -> comments, help strings, docstrings and 00_metadata/citations.md"]
-  W157["W-157 issue todo, standalone: The figures mode of the black-hole, baseline and precision scripts is tested"]
-  W157 --> T422["T-422 todo: Pin the figures folder of three scripts test-first -> three test_*_figures_folder tests"]
-  W158["W-158 issue todo, standalone: cloudpickle is a declared dependency of the project"]
+  E015["E-015 todo: A clean checkout rebuilds the four surrogates as they were tuned"]
+  E015 --> W158["W-158 issue todo: cloudpickle is a declared dependency of the project"]
   W158 --> T423["T-423 todo: Declare cloudpickle as a dependency -> pyproject.toml"]
-  W159["W-159 issue todo, standalone: A saved curve-wise surrogate predicts as fitted"]
+  E015 --> W159["W-159 issue todo: A saved curve-wise surrogate predicts as fitted"]
   W159 --> T424["T-424 todo: Test the curve-wise round trip of a saved surrogate -> paperlib/test_final.py"]
-  W160["W-160 issue todo, standalone: make pipeline takes its knobs from the tuning's own knobs"]
+  E015 --> W160["W-160 issue todo: make pipeline takes its knobs from the tuning's own knobs"]
   W160 --> T425["T-425 todo: Read the pipeline knobs from TUNING_KNOBS -> 40_pipeline/41_algorithm/41_algorithm.mk"]
   W160 --> T431["T-431 todo: Name the saved domains in the pipeline header -> 40_pipeline/41_algorithm/41_algorithm.mk"]
-  W161["W-161 bug todo, standalone: make precision after a one-pair smoke run skips the full run as current"]
+  E015 --> W161["W-161 bug todo: make precision after a one-pair smoke run skips the full run as current"]
   W161 --> T428["T-428 todo: Make the precision rule depend on PRECISION_PAIRS -> 90_appendix/99_precision/99_precision.mk"]
+  E016["E-016 todo: The section scripts keep each rule once and each shipped setting under test"]
+  E016 --> W132["W-132 issue todo: One home for the family and unit macro tags"]
+  W132 --> T347["T-347 todo: Move the family and unit macro tags into paperlib/candidates.py -> paperlib/candidates.py, screen_families.py, tune_survivors.py, paper_knobs.py"]
+  E016 --> W143["W-143 issue todo: A Table refuses a row whose width differs from its columns"]
+  W143 --> T382["T-382 todo: Add the Table smart constructor -> make_table in paperlib/tables.py"]
+  E016 --> W144["W-144 issue todo: The shipped section settings are pinned by tests"]
+  W144 --> T383["T-383 todo: Pin the picks of each shipped section toml -> one test per section beside its script"]
+  E016 --> W145["W-145 issue todo: One helper stores a section's tables and numbers"]
+  W145 --> T384["T-384 todo: Promote the store step -> paperlib/tools/render_assets.py store_section"]
+  E016 --> W147["W-147 issue todo: Code comments and the citation notes name the sections the paper now has"]
+  W147 --> T388["T-388 todo: Rename the stale section numbers -> comments, help strings, docstrings and 00_metadata/citations.md"]
+  E016 --> W157["W-157 issue todo: The figures mode of the black-hole, baseline and precision scripts is tested"]
+  W157 --> T422["T-422 todo: Pin the figures folder of three scripts test-first -> three test_*_figures_folder tests"]
+  E016 --> W163["W-163 issue todo: The stable edge of a coupling pair is read from paperlib/domain.py alone"]
+  W163 --> T433["T-433 todo: Expose the stable edge of a coupling pair -> paperlib/domain.py stable_edge"]
+  E017["E-017 todo: The article is ready for the supervisors' read"]
+  E017 --> W061["W-061 spike todo: Which real references replace the placeholder citations"]
+  W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
+  E017 --> W129["W-129 bug todo: A table caption above its table touches the top rule"]
+  W129 --> T341["T-341 todo: Give a table caption its skip above the top rule -> paperlib/latex/preamble.tex"]
+  E017 --> W164["W-164 issue todo: Section 2.5 states the sampled neutron-star coupling ranges"]
+  W164 --> T435["T-435 todo: Write the neutron-star coupling ranges as macros -> 90_appendix/91_neutron_stars/eda_neutron_stars.py and 35_domain_boundaries.tex"]
   W162["W-162 issue todo, standalone: The session context fits the hook cap again"]
   W162 --> T429["T-429 todo: Distill the standing findings -> .board/KNOWLEDGE.md under its budgets"]
-  W163["W-163 issue todo, standalone: The stable edge of a coupling pair is read from paperlib/domain.py alone"]
-  W163 --> T433["T-433 todo: Expose the stable edge of a coupling pair -> paperlib/domain.py stable_edge"]
-  W164["W-164 issue todo, standalone: Section 2.5 states the sampled neutron-star coupling ranges"]
-  W164 --> T435["T-435 todo: Write the neutron-star coupling ranges as macros -> 90_appendix/91_neutron_stars/eda_neutron_stars.py and 35_domain_boundaries.tex"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429,W163,T433,W164,T435 todo
+  class E015,W158,T423,W159,T424,W160,T425,T431,W161,T428,E016,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W163,T433,E017,W061,T118,W129,T341,W164,T435,W162,T429 todo
 ```
