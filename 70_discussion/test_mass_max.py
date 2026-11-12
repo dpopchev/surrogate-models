@@ -58,12 +58,12 @@ def toy_numbers() -> dict[str, str]:
 
 @pytest.mark.model
 def test_run_numbers_hold_the_p95_relative_error():
-    assert toy_numbers()["discussionMassP95"] == "0.100"
+    assert toy_numbers()["discussionMassPNinetyFive"] == "0.100"
 
 
 @pytest.mark.model
 def test_run_numbers_hold_the_p95_in_significant_figures():
-    assert toy_numbers()["discussionMassP95Digits"] == "1.0"
+    assert toy_numbers()["discussionMassPNinetyFiveDigits"] == "1.0"
 
 
 @pytest.mark.model

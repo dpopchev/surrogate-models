@@ -157,8 +157,8 @@ def numbers(found: Evidence) -> dict[str, str]:
         "discussionMassCurves": str(errors.size),
         "discussionMassSkipped": str(found.maxes.skipped),
         "discussionMassMedian": number_tex(float(np.median(errors))),
-        "discussionMassP95": number_tex(p95),
-        "discussionMassP95Digits": f"{-np.log10(max(p95, FLOOR)):.1f}",
+        "discussionMassPNinetyFive": number_tex(p95),
+        "discussionMassPNinetyFiveDigits": f"{-np.log10(max(p95, FLOOR)):.1f}",
         "discussionMassCeiling": f"{found.ceiling:.1f}",
     }
 
