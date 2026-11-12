@@ -71,6 +71,31 @@ def test_saved_surrogate_predicts_as_fitted(tmp_path: Path) -> None:
     np.testing.assert_array_equal(loaded.predict(TOY.X), surrogate.predict(TOY.X))
 
 
+# Six curves of ten rows, y = 1 + p + x: curve 5 is the test curve, the validation split of
+# the other five leaves at least two fit curves for the curve-wise local RBF.
+P6 = np.repeat(np.arange(6.0), 10)
+X6 = np.tile(np.linspace(0.0, 1.0, 10), 6)
+TOY6 = Design(
+    X=np.column_stack([X6, P6]),
+    y=1.0 + P6 + X6,
+    groups=P6.astype(int),
+    test=P6 >= 5,
+    fold=np.where(P6 >= 5, -1, P6.astype(int)),
+    ablation=np.zeros(60, dtype=bool),
+)
+PAIR6 = Pair("toy", "mass", TOY6, SPACE)
+CURVE_WISE_WINNER = Winner("toy", "mass", Candidate("local RBF", "curve-wise"), {})
+
+
+def test_saved_curve_wise_surrogate_predicts_as_fitted(tmp_path: Path) -> None:
+    surrogate = fit_winner(
+        PAIR6, CURVE_WISE_WINNER, KNOBS, TRAINING, seed=0, valid_fraction=0.5, ceiling=4.0
+    )
+    save_surrogate(tmp_path / "toy.pkl", surrogate)
+    loaded = load_surrogate(tmp_path / "toy.pkl")
+    np.testing.assert_array_equal(loaded.predict(TOY6.X), surrogate.predict(TOY6.X))
+
+
 def test_a_fitted_surrogate_names_its_pair() -> None:
     surrogate = fitted()
     assert (surrogate.dataset, surrogate.target, surrogate.family, surrogate.unit) == (
