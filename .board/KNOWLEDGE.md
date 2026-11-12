@@ -33,12 +33,11 @@
 - 2026-11-10 W-139: standing: Table.small_spec holds a *{n}{x} repeat spec -> the small layout writes it as given, aligned reads the columns supersedes: W-139#1
 - 2026-11-11 E-013: standing: an attribution trailer was rewritten out on 2026-11-10 -> T-373 cites pre-rewrite shas: 388f1c8 is fa76073, de324d2 is ad290b4, cdb0e87 is 6b166c0 supersedes: E-013#2
 - 2026-11-11 E-013: standing: the scope gate reads a path only from a token with a slash or an extension -> a brief names each moved file by its full path, never a bare folder name supersedes: E-013#1
-- 2026-11-11 E-014: fact: at filing only NS M is within one figure of its ceiling (3.6 vs 4.1); NS D 1.1 vs 2.4, BH M 3.8 vs 7.1, BH D 3.0 vs 6.0 (W-068) -> Sections 5.1 and 5.2 report each gap; W-093 is the path to close it
+- 2026-11-12 E-014: fact: verified on main: NS M 3.6 vs 4.1 figures, NS D 1.1 vs 2.4, BH M 3.8 vs 7.1, BH D 3.0 vs 6.0; W-093 ran on the tuned winners, edges unwidened -> 5.1, 5.2 report each gap supersedes: E-014#1, W-068#4
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 - 2026-10-07 W-047: open: what observational sigma do realistic mock observations of M and D carry (supervisors)? the data ceiling alone allows a surrogate about 1e-4 M_sun on the NS mass and 1.6e-3 dex on the NS charge (W-064) -- the surrogate's error target follows from it
-- 2026-10-10 W-068: T-206: open: best trials on range edges: BH cw knots 24 of 24, RBF pw neighbours NS 399/377 of 400, BH 51/50 of 50 -> widen KNOTS and neighbours before W-093's precision regime, or run W-093 on these? supersedes: W-068#2
 - 2026-11-10 E-013: T-375: open: make section S=90_appendix prints about 80 'Label multiply defined' warnings (e.g. tab:ns-univariate) while the full article prints none -- a standalone-preview artifact, or new with the appendix move?
 - 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
 - 2026-11-10 W-139: open: a non-default split or two_tables pick stores two tables -- does the paper then show both? (unchecked at the E-012 close) supersedes: W-139#2
