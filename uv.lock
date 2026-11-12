@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.14"
 resolution-markers = [
     "sys_platform == 'win32'",
@@ -1088,6 +1088,7 @@ name = "surrogate-models"
 version = "0"
 source = { virtual = "." }
 dependencies = [
+    { name = "cloudpickle" },
     { name = "matplotlib" },
     { name = "optuna" },
     { name = "pandas" },
@@ -1116,6 +1117,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cloudpickle", specifier = ">=3.1.2" },
     { name = "matplotlib", specifier = ">=3.11.2" },
     { name = "optuna", specifier = ">=5.0.0" },
     { name = "pandas", specifier = ">=3.0.6" },
