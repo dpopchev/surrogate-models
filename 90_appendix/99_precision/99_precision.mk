@@ -73,8 +73,17 @@ PRECISION_PAIRS   ?=
 PRECISION_BATCH   ?= 01a1cc48-ef02-731a-a429-8911759c81a9
 PRECISION_DIR     := $(ASSETS)/99_precision
 PRECISION_ASSETS  := $(PRECISION_DIR)/99_precision_fig_precision.tex
+# The pairs stamp (W-161): holds the PRECISION_PAIRS of the run that built the assets. Its rule
+# has the always-stale FORCE prerequisite only while the stamp's content differs from the
+# value, so a subset run, then the full run, re-runs the fits and an unchanged value does not.
+PRECISION_STAMP   := $(PRECISION_DIR)/.precision-pairs
+PRECISION_STAMPED := $(strip $(file <$(PRECISION_STAMP)))
 
-$(PRECISION_ASSETS) $(PRECISION_DIR)/99_precision_precision_num.tex $(PRECISION_DIR)/figures/99_precision_fig_precision.png &: $(PRECISION) $(PRECISION_OPTIONS) paper.toml $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(STATE)/41_algorithm/summary.json
+$(PRECISION_STAMP): $(if $(subst $(PRECISION_STAMPED),,$(strip $(PRECISION_PAIRS)))$(subst $(strip $(PRECISION_PAIRS)),,$(PRECISION_STAMPED)),FORCE)
+	@mkdir -p $(PRECISION_DIR)
+	@printf '%s\n' '$(strip $(PRECISION_PAIRS))' > $@
+
+$(PRECISION_ASSETS) $(PRECISION_DIR)/99_precision_precision_num.tex $(PRECISION_DIR)/figures/99_precision_fig_precision.png &: $(PRECISION) $(PRECISION_OPTIONS) paper.toml $(PRECISION_STAMP) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(STATE)/41_algorithm/summary.json
 	$(call log_info,$(if $(PRECISION_BATCH),rebuilding the precision figure from batch $(PRECISION_BATCH),scoring the precision options ($(PRECISION_KNOBS)) -- one line per finished job))
 	@$(RUN) python $(PRECISION) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(PRECISION_KNOBS) $(foreach pair,$(PRECISION_PAIRS),--pair $(pair)) $(if $(PRECISION_BATCH),--batch $(PRECISION_BATCH))
 	$(call log_done,precision figure and macros written to $(PRECISION_DIR)/)
