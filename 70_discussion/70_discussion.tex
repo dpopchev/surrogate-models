@@ -1,8 +1,8 @@
 \section{Physical Implications}
 \label{sec:discussion}
 
-\todo{Draft from the outline.}
-\begin{itemize}
-  \item The predicted $M_{\max}$ of the neutron-star branch, read from the surrogate and compared with the data (Section~\ref{sec:domain-boundaries}).
-  \item The scalarization edge: where in $(\rhoc, \beta, \lambda)$ the charge target departs from the general-relativity value.
-\end{itemize}
+The maximum mass of a scalarized neutron star, $M_{\max}(\beta, \lambda)$, is read from the surrogate at the stable edge of each curve, without solving the field equations. Figure~\ref{fig:discussion-mass-max} sets it against the last row of each of the \discussionMassCurves{} held-out curves (\discussionMassSkipped{} are skipped). The median relative error is $\discussionMassMedian$, just above the data ceiling of the mass, \discussionMassCeiling{} significant figures; the heaviest, low-$\lambda$ curves agree far better. The upper tail, $\discussionMassPNinetyFive$ at the 95th percentile or \discussionMassPNinetyFiveDigits{} significant figures, stays short of the ceiling: a few high-$\lambda$ curves of low mass miss widely, and the edge, not the surrogate, is the likely limit.
+
+A reader gets $M_{\max}(\beta, \lambda)$ on the whole sampled coupling plane, to compare with observed masses. The scalarization edge, where the charge target leaves its general-relativity value, is read the same way and left to future work.
+
+\InputIfFileExists{70_discussion_fig_mass_max}{}{}
