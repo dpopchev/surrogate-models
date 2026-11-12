@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-014   | blocked: 0 | todo roots: 13 | done: 472 | pruned: 99
+open path: E-014 > W-156 > T-415   | blocked: 0 | todo roots: 13 | done: 472 | pruned: 99
 
 ## Tree
 
@@ -14,7 +14,7 @@ E-014         [doing]    One pipeline, two maps -- the data ceiling inside the p
   W-153  issue  [done]     The surrogate refuses an input outside the physical domain, shown in Section 4 -- T-406 [done], T-407 [done], T-408 [done], T-409 [done], T-432 [done]
   W-154  issue  [done]     Section 5.1 shows the black-hole surrogates against the data ceiling -- T-410 [done], T-411 [done], T-412 [done]
   W-155  issue  [done]     Section 5.2 shows the neutron-star surrogates against the data ceiling -- T-413 [done], T-414 [done]
-  W-156  issue  [todo]     Section 6 shows the maximum neutron-star mass the surrogate predicts -- T-415 [todo], T-416 [todo], T-417 [todo]
+  W-156  issue  [doing]    Section 6 shows the maximum neutron-star mass the surrogate predicts -- T-415 [doing]   <- ACTIVE LEAF, T-416 [todo], T-417 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-129  bug    [todo]     (standalone) A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
 W-132  issue  [todo]     (standalone) One home for the family and unit macro tags   (filed during T-346) -- T-347 [todo]
@@ -988,8 +988,8 @@ flowchart TD
   E014 --> W155["W-155 issue done: Section 5.2 shows the neutron-star surrogates against the data ceiling"]
   W155 --> T413["T-413 done: Draw Section 5.2's error figure -> 60_results/62_neutron_stars/results_neutron_stars.py and make 62_neutron_stars"]
   W155 --> T414["T-414 done: Write Section 5.2 -> 60_results/62_neutron_stars/62_neutron_stars.tex"]
-  E014 --> W156["W-156 issue todo: Section 6 shows the maximum neutron-star mass the surrogate predicts"]
-  W156 --> T415["T-415 todo: Predict the maximum mass of each held-out curve -> 70_discussion/mass_max.py"]
+  E014 --> W156["W-156 issue doing: Section 6 shows the maximum neutron-star mass the surrogate predicts"]
+  W156 --> T415["T-415 doing: Predict the maximum mass of each held-out curve -> 70_discussion/mass_max.py -- ACTIVE LEAF"]
   W156 --> T416["T-416 todo: Draw Section 6's maximum-mass figure -> make 70_discussion"]
   W156 --> T417["T-417 todo: Write Section 6 -> 70_discussion/70_discussion.tex"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
@@ -1024,8 +1024,8 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E014 doing
+  class E014,W156,T415 doing
   class W093,T210,T211,T212,T427,T430,W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,T426,W153,T406,T407,T408,T409,T432,W154,T410,T411,T412,W155,T413,T414 done
-  class W052,T418,T419,T420,T421,W156,T415,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429 todo
+  class W052,T418,T419,T420,T421,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429 todo
   class T209 pruned
 ```
