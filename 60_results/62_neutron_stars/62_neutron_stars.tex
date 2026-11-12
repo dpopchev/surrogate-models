@@ -1,9 +1,13 @@
 \subsection{Neutron Stars: the Three-Parameter Map}
 \label{sec:results-ns}
 
-\todo{Draft from the outline.}
-\begin{itemize}
-  \item The surrogate of the three-parameter neutron-star map $(\beta, \lambda, \rho_c)$ to the mass and the dilaton charge, its error on held-out curves against the data ceiling of the grid.
-  \item Where the error rises -- near the turning point $M_{\max}$ and the edges of the triangle -- and where it stays at the ceiling.
-  \item The tables of the candidates and of the precision are in the appendix (Sections~\ref{sec:families} and~\ref{sec:precision}).
-\end{itemize}
+On the held-out $(\beta, \lambda)$ curves, the saved surrogate of the three-parameter map $(\beta, \lambda, \rho_c)$ holds the mass $M$ to \resultsNsMassTest{} significant figures at the 95th percentile of the relative error, against \resultsNsMassCeiling{} figures for the data ceiling: it falls \resultsNsMassGap{} figures short.
+The dilaton charge $D$ reaches \resultsNsChargeTest{} figures against a ceiling of \resultsNsChargeCeiling{}, \resultsNsChargeGap{} figures short.
+The mass uses a \resultsNsMassFamily{} surrogate fitted \resultsNsMassUnit{}, and the charge a \resultsNsChargeFamily{} one fitted \resultsNsChargeUnit{}.
+
+Figure~\ref{fig:results-ns-errors} shows where the error sits.
+For $M$ it rises at low central density, by several orders of magnitude toward $\log_{10}\rho_c \approx 14.8$ for the largest $\lambda$, and it stays near the level of the ceiling for $\log_{10}\rho_c$ above about $15.0$.
+For $D$ it does not rise along $\rho_c$: each curve keeps its own level, and the spread between curves is wide.
+The candidates and their tuning are in the appendix (Sections~\ref{sec:families} and~\ref{sec:precision}).
+
+\InputIfFileExists{62_neutron_stars_fig_errors}{}{}
