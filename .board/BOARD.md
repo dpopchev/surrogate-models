@@ -1,15 +1,10 @@
 # Board -- surrogate-models
 record: local
-open path: E-015   | blocked: 0 | todo roots: 3 | done: 492 | pruned: 99
+open path: none   | blocked: 0 | todo roots: 3 | done: 493 | pruned: 99
 
 ## Tree
 
 ```text
-E-015         [doing]    A clean checkout rebuilds the four surrogates as they were tuned
-  W-158  issue  [done]     cloudpickle is a declared dependency of the project   (filed during T-404) -- T-423 [done]
-  W-159  issue  [done]     A saved curve-wise surrogate predicts as fitted   (filed during T-404) -- T-424 [done]
-  W-160  issue  [done]     make pipeline takes its knobs from the tuning's own knobs   (filed during T-405) -- T-425 [done], T-431 [done]
-  W-161  bug    [done]     make precision after a one-pair smoke run skips the full run as current   (filed during T-212) -- T-428 [done]
 E-016         [todo]     The section scripts keep each rule once and each shipped setting under test
   W-132  issue  [todo]     One home for the family and unit macro tags   (filed during T-346) -- T-347 [todo]
   W-143  issue  [todo]     A Table refuses a row whose width differs from its columns   (filed during T-354) -- T-382 [todo]
@@ -756,6 +751,27 @@ closed 2026-11-12 -- outcome: article.pdf is a short physics-first paper -- the 
 - T-416 [done] Draw Section 6's maximum-mass figure -> make 70_discussion
 - T-417 [done] Write Section 6 -> 70_discussion/70_discussion.tex
 
+### E-015 [done] A clean checkout rebuilds the four surrogates as they were tuned
+
+closed 2026-11-12 -- outcome: make pipeline and make precision rebuild the four tuned surrogates from a clean checkout: a full run after a smoke run fits every pair, the pipeline reads the tuning's own knobs, cloudpickle is declared, and a saved curve-wise surrogate predicts as fitted. -- ledger: ledgers/E-015.md
+
+#### W-158 issue [done] cloudpickle is a declared dependency of the project   (filed during T-404)
+
+- T-423 [done] Declare cloudpickle as a dependency -> pyproject.toml
+
+#### W-159 issue [done] A saved curve-wise surrogate predicts as fitted   (filed during T-404)
+
+- T-424 [done] Test the curve-wise round trip of a saved surrogate -> paperlib/test_final.py
+
+#### W-160 issue [done] make pipeline takes its knobs from the tuning's own knobs   (filed during T-405)
+
+- T-425 [done] Read the pipeline knobs from TUNING_KNOBS -> 40_pipeline/41_algorithm/41_algorithm.mk
+- T-431 [done] Name the saved domains in the pipeline header -> 40_pipeline/41_algorithm/41_algorithm.mk
+
+#### W-161 bug [done] make precision after a one-pair smoke run skips the full run as current   (filed during T-212)
+
+- T-428 [done] Make the precision rule depend on PRECISION_PAIRS -> 90_appendix/99_precision/99_precision.mk
+
 ### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
 
 closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/python.md, When make check runs, Then it passes with the repository root on pytest pythonpath and the python files matching the add-python COLOCATED templates. -- ledger: ledgers/W-005.md
@@ -1009,16 +1025,6 @@ closed 2026-11-11 -- outcome: Given the Makefile follows the \~/.claude template
 ## Diagram
 ```mermaid
 flowchart TD
-  E015["E-015 doing: A clean checkout rebuilds the four surrogates as they were tuned"]
-  E015 --> W158["W-158 issue done: cloudpickle is a declared dependency of the project"]
-  W158 --> T423["T-423 done: Declare cloudpickle as a dependency -> pyproject.toml"]
-  E015 --> W159["W-159 issue done: A saved curve-wise surrogate predicts as fitted"]
-  W159 --> T424["T-424 done: Test the curve-wise round trip of a saved surrogate -> paperlib/test_final.py"]
-  E015 --> W160["W-160 issue done: make pipeline takes its knobs from the tuning's own knobs"]
-  W160 --> T425["T-425 done: Read the pipeline knobs from TUNING_KNOBS -> 40_pipeline/41_algorithm/41_algorithm.mk"]
-  W160 --> T431["T-431 done: Name the saved domains in the pipeline header -> 40_pipeline/41_algorithm/41_algorithm.mk"]
-  E015 --> W161["W-161 bug done: make precision after a one-pair smoke run skips the full run as current"]
-  W161 --> T428["T-428 done: Make the precision rule depend on PRECISION_PAIRS -> 90_appendix/99_precision/99_precision.mk"]
   E016["E-016 todo: The section scripts keep each rule once and each shipped setting under test"]
   E016 --> W132["W-132 issue todo: One home for the family and unit macro tags"]
   W132 --> T347["T-347 todo: Move the family and unit macro tags into paperlib/candidates.py -> paperlib/candidates.py, screen_families.py, tune_survivors.py, paper_knobs.py"]
@@ -1048,7 +1054,5 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E015 doing
-  class W158,T423,W159,T424,W160,T425,T431,W161,T428 done
   class E016,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W163,T433,E017,W061,T118,W129,T341,W164,T435,W162,T429 todo
 ```
