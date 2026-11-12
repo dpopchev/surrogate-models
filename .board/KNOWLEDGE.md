@@ -45,13 +45,13 @@
 - 2026-11-11 W-093: open: winners all local RBF -> float64, L-BFGS, H2 untested; NS-charge ResNet run (about +6 h) a new item?
 
 ## Decisions
-- 2026-11-11 E-014: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 16 hours) (developer, 2026-11-11) supersedes: E-014#d8
 - 2026-11-11 E-014: goal (developer, 2026-11-11): a framework whose algorithm is a data pipeline for surrogates reaching the minimal relative error the dataset allows, the physical framework kept intact -- no extrapolation beyond stable solutions; replaces E-013's extrapolation goal
 - 2026-11-11 E-014: layout (developer, 2026-11-11): paperlib holds the paper-wide Python; each section is a module make rebuilds alone; local/ holds interim results; build/ the paper, the sections with their artifacts and alternative figures; no table artifact, only figures
 - 2026-11-11 E-014: physics before data science; the main body short, anything longer in an appendix (developer, 2026-11-11)
 - 2026-11-11 E-014: plan agreed 2026-11-11: W-150..W-156 new, W-052 and W-093 adopted; pruned W-069, W-070, W-075, W-088, W-100, W-101, W-121, W-046, W-146, E-007, E-008; E-006, E-009 close; W-061, W-129, W-132, W-143..W-145, W-147 stay todo
 - 2026-11-11 E-014: shown on neutron stars (three to two parameters) and black holes (two to two) with the same properties; a dataset's minimal relative error is a function of the incoming dataset, an input, not part of the automated process (developer, 2026-11-11)
 - 2026-11-11 E-014: things are local to a section or subsection; the global layer -- read as the root Makefile, mk/ and paper.toml -- is configuration or data to import; paperlib keeps code two or more sections import (developer agreed, 2026-11-11)
+- 2026-11-12 E-014: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 30 hours) (developer, 2026-11-12) supersedes: E-014#d9
 
 ## Deviations
 - none recorded
