@@ -1,8 +1,4 @@
 \subsection{The Relative Error and the Data Ceilings}
 \label{sec:error-metric}
 
-\todo{Draft from the outline.}
-\begin{itemize}
-  \item The relative error on held-out curves as the one score of every candidate.
-  \item The data ceilings: the error a smooth interpolation between neighbouring curves already reaches, which is the target a surrogate is asked to match to one significant figure (Section~\ref{sec:hypotheses}).
-\end{itemize}
+Every candidate is scored by one number, the relative error on held-out curves, reported as significant figures. The data ceiling is the error that the neighbouring curves already allow: a smooth interpolation between them reproduces a held-out curve to that error and no better (Section~\ref{sec:hypotheses}). It is the input that fixes the target of the pipeline, a surrogate within one significant figure of it.
