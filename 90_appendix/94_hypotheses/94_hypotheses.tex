@@ -12,7 +12,7 @@ They are fixed in this order, because the earlier ones carry across models and t
   \item \emph{training regime}: the loss, the activation, the optimizer and the numerical precision (Section~\ref{sec:precision});
   \item \emph{data budget}: how the error falls with the number of training curves.
 \end{enumerate}
-Inside the sampled domain a candidate is scored by the significant figures it keeps on held-out curves; outside it, by how fast its error grows with the distance from the training curves (Section~\ref{sec:extrapolation}); and every candidate by its fit and call time, which closes the comparison on a front of accuracy against cost (Section~\ref{sec:budget}).
+A candidate is scored by the significant figures it keeps on held-out curves.
 
 \paragraph{Three choices the analysis suggests are tested on their own.}
 \begin{itemize}

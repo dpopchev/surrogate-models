@@ -1,11 +1,20 @@
 \subsection{The Pipeline as One Algorithm}
 \label{sec:algorithm}
 
-\todo{Draft from the outline.}
-\begin{itemize}
-  \item The audit of the two datasets (Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}).
-  \item The representation: input scale and the target transform (Section~\ref{sec:representation}).
-  \item The curve-grouped split, so no curve is in training and test at once (Section~\ref{sec:preprocessing}).
-  \item The family screen (Section~\ref{sec:families}) and the tuning of each survivor under one budget (Section~\ref{sec:optimization}).
-  \item The ensemble of the best candidate (Section~\ref{sec:algorithms}) and the validity filter (Section~\ref{sec:validity}).
-\end{itemize}
+The pipeline is one algorithm that builds a surrogate from a dataset of solution curves. Its inputs are the dataset, its data ceiling per target and its physical domain. The ceiling is a property of the incoming dataset, measured from it in the audit (Sections~\ref{sec:eda-ns} and~\ref{sec:eda-bh}), and not a step of the automated process; the domain is the physical edge of Section~\ref{sec:domain-boundaries}. The same algorithm runs on the two-parameter black-hole map and on the three-parameter neutron-star map.
+
+\begin{algorithm}[!htb]
+\caption{Building a surrogate of a compact-object map.}
+\label{alg:surrogate}
+\begin{algorithmic}[1]
+\Require a dataset of solution curves, its data ceiling per target, its physical domain
+\Ensure per target, a surrogate with its relative error beside the ceiling, which refuses an input outside the domain
+\State prepare the dataset and cut each curve at its stable edge (Section~\ref{sec:preprocessing})
+\State split by whole curves, so no curve is in training and test at once
+\State choose the representation: input scale and target transform (Section~\ref{sec:representation})
+\State screen the model families on the same folds (Section~\ref{sec:families})
+\State tune the survivors under one search budget (Section~\ref{sec:optimization})
+\State refit the winner with its numerical precision (Section~\ref{sec:precision})
+\State guard it with the physical domain (Section~\ref{sec:validity})
+\end{algorithmic}
+\end{algorithm}

@@ -1,16 +1,11 @@
-\section{Conclusion and Repository Release}
+\section{Conclusion}
 \label{sec:conclusion}
 
-\todo{Draft from the outline.}
-\begin{itemize}
-  \item \textbf{Pipeline on each map:} what the pipeline achieved on the two-parameter black-hole map and on the three-parameter neutron-star map against its data ceiling (Section~\ref{sec:results}).
-  \item \textbf{Extrapolation and filter:} how far the surrogates extrapolate beyond the sampled curves, and what the filter flags and feeds back on the nearest valid input (Section~\ref{sec:validity}).
-  \item \textbf{Physical implications:} what the surrogates show about scalarization in the two sectors (Section~\ref{sec:discussion}).
-  \item \textbf{Design hypotheses:} how the data-guided hypotheses $H_1$, $H_2$ and $H_3$ held is the content of the appendix (Section~\ref{sec:hypotheses}).
-  \item \textbf{Release:} the open-source Python repository (Section~\ref{sec:availability}).
-  \item \textbf{Future work, MCMC parameter estimation:} posterior distributions of the ESTGB parameters $(\beta, \lambda)$ inferred from synthetic compact-object observations~\citep{Reed2024}, the surrogate-accelerated posteriors set against the reference posteriors of the solver.
-  \item Future extension to rapidly rotating compact objects~\citep{Komatsu1989,Cook1994,Stergioulas1995}.
-\end{itemize}
+One pipeline, run unchanged, builds surrogates of a two-parameter black-hole map and a three-parameter neutron-star map. At the 95th percentile of the relative error, the black-hole mass reaches \resultsBhMassTest{} significant figures against a data ceiling of \resultsBhMassCeiling{}, and its charge \resultsBhChargeTest{} against \resultsBhChargeCeiling{}; the neutron-star mass reaches \resultsNsMassTest{} against \resultsNsMassCeiling{}, and its charge \resultsNsChargeTest{} against \resultsNsChargeCeiling{} (Section~\ref{sec:results}). No pair reaches its ceiling. The surrogates stay inside the physical domain, where stable solutions exist, and refuse an input outside it (Section~\ref{sec:validity}).
+
+The surrogate reads the maximum mass of a neutron star at the stable edge of each curve; its 95th percentile error is \discussionMassPNinetyFiveDigits{} figures, short of the ceiling of \discussionMassCeiling{} (Section~\ref{sec:discussion}). How the data-guided hypotheses $H_1$, $H_2$ and $H_3$ held is in the appendix (Section~\ref{sec:hypotheses}).
+
+Two extensions are left for future work: Markov chain Monte Carlo estimation of the parameters $(\beta, \lambda)$ from synthetic observations~\citep{Reed2024}, and rapidly rotating compact objects~\citep{Komatsu1989,Cook1994,Stergioulas1995}. The code is open source (Section~\ref{sec:availability}).
 
 \section*{Code and Data Availability}
 \label{sec:availability}
