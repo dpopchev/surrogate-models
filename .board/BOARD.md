@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-014 > W-052 > T-418   | blocked: 0 | todo roots: 14 | done: 476 | pruned: 99
+open path: E-014 > W-052 > T-418   | blocked: 0 | todo roots: 15 | done: 476 | pruned: 99
 
 ## Tree
 
@@ -29,6 +29,7 @@ W-160  issue  [todo]     (standalone) make pipeline takes its knobs from the tun
 W-161  bug    [todo]     (standalone) make precision after a one-pair smoke run skips the full run as current   (filed during T-212) -- T-428 [todo]
 W-162  issue  [todo]     (standalone) The session context fits the hook cap again   (filed during T-212) -- T-429 [todo]
 W-163  issue  [todo]     (standalone) The stable edge of a coupling pair is read from paperlib/domain.py alone   (filed during T-415) -- T-433 [todo]
+W-164  issue  [todo]     (standalone) Section 2.5 states the sampled neutron-star coupling ranges   (filed during T-419) -- T-435 [todo]
 ```
 
 ## Closed
@@ -1023,6 +1024,8 @@ flowchart TD
   W162 --> T429["T-429 todo: Distill the standing findings -> .board/KNOWLEDGE.md under its budgets"]
   W163["W-163 issue todo, standalone: The stable edge of a coupling pair is read from paperlib/domain.py alone"]
   W163 --> T433["T-433 todo: Expose the stable edge of a coupling pair -> paperlib/domain.py stable_edge"]
+  W164["W-164 issue todo, standalone: Section 2.5 states the sampled neutron-star coupling ranges"]
+  W164 --> T435["T-435 todo: Write the neutron-star coupling ranges as macros -> 90_appendix/91_neutron_stars/eda_neutron_stars.py and 35_domain_boundaries.tex"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -1030,6 +1033,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E014,W052,T418 doing
   class W093,T210,T211,T212,T427,T430,W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,T426,W153,T406,T407,T408,T409,T432,W154,T410,T411,T412,W155,T413,T414,W156,T415,T416,T417 done
-  class T419,T420,T421,T434,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429,W163,T433 todo
+  class T419,T420,T421,T434,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429,W163,T433,W164,T435 todo
   class T209 pruned
 ```
