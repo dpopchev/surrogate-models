@@ -1,18 +1,16 @@
 \section{Introduction}
 \label{sec:introduction}
 
-\todo{Draft from the outline.}
-\begin{itemize}
-  \item \textbf{Astrophysical context:} probing strong-field modifications of general relativity with compact objects -- black holes and neutron stars -- in scalar-tensor-Gauss--Bonnet gravity.~\citep{TODO_StrongFieldTests}
-  \item \textbf{Spontaneous scalarization:} matter-induced against curvature-induced scalarization; in extreme curvature the Gauss--Bonnet invariant $\RGB$ acts as an effective mass term for the scalar field~\citep{Doneva2017_BH,Doneva2017_NS,DamourEspositoFarese1993}.
-  \item \textbf{Computational bottleneck:} high-fidelity ODE integration -- shooting on the non-linear field equations with boundary conditions at $r \to \infty$ -- takes seconds to minutes per evaluation~\citep{TODO_SolverCost}, which makes large-scale Bayesian parameter estimation impractically slow~\citep{Reed2024}.
-  \item \textbf{Literature gap:} previous surrogates~\citep{Liodis2024,Kaushikk2026,Liu2026} give no procedure for building a surrogate and no domain of validity: they do not say where a prediction can be trusted.
-  \item \textbf{Core contributions:}
-  \begin{enumerate}
-    \item A processing pipeline as the algorithm for building surrogates of compact-object maps, minimizing the relative error against the data ceiling (Section~\ref{sec:pipeline}).
-    \item Effective extrapolation beyond the sampled curves, with an out-of-domain filter that flags an input and feeds back the nearest valid one (Section~\ref{sec:validity}).
-    \item Its validation on a two-parameter (black holes) and a three-parameter (neutron stars) map of ESTGB gravity (Section~\ref{sec:results}).
-  \end{enumerate}
-  \item \textbf{Appendix:} the scheme of elimination and the three testable hypotheses ($H_1$, $H_2$, $H_3$) behind the design are the data science of the appendix (Section~\ref{sec:hypotheses}).
-  \item \textbf{Layout:} Section~\ref{sec:physical-framework} sets the physical framework and the data generation; Section~\ref{sec:pipeline} the surrogate pipeline; Section~\ref{sec:validity} the validity check of an input and its feedback; Section~\ref{sec:results} the results; Section~\ref{sec:discussion} the physical implications; Section~\ref{sec:conclusion} concludes and releases the repository.
-\end{itemize}
+Compact objects, black holes and neutron stars, probe strong-field modifications of general relativity, among them scalar-tensor-Gauss--Bonnet gravity~\citep{TODO_StrongFieldTests}. In such theories a scalar field couples to the Gauss--Bonnet invariant $\RGB$, which in extreme curvature acts as an effective mass term for it, and the object can scalarize spontaneously: through matter for neutron stars, through curvature for black holes~\citep{Doneva2017_BH,Doneva2017_NS,DamourEspositoFarese1993}.
+
+The field equations are non-linear, and each solution is a shooting problem with boundary conditions at $r \to \infty$ that takes seconds to minutes~\citep{TODO_SolverCost}. Bayesian parameter estimation needs many such evaluations, which makes it impractically slow~\citep{Reed2024}. Previous surrogates~\citep{Liodis2024,Kaushikk2026,Liu2026} give no procedure for building one and no domain of validity: they do not say where a prediction can be trusted.
+
+This work gives both. Its contributions are:
+\begin{enumerate}
+  \item a processing pipeline as the algorithm for building surrogates of compact-object maps, which aims at the relative error the dataset allows, its data ceiling (Section~\ref{sec:pipeline});
+  \item a domain of validity set by the physics, the existence edge of black holes and the stability edge of neutron stars: the surrogate never extrapolates beyond stable solutions, and refuses an input outside the domain and returns the nearest valid one (Section~\ref{sec:validity});
+  \item the demonstration of the same pipeline on a two-parameter black-hole map and on a three-parameter neutron-star map, with the error of each target beside its ceiling (Section~\ref{sec:results}).
+\end{enumerate}
+The data science behind the design, the exploratory analysis and the three testable hypotheses $H_1$, $H_2$ and $H_3$, is in the appendix (Section~\ref{sec:hypotheses}).
+
+Section~\ref{sec:physical-framework} sets the physical framework and its domain edges; Section~\ref{sec:pipeline} gives the pipeline; Section~\ref{sec:validity} the domain of validity; Section~\ref{sec:results} the results on both maps; Section~\ref{sec:discussion} the physical implications; Section~\ref{sec:conclusion} concludes and releases the repository.
