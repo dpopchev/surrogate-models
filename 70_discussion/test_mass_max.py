@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from mass_max import predicted_mass_max
+from mass_max import MapInput, numbers, predicted_mass_max, run
 
 # Three training curves (fold labels) and one test curve at the middle of the edge between the
 # first two. Each curve ends at its stable edge: 100, 1000 and 100 for the training curves.
@@ -44,3 +44,33 @@ def rho_back(x: np.ndarray) -> np.ndarray:
 def test_predicted_mass_max_is_the_mass_at_the_interpolated_edge():
     result = predicted_mass_max(toy_table(), toy_split(), rho_back)
     assert result.curves[0].predicted == pytest.approx(550.0, rel=1e-4)
+
+
+def tenth_over(x: np.ndarray) -> np.ndarray:
+    """The toy mass predictor that overshoots the test curve's maximum mass (2.5) by a tenth."""
+    return np.full(len(x), 2.75)
+
+
+def toy_numbers() -> dict[str, str]:
+    """The macros of Section 6 on the toy curves."""
+    return numbers(run(MapInput(toy_table(), toy_split(), tenth_over, 2.5)))
+
+
+@pytest.mark.model
+def test_run_numbers_hold_the_p95_relative_error():
+    assert toy_numbers()["discussionMassP95"] == "0.100"
+
+
+@pytest.mark.model
+def test_run_numbers_hold_the_p95_in_significant_figures():
+    assert toy_numbers()["discussionMassP95Digits"] == "1.0"
+
+
+@pytest.mark.model
+def test_run_numbers_hold_the_ceiling_beside_it():
+    assert toy_numbers()["discussionMassCeiling"] == "2.5"
+
+
+@pytest.mark.model
+def test_run_numbers_hold_the_curves_scored():
+    assert toy_numbers()["discussionMassCurves"] == "1"

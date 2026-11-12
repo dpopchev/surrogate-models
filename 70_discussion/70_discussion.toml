@@ -1,0 +1,5 @@
+# Section 6 -- which variant of the maximum-mass figure mass_max.py draws; `make figures` draws
+# both side by side under build/sections/70_discussion/figures/ to pick from.
+[variants]
+mass_max = "parity"  # parity: predicted against data maximum mass, colored by lambda
+                     # map: the relative error as color over the (beta, lambda) plane
