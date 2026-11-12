@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-014 > W-156 > T-415   | blocked: 0 | todo roots: 13 | done: 472 | pruned: 99
+open path: E-014 > W-156 > T-415   | blocked: 0 | todo roots: 14 | done: 472 | pruned: 99
 
 ## Tree
 
@@ -28,6 +28,7 @@ W-159  issue  [todo]     (standalone) A saved curve-wise surrogate predicts as f
 W-160  issue  [todo]     (standalone) make pipeline takes its knobs from the tuning's own knobs   (filed during T-405) -- T-425 [todo], T-431 [todo]
 W-161  bug    [todo]     (standalone) make precision after a one-pair smoke run skips the full run as current   (filed during T-212) -- T-428 [todo]
 W-162  issue  [todo]     (standalone) The session context fits the hook cap again   (filed during T-212) -- T-429 [todo]
+W-163  issue  [todo]     (standalone) The stable edge of a coupling pair is read from paperlib/domain.py alone   (filed during T-415) -- T-433 [todo]
 ```
 
 ## Closed
@@ -1019,6 +1020,8 @@ flowchart TD
   W161 --> T428["T-428 todo: Make the precision rule depend on PRECISION_PAIRS -> 90_appendix/99_precision/99_precision.mk"]
   W162["W-162 issue todo, standalone: The session context fits the hook cap again"]
   W162 --> T429["T-429 todo: Distill the standing findings -> .board/KNOWLEDGE.md under its budgets"]
+  W163["W-163 issue todo, standalone: The stable edge of a coupling pair is read from paperlib/domain.py alone"]
+  W163 --> T433["T-433 todo: Expose the stable edge of a coupling pair -> paperlib/domain.py stable_edge"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -1026,6 +1029,6 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E014,W156,T415 doing
   class W093,T210,T211,T212,T427,T430,W150,T396,T397,T398,T399,W151,T400,T401,W152,T402,T403,T404,T405,T426,W153,T406,T407,T408,T409,T432,W154,T410,T411,T412,W155,T413,T414 done
-  class W052,T418,T419,T420,T421,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429 todo
+  class W052,T418,T419,T420,T421,T416,T417,W061,T118,W129,T341,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W158,T423,W159,T424,W160,T425,T431,W161,T428,W162,T429,W163,T433 todo
   class T209 pruned
 ```
