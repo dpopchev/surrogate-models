@@ -1,5 +1,6 @@
 """Facts about the physical domain of each map, on tiny synthetic curves."""
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -10,6 +11,7 @@ from paperlib.domain import (
     check,
     make_black_hole_domain,
     make_neutron_star_domain,
+    stable_edge,
 )
 
 # Two beta curves; the edge r_h,min is 1.0 at beta 0 and 2.0 at beta 1, the curve ends at 5.0.
@@ -83,3 +85,19 @@ def test_neutron_star_query_above_the_stable_edge_is_outside() -> None:
 def test_neutron_star_query_inside_the_curve_is_inside() -> None:
     domain = make_neutron_star_domain(NEUTRON_STARS)
     assert check(domain, {"beta": 0.5, "lambda": 0.5, "rho_c": 3.0}) == Inside()
+
+
+@pytest.mark.model
+def test_stable_edge_is_the_mean_of_two_neighbouring_edges() -> None:
+    # Three non-collinear curves; the last rho_c of each is 4, 6 and 8, the first 1, 2 and 3.
+    table = pd.DataFrame(
+        {
+            "beta": [0.0] * 2 + [1.0] * 2 + [0.0] * 2,
+            "lambda": [0.0] * 2 + [0.0] * 2 + [1.0] * 2,
+            "rho_c": [1.0, 4.0, 2.0, 6.0, 3.0, 8.0],
+        }
+    )
+    domain = make_neutron_star_domain(table)
+    low, high = stable_edge(domain, 0.5, 0.5)  # midway between (1, 0) and (0, 1)
+    off_low, off_high = stable_edge(domain, 1.0, 1.0)  # in the box, off the hull
+    assert (low, high, *np.isnan([off_low, off_high])) == pytest.approx((2.5, 7.0, True, True))
