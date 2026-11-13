@@ -385,7 +385,7 @@ class TestMain:
 
 
 @pytest.mark.functional
-def test_ns_eda_draws_every_variant_as_its_own_file(tmp_path: Path) -> None:
+def test_ns_eda_figures_folder_draws_every_variant_as_its_own_file(tmp_path: Path) -> None:
     table, assets, state = tmp_path / "ns.parquet", tmp_path / "assets", tmp_path / "state"
     prepared = DENSE.copy()
     prepared.attrs.update({"runs": 5, "empty_runs": 1, "rows": 20})

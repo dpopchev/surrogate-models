@@ -1,11 +1,23 @@
 """Facts about the predicted maximum mass of a held-out curve, on tiny synthetic curves."""
 
+import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
-from mass_max import SECTION_TOML, DiscussionSection, MapInput, numbers, predicted_mass_max, run
+from mass_max import (
+    SECTION_TOML,
+    DiscussionSection,
+    MapInput,
+    main,
+    numbers,
+    predicted_mass_max,
+    run,
+)
 
-from paperlib.config import load_section
+from paperlib.config import PaperConfig, load_section
+from paperlib.final import FinalSurrogate, save_surrogate
 
 # Three training curves (fold labels) and one test curve at the middle of the edge between the
 # first two. Each curve ends at its stable edge: 100, 1000 and 100 for the training curves.
@@ -76,6 +88,34 @@ def test_run_numbers_hold_the_ceiling_beside_it():
 @pytest.mark.model
 def test_run_numbers_hold_the_curves_scored():
     assert toy_numbers()["discussionMassCurves"] == "1"
+
+
+@pytest.mark.functional
+def test_mass_max_figures_folder_holds_each_variant_png(tmp_path: Path) -> None:
+    state = tmp_path / "state"
+    toy_table().to_parquet(tmp_path / "ns.parquet")
+    toy_split().to_parquet(tmp_path / "split.parquet")
+    surrogate = FinalSurrogate(
+        dataset="neutron_stars",
+        target="mass",
+        family="local RBF",
+        unit="curve-wise",
+        params={},
+        test=1.0,
+        ceiling=2.5,
+        predictor=tenth_over,
+    )
+    save_surrogate(state / "41_algorithm" / "neutron_stars-mass.pkl", surrogate)
+    (state / "91_neutron_stars").mkdir(parents=True)
+    (state / "91_neutron_stars" / "reachable_figures.json").write_text(json.dumps({"mass": 2.5}))
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
+    paths = [str(tmp_path / "ns.parquet"), str(tmp_path / "split.parquet"), str(state)]
+    main([*paths, str(tmp_path / "assets")], config=config, section=DiscussionSection())
+    out = tmp_path / "figures"
+    main(["--figures", str(out), "--state", str(state)], config=config)
+    stem = "70_discussion_fig_mass_max_"
+    expected = {f"{stem}parity.png", f"{stem}map.png"}
+    assert {p.name for p in (out / "70_discussion" / "figures").iterdir()} == expected
 
 
 @pytest.mark.model

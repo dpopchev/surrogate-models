@@ -182,6 +182,18 @@ def test_main_stores_the_numbers(written: tuple[Path, Path]) -> None:
     assert stored["resultsBhMassGap"] == "1.0"
 
 
+@pytest.mark.functional
+def test_bh_results_figures_folder_holds_each_variant_png(
+    written: tuple[Path, Path], tmp_path: Path
+) -> None:
+    out = tmp_path / "figures"
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
+    main(["--figures", str(out), "--state", str(written[0])], config=config)
+    stem = "61_black_holes_fig_errors_"
+    expected = {f"{stem}curves.png", f"{stem}plane.png"}
+    assert {p.name for p in (out / "61_black_holes" / "figures").iterdir()} == expected
+
+
 @pytest.mark.model
 def test_shipped_section_toml_selects_the_papers_picks() -> None:
     expected = BlackHoleSection.model_validate({"variants": {"errors": "curves"}})

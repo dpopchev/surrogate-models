@@ -364,7 +364,7 @@ def test_main_writes_only_the_selected_figure_and_its_wrapper(
 
 
 @pytest.mark.functional
-def test_family_figures_are_drawn_one_file_per_variant(
+def test_family_figures_folder_is_drawn_one_file_per_variant(
     ran: Path, tmp_path: Path, toy_inputs: ToyInputs
 ) -> None:
     """The figures mode draws the recorded batch's variants as files of their own, no sheet."""

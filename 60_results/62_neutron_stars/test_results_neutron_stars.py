@@ -187,6 +187,18 @@ def test_main_stores_the_numbers(written: tuple[Path, Path]) -> None:
     assert stored["resultsNsMassGap"] == "1.0"
 
 
+@pytest.mark.functional
+def test_ns_results_figures_folder_holds_each_variant_png(
+    written: tuple[Path, Path], tmp_path: Path
+) -> None:
+    out = tmp_path / "figures"
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
+    main(["--figures", str(out), "--state", str(written[0])], config=config)
+    stem = "62_neutron_stars_fig_errors_"
+    expected = {f"{stem}by_lambda.png", f"{stem}by_beta.png"}
+    assert {p.name for p in (out / "62_neutron_stars" / "figures").iterdir()} == expected
+
+
 @pytest.mark.model
 def test_shipped_section_toml_selects_the_papers_picks() -> None:
     expected = NeutronStarSection.model_validate({"variants": {"errors": "by_lambda"}})

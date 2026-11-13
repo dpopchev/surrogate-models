@@ -483,6 +483,23 @@ def test_table_rebuild_writes_the_parity_wrapper(ran: Path, tmp_path: Path) -> N
 
 
 @pytest.mark.functional
+def test_baseline_figures_folder_holds_each_parity_variant_png(
+    ran: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The all-pairs panel titles take TARGET_TEX raw, so mathtext (LaTeX off) cannot parse \Dch.
+    monkeypatch.setattr("fit_baseline.TARGET_TEX", {"mass": "$M$", "charge": "$D$"})
+    out = tmp_path / "figures"
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
+    main(
+        [str(ran / name) for name in ("ns.parquet", "bh.parquet", "split.parquet")]
+        + [str(tmp_path / "assets"), str(ran / "state"), "--figures", str(out)],
+        config,
+    )
+    expected = {f"{SECTION}_fig_parity_{v}.png" for v in ("ns_mass", "residual_strip", "all_pairs")}
+    assert {p.name for p in (out / SECTION / "figures").iterdir()} == expected
+
+
+@pytest.mark.functional
 def test_the_run_names_make_dashboard_as_it_starts(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:

@@ -373,6 +373,22 @@ def test_main_ranges_wrapper_includes_the_picked_variant_file(ran: Path) -> None
     assert f"{{{SECTION}_fig_ranges_row}}" in wrapper
 
 
+@pytest.mark.functional
+def test_tuning_figures_folder_holds_each_variant_png(ran: Path, tmp_path: Path) -> None:
+    out = tmp_path / "figures"
+    paths = [*toy_paths(ran, "figs"), *TOY_KNOBS]
+    main([*paths, "--batch", saved_batch(ran / "state").stem, "--figures", str(out)], TOY_CONFIG)
+    expected = {
+        f"{SECTION}_fig_{name}_{variant}.png"
+        for name, variants in {
+            "history": ("dots_and_best", "best_only", "regret"),
+            "ranges": ("row", "grid", "no_network"),
+        }.items()
+        for variant in variants
+    }
+    assert {p.name for p in (out / SECTION / "figures").iterdir()} == expected
+
+
 @pytest.mark.model
 def test_one_job_per_pair_and_short_listed_candidate() -> None:
     bh_mass_xgb = Job("black_holes", "mass", Candidate("XGBoost", "pointwise"))
