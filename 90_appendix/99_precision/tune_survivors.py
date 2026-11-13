@@ -51,7 +51,15 @@ from paperlib.batches import (
     write_checked,
     write_entry,
 )
-from paperlib.candidates import FAMILIES, UNITS, Candidate, Knobs, tuned_fitter
+from paperlib.candidates import (
+    FAMILIES,
+    FAMILY_TAG,
+    UNIT_TAG,
+    UNITS,
+    Candidate,
+    Knobs,
+    tuned_fitter,
+)
 from paperlib.config import (
     NOTATION_TEX,
     PaperConfig,
@@ -594,16 +602,6 @@ def _math_cell(text: str) -> Cell:
     return Text(f"${text}$")
 
 
-# Macro tags of the families and units, as in screen_families.py: \tunNsMassRbfPointwiseFolds.
-FAMILY_TAG = {
-    "k-NN": "Knn",
-    "local RBF": "Rbf",
-    "GPR": "Gpr",
-    "XGBoost": "Xgboost",
-    "MLP": "Mlp",
-    "ResNet": "Resnet",
-}
-UNIT_TAG = {"pointwise": "Pointwise", "curve-wise": "Curvewise"}
 # The best trial's params the text cites, where the candidate's space holds them.
 CITED_PARAMS = ("knots", "neighbours", "width", "depth", "lr")
 

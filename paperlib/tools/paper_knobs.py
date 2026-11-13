@@ -20,6 +20,7 @@ from pathlib import Path
 
 from optuna.distributions import FloatDistribution, IntDistribution
 
+from paperlib.candidates import SPACE_TAG
 from paperlib.config import NetworkSettings, load_config
 from paperlib.eda import camel, number_tex, render_macros
 from paperlib.search import KNOTS, SPACES, Space
@@ -114,15 +115,6 @@ def space_numbers(spaces: Mapping[str, Space], knots: IntDistribution) -> dict[s
 
 # The make option of each screen and the macro tag of its knobs.
 SCREENS = {"representation": "Repr", "families": "Families", "tuning": "Tuning"}
-# The macro tag of each family's search space; the two networks share one space, Net.
-SPACE_TAG = {
-    "k-NN": "Knn",
-    "local RBF": "Rbf",
-    "GPR": "Gpr",
-    "XGBoost": "Xgboost",
-    "MLP": "Net",
-    "ResNet": "Net",
-}
 
 
 def _arguments(argv: list[str]) -> argparse.Namespace:

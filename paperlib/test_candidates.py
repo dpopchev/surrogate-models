@@ -13,6 +13,8 @@ from optuna.distributions import (
 
 from paperlib.candidates import (
     FAMILIES,
+    FAMILY_TAG,
+    UNIT_TAG,
     UNITS,
     Candidate,
     Knobs,
@@ -44,6 +46,10 @@ TRAINING = Training(
     seed=0,
 )
 KNOBS = Knobs(k=2, neighbours=4, knots=4, per_curve=2)
+
+
+def test_every_family_and_unit_has_a_macro_tag() -> None:
+    assert (set(FAMILY_TAG), set(UNIT_TAG)) == (set(FAMILIES), set(UNITS))
 
 
 def test_a_curve_is_keyed_by_its_curve_columns_and_runs_along_the_other_input() -> None:
