@@ -81,7 +81,8 @@ from paperlib.plots import (
     mark_alpha,
     mark_size,
 )
-from paperlib.tables import Plain, Table, Text, aligns, fixed, make_table, number, render, to_json
+from paperlib.tables import Plain, Table, Text, aligns, fixed, make_table, number, render
+from paperlib.tools.render_assets import store_section
 
 logger = logging.getLogger(__name__)
 
@@ -1012,18 +1013,6 @@ def _draw_figures(out: Path, data: FigureData, style: PlotStyle) -> None:
     logger.info("done: %d NS figure variants -> %s", len(drawers), out)
 
 
-def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
-    """Store the tables as JSON by name and the numbers under the section's state folder, for
-    paperlib/tools/render_assets.py to write the assets from; an earlier run's tables go."""
-    folder = state / SECTION / "tables"
-    folder.mkdir(parents=True, exist_ok=True)
-    for stale in folder.glob("*.json"):
-        stale.unlink()
-    for name, table in tables.items():
-        (folder / f"{name}.json").write_text(to_json(table))
-    (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
-
-
 def _store_reachable_figures(state: Path, bounds: Ceilings) -> None:
     """Store the data ceiling of the mass and of the charge target as significant figures, the
     input the pipeline reads as plain JSON."""
@@ -1095,7 +1084,7 @@ def main(
         | uncertainty_macros("nsEda", bounds, CEILING_TAGS, typical, "D")
     )
     assert args.state is not None, "--state is required"
-    _store(args.state, table_objects(found, section.tables, bounds), macros)
+    store_section(args.state, SECTION, table_objects(found, section.tables, bounds), macros)
     _store_reachable_figures(args.state, bounds)
     _figure_data_path(args.state).write_bytes(pickle.dumps(FigureData(table, args.window, bounds)))
     _write_ceilings(out, bounds, config.plot, section.variants.ceilings)

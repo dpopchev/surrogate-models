@@ -30,6 +30,7 @@ from paperlib.design import NEUTRON_STARS, TARGETS, Pair, Target, pairs, target_
 from paperlib.eda import text_width_size
 from paperlib.final import FinalSurrogate, HeldOut, held_out_errors, load_surrogate
 from paperlib.plots import SYMBOLS, PlotStyle, apply_style, colormap, line_width, mark_size
+from paperlib.tools.render_assets import store_section
 
 logger = logging.getLogger(__name__)
 
@@ -289,12 +290,6 @@ def _inputs(args: argparse.Namespace) -> MapInput:
     )
 
 
-def _store(state: Path, macros: Mapping[str, str]) -> None:
-    """Store the numbers under the section's state folder, for paperlib/tools/render_assets.py."""
-    (state / SECTION).mkdir(parents=True, exist_ok=True)
-    (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
-
-
 def main(
     argv: Sequence[str],
     config: PaperConfig | None = None,
@@ -322,7 +317,7 @@ def main(
     out = args.assets / SECTION
     out.mkdir(parents=True, exist_ok=True)
     (out / f"{asset()}.tex").write_text(figure_tex(section.variants.errors))
-    _store(args.state, numbers(found))
+    store_section(args.state, SECTION, {}, numbers(found))
     _figure_data_path(args.state).write_bytes(pickle.dumps(found))
     logger.info("done: error figure wrapper -> %s, numbers -> %s", out, args.state / SECTION)
 
