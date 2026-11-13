@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-016   | blocked: 0 | todo roots: 2 | done: 495 | pruned: 101
+open path: E-016 > W-157 > T-422   | blocked: 0 | todo roots: 2 | done: 495 | pruned: 101
 
 ## Tree
 
@@ -11,8 +11,9 @@ E-016         [doing]    The section scripts keep each rule once and each shippe
   W-144  issue  [done]     The shipped section settings are pinned by tests   (filed during T-359) -- T-383 [done]
   W-145  issue  [todo]     One helper stores a section's tables and numbers   (filed during T-364) -- T-384 [todo]
   W-147  issue  [todo]     Code comments and the citation notes name the sections the paper now has   (filed during T-373) -- T-388 [todo]
-  W-157  issue  [todo]     The figures mode of every section script is tested   (filed during T-398) -- T-422 [todo]
+  W-157  issue  [doing]    The figures mode of every section script is tested   (filed during T-398) -- T-422 [doing]   <- ACTIVE LEAF
   W-163  issue  [todo]     The stable edge of a coupling pair is read from paperlib/domain.py alone   (filed during T-415) -- T-433 [todo]
+  W-166  bug    [todo]     A drifted section toml fails its pin test without naming the toml   (filed during T-383) -- T-437 [todo]
 E-017         [todo]     The article is ready for the supervisors' read
   W-061  spike  [todo]     Which real references replace the placeholder citations -- T-118 [todo]
   W-129  bug    [todo]     A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
@@ -1042,10 +1043,12 @@ flowchart TD
   W145 --> T384["T-384 todo: Promote the store step -> paperlib/tools/render_assets.py store_section"]
   E016 --> W147["W-147 issue todo: Code comments and the citation notes name the sections the paper now has"]
   W147 --> T388["T-388 todo: Rename the stale section numbers -> comments, help strings, docstrings and 00_metadata/citations.md"]
-  E016 --> W157["W-157 issue todo: The figures mode of every section script is tested"]
-  W157 --> T422["T-422 todo: Pin the figures folder of seven scripts test-first -> seven test_*_figures_folder tests"]
+  E016 --> W157["W-157 issue doing: The figures mode of every section script is tested"]
+  W157 --> T422["T-422 doing: Pin the figures folder of seven scripts test-first -> seven test_*_figures_folder tests -- ACTIVE LEAF"]
   E016 --> W163["W-163 issue todo: The stable edge of a coupling pair is read from paperlib/domain.py alone"]
   W163 --> T433["T-433 todo: Expose the stable edge of a coupling pair -> paperlib/domain.py stable_edge"]
+  E016 --> W166["W-166 bug todo: A drifted section toml fails its pin test without naming the toml"]
+  W166 --> T437["T-437 todo: Name the section toml in each pin test's failure -> nine assert messages carrying SECTION_TOML"]
   E017["E-017 todo: The article is ready for the supervisors' read"]
   E017 --> W061["W-061 spike todo: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
@@ -1060,7 +1063,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E016 doing
+  class E016,W157,T422 doing
   class W144,T383 done
-  class W132,T347,W143,T382,W145,T384,W147,T388,W157,T422,W163,T433,E017,W061,T118,W129,T341,W164,T435,W165,T436 todo
+  class W132,T347,W143,T382,W145,T384,W147,T388,W163,T433,W166,T437,E017,W061,T118,W129,T341,W164,T435,W165,T436 todo
 ```

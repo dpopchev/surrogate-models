@@ -52,4 +52,4 @@
 - 2026-11-13 E-017: W-061 last by depends_on: it waits for the sources (developer, 2026-11-13) supersedes: E-017#d1
 
 ## Deviations
-- none recorded
+- 2026-11-13 E-016: W-166 bug filed under E-016 from the W-144 criterion run: the pin test fails but never prints the toml path AC1 names
