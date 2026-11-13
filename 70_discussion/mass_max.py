@@ -44,7 +44,7 @@ VariantName = Literal["parity", "map"]
 
 
 class MassMaxVariants(BaseModel):
-    """Section 6: which variant of the maximum-mass figure the paper places."""
+    """The physical implications: which variant of the maximum-mass figure the paper places."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -52,7 +52,7 @@ class MassMaxVariants(BaseModel):
 
 
 class DiscussionSection(BaseModel):
-    """Section 6's own settings: the picked variant of its figure."""
+    """The physical implications' own settings: the picked variant of its figure."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -146,9 +146,9 @@ def run(found: MapInput) -> Evidence:
 
 
 def numbers(found: Evidence) -> dict[str, str]:
-    """Every number Section 6 cites, keyed by its \\discussionMass macro name: the curves scored
-    and skipped, the median and p95 relative error, the p95 in significant figures and the
-    ceiling."""
+    """Every number the physical implications cite, keyed by its \\discussionMass macro name:
+    the curves scored and skipped, the median and p95 relative error, the p95 in significant
+    figures and the ceiling."""
     errors = np.array([c.error for c in found.maxes.curves])
     assert errors.size, "no held-out curve has a predicted maximum mass"
     p95 = float(np.quantile(errors, 0.95))

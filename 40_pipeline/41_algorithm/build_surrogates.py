@@ -1,4 +1,4 @@
-"""The algorithm of Section 4.1 (W-152): one fitted surrogate per map and target.
+"""The pipeline as one algorithm (W-152): one fitted surrogate per map and target.
 
 The tuning's winner of each pair (recorded as JSON under the state folder, no new search) is fitted
 on every non-test row, scored on the test rows beside the dataset's ceiling (the audit's, also

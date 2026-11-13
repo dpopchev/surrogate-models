@@ -1,4 +1,5 @@
-"""The precision options of Section 5.3 (W-093): what each one is and which family takes it.
+"""The precision options of the tuning and precision appendix (W-093): what each one is and
+which family takes it.
 
 An option is a stage laid on the tuned fitter of a candidate. The residual stage fits a second
 model on the first one's residuals; float64 and L-BFGS are for the networks, none of which is a

@@ -1,4 +1,4 @@
-"""Facts about the pipeline of Section 4.1 (W-152), on tiny synthetic tables, a recording save."""
+"""Facts about the pipeline as one algorithm (W-152), on tiny synthetic tables, a recording save."""
 
 import json
 from collections.abc import Callable

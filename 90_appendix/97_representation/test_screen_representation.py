@@ -1,4 +1,5 @@
-"""Facts about the representation screen behind Section 5.1, on tiny synthetic data."""
+"""Facts about the representation screen behind the representation appendix, on tiny
+synthetic data."""
 
 import json
 import re

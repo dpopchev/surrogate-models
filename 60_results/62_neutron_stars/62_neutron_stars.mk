@@ -1,4 +1,4 @@
-# Section 5.2: the neutron-star surrogates against the data ceiling (W-155). The figure scores the
+# The neutron-star results: the neutron-star surrogates against the data ceiling (W-155). The figure scores the
 # saved surrogates of $(STATE)/41_algorithm/ (make pipeline) on the held-out curves, so its assets
 # join make assets only while those exist: make pipeline fits for minutes and is no prerequisite.
 RESNS           := 60_results/62_neutron_stars/results_neutron_stars.py
@@ -14,14 +14,14 @@ ifneq ($(wildcard $(STATE)/41_algorithm/neutron_stars-mass.pkl),)
 PAPER_ASSETS += $(RESNS_NUM)
 endif
 
-# As Section 5.1: the script stores the JSON and writes the wrapper, the render step the numbers.
+# As the black-hole results: the script stores the JSON and writes the wrapper, the render step the numbers.
 $(RESNS_STATE)/numbers.json $(RESNS_NUM) $(RESNS_FIG) &: $(RESNS) $(RESNS_RENDER) paper.toml $(RESNS_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/split.parquet $(RESNS_SAVED) $(RESNS_CEILINGS)
 	@$(RUN) python $(RESNS) $(STATE)/neutron_stars.parquet $(STATE)/split.parquet $(STATE) $(ASSETS)
 	@$(RUN) python $(RESNS_RENDER) $(RESNS_STATE) $(ASSETS)
 	$(call log_done,error figure wrapper and numbers written to $(@D)/; make figures draws the PNGs)
 
 .PHONY: 62_neutron_stars
-62_neutron_stars: $(RESNS_NUM) ## Build the neutron-star results assets for Section 5.2
+62_neutron_stars: $(RESNS_NUM) ## Build the neutron-star results assets
 	$(call log_done,assets current in $(dir $(RESNS_NUM)))
 
 # Every figure variant as its own PNG under build/sections/62_neutron_stars/figures/, drawn from the

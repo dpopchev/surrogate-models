@@ -1,4 +1,5 @@
-"""Facts about the precision options of Section 5.3, on tiny synthetic rows."""
+"""Facts about the precision options of the tuning and precision appendix, on tiny
+synthetic rows."""
 
 import logging
 

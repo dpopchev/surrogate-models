@@ -1,11 +1,11 @@
-# Section 5.3's tuning (W-068): every candidate on the family screen's short list searched with
+# The tuning and precision appendix's tuning (W-068): every candidate on the family screen's short list searched with
 # the same Optuna trials over its own hyperparameters, scored on the frozen folds; a fit past the
 # wall fails its trial. Hours, so its own target, in make assets only from its recorded batch
 # (W-130); one line per finished job in the log, the trials live in optuna-dashboard on the
 # batch's journal under $(STATE)/99_precision/. Its knobs are written here only; k, neighbours
 # and knots are the screen's, each overridden by a trial that searches it. The short list and
 # the screen's figures come from its recorded batch in the ledger: per pair, the candidates
-# within --within figures of the best on the most rows (Section 5.2).
+# within --within figures of the best on the most rows (the family screen appendix).
 TUNING        := 90_appendix/99_precision/tune_survivors.py
 TUNING_TOML   := 90_appendix/99_precision/99_precision.toml
 TUNING_ASSETS := $(ASSETS)/99_precision/99_precision_tab_tuning.tex
@@ -33,10 +33,10 @@ $(TUNING_STATE)/numbers.json $(TUNING_STATE)/winners.json $(TUNING_ASSETS) &: $(
 PAPER_ASSETS += $(if $(TUNING_BATCH),$(TUNING_ASSETS))
 
 .PHONY: tuning 99_precision
-tuning: $(TUNING_ASSETS) ## Run the tuning of the short list for Section 5.3
+tuning: $(TUNING_ASSETS) ## Run the tuning of the short list
 	$(call log_done,tuning assets current in $(dir $(TUNING_ASSETS)))
 
-99_precision: tuning ## Build the Section 5.3 assets -- the same as make tuning
+99_precision: tuning ## Build the tuning assets -- the same as make tuning
 
 # Every figure variant as its own PNG under build/sections/99_precision/figures/, redrawn from
 # the recorded batch and its journal; nothing is tuned. TUNING_BATCH must name a recorded batch.
@@ -91,5 +91,5 @@ $(PRECISION_ASSETS) $(PRECISION_DIR)/99_precision_precision_num.tex $(PRECISION_
 PAPER_ASSETS += $(if $(PRECISION_BATCH),$(PRECISION_ASSETS))
 
 .PHONY: precision
-precision: $(PRECISION_ASSETS) ## Score the precision options on the saved surrogates for Section 5.3 (hours; run make pipeline first)
+precision: $(PRECISION_ASSETS) ## Score the precision options on the saved surrogates (hours; run make pipeline first)
 	$(call log_done,precision assets current in $(PRECISION_DIR)/)

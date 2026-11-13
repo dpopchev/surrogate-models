@@ -1,4 +1,4 @@
-# Which variant of the Section 4.1 parity figure the paper places; `make figures` draws them
+# Which variant of the baseline appendix parity figure the paper places; `make figures` draws them
 # from the latest baseline batch's ledger entries, nothing fitted (W-113).
 [variants]
 parity = "ns_mass"        # ns_mass: the NS mass parity | residual_strip: with its residuals below

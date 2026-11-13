@@ -221,7 +221,7 @@ sections: $(foreach s,$(SECTIONS),$(SECTIONS_OUT)/$(s)/$(s).pdf) ## Compile each
 examples: ## Show common commands with examples
 	@printf '%s\n' \
 	  'Train and watch the baseline surrogate' \
-	  '  make baseline                   fit it (minutes) -> Section 4.1 numbers and parity figure' \
+	  '  make baseline                   fit it (minutes) -> baseline numbers and parity figure' \
 	  '  make follow                     watch the running fit live from any terminal (Ctrl-C ends)' \
 	  '  make runs                       one line per run, newest first -- MARE, epochs, commit' \
 	  '  make run                        the latest run files -- log, run.json, diagnostics PNGs' \

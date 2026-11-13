@@ -1,5 +1,6 @@
-"""The tuning behind Section 5.3 (W-068): every candidate on the short list of the family
-screen (Section 5.2) searched over its own hyperparameters with the same budget of trials.
+"""The tuning behind the tuning and precision appendix (W-068): every candidate on the
+short list of the family screen (the family screen appendix) searched over its own
+hyperparameters with the same budget of trials.
 
 One job per pair and short-listed candidate runs paperlib/search.py's search on the full design,
 its trials scored on the frozen folds only; the best trial's params are then refitted once
@@ -138,7 +139,7 @@ PrecisionRangesVariant = Literal["row", "grid", "no_network"]
 
 
 class PrecisionVariants(BaseModel):
-    """Section 5.3: which variant of each tuning figure the paper places (W-113)."""
+    """The tuning and precision appendix: which variant of each figure the paper places (W-113)."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -147,7 +148,7 @@ class PrecisionVariants(BaseModel):
 
 
 class PrecisionSection(BaseModel):
-    """Section 5.3: the tuning figures tune_survivors.py writes (W-113)."""
+    """The tuning and precision appendix: the tuning figures tune_survivors.py writes (W-113)."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -156,7 +157,8 @@ class PrecisionSection(BaseModel):
 
 HISTORY = f"{SECTION}_fig_history"
 RANGES = f"{SECTION}_fig_ranges"
-# The data ceilings of Sections 4.1 and 4.2 (W-064) in significant figures, as their macros.
+# The data ceilings of the relative-error section (W-064) in significant figures, as their
+# macros.
 CEILING_TEX: Mapping[tuple[str, Target], str] = {
     ("neutron_stars", "mass"): "\\nsEdaCeilMFigures",
     ("neutron_stars", "charge"): "\\nsEdaCeilDFigures",
@@ -198,7 +200,7 @@ class Walled:
 
 
 Outcome = Tuned | Walled
-# Per pair, the candidates the family screen short-listed (short_list, Section 5.2).
+# Per pair, the candidates the family screen short-listed (short_list, the family screen appendix).
 ShortList = Mapping[tuple[str, Target], tuple[Candidate, ...]]
 
 
@@ -296,8 +298,8 @@ def range_ends(distribution: BaseDistribution) -> RangeEnds:
 
 def short_list(entries: Sequence[LedgerEntry], batch: str, within: float) -> ShortList:
     """Per pair, the candidates of the screen batch that ran the most rows the pair ran and
-    whose mean fold figures there lie within `within` figures of the best (Section 5.2), in
-    FAMILIES x UNITS order."""
+    whose mean fold figures there lie within `within` figures of the best (the family screen
+    appendix), in FAMILIES x UNITS order."""
     by_pair: dict[tuple[str, Target], dict[Job, tuple[int, float]]] = {}
     for job, last_round in _last_rounds(entries, batch).items():
         by_pair.setdefault((job.dataset, job.target), {})[job] = last_round
@@ -598,10 +600,11 @@ CITED_PARAMS = ("knots", "neighbours", "width", "depth", "lr")
 def numbers(
     outcomes: Sequence[Outcome], points: Sequence[TrialPoint], screen: Mapping[Job, float]
 ) -> dict[str, str]:
-    """Every figure Section 5.3 cites, per pair and candidate (\\tun<Pair><Family><Unit>...):
-    its screen figures (Screen); once tuned, its fold and test figures (Folds, Test), the
-    trials run and those that met the wall (Trials, Walls), the number of its best trial
-    (BestTrial) and the best params the text cites (Knots, Neighbours, Width, Depth, Lr)."""
+    """Every figure the tuning and precision appendix cites, per pair and candidate
+    (\\tun<Pair><Family><Unit>...): its screen figures (Screen); once tuned, its fold and test
+    figures (Folds, Test), the trials run and those that met the wall (Trials, Walls), the
+    number of its best trial (BestTrial) and the best params the text cites (Knots,
+    Neighbours, Width, Depth, Lr)."""
     macros: dict[str, str] = {}
     for outcome in outcomes:
         job = outcome.job
@@ -636,9 +639,9 @@ def numbers(
     return macros
 
 
-# Section 5.3's yardsticks on the searches: a trial within NEAR figures of its search's best is
-# near it, a search near its best before trial EARLY settles early, and a network of WIDE
-# units or more is wide.
+# The tuning and precision appendix's yardsticks on the searches: a trial within NEAR
+# figures of its search's best is near it, a search near its best before trial EARLY settles
+# early, and a network of WIDE units or more is wide.
 NEAR = 0.02
 EARLY = 12
 WIDE = 250
@@ -713,11 +716,12 @@ def analysis(
     screen: Mapping[Job, float],
     seed: int,
 ) -> dict[str, str]:
-    """What Section 5.3 reads off the searches' journals, per job (\\tun<Pair><Family><Unit>...):
-    its gain on the screen (Gain, the difference of the printed entries), the first trial near
-    its best (NearBestTrial), each varied param's fANOVA importance (Importance<Param>), the
-    ranges of TOP_PARAMS over its five best trials (Top<Param>Low/High), its fit time
-    (SearchHours, SearchMinutes, mean TrialMinutes, WalledHours) and its wall cut
+    """What the tuning and precision appendix reads off the searches' journals, per job
+    (\\tun<Pair><Family><Unit>...): its gain on the screen (Gain, the difference of the
+    printed entries), the first trial near its best (NearBestTrial), each varied param's
+    fANOVA importance (Importance<Param>), the ranges of TOP_PARAMS over its five best
+    trials (Top<Param>Low/High), its fit time (SearchHours, SearchMinutes,
+    mean TrialMinutes, WalledHours) and its wall cut
     (_wall_numbers); then the yardsticks, how many searches settle early
     (\\tunSearchesNearEarly of \\tunSearches) and how long the last search ran alone
     (\\tunTailHours)."""

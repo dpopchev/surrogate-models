@@ -1,4 +1,4 @@
-# Section 3.2 -- which BH EDA figures and tables eda_black_holes.py renders; placed by the text.
+# The black-hole data appendix -- which BH EDA figures and tables eda_black_holes.py renders; placed by the text.
 figures = [
   "univariate_continuous",  # r_h, M, D, D/M raw and log10, one bar per grid value
   "mass_radius",            # M against r_h, one line per beta
@@ -7,7 +7,7 @@ figures = [
 ]
 tables = ["univariate", "charge_correlation", "split_strategies"]
 
-# Which variant of each Section 3.2 figure the paper places; `make figures` draws them all
+# Which variant of each black-hole data appendix figure the paper places; `make figures` draws them all
 # side by side under build/sections/92_black_holes/figures/ to pick from (W-111).
 [variants]
 mass_radius = "inset"     # inset: M against r_h, the departure from GR in an inset

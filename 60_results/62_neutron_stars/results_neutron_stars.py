@@ -1,4 +1,4 @@
-"""The error figure of Section 5.2 and its numbers (W-155).
+"""The error figure of the neutron-star results and its numbers (W-155).
 
 The saved neutron-star surrogates of the mass and the charge score every held-out row
 (paperlib/final.py held_out_errors). The figure draws, per target, the relative error of those
@@ -41,7 +41,7 @@ VariantName = Literal["by_lambda", "by_beta"]
 
 
 class ErrorVariants(BaseModel):
-    """Section 5.2: which variant of the error figure the paper places."""
+    """The neutron-star results: which variant of the error figure the paper places."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -49,7 +49,7 @@ class ErrorVariants(BaseModel):
 
 
 class NeutronStarSection(BaseModel):
-    """Section 5.2's own settings: the picked variant of its figure."""
+    """The neutron-star results' own settings: the picked variant of its figure."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -127,8 +127,8 @@ def run(found: MapInput) -> Evidence:
 
 
 def numbers(found: Evidence) -> dict[str, str]:
-    """Every number Section 5.2 cites, keyed by its \\resultsNs macro name: per target the p95
-    test and ceiling figures, their gap and the family and unit of the winner."""
+    """Every number the neutron-star results cite, keyed by its \\resultsNs macro name: per target
+    the p95 test and ceiling figures, their gap and the family and unit of the winner."""
     macros: dict[str, str] = {}
     for one in found.targets:
         tag = f"resultsNs{TAG[one.target]}"

@@ -1,4 +1,4 @@
-"""Facts about the domain figure of Section 4, on tiny synthetic maps and a toy surrogate."""
+"""Facts about the domain figure, on tiny synthetic maps and a toy surrogate."""
 
 import json
 from pathlib import Path

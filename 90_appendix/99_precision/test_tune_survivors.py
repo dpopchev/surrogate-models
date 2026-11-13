@@ -1,4 +1,4 @@
-"""Facts about the tuning behind Section 5.3, on tiny synthetic data."""
+"""Facts about the tuning behind the tuning and precision appendix, on tiny synthetic data."""
 
 import json
 import shutil

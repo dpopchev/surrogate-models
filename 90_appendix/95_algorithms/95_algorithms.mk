@@ -1,8 +1,8 @@
-# Section 4.1: the frozen split, the baseline surrogate, its table and the tools that read its
+# The baseline appendix: the frozen split, the baseline surrogate, its table and the tools that read its
 # runs and ledger. Uses the base's STATE and log helpers and PAPERLIB (mk/paper.mk).
 
 # The frozen curve-grouped split of both tables (W-019): its seed, test fraction and folds are
-# written once here (Section 3.3 reports them; the EDA probes of the sections reuse them).
+# written once here (the preprocessing appendix reports them; the EDA probes of the sections reuse them).
 SPLIT_SCRIPT        := 90_appendix/95_algorithms/split_datasets.py
 SPLIT_SEED          := 20261005
 SPLIT_FOLDS         := 5
@@ -33,7 +33,7 @@ $(BASELINE_STATE)/numbers.json $(BASELINE_ASSETS) &: $(BASELINE) $(RENDER_ASSETS
 	$(call log_done,baseline table and numbers rendered and parity wrapper written to $(@D)/ -- run diagnostics under $(STATE)/95_algorithms/)
 
 .PHONY: baseline
-baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate for Section 4.1
+baseline: $(BASELINE_ASSETS) ## Fit the baseline surrogate
 	$(call log_done,baseline assets current in $(dir $(BASELINE_ASSETS)))
 
 # The baseline table alone is a paper asset: rebuilt from the latest baseline batch of the
@@ -53,8 +53,8 @@ $(BASELINE_TABLE): $(BASELINE) $(RENDER_ASSETS) paper.toml $(BASELINE_TOML) $(PA
 
 # The section's assets are the split and the baseline table; the fit itself is make baseline.
 .PHONY: 95_algorithms
-95_algorithms: $(STATE)/split.parquet $(BASELINE_TABLE) ## Build the split and the baseline table for Section 4.1 -- nothing fitted
-	$(call log_done,Section 4.1 assets current in $(dir $(BASELINE_TABLE)))
+95_algorithms: $(STATE)/split.parquet $(BASELINE_TABLE) ## Build the split and the baseline table -- nothing fitted
+	$(call log_done,baseline appendix assets current in $(dir $(BASELINE_TABLE)))
 
 # Each baseline run logs into its own <run>/train.log and repoints latest.log at it (W-054);
 # tail -F follows the name, so one make follow keeps up across runs. It ends with Ctrl-C, so

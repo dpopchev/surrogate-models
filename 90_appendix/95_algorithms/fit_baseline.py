@@ -1,5 +1,5 @@
-"""The baseline surrogate behind Section 4.1 (W-034, W-036): a plain MLP on NS and BH, mass
-and charge, against the mean and nearest-curve references.
+"""The baseline surrogate behind the baseline appendix (W-034, W-036): a plain MLP on NS and BH,
+mass and charge, against the mean and nearest-curve references.
 
 Inputs: the prepared NS and BH tables and the frozen curve split (local/state/). Per pair the
 net is scored on each frozen fold and, trained on every non-test curve through paperlib/design.py
@@ -125,7 +125,7 @@ AlgParityVariant = Literal["ns_mass", "residual_strip", "all_pairs"]
 
 
 class AlgorithmsVariants(BaseModel):
-    """Section 4.1: which variant of each figure the paper places (W-113)."""
+    """The baseline appendix: which variant of each figure the paper places (W-113)."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -133,7 +133,7 @@ class AlgorithmsVariants(BaseModel):
 
 
 class AlgorithmsSection(BaseModel):
-    """Section 4.1's own settings: its figure variants; the network is paper-wide."""
+    """The baseline appendix's own settings: its figure variants; the network is paper-wide."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -481,14 +481,14 @@ def baseline_table(
     layout: TableLayout = "small",
     shape: BaselineTableLayout = "one_table",
 ) -> str:
-    """The Section 4.1 table in the paper's table layout."""
+    """The baseline appendix table in the paper's table layout."""
     return "".join(render(table, layout) for table in baseline_objects(pairs, shape).values())
 
 
 def baseline_objects(
     pairs: list[PairScores], shape: BaselineTableLayout = "one_table"
 ) -> dict[str, Table]:
-    """The Section 4.1 table as objects by stored name, to store as JSON: every predictor on
+    """The baseline appendix table as objects by stored name, to store as JSON: every predictor on
     every dataset and target, in one table or as a test table and a folds table (two_tables,
     the folds one as baseline_folds)."""
     table = _one_table(pairs)
@@ -582,7 +582,7 @@ def start_banner(
         f"  - {run / 'loss_curve.png'} (redrawn every {live_every} epochs)",
         "at the end:",
         f"  - {run}/ (run.json, error_cdf.png, curves.png)",
-        f"  - {out}/ (Section 4.1 numbers, parity figure)",
+        f"  - {out}/ (baseline appendix numbers, parity figure)",
         "follow live: make follow",
     ]
 

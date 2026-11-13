@@ -1,4 +1,4 @@
-# Section 5.1: the black-hole surrogates against the data ceiling (W-154). The figure scores the
+# The black-hole results: the black-hole surrogates against the data ceiling (W-154). The figure scores the
 # saved surrogates of $(STATE)/41_algorithm/ (make pipeline) on the held-out curves, so its assets
 # join make assets only while those exist: make pipeline fits for minutes and is no prerequisite.
 RESBH           := 60_results/61_black_holes/results_black_holes.py
@@ -14,14 +14,14 @@ ifneq ($(wildcard $(STATE)/41_algorithm/black_holes-domain.json),)
 PAPER_ASSETS += $(RESBH_NUM)
 endif
 
-# As Section 4: the script stores the JSON and writes the wrapper, the render step the numbers.
+# As the domain of validity: the script stores the JSON and writes the wrapper, the render step the numbers.
 $(RESBH_STATE)/numbers.json $(RESBH_NUM) $(RESBH_FIG) &: $(RESBH) $(RESBH_RENDER) paper.toml $(RESBH_TOML) $(PAPERLIB) $(STATE)/black_holes.parquet $(STATE)/split.parquet $(RESBH_SAVED) $(RESBH_CEILINGS)
 	@$(RUN) python $(RESBH) $(STATE)/black_holes.parquet $(STATE)/split.parquet $(STATE) $(ASSETS)
 	@$(RUN) python $(RESBH_RENDER) $(RESBH_STATE) $(ASSETS)
 	$(call log_done,error figure wrapper and numbers written to $(@D)/; make figures draws the PNGs)
 
 .PHONY: 61_black_holes
-61_black_holes: $(RESBH_NUM) ## Build the black-hole results assets for Section 5.1
+61_black_holes: $(RESBH_NUM) ## Build the black-hole results assets
 	$(call log_done,assets current in $(dir $(RESBH_NUM)))
 
 # Every figure variant as its own PNG under build/sections/61_black_holes/figures/, drawn from the

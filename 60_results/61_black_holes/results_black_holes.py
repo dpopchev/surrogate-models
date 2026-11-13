@@ -1,4 +1,4 @@
-"""The error figure of Section 5.1 and its numbers (W-154).
+"""The error figure of the black-hole results and its numbers (W-154).
 
 The saved black-hole surrogates of the mass and the charge score every held-out row
 (paperlib/final.py held_out_errors). The figure draws, per target, the relative error of those
@@ -49,7 +49,7 @@ VariantName = Literal["curves", "plane"]
 
 
 class ErrorVariants(BaseModel):
-    """Section 5.1: which variant of the error figure the paper places."""
+    """The black-hole results: which variant of the error figure the paper places."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -57,7 +57,7 @@ class ErrorVariants(BaseModel):
 
 
 class BlackHoleSection(BaseModel):
-    """Section 5.1's own settings: the picked variant of its figure."""
+    """The black-hole results' own settings: the picked variant of its figure."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -136,8 +136,8 @@ def run(found: MapInput) -> Evidence:
 
 
 def numbers(found: Evidence) -> dict[str, str]:
-    """Every number Section 5.1 cites, keyed by its \\resultsBh macro name: per target the p95
-    test and ceiling figures, their gap and the family and unit of the winner."""
+    """Every number the black-hole results cite, keyed by its \\resultsBh macro name: per target
+    the p95 test and ceiling figures, their gap and the family and unit of the winner."""
     macros: dict[str, str] = {}
     for one in found.targets:
         tag = f"resultsBh{TAG[one.target]}"
@@ -296,7 +296,7 @@ def _figure_data_path(state: Path) -> Path:
 
 def _inputs(args: argparse.Namespace) -> MapInput:
     """Read the black-hole map: its table and split, its saved domain and surrogates, the data
-    ceilings recorded by Section 5's tuning."""
+    ceilings recorded by the tuning and precision appendix's tuning."""
     table = pd.read_parquet(args.bh)
     saved = args.state / PIPELINE
     ceilings = json.loads((args.state / REACHABLE).read_text())

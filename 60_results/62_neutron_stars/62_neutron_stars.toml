@@ -1,4 +1,4 @@
-# Section 5.2 -- which variant of the error figure results_neutron_stars.py draws; `make figures`
+# The neutron-star results -- which variant of the error figure results_neutron_stars.py draws; `make figures`
 # draws both side by side under build/sections/62_neutron_stars/figures/ to pick from.
 [variants]
 errors = "by_lambda"  # by_lambda: one line per held-out curve, colored by lambda

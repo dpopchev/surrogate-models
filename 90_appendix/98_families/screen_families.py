@@ -1,5 +1,5 @@
-"""The family screen behind Section 5.2 (W-067): every model family on W-066's representation,
-pointwise and curve-wise, eliminated by successive halving over the training rows.
+"""The family screen behind the family screen appendix (W-067): every model family on W-066's
+representation, pointwise and curve-wise, eliminated by successive halving over the training rows.
 
 Every candidate -- a family in one unit of prediction -- is scored through paperlib/harness.py on
 each pair (dataset and target) at the first budget of training rows, thinned along each curve;
@@ -132,7 +132,7 @@ FamiliesScalingVariant = Literal["figures_and_seconds", "marker_size", "small_mu
 
 
 class FamiliesVariants(BaseModel):
-    """Section 5.2: which variant of each family-screen figure the paper places (W-113)."""
+    """The family screen appendix: which variant of each screen figure the paper places (W-113)."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -142,7 +142,7 @@ class FamiliesVariants(BaseModel):
 
 
 class FamiliesSection(BaseModel):
-    """Section 5.2: which family-screen figures screen_families.py writes."""
+    """The family screen appendix: which family-screen figures screen_families.py writes."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -318,13 +318,13 @@ def family_table(
     layout: TableLayout = "small",
     shape: FamiliesTableLayout = "subscripts",
 ) -> str:
-    """The Section 5.2 table in the paper's table layout."""
+    """The family screen appendix table in the paper's table layout."""
     return render(family_object(outcomes, shape), layout)
 
 
 def family_object(outcomes: Sequence[Outcome], shape: FamiliesTableLayout = "subscripts") -> Table:
-    """The Section 5.2 table in its shape as an object, to store as JSON: the stored table
-    (subscripts), or a shape applied to it (rows_column)."""
+    """The family screen appendix table in its shape as an object, to store as JSON: the stored
+    table (subscripts), or a shape applied to it (rows_column)."""
     table = _subscripts_table(outcomes)
     return table if shape == "subscripts" else SHAPES[shape](table)[0]
 
@@ -453,11 +453,11 @@ SHAPES: Mapping[str, Shape] = {"rows_column": rows_column}
 
 
 def numbers(outcomes: Sequence[Outcome]) -> dict[str, str]:
-    """Every figure Section 5.2 cites. Per pair, at the most rows it ran on, the leader as the
-    table names it (\\fam<Pair>Leader, \\fam<Pair>LeaderUnit) and how many families stay within
-    one figure of it (\\fam<Pair>WithinOne). Per candidate, at the most rows it reached
-    (\\fam<Pair><Family><Unit>Rows), its folds' figures and final fit's seconds (Figures,
-    Seconds), or the rows of its wall there (WallRows)."""
+    """Every figure the family screen appendix cites. Per pair, at the most rows it ran on, the
+    leader as the table names it (\\fam<Pair>Leader, \\fam<Pair>LeaderUnit) and how many
+    families stay within one figure of it (\\fam<Pair>WithinOne). Per candidate, at the most
+    rows it reached (\\fam<Pair><Family><Unit>Rows), its folds' figures and final fit's
+    seconds (Figures, Seconds), or the rows of its wall there (WallRows)."""
     macros: dict[str, str] = {}
     pairs: dict[tuple[str, Target], None] = dict.fromkeys(
         (o.job.dataset, o.job.target) for o in outcomes

@@ -1,4 +1,4 @@
-"""Exploratory analysis of the prepared BH table behind Section 3.2 (W-018).
+"""Exploratory analysis of the prepared BH table behind the black-hole data appendix (W-018).
 
 The BH data are 21 dense beta curves over the horizon radius r_h. The computations ask what the
 NS analysis asked, and find different answers: how closely M follows r_h, how much beta moves M
@@ -94,7 +94,7 @@ BhExistenceEdgeVariant = Literal["segments", "edge_line", "zoomed"]
 
 
 class BlackHoleVariants(BaseModel):
-    """Section 3.2: which variant of each BH figure the paper places (W-111)."""
+    """The black-hole data appendix: which variant of each BH figure the paper places (W-111)."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -106,7 +106,7 @@ class BlackHoleVariants(BaseModel):
 
 
 class BlackHolesSection(BaseModel):
-    """Section 3.2: which BH EDA figures and tables eda_black_holes.py renders."""
+    """The black-hole data appendix: which BH EDA figures and tables eda_black_holes.py renders."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -255,7 +255,8 @@ SPLIT_TAGS = {"M": "M", "log10_D": "LD"}
 
 @dataclass(frozen=True)
 class Evidence:
-    """Every computed result Section 3.2 cites, computed once for the macros and the tables."""
+    """Every computed result the black-hole data appendix cites, computed once for
+    the macros and the tables."""
 
     rows: int
     curves: int
@@ -272,7 +273,7 @@ class Evidence:
 
 
 def evidence(table: pd.DataFrame, folds: int, seed: int) -> Evidence:
-    """Compute every Section 3.2 result from a table with the charge targets."""
+    """Compute every black-hole data appendix result from a table with the charge targets."""
     sizes = table.groupby(list(CURVE)).size()
     grid = np.unique(table["r_h"].to_numpy())
     return Evidence(
@@ -292,7 +293,7 @@ def evidence(table: pd.DataFrame, folds: int, seed: int) -> Evidence:
 
 
 def numbers(found: Evidence) -> dict[str, str]:
-    """Every number Section 3.2 cites, keyed by its \\bhEda macro name."""
+    """Every number the black-hole data appendix cites, keyed by its \\bhEda macro name."""
     summary = {(s.column, s.scale): s for s in found.summaries}
     target = {t.target: t for t in found.targets}
     effect = {e.target: e.spread_ratio for e in found.beta_effects}
