@@ -114,6 +114,7 @@ from paperlib.tables import (
     Span,
     Table,
     Text,
+    make_table,
     render,
     shape_files,
     to_json,
@@ -493,7 +494,7 @@ def _screen_tuned_test(outcomes: Sequence[Outcome], screen: Mapping[Job, float])
     spec = "@{}lll*{4}{r}@{}"
     fitted = [Column("l", before="@{}"), Column("l"), Column("l"), *(Column("r") for _ in heads)]
     fitted.append(Column("r"))
-    return Table(
+    return make_table(
         "tuning",
         "Each short-listed candidate of \\cref{tab:families} after the same budget of trials "
         "over its own hyperparameters: the significant figures kept at the 95th percentile of "

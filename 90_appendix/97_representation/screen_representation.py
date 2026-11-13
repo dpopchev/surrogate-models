@@ -67,6 +67,7 @@ from paperlib.tables import (
     Spread,
     Table,
     Text,
+    make_table,
     render,
     shape_files,
     to_json,
@@ -418,7 +419,7 @@ def transposed(table: Table) -> tuple[Table, ...]:
     header = (tuple(Text(h) for h in ("Pair", "Model", *shown)),)
     caption = table.caption.replace(SPREAD_TEX["aligned"], SPREAD_TEX["small"])
     caption = f"{caption} Each cell: test / folds."
-    return (Table("representation", caption, columns, header, tuple(rows)),)
+    return (make_table("representation", caption, columns, header, tuple(rows)),)
 
 
 # The shapes of the representation table besides the eight columns, by the name the pick of
@@ -463,7 +464,7 @@ def _eight_columns(found: Sequence[Score], label: str, caption: str) -> Table:
         tuple(Text(h) for h in ("", "", *("Test", "Folds") * 3)),
     )
     spec = "@{}l@{\\hspace{8pt}}l*{6}{@{\\hspace{8pt}}r}@{}"
-    return Table(label, caption, columns, header, tuple(rows), spec)
+    return make_table(label, caption, columns, header, tuple(rows), spec)
 
 
 def _entry(score: Score | None, baseline: Score | None) -> tuple[TableCell, TableCell]:

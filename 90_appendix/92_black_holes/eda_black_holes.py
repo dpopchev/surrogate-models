@@ -75,7 +75,7 @@ from paperlib.plots import (
     line_width,
     mark_size,
 )
-from paperlib.tables import Table, Text, aligns, fixed, number, render, to_json
+from paperlib.tables import Table, Text, aligns, fixed, make_table, number, render, to_json
 
 logger = logging.getLogger(__name__)
 
@@ -374,7 +374,7 @@ def _univariate_table(found: Evidence) -> Table:
         "Black holes: range, orders of magnitude spanned (orders) and skewness of each "
         "continuous variable, raw and in $\\log_{10}$."
     )
-    return Table("bh-univariate", caption, aligns("lrrrrr"), (header,), rows)
+    return make_table("bh-univariate", caption, aligns("lrrrrr"), (header,), rows)
 
 
 def _charge_table(found: Evidence) -> Table:
@@ -400,7 +400,7 @@ def _charge_table(found: Evidence) -> Table:
         )
     )
     caption = "Black holes: correlation of the candidate charge targets."
-    return Table("bh-charge-correlation", caption, aligns("lrrrr"), (header,), rows)
+    return make_table("bh-charge-correlation", caption, aligns("lrrrr"), (header,), rows)
 
 
 def _split_table(found: Evidence) -> Table:
@@ -419,7 +419,7 @@ def _split_table(found: Evidence) -> Table:
         f"Black holes: 1-nearest-neighbour mean absolute error under each split "
         f"({found.folds} folds; the outer curves are predicted from the others)."
     )
-    return Table("bh-split-strategies", caption, aligns("lrr"), (header,), rows)
+    return make_table("bh-split-strategies", caption, aligns("lrr"), (header,), rows)
 
 
 def table_object(found: Evidence, table: BhTable) -> Table:

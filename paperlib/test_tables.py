@@ -16,6 +16,7 @@ from paperlib.tables import (
     aligns,
     fixed,
     from_json,
+    make_table,
     number,
     power,
     render,
@@ -143,7 +144,7 @@ def test_a_small_spec_with_a_repeat_is_written_as_given_in_the_small_layout(
 
 @pytest.mark.model
 def test_table_round_trips_through_json() -> None:
-    rows = (*SAMPLE.rows, (Plain("1", True, True),))
+    rows = (*SAMPLE.rows, (Plain("1", True, True), *(Text("") for _ in range(3))))
     table = replace(SAMPLE, small_spec="@{}l*{3}{r}@{}", rows=rows)
     assert from_json(to_json(table)) == table
 
@@ -157,3 +158,36 @@ def test_shape_files_name_a_shape_by_dot_and_each_of_several_tables_by_number() 
 @pytest.mark.functional
 def test_aligns_gives_a_column_per_letter() -> None:
     assert aligns("lrc") == (Column("l"), Column("r"), Column("c"))
+
+
+HEADER = ((Text("a"), Text("b")),)
+
+
+@pytest.mark.model
+def test_make_table_refuses_a_short_row() -> None:
+    with pytest.raises(ValueError):
+        make_table("m", "M.", aligns("lr"), HEADER, ((Text("x"),),))
+
+
+@pytest.mark.model
+def test_make_table_names_the_row_and_the_two_widths() -> None:
+    with pytest.raises(ValueError, match=r"row 1 .*1.*2"):
+        make_table("m", "M.", aligns("lr"), HEADER, ((Text("x"), Text("y")), (Text("x"),)))
+
+
+@pytest.mark.model
+def test_make_table_refuses_a_too_wide_header() -> None:
+    with pytest.raises(ValueError):
+        make_table("m", "M.", aligns("lr"), ((Text("a"), Span(2, "c", "b")),), ())
+
+
+@pytest.mark.model
+def test_make_table_refuses_a_span_narrower_than_one() -> None:
+    with pytest.raises(ValueError):
+        make_table("m", "M.", aligns("lr"), ((Text("a"), Span(0, "c", "b"), Text("c")),), ())
+
+
+@pytest.mark.model
+def test_make_table_counts_a_span_by_its_width() -> None:
+    table = make_table("m", "M.", aligns("lrr"), ((Text("a"), Span(2, "c", "b")),), ())
+    assert table.header == ((Text("a"), Span(2, "c", "b")),)
