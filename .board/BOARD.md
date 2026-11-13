@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-016 > W-166 > T-437   | blocked: 0 | todo roots: 4 | done: 505 | pruned: 101
+open path: E-016 > W-166   | blocked: 0 | todo roots: 4 | done: 506 | pruned: 101
 
 ## Tree
 
@@ -13,7 +13,7 @@ E-016         [doing]    The section scripts keep each rule once and each shippe
   W-147  issue  [todo]     Code comments and the citation notes name the sections the paper now has   (filed during T-373) -- T-388 [todo]
   W-157  issue  [done]     The figures mode of every section script is tested   (filed during T-398) -- T-422 [done]
   W-163  issue  [done]     The stable edge of a coupling pair is read from paperlib/domain.py alone   (filed during T-415) -- T-433 [done]
-  W-166  bug    [doing]    A drifted section toml fails its pin test without naming the toml   (filed during T-383) -- T-437 [doing]   <- ACTIVE LEAF
+  W-166  bug    [doing]    A drifted section toml fails its pin test without naming the toml   (filed during T-383) -- T-437 [done]
 E-017         [todo]     The article is ready for the supervisors' read
   W-061  spike  [todo]     Which real references replace the placeholder citations -- T-118 [todo]
   W-129  bug    [todo]     A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
@@ -1050,7 +1050,7 @@ flowchart TD
   E016 --> W163["W-163 issue done: The stable edge of a coupling pair is read from paperlib/domain.py alone"]
   W163 --> T433["T-433 done: Expose the stable edge of a coupling pair -> paperlib/domain.py stable_edge"]
   E016 --> W166["W-166 bug doing: A drifted section toml fails its pin test without naming the toml"]
-  W166 --> T437["T-437 doing: Name the section toml in each pin test's failure -> nine assert messages carrying SECTION_TOML -- ACTIVE LEAF"]
+  W166 --> T437["T-437 done: Name the section toml in each pin test's failure -> nine assert messages carrying SECTION_TOML"]
   E017["E-017 todo: The article is ready for the supervisors' read"]
   E017 --> W061["W-061 spike todo: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
@@ -1069,7 +1069,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E016,W166,T437 doing
-  class W132,T347,W143,T382,W144,T383,W145,T384,W157,T422,W163,T433 done
+  class E016,W166 doing
+  class W132,T347,W143,T382,W144,T383,W145,T384,W157,T422,W163,T433,T437 done
   class W147,T388,E017,W061,T118,W129,T341,W164,T435,W165,T436,W167,T438,W168,T439 todo
 ```
