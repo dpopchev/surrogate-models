@@ -121,4 +121,6 @@ def test_mass_max_figures_folder_holds_each_variant_png(tmp_path: Path) -> None:
 @pytest.mark.model
 def test_shipped_section_toml_selects_the_papers_picks() -> None:
     expected = DiscussionSection.model_validate({"variants": {"mass_max": "parity"}})
-    assert load_section(DiscussionSection, SECTION_TOML) == expected
+    assert load_section(DiscussionSection, SECTION_TOML) == expected, (
+        f"{SECTION_TOML} drifted from the paper's picks"
+    )

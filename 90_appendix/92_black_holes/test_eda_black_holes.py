@@ -345,4 +345,6 @@ def test_shipped_section_toml_selects_the_papers_picks() -> None:
             },
         }
     )
-    assert load_section(BlackHolesSection, SECTION_TOML) == expected
+    assert load_section(BlackHolesSection, SECTION_TOML) == expected, (
+        f"{SECTION_TOML} drifted from the paper's picks"
+    )
