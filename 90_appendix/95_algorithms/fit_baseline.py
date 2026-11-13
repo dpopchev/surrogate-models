@@ -108,7 +108,7 @@ from paperlib.surrogate import (
     rmse,
     sklearn_fitter,
 )
-from paperlib.tables import Cell, Shape, Table, Text, aligns, fixed, render, shape_files
+from paperlib.tables import Cell, Shape, Table, Text, aligns, fixed, make_table, render, shape_files
 from paperlib.tables import to_json as table_json
 from paperlib.trials import ReportEpochs, open_study, tell_run
 from paperlib.workers import run_jobs
@@ -454,7 +454,7 @@ FOLDS_CAPTION = (
 
 def _columns_of(table: Table, label: str, caption: str, at: Sequence[int]) -> Table:
     """The table cut to the columns at `at`, plain-aligned, under its own label and caption."""
-    return Table(
+    return make_table(
         label,
         caption,
         aligns("".join(table.columns[i].align for i in at)),
@@ -509,7 +509,7 @@ def baseline_stored(
 
 def _one_table(pairs: list[PairScores]) -> Table:
     """Every predictor on every dataset and target, in one table."""
-    return Table(
+    return make_table(
         "baseline",
         "The baseline MLP against the mean and nearest-curve references, every predictor "
         "fitted on the same curves and timed on one thread: MARE on the test curves and "

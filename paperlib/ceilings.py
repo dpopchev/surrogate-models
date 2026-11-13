@@ -22,7 +22,7 @@ from scipy.interpolate import CubicSpline, PchipInterpolator
 
 from paperlib.config import CeilingsVariant, TableLayout
 from paperlib.eda import sci_tex
-from paperlib.tables import Cell, Table, Text, aligns, fixed, power, render
+from paperlib.tables import Cell, Table, Text, aligns, fixed, make_table, power, render
 
 # --- vocabulary and types ---------------------------------------------------------------------
 
@@ -186,7 +186,7 @@ def ceiling_object(
     )
     across = [f"across {labels[key]}" for key in keys]
     header = tuple(Text(h) for h in ("Target", "noise", "along", *across, "figures"))
-    return Table(label, caption, aligns("l" + "r" * (len(keys) + 3)), (header,), rows)
+    return make_table(label, caption, aligns("l" + "r" * (len(keys) + 3)), (header,), rows)
 
 
 def decade_object(
@@ -207,7 +207,7 @@ def decade_object(
         rows.append((Text(f"$10^{{{decade}}}$"), *cells, fixed(-np.log10(worst), 1)))
     across = [f"across {labels[key]}" for key in keys]
     header = tuple(Text(h) for h in ("Decade", *across, "figures"))
-    return Table(label, caption, aligns("l" + "r" * (len(keys) + 1)), (header,), tuple(rows))
+    return make_table(label, caption, aligns("l" + "r" * (len(keys) + 1)), (header,), tuple(rows))
 
 
 def _figure_lines(ax: Axes) -> None:

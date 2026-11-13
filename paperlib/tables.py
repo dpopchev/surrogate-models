@@ -85,6 +85,31 @@ class Table:
     small_spec: str = ""
 
 
+def _width(row: tuple[Cell, ...]) -> int:
+    return sum(cell.width if isinstance(cell, Span) else 1 for cell in row)
+
+
+def make_table(
+    label: str,
+    caption: str,
+    columns: tuple[Column, ...],
+    header: tuple[tuple[Cell, ...], ...],
+    rows: tuple[tuple[Cell, ...], ...],
+    small_spec: str | None = None,
+) -> Table:
+    """A table whose every row spans the columns; raises ValueError naming the row and the two
+    widths when one does not, or when a Span is narrower than one column."""
+    for name, group in (("header", header), ("row", rows)):
+        for at, row in enumerate(group):
+            if any(isinstance(cell, Span) and cell.width < 1 for cell in row):
+                raise ValueError(f"{name} {at} of {label!r} has a span narrower than 1")
+            if _width(row) != len(columns):
+                raise ValueError(
+                    f"{name} {at} of {label!r} spans {_width(row)} columns, not {len(columns)}"
+                )
+    return Table(label, caption, columns, header, rows, small_spec or "")
+
+
 def aligns(letters: str) -> tuple[Column, ...]:
     """The columns of a spec of plain alignment letters, e.g. "lrr"."""
     return tuple(Column(letter) for letter in letters)  # type: ignore[arg-type]
@@ -213,7 +238,7 @@ def to_json(table: Table) -> str:
 def from_json(text: str) -> Table:
     """The table of JSON text; raises pydantic.ValidationError when the text is not a table."""
     raw = _TableJson.model_validate_json(text)
-    return Table(
+    return make_table(
         label=raw.label,
         caption=raw.caption,
         columns=tuple(Column(c.align, c.before, c.after) for c in raw.columns),

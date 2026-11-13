@@ -81,7 +81,7 @@ from paperlib.plots import (
     mark_alpha,
     mark_size,
 )
-from paperlib.tables import Plain, Table, Text, aligns, fixed, number, render, to_json
+from paperlib.tables import Plain, Table, Text, aligns, fixed, make_table, number, render, to_json
 
 logger = logging.getLogger(__name__)
 
@@ -407,7 +407,7 @@ def _univariate_table(found: Evidence) -> Table:
         "Neutron stars: range, orders of magnitude spanned (orders) and skewness of each "
         "continuous variable, raw and in $\\log_{10}$."
     )
-    return Table("ns-univariate", caption, aligns("lrrrrr"), (header,), rows)
+    return make_table("ns-univariate", caption, aligns("lrrrrr"), (header,), rows)
 
 
 def _charge_table(found: Evidence) -> Table:
@@ -433,7 +433,7 @@ def _charge_table(found: Evidence) -> Table:
         )
     )
     caption = "Neutron stars: correlation of the two candidate charge targets."
-    return Table("ns-charge-correlation", caption, aligns("lrrrr"), (header,), rows)
+    return make_table("ns-charge-correlation", caption, aligns("lrrrr"), (header,), rows)
 
 
 def _split_table(found: Evidence) -> Table:
@@ -452,7 +452,7 @@ def _split_table(found: Evidence) -> Table:
         f"Neutron stars: 1-nearest-neighbour mean absolute error under each split "
         f"({found.folds} folds; the rim is predicted from the interior)."
     )
-    return Table("ns-split-strategies", caption, aligns("lrr"), (header,), rows)
+    return make_table("ns-split-strategies", caption, aligns("lrr"), (header,), rows)
 
 
 def table_object(found: Evidence, table: NsTable) -> Table:

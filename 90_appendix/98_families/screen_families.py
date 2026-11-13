@@ -106,6 +106,7 @@ from paperlib.tables import (
     Span,
     Table,
     Text,
+    make_table,
     render,
     shape_files,
     to_json,
@@ -376,7 +377,7 @@ def _subscripts_table(outcomes: Sequence[Outcome]) -> Table:
         for candidate in candidates()
     )
     fitted = [Column("l", before="@{}"), Column("l"), *(Column("r") for _ in keys)]
-    return Table(
+    return make_table(
         "families",
         FAMILIES_CAPTION.format(where="the subscript"),
         (*fitted[:-1], replace(fitted[-1], after="@{}")),
