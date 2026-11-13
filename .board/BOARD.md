@@ -1,12 +1,12 @@
 # Board -- surrogate-models
 record: local
-open path: E-016   | blocked: 0 | todo roots: 3 | done: 497 | pruned: 101
+open path: E-016 > W-132 > T-347   | blocked: 0 | todo roots: 3 | done: 497 | pruned: 101
 
 ## Tree
 
 ```text
 E-016         [doing]    The section scripts keep each rule once and each shipped setting under test
-  W-132  issue  [todo]     One home for the family and unit macro tags   (filed during T-346) -- T-347 [todo]
+  W-132  issue  [doing]    One home for the family and unit macro tags   (filed during T-346) -- T-347 [doing]   <- ACTIVE LEAF
   W-143  issue  [todo]     A Table refuses a row whose width differs from its columns   (filed during T-354) -- T-382 [todo]
   W-144  issue  [done]     The shipped section settings are pinned by tests   (filed during T-359) -- T-383 [done]
   W-145  issue  [todo]     One helper stores a section's tables and numbers   (filed during T-364) -- T-384 [todo]
@@ -1034,8 +1034,8 @@ closed 2026-11-13 -- pruned: its Given no longer holds: board context prints 839
 ```mermaid
 flowchart TD
   E016["E-016 doing: The section scripts keep each rule once and each shipped setting under test"]
-  E016 --> W132["W-132 issue todo: One home for the family and unit macro tags"]
-  W132 --> T347["T-347 todo: Move the family and unit macro tags into paperlib/candidates.py -> paperlib/candidates.py, screen_families.py, tune_survivors.py, paper_knobs.py"]
+  E016 --> W132["W-132 issue doing: One home for the family and unit macro tags"]
+  W132 --> T347["T-347 doing: Move the family and unit macro tags into paperlib/candidates.py -> paperlib/candidates.py, screen_families.py, tune_survivors.py, paper_knobs.py -- ACTIVE LEAF"]
   E016 --> W143["W-143 issue todo: A Table refuses a row whose width differs from its columns"]
   W143 --> T382["T-382 todo: Add the Table smart constructor -> make_table in paperlib/tables.py"]
   E016 --> W144["W-144 issue done: The shipped section settings are pinned by tests"]
@@ -1066,7 +1066,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E016 doing
+  class E016,W132,T347 doing
   class W144,T383,W157,T422 done
-  class W132,T347,W143,T382,W145,T384,W147,T388,W163,T433,W166,T437,E017,W061,T118,W129,T341,W164,T435,W165,T436,W167,T438 todo
+  class W143,T382,W145,T384,W147,T388,W163,T433,W166,T437,E017,W061,T118,W129,T341,W164,T435,W165,T436,W167,T438 todo
 ```
