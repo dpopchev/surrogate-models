@@ -1,23 +1,22 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 3 | done: 493 | pruned: 99
+open path: E-016 > W-144 > T-383   | blocked: 0 | todo roots: 1 | done: 493 | pruned: 101
 
 ## Tree
 
 ```text
-E-016         [todo]     The section scripts keep each rule once and each shipped setting under test
+E-016         [doing]    The section scripts keep each rule once and each shipped setting under test
   W-132  issue  [todo]     One home for the family and unit macro tags   (filed during T-346) -- T-347 [todo]
   W-143  issue  [todo]     A Table refuses a row whose width differs from its columns   (filed during T-354) -- T-382 [todo]
-  W-144  issue  [todo]     The shipped section settings are pinned by tests   (filed during T-359) -- T-383 [todo]
+  W-144  issue  [doing]    The shipped section settings are pinned by tests   (filed during T-359) -- T-383 [doing]   <- ACTIVE LEAF
   W-145  issue  [todo]     One helper stores a section's tables and numbers   (filed during T-364) -- T-384 [todo]
   W-147  issue  [todo]     Code comments and the citation notes name the sections the paper now has   (filed during T-373) -- T-388 [todo]
-  W-157  issue  [todo]     The figures mode of the black-hole, baseline and precision scripts is tested   (filed during T-398) -- T-422 [todo]
+  W-157  issue  [todo]     The figures mode of every section script is tested   (filed during T-398) -- T-422 [todo]
   W-163  issue  [todo]     The stable edge of a coupling pair is read from paperlib/domain.py alone   (filed during T-415) -- T-433 [todo]
 E-017         [todo]     The article is ready for the supervisors' read
   W-061  spike  [todo]     Which real references replace the placeholder citations -- T-118 [todo]
   W-129  bug    [todo]     A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
   W-164  issue  [todo]     Section 2.5 states the sampled neutron-star coupling ranges   (filed during T-419) -- T-435 [todo]
-W-162  issue  [todo]     (standalone) The session context fits the hook cap again   (filed during T-212) -- T-429 [todo]
 ```
 
 ## Closed
@@ -1022,22 +1021,28 @@ closed 2026-11-11 -- outcome: Given the Makefile follows the \~/.claude template
 - T-390 [pruned] Rename the aggregate and the paper target -> Makefile deliverables, mk/paper.mk paper   [pruned: its Check pipes stdout only while log_done writes to stderr (Makefile:42), so it printed 0 on a working build; superseded with 2>&1]
 - T-392 [done] Rename the aggregate and the paper target -> Makefile deliverables, mk/paper.mk paper
 
+### W-162 issue [pruned] (standalone) The session context fits the hook cap again
+
+closed 2026-11-13 -- pruned: its Given no longer holds: board context prints 8396 of 10000 characters and the standing part 5953 of 7500 on 2026-11-13, after the E-014 and E-015 closes (developer: the burn pick pasted, 2026-11-13) -- ledger: ledgers/W-162.md
+
+- T-429 [pruned] Distill the standing findings -> .board/KNOWLEDGE.md under its budgets   [pruned: its Given no longer holds: board context prints 8396 of 10000 characters and the standing part 5953 of 7500 on 2026-11-13, after the E-014 and E-015 closes (developer: the burn pick pasted, 2026-11-13)]
+
 ## Diagram
 ```mermaid
 flowchart TD
-  E016["E-016 todo: The section scripts keep each rule once and each shipped setting under test"]
+  E016["E-016 doing: The section scripts keep each rule once and each shipped setting under test"]
   E016 --> W132["W-132 issue todo: One home for the family and unit macro tags"]
   W132 --> T347["T-347 todo: Move the family and unit macro tags into paperlib/candidates.py -> paperlib/candidates.py, screen_families.py, tune_survivors.py, paper_knobs.py"]
   E016 --> W143["W-143 issue todo: A Table refuses a row whose width differs from its columns"]
   W143 --> T382["T-382 todo: Add the Table smart constructor -> make_table in paperlib/tables.py"]
-  E016 --> W144["W-144 issue todo: The shipped section settings are pinned by tests"]
-  W144 --> T383["T-383 todo: Pin the picks of each shipped section toml -> one test per section beside its script"]
+  E016 --> W144["W-144 issue doing: The shipped section settings are pinned by tests"]
+  W144 --> T383["T-383 doing: Pin the picks of each shipped section toml -> one test per section beside its script -- ACTIVE LEAF"]
   E016 --> W145["W-145 issue todo: One helper stores a section's tables and numbers"]
   W145 --> T384["T-384 todo: Promote the store step -> paperlib/tools/render_assets.py store_section"]
   E016 --> W147["W-147 issue todo: Code comments and the citation notes name the sections the paper now has"]
   W147 --> T388["T-388 todo: Rename the stale section numbers -> comments, help strings, docstrings and 00_metadata/citations.md"]
-  E016 --> W157["W-157 issue todo: The figures mode of the black-hole, baseline and precision scripts is tested"]
-  W157 --> T422["T-422 todo: Pin the figures folder of three scripts test-first -> three test_*_figures_folder tests"]
+  E016 --> W157["W-157 issue todo: The figures mode of every section script is tested"]
+  W157 --> T422["T-422 todo: Pin the figures folder of seven scripts test-first -> seven test_*_figures_folder tests"]
   E016 --> W163["W-163 issue todo: The stable edge of a coupling pair is read from paperlib/domain.py alone"]
   W163 --> T433["T-433 todo: Expose the stable edge of a coupling pair -> paperlib/domain.py stable_edge"]
   E017["E-017 todo: The article is ready for the supervisors' read"]
@@ -1047,12 +1052,11 @@ flowchart TD
   W129 --> T341["T-341 todo: Give a table caption its skip above the top rule -> paperlib/latex/preamble.tex"]
   E017 --> W164["W-164 issue todo: Section 2.5 states the sampled neutron-star coupling ranges"]
   W164 --> T435["T-435 todo: Write the neutron-star coupling ranges as macros -> 90_appendix/91_neutron_stars/eda_neutron_stars.py and 35_domain_boundaries.tex"]
-  W162["W-162 issue todo, standalone: The session context fits the hook cap again"]
-  W162 --> T429["T-429 todo: Distill the standing findings -> .board/KNOWLEDGE.md under its budgets"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E016,W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W163,T433,E017,W061,T118,W129,T341,W164,T435,W162,T429 todo
+  class E016,W144,T383 doing
+  class W132,T347,W143,T382,W145,T384,W147,T388,W157,T422,W163,T433,E017,W061,T118,W129,T341,W164,T435 todo
 ```

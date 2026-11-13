@@ -47,6 +47,8 @@
 - 2026-11-12 W-129: criterion and brief re-pointed at what E-013 left: make section S=90_appendix and paperlib/latex/preamble.tex replace make variants and 00_metadata/preamble.tex (developer: file, 2026-11-12)
 - 2026-11-12 W-132: criterion and brief re-pointed at what E-013 left: paperlib/candidates.py, 98_families_num.tex and 99_precision_num.tex; T-347 now names SPACE_TAG, as the 2026-10-12 finding asked (developer: file, 2026-11-12)
 - 2026-11-12 W-144: criterion and brief re-pointed at what E-013 and E-014 left: the Given names 90_appendix/91_neutron_stars/91_neutron_stars.toml, and T-383 pins nine section tomls instead of five (developer: file, 2026-11-12)
+- 2026-11-13 E-016: AC2, W-157 and T-422 re-pointed at the nine --figures scripts E-014 and E-015 left, seven of them untested, instead of five and three (developer: the burn pick pasted, 2026-11-13)
+- 2026-11-13 E-016: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 8 hours) (developer, 2026-11-13)
 
 ## Deviations
 - none recorded
