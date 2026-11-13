@@ -50,6 +50,8 @@ from paperlib.batches import (
 )
 from paperlib.candidates import (
     FAMILIES,
+    FAMILY_TAG,
+    UNIT_TAG,
     UNITS,
     Candidate,
     Family,
@@ -459,18 +461,6 @@ def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) 
     for name, table in tables.items():
         (folder / f"{name}.json").write_text(to_json(table))
     (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
-
-
-# Macro tags of the families and units: \famNsMassRbfCurvewiseFigures.
-FAMILY_TAG = {
-    "k-NN": "Knn",
-    "local RBF": "Rbf",
-    "GPR": "Gpr",
-    "XGBoost": "Xgboost",
-    "MLP": "Mlp",
-    "ResNet": "Resnet",
-}
-UNIT_TAG = {"pointwise": "Pointwise", "curve-wise": "Curvewise"}
 
 
 def numbers(outcomes: Sequence[Outcome]) -> dict[str, str]:

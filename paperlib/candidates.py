@@ -33,6 +33,26 @@ Family = Literal["k-NN", "local RBF", "GPR", "XGBoost", "MLP", "ResNet"]
 FAMILIES: tuple[Family, ...] = ("k-NN", "local RBF", "GPR", "XGBoost", "MLP", "ResNet")
 UNITS: tuple[Unit, ...] = ("pointwise", "curve-wise")
 
+# Macro tags of the families and units: \famNsMassRbfCurvewiseFigures, \tunNsMassRbfPointwiseFolds.
+FAMILY_TAG: Mapping[Family, str] = {
+    "k-NN": "Knn",
+    "local RBF": "Rbf",
+    "GPR": "Gpr",
+    "XGBoost": "Xgboost",
+    "MLP": "Mlp",
+    "ResNet": "Resnet",
+}
+UNIT_TAG: Mapping[Unit, str] = {"pointwise": "Pointwise", "curve-wise": "Curvewise"}
+# The macro tag of each family's search space; the two networks share one space, Net.
+SPACE_TAG: Mapping[str, str] = {
+    "k-NN": "Knn",
+    "local RBF": "Rbf",
+    "GPR": "Gpr",
+    "XGBoost": "Xgboost",
+    "MLP": "Net",
+    "ResNet": "Net",
+}
+
 # The GPR's kernel shapes a trial chooses from (paperlib/search.py SPACES), each scaled and
 # joined by white noise as in paperlib/families.py make_gpr.
 GPR_KERNELS: Mapping[str, Callable[[], Kernel]] = {
