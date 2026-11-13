@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from check_domain import (
+    SECTION_TOML,
     DomainSection,
     DomainVariant,
     MapInput,
@@ -22,7 +23,7 @@ from check_domain import (
     run,
 )
 
-from paperlib.config import PaperConfig
+from paperlib.config import PaperConfig, load_section
 from paperlib.domain import make_black_hole_domain, make_neutron_star_domain
 from paperlib.final import FinalSurrogate, save_domain, save_surrogate
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
@@ -205,3 +206,9 @@ def test_main_writes_the_figure_wrapper(written: tuple[Path, Path]) -> None:
 def test_main_stores_the_numbers(written: tuple[Path, Path]) -> None:
     stored = json.loads((written[0] / "50_validity" / "numbers.json").read_text())
     assert stored["validityBhTestInside"] == "100"
+
+
+@pytest.mark.model
+def test_shipped_section_toml_selects_the_papers_picks() -> None:
+    expected = DomainSection.model_validate({"variants": {"domain": "planes"}})
+    assert load_section(DomainSection, SECTION_TOML) == expected

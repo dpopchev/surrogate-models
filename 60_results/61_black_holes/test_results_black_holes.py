@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from results_black_holes import (
+    SECTION_TOML,
     BlackHoleSection,
     MapInput,
     TargetInput,
@@ -24,7 +25,7 @@ from results_black_holes import (
     run,
 )
 
-from paperlib.config import PaperConfig
+from paperlib.config import PaperConfig, load_section
 from paperlib.design import BLACK_HOLES, Target, pairs
 from paperlib.domain import make_black_hole_domain
 from paperlib.final import FinalSurrogate, save_domain, save_surrogate
@@ -179,3 +180,9 @@ def test_main_writes_the_figure_wrapper(written: tuple[Path, Path]) -> None:
 def test_main_stores_the_numbers(written: tuple[Path, Path]) -> None:
     stored = json.loads((written[0] / "61_black_holes" / "numbers.json").read_text())
     assert stored["resultsBhMassGap"] == "1.0"
+
+
+@pytest.mark.model
+def test_shipped_section_toml_selects_the_papers_picks() -> None:
+    expected = BlackHoleSection.model_validate({"variants": {"errors": "curves"}})
+    assert load_section(BlackHoleSection, SECTION_TOML) == expected

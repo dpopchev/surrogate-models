@@ -14,6 +14,7 @@ import pytest
 import screen_families
 from screen_families import (
     SECTION,
+    SECTION_TOML,
     SHAPES,
     Candidate,
     FamiliesParityVariant,
@@ -46,7 +47,7 @@ from screen_families import (
     trajectories,
 )
 
-from paperlib.config import PaperConfig
+from paperlib.config import PaperConfig, load_section
 from paperlib.design import Design, Target
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
 from paperlib.tables import from_json, render
@@ -642,3 +643,18 @@ def test_the_next_round_runs_each_pair_s_survivors_at_the_next_budget() -> None:
         Job("toy", "mass", RBF, rows=10_000, round=1),
         Job("other", "charge", KNN, rows=10_000, round=1),
     )
+
+
+@pytest.mark.model
+def test_shipped_section_toml_selects_the_papers_picks() -> None:
+    expected = FamiliesSection.model_validate(
+        {
+            "figures": ["parity", "errors", "scaling"],
+            "variants": {
+                "parity": "parity",
+                "errors": "scatter_profiles",
+                "scaling": "figures_and_seconds",
+            },
+        }
+    )
+    assert load_section(FamiliesSection, SECTION_TOML) == expected
