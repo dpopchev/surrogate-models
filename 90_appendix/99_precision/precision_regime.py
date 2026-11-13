@@ -1,5 +1,6 @@
-"""The precision regime of Section 5.3 (W-093): each precision option laid on the tuned winner of
-every pair, scored on the frozen folds beside the tuned figures and the pair's data ceiling.
+"""The precision regime of the tuning and precision appendix (W-093): each precision
+option laid on the tuned winner of every pair, scored on the frozen folds beside the tuned
+figures and the pair's data ceiling.
 
 The winners are the saved surrogates of make pipeline, read as plain JSON from
 <state>/41_algorithm/summary.json. One job per pair, applicable option and seed runs the harness

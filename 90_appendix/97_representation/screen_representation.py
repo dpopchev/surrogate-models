@@ -1,7 +1,7 @@
-"""The representation screen behind Section 5.1 (W-066): one factor at a time from the baseline
-representation, each scored at equal model.
+"""The representation screen behind the representation appendix (W-066): one factor at a time
+from the baseline representation, each scored at equal model.
 
-The baseline representation is the one of Section 4.1: NS log10 rho_c, the target M or the
+The baseline representation is the one of the baseline appendix: NS log10 rho_c, the target M or the
 charge target Y = log10(D/M), one row at a time. Each other cell changes one factor -- NS rho_c
 raw, the mass as log10 M, the charge as linear D, or the curve-wise unit (paperlib/curvewise.py) --
 and is scored through paperlib/harness.py with the weighted k-NN, the local RBF
@@ -291,10 +291,10 @@ MODEL_TAG = {"k-NN": "Knn", "local RBF": "Rbf", "MLP": "Mlp"}
 
 
 def numbers(found: Sequence[Score]) -> dict[str, str]:
-    """Every score Section 5.1 cites, as the table prints it: \\repr<Pair><Representation>
-    <Model><Test|Folds>; then per model the fold figures raw rho_c loses on the NS mass,
-    \\reprNsMassRawRhoLoss<Model>, the difference of the printed entries so a reader's check
-    against the table holds."""
+    """Every score the representation appendix cites, as the table prints it:
+    \\repr<Pair><Representation><Model><Test|Folds>; then per model the fold figures raw rho_c
+    loses on the NS mass, \\reprNsMassRawRhoLoss<Model>, the difference of the printed entries
+    so a reader's check against the table holds."""
     macros: dict[str, str] = {}
     by_key = {(s.dataset, s.target, s.representation, s.model): s for s in found}
     for s in found:
@@ -331,9 +331,9 @@ def representation_table(
     layout: TableLayout = "small",
     shape: RepresentationTableLayout = "eight_columns",
 ) -> str:
-    """The Section 5.1 table in its shape: every pair in eight columns, the NS and the BH pairs
-    as two such tables (split), or a row per pair and model with a column per representation
-    (transposed)."""
+    """The representation appendix table in its shape: every pair in eight
+    columns, the NS and the BH pairs as two such tables (split), or a row per pair and model
+    with a column per representation (transposed)."""
     tables = representation_objects(found, layout, shape)
     return "".join(render(table, layout) for table in tables.values())
 
@@ -343,9 +343,9 @@ def representation_objects(
     layout: TableLayout = "small",
     shape: RepresentationTableLayout = "eight_columns",
 ) -> dict[str, Table]:
-    """The Section 5.1 table in its shape as objects by stored name, to store as JSON: one
-    table, or the NS and the BH tables (split, the BH one as representation_bh). The caption
-    names the spread as the layout writes it."""
+    """The representation appendix table in its shape as objects by stored name, to store as
+    JSON: one table, or the NS and the BH tables (split, the BH one as representation_bh). The
+    caption names the spread as the layout writes it."""
     caption = REPRESENTATION_CAPTION.replace(SPREAD_TEX["small"], SPREAD_TEX[layout])
     table = _eight_columns(found, "representation", caption)
     if shape == "eight_columns":

@@ -1,4 +1,4 @@
-"""Facts about the baseline fit behind Section 4.1, on tiny synthetic curves."""
+"""Facts about the baseline fit behind the baseline appendix, on tiny synthetic curves."""
 
 import json
 import re
@@ -327,7 +327,7 @@ class TestStartBanner:
         assert "  - state/run-1/loss_curve.png (redrawn every 5 epochs)" in lines
 
     def test_lists_the_paper_assets_written_at_the_end(self, lines: list[str]) -> None:
-        assert "  - assets/95_algorithms/ (Section 4.1 numbers, parity figure)" in lines
+        assert "  - assets/95_algorithms/ (baseline appendix numbers, parity figure)" in lines
 
     def test_says_how_to_follow_the_run(self, lines: list[str]) -> None:
         assert "follow live: make follow" in lines

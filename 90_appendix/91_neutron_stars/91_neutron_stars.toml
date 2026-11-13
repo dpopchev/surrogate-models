@@ -1,4 +1,4 @@
-# Section 3.1 -- which NS EDA figures and tables eda_neutron_stars.py renders; the section text
+# The neutron-star data appendix -- which NS EDA figures and tables eda_neutron_stars.py renders; the section text
 # places each one beside the paragraph that cites it, and a deselected one simply drops out.
 # Also available: "univariate" (every variable, equal bins), "curve_adjacency"
 # (nearest-neighbour distance, own vs other curve) and "grid_fill" (rows per curve; the
@@ -11,7 +11,7 @@ figures = [
 ]
 tables = ["univariate", "charge_correlation", "split_strategies"]
 
-# Which variant of each Section 3.1 figure the paper places; `make figures` draws them all
+# Which variant of each neutron-star data appendix figure the paper places; `make figures` draws them all
 # side by side under build/sections/91_neutron_stars/figures/ to pick from (W-112).
 [variants]
 charge_target = "scatter"            # scatter: every row | lines: one line per curve

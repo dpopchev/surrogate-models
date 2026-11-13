@@ -66,7 +66,7 @@ def tenth_over(x: np.ndarray) -> np.ndarray:
 
 
 def toy_numbers() -> dict[str, str]:
-    """The macros of Section 6 on the toy curves."""
+    """The macros of the physical implications on the toy curves."""
     return numbers(run(MapInput(toy_table(), toy_split(), tenth_over, 2.5)))
 
 

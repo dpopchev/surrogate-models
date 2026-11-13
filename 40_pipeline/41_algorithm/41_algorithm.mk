@@ -1,4 +1,4 @@
-# Section 4.1's pipeline (W-152): the tuning's winner of each pair fitted on every non-test row and
+# The pipeline as one algorithm (W-152): the tuning's winner of each pair fitted on every non-test row and
 # saved under $(STATE)/41_algorithm/, each printed with its test figures beside its ceiling. It also
 # saves the physical domain of each map as <dataset>-domain.json there (paperlib/final.py load_domain). Its
 # inputs are data under $(STATE): the prepared tables and the split, the audit's ceilings and the
@@ -16,4 +16,4 @@ pipeline: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/s
 	@$(RUN) python $(PIPELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(STATE) $(PIPELINE_KNOBS) --seed $(PIPELINE_SEED)
 	$(call log_done,4 surrogates and 2 domains saved under $(notdir $(LOCAL))/state/41_algorithm/)
 
-41_algorithm: pipeline ## Run the Section 4.1 pipeline -- the same as make pipeline
+41_algorithm: pipeline ## Run the pipeline --the same as make pipeline

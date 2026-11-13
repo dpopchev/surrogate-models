@@ -1,5 +1,5 @@
-"""Facts about Section 5.2's figure and numbers, on a tiny synthetic neutron-star map and toy
-surrogates."""
+"""Facts about the neutron-star results' figure and numbers, on a tiny synthetic neutron-star map
+and toy surrogates."""
 
 import json
 from pathlib import Path

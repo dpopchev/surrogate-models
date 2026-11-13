@@ -1,4 +1,4 @@
-"""Facts about the family screen behind Section 5.2, on tiny synthetic data."""
+"""Facts about the family screen behind the family screen appendix, on tiny synthetic data."""
 
 import json
 import time

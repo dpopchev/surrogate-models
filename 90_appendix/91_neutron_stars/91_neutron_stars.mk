@@ -1,4 +1,4 @@
-# Section 3.1: the NS EDA writes the figures and tables paper.toml and this section's toml
+# The neutron-star data appendix: the NS EDA writes the figures and tables paper.toml and this section's toml
 # select and their numbers; the numbers file, written on every run, stands for the whole set
 # (the script empties its own folder first).
 NS_EDA        := 90_appendix/91_neutron_stars/eda_neutron_stars.py
@@ -6,7 +6,7 @@ NS_EDA_TOML   := 90_appendix/91_neutron_stars/91_neutron_stars.toml
 NS_EDA_ASSETS := $(ASSETS)/91_neutron_stars/91_neutron_stars_num.tex
 PAPER_ASSETS  += $(NS_EDA_ASSETS)
 # The EDA probes the split with the split's own folds and seed (95_algorithms.mk); the NS pile-up
-# window in M is the band below a curve's M_max that Section 3.1 counts.
+# window in M is the band below a curve's M_max that the neutron-star data appendix counts.
 NS_PILE_UP_WINDOW := 0.09
 
 # The script stores the tables and numbers as JSON under $(STATE)/91_neutron_stars/ and still
@@ -22,8 +22,8 @@ $(NS_EDA_STATE)/numbers.json $(NS_EDA_STATE)/reachable_figures.json $(NS_EDA_ASS
 	$(call log_done,NS EDA figure wrappers written to $(@D)/ and tables and numbers to $(NS_EDA_STATE)/; make figures draws the PNGs)
 
 .PHONY: 91_neutron_stars
-91_neutron_stars: $(NS_EDA_ASSETS) ## Build the neutron-star EDA assets for Section 3.1
-	$(call log_done,Section 3.1 assets current in $(dir $(NS_EDA_ASSETS)))
+91_neutron_stars: $(NS_EDA_ASSETS) ## Build the neutron-star EDA assets
+	$(call log_done,neutron-star data appendix assets current in $(dir $(NS_EDA_ASSETS)))
 
 # Every figure variant as its own PNG under build/sections/91_neutron_stars/figures/, drawn from
 # the figure data the main run stored; nothing is computed.

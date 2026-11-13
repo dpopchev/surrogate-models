@@ -1,4 +1,4 @@
-# Section 5.2: the family screen (W-067), successive halving over the training rows -- every
+# The family screen appendix: the family screen (W-067), successive halving over the training rows -- every
 # family pointwise and curve-wise at the first budget, the top 3 of each unit per pair at the
 # second, the top 2 of each at the third, each unit ranked apart because a thinned NS design
 # keeps few curves (Decisions on W-067); a fit past 30 min or 4 GB is the family's wall there
@@ -13,7 +13,7 @@ FAMILIES_KNOBS  := --k 8 --neighbours 100 --knots 8 --per-curve 10 \
 # The text cites them: paper_knobs.py reads the flag, and a change here rebuilds the knobs asset.
 KNOBS_FLAGS     += --families "$(FAMILIES_KNOBS)"
 KNOBS_DEPS      += 90_appendix/98_families/98_families.mk
-# The recorded batch Section 5.2 reports (2026-10-08, clean at 037443f; 88 outcomes): its saved
+# The recorded batch the family screen appendix reports (2026-10-08, clean at 037443f; 88 outcomes): its saved
 # outcomes (local/state/98_families/<batch>.json) rebuild the table and figures in seconds.
 # Empty it to refit the whole screen (hours): make families FAMILIES_BATCH=
 FAMILIES_BATCH  ?= 01a11be4-6eca-7427-a5dd-a97dd7a0194d
@@ -35,10 +35,10 @@ $(FAMILIES_STATE)/numbers.json $(FAMILIES_ASSETS) &: $(FAMILIES) $(RENDER_ASSETS
 PAPER_ASSETS += $(if $(FAMILIES_BATCH),$(FAMILIES_ASSETS))
 
 .PHONY: families 98_families
-families: $(FAMILIES_ASSETS) ## Run the family screen for Section 5.2
+families: $(FAMILIES_ASSETS) ## Run the family screen
 	$(call log_done,family assets current in $(dir $(FAMILIES_ASSETS)))
 
-98_families: families ## Build the Section 5.2 assets -- the same as make families
+98_families: families ## Build the family screen assets -- the same as make families
 
 # Every figure variant as its own PNG under build/sections/98_families/figures/, redrawn from the
 # recorded batch; nothing is screened. FAMILIES_BATCH must name a recorded batch.

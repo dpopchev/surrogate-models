@@ -1,4 +1,4 @@
-# Section 5.1 -- which variant of the error figure results_black_holes.py draws; `make figures`
+# The black-hole results -- which variant of the error figure results_black_holes.py draws; `make figures`
 # draws both side by side under build/sections/61_black_holes/figures/ to pick from.
 [variants]
 errors = "curves"  # curves: the error of every held-out curve against r_h, one line per beta

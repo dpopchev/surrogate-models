@@ -1,4 +1,4 @@
-"""The domain figure of Section 4 and its numbers (W-153).
+"""The domain figure of the domain of validity and its numbers (W-153).
 
 Per map -- black holes in the (beta, r_h) plane, neutron stars in the (beta, lambda) plane and along
 one curve of rho_c -- a regular grid of probe queries goes through predict of paperlib/final.py: an
@@ -49,7 +49,7 @@ DomainVariant = Literal["planes", "planes_no_arrows"]
 
 
 class DomainVariants(BaseModel):
-    """Section 4: which variant of the domain figure the paper places."""
+    """The domain of validity: which variant of the domain figure the paper places."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -57,7 +57,7 @@ class DomainVariants(BaseModel):
 
 
 class DomainSection(BaseModel):
-    """Section 4's own settings: the picked variant of its figure."""
+    """The domain of validity's own settings: the picked variant of its figure."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -246,7 +246,7 @@ def run(maps: Sequence[MapInput]) -> tuple[MapEvidence, ...]:
 
 
 def numbers(found: Sequence[MapEvidence]) -> dict[str, str]:
-    """Every number Section 4 cites, keyed by its \\validity macro name."""
+    """Every number the domain of validity cites, keyed by its \\validity macro name."""
     macros: dict[str, str] = {}
     for evidence in found:
         tag = "Bh" if isinstance(evidence.domain, BlackHoleDomain) else "Ns"

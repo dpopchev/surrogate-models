@@ -1,4 +1,4 @@
-"""The numbers Section 3.3 cites about the split (W-020).
+"""The numbers the preprocessing appendix cites about the split (W-020).
 
 Reads the frozen split (local/state/split.parquet); stores \\prep... LaTeX macros: per dataset
 the curves in the test set and in each GroupKFold fold, and the curves the extrapolation ablation
@@ -68,8 +68,8 @@ TAGS = {"neutron_stars": "Ns", "black_holes": "Bh"}
 def numbers(
     splits: tuple[SplitSummary, ...], seed: int, decisions: DecisionsTableLayout = "wide"
 ) -> dict[str, str]:
-    """Every number Section 3.3 cites, keyed by its \\prep macro name, and the decisions
-    tables' layout."""
+    """Every number the preprocessing appendix cites, keyed by its \\prep macro name, and the
+    decisions tables' layout."""
     found = {"prepSeed": f"{seed}", "prepDecisionsLayout": decisions}
     for s in splits:
         tag = TAGS[s.dataset]
@@ -102,8 +102,9 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
 
 
 def main(argv: list[str]) -> None:
-    """Store the Section 3.3 numbers from the split file as JSON under the section's folder of
-    the state dir, for paperlib/tools/render_assets.py to write the asset from."""
+    """Store the preprocessing appendix numbers from the split file as JSON under the
+    section's folder of the state dir, for paperlib/tools/render_assets.py to write the asset
+    from."""
     args = _arguments(argv)
     assert args.split.is_file(), f"input not found: {args.split}"
     split = pd.read_parquet(args.split)
@@ -113,7 +114,7 @@ def main(argv: list[str]) -> None:
     numbers_json = out / "numbers.json"
     decisions = load_config().tables.decisions
     numbers_json.write_text(json.dumps(numbers(splits, args.seed, decisions)))
-    logger.info("done: Section 3.3 numbers -> %s", numbers_json)
+    logger.info("done: preprocessing appendix numbers -> %s", numbers_json)
 
 
 if __name__ == "__main__":

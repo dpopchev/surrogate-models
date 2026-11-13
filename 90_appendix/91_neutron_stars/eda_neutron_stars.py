@@ -1,4 +1,4 @@
-"""Exploratory analysis of the prepared NS table behind Section 3.1 (W-017).
+"""Exploratory analysis of the prepared NS table behind the neutron-star data appendix (W-017).
 
 The computations are pure functions over the table, each returning a frozen record; their
 numbers become \\nsEda... LaTeX macros so the text and the decisions table cite generated values.
@@ -108,7 +108,7 @@ NsMassMaxVariant = Literal["histogram_heatmap", "heatmap_contours", "log_histogr
 
 
 class NeutronStarVariants(BaseModel):
-    """Section 3.1: which variant of each NS figure the paper places (W-112)."""
+    """The neutron-star data appendix: which variant of each NS figure the paper places (W-112)."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -120,7 +120,7 @@ class NeutronStarVariants(BaseModel):
 
 
 class NeutronStarsSection(BaseModel):
-    """Section 3.1: which NS EDA figures and tables eda_neutron_stars.py renders."""
+    """The neutron-star appendix: which NS EDA figures and tables eda_neutron_stars.py renders."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -282,7 +282,8 @@ SPLIT_TARGETS = ("log10_D_over_M", "M")
 
 @dataclass(frozen=True)
 class Evidence:
-    """Every computed result Section 3.1 cites, computed once for the macros and the tables."""
+    """Every computed result the neutron-star data appendix cites, computed once for
+    the macros and the tables."""
 
     rows: int
     density_grid_values: int
@@ -300,7 +301,7 @@ class Evidence:
 
 
 def evidence(table: pd.DataFrame, folds: int, seed: int, window: float) -> Evidence:
-    """Compute every Section 3.1 result from a table with the charge targets."""
+    """Compute every neutron-star data appendix result from a table with the charge targets."""
     sizes = table.groupby(list(CURVE)).size()
     return Evidence(
         len(table),
@@ -321,7 +322,7 @@ def evidence(table: pd.DataFrame, folds: int, seed: int, window: float) -> Evide
 
 def raw_numbers(raw: Mapping[str, int]) -> dict[str, str]:
     """The raw file's counts the preparation kept with the table (its runs, the empty ones,
-    its rows), as \\nsEda macros for Section 2.4."""
+    its rows), as \\nsEda macros for the neutron-star dataset."""
     return {
         "nsEdaRawRuns": str(raw["runs"]),
         "nsEdaEmptyRuns": str(raw["empty_runs"]),
@@ -330,7 +331,7 @@ def raw_numbers(raw: Mapping[str, int]) -> dict[str, str]:
 
 
 def numbers(found: Evidence) -> dict[str, str]:
-    """Every number Section 3.1 cites, keyed by its \\nsEda macro name."""
+    """Every number the neutron-star data appendix cites, keyed by its \\nsEda macro name."""
     summary = {(s.column, s.scale): s for s in found.summaries}
     log_d, log_dm = found.targets
     rho = summary["rho_c", "log10"]

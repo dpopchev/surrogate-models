@@ -1,5 +1,5 @@
-"""Facts about the precision run of Section 5.3 (W-093), on the toy tables and a toy summary of
-k-NN pointwise winners: nothing here fits a real surrogate."""
+"""Facts about the precision run of the tuning and precision appendix (W-093), on the toy tables
+and a toy summary of k-NN pointwise winners: nothing here fits a real surrogate."""
 
 import json
 import re

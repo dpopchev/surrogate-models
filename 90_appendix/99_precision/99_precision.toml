@@ -1,4 +1,4 @@
-# Which variant of each Section 5.3 figure the paper places; `make figures` draws them from
+# Which variant of each tuning and precision appendix figure the paper places; `make figures` draws them from
 # TUNING_BATCH's journal, nothing fitted (W-113).
 [variants]
 history = "dots_and_best"  # dots_and_best: every trial and the best so far | best_only
