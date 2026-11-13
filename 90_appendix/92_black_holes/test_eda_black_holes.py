@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from eda_black_holes import (
+    SECTION_TOML,
     BlackHolesSection,
     BlackHoleVariants,
     CurveStart,
@@ -29,7 +30,7 @@ from eda_black_holes import (
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from paperlib.config import PaperConfig
+from paperlib.config import PaperConfig, load_section
 from paperlib.eda import number_tex, with_charge_targets
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
 
@@ -300,3 +301,21 @@ class TestMain:
 def test_split_strategies_score_every_strategy_in_order() -> None:
     scores = split_strategies(TABLE, "M", folds=3, seed=0)
     assert [s.strategy for s in scores] == ["random_rows", "curves", "outer_curves"]
+
+
+@pytest.mark.model
+def test_shipped_section_toml_selects_the_papers_picks() -> None:
+    expected = BlackHolesSection.model_validate(
+        {
+            "figures": ["univariate_continuous", "mass_radius", "charge_target", "existence_edge"],
+            "tables": ["univariate", "charge_correlation", "split_strategies"],
+            "variants": {
+                "mass_radius": "inset",
+                "univariate_continuous": "histograms",
+                "charge_target": "two_panels",
+                "existence_edge": "segments",
+                "ceilings": "annotated",
+            },
+        }
+    )
+    assert load_section(BlackHolesSection, SECTION_TOML) == expected

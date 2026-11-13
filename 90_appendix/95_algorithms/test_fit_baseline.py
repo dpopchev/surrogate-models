@@ -23,7 +23,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from fit_baseline import (
     SECTION,
+    SECTION_TOML,
     SHAPES,
+    AlgorithmsSection,
     ChargeMares,
     Fit,
     PairScores,
@@ -48,7 +50,7 @@ from fit_baseline import (
 )
 
 from paperlib.ceilings import Spread
-from paperlib.config import PaperConfig
+from paperlib.config import PaperConfig, load_section
 from paperlib.design import NEUTRON_STARS, Design
 from paperlib.harness import Timing
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
@@ -625,3 +627,9 @@ class TestFinalFit:
     def test_names_the_epoch_of_the_lowest_valid_loss(self, fit: Fit) -> None:
         best = min(fit.history, key=lambda row: cast(float, row["valid_loss"]))
         assert fit.best_epoch == best["epoch"]
+
+
+@pytest.mark.model
+def test_shipped_section_toml_selects_the_papers_picks() -> None:
+    expected = AlgorithmsSection.model_validate({"variants": {"parity": "ns_mass"}})
+    assert load_section(AlgorithmsSection, SECTION_TOML) == expected

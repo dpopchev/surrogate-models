@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from eda_neutron_stars import (
+    SECTION_TOML,
     NeutronStarsSection,
     NeutronStarVariants,
     beta_share_at_fixed_lambda,
@@ -31,7 +32,7 @@ from eda_neutron_stars import (
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from paperlib.config import PaperConfig
+from paperlib.config import PaperConfig, load_section
 from paperlib.eda import RowsPerCurve, with_charge_targets
 from paperlib.plots import NOTATION_TEX, PlotStyle, anchor_color, apply_style
 
@@ -434,3 +435,21 @@ def test_ns_eda_writes_its_five_tables_as_json(tmp_path: Path) -> None:
         "ceilings",
         "ceiling_decades",
     }
+
+
+@pytest.mark.model
+def test_shipped_section_toml_selects_the_papers_picks() -> None:
+    expected = NeutronStarsSection.model_validate(
+        {
+            "figures": ["univariate_continuous", "mass_density", "charge_target", "mass_max"],
+            "tables": ["univariate", "charge_correlation", "split_strategies"],
+            "variants": {
+                "charge_target": "scatter",
+                "mass_density": "by_lambda",
+                "univariate_continuous": "histograms",
+                "mass_max": "histogram_heatmap",
+                "ceilings": "annotated",
+            },
+        }
+    )
+    assert load_section(NeutronStarsSection, SECTION_TOML) == expected

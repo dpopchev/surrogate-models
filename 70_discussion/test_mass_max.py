@@ -3,7 +3,9 @@
 import numpy as np
 import pandas as pd
 import pytest
-from mass_max import MapInput, numbers, predicted_mass_max, run
+from mass_max import SECTION_TOML, DiscussionSection, MapInput, numbers, predicted_mass_max, run
+
+from paperlib.config import load_section
 
 # Three training curves (fold labels) and one test curve at the middle of the edge between the
 # first two. Each curve ends at its stable edge: 100, 1000 and 100 for the training curves.
@@ -74,3 +76,9 @@ def test_run_numbers_hold_the_ceiling_beside_it():
 @pytest.mark.model
 def test_run_numbers_hold_the_curves_scored():
     assert toy_numbers()["discussionMassCurves"] == "1"
+
+
+@pytest.mark.model
+def test_shipped_section_toml_selects_the_papers_picks() -> None:
+    expected = DiscussionSection.model_validate({"variants": {"mass_max": "parity"}})
+    assert load_section(DiscussionSection, SECTION_TOML) == expected

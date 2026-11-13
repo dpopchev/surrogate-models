@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from results_neutron_stars import (
+    SECTION_TOML,
     MapInput,
     NeutronStarSection,
     TargetInput,
@@ -24,7 +25,7 @@ from results_neutron_stars import (
     run,
 )
 
-from paperlib.config import PaperConfig
+from paperlib.config import PaperConfig, load_section
 from paperlib.design import NEUTRON_STARS, Target, pairs
 from paperlib.final import FinalSurrogate, save_surrogate
 from paperlib.harness import Predictor
@@ -184,3 +185,9 @@ def test_main_writes_the_figure_wrapper(written: tuple[Path, Path]) -> None:
 def test_main_stores_the_numbers(written: tuple[Path, Path]) -> None:
     stored = json.loads((written[0] / "62_neutron_stars" / "numbers.json").read_text())
     assert stored["resultsNsMassGap"] == "1.0"
+
+
+@pytest.mark.model
+def test_shipped_section_toml_selects_the_papers_picks() -> None:
+    expected = NeutronStarSection.model_validate({"variants": {"errors": "by_lambda"}})
+    assert load_section(NeutronStarSection, SECTION_TOML) == expected

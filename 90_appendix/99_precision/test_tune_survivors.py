@@ -21,8 +21,10 @@ from optuna.storages.journal import JournalFileBackend
 from optuna.trial import TrialState
 from tune_survivors import (
     SECTION,
+    SECTION_TOML,
     SHAPES,
     Job,
+    PrecisionSection,
     ShortList,
     TrialPoint,
     Tuned,
@@ -52,7 +54,7 @@ from tune_survivors import (
 from paperlib.batches import write_entry
 from paperlib.candidates import Candidate
 from paperlib.ceilings import Spread
-from paperlib.config import PaperConfig
+from paperlib.config import PaperConfig, load_section
 from paperlib.design import Design
 from paperlib.harness import Run, Timing
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
@@ -597,3 +599,11 @@ def test_a_walled_network_trial_is_a_cross_at_its_width_and_rate_on_the_ranges_f
     figure = ranges_figure(TOY_POINTS, PlotStyle(usetex=False))
     (crosses,) = [line for line in figure.axes[2].lines if line.get_marker() == "x"]
     assert np.asarray(crosses.get_xydata()).tolist() == [[400.0, 1e-3]]
+
+
+@pytest.mark.model
+def test_shipped_section_toml_selects_the_papers_picks() -> None:
+    expected = PrecisionSection.model_validate(
+        {"variants": {"history": "dots_and_best", "ranges": "row"}}
+    )
+    assert load_section(PrecisionSection, SECTION_TOML) == expected
