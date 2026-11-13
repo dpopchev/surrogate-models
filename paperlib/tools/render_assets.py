@@ -14,7 +14,7 @@ from pathlib import Path
 
 from paperlib.config import TableLayout, load_config
 from paperlib.eda import render_macros
-from paperlib.tables import from_json, render
+from paperlib.tables import Table, from_json, render, to_json
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,24 @@ def assets_of(
 
 
 # --- shell ------------------------------------------------------------------------------------
+
+
+def store_section(
+    state: Path, section: str, tables: Mapping[str, Table], numbers: Mapping[str, str] | None
+) -> None:
+    """Store a section's tables as <state>/<section>/tables/<name>.json, an earlier run's
+    tables gone, and its numbers as <state>/<section>/numbers.json when given; no tables, no
+    tables folder."""
+    folder = state / section
+    folder.mkdir(parents=True, exist_ok=True)
+    if tables:
+        (folder / "tables").mkdir(exist_ok=True)
+        for stale in (folder / "tables").glob("*.json"):
+            stale.unlink()
+        for name, table in tables.items():
+            (folder / "tables" / f"{name}.json").write_text(to_json(table))
+    if numbers is not None:
+        (folder / "numbers.json").write_text(json.dumps(dict(numbers)))
 
 
 def main(argv: list[str]) -> None:

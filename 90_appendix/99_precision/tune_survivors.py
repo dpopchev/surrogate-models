@@ -117,8 +117,8 @@ from paperlib.tables import (
     make_table,
     render,
     shape_files,
-    to_json,
 )
+from paperlib.tools.render_assets import store_section
 from paperlib.trials import open_study
 from paperlib.workers import run_jobs
 
@@ -581,18 +581,6 @@ def winners_json(outcomes: Sequence[Outcome]) -> str:
         for w in winners(outcomes)
     ]
     return json.dumps(found, indent=2) + "\n"
-
-
-def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
-    """Store the tables as JSON by name and the numbers under the section's state folder, for
-    paperlib/tools/render_assets.py to write the assets from; an earlier run's tables go."""
-    folder = state / SECTION / "tables"
-    folder.mkdir(parents=True, exist_ok=True)
-    for stale in folder.glob("*.json"):
-        stale.unlink()
-    for name, table in tables.items():
-        (folder / f"{name}.json").write_text(to_json(table))
-    (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
 
 
 def _math_cell(text: str) -> Cell:
@@ -1217,7 +1205,8 @@ def main(
         found |= analysis(outcomes, points, screen, settings.seed)
         (args.state / SECTION).mkdir(parents=True, exist_ok=True)
         (args.state / SECTION / "winners.json").write_text(winners_json(outcomes))
-        _store(args.state, tuning_stored(outcomes, screen, config.tables.tuning), found)
+        stored = tuning_stored(outcomes, screen, config.tables.tuning)
+        store_section(args.state, SECTION, stored, found)
         logger.info(
             "done: tuning table and numbers of batch %s, %d jobs -> %s",
             batch,

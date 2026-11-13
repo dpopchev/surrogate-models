@@ -109,8 +109,8 @@ from paperlib.tables import (
     make_table,
     render,
     shape_files,
-    to_json,
 )
+from paperlib.tools.render_assets import store_section
 from paperlib.workers import run_jobs
 
 logger = logging.getLogger(__name__)
@@ -450,18 +450,6 @@ def _tex(cell: TableCell) -> str:
 # The shapes of the families table besides the subscripts, by the name the pick of paper.toml
 # gives them; each is applied to the stored table.
 SHAPES: Mapping[str, Shape] = {"rows_column": rows_column}
-
-
-def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
-    """Store the tables as JSON by name and the numbers under the section's state folder, for
-    paperlib/tools/render_assets.py to write the assets from; an earlier run's tables go."""
-    folder = state / SECTION / "tables"
-    folder.mkdir(parents=True, exist_ok=True)
-    for stale in folder.glob("*.json"):
-        stale.unlink()
-    for name, table in tables.items():
-        (folder / f"{name}.json").write_text(to_json(table))
-    (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
 
 
 def numbers(outcomes: Sequence[Outcome]) -> dict[str, str]:
@@ -1189,7 +1177,8 @@ def main(
         out.mkdir(parents=True, exist_ok=True)
         for stale in (p for p in out.iterdir() if p.is_file()):  # W-102; not figures/
             stale.unlink()
-        _store(args.state, families_stored(outcomes, config.tables.families), numbers(outcomes))
+        stored = families_stored(outcomes, config.tables.families)
+        store_section(args.state, SECTION, stored, numbers(outcomes))
         logger.info(
             "done: family table and numbers of batch %s, %d outcomes -> %s",
             batch,

@@ -13,7 +13,6 @@ Run as `uv run python <this file> <ns.parquet> <bh.parquet> <split.parquet> <ass
 <state dir>` (mk/paper.mk does).
 """
 
-import json
 import logging
 import multiprocessing
 import sys
@@ -109,7 +108,7 @@ from paperlib.surrogate import (
     sklearn_fitter,
 )
 from paperlib.tables import Cell, Shape, Table, Text, aligns, fixed, make_table, render, shape_files
-from paperlib.tables import to_json as table_json
+from paperlib.tools.render_assets import store_section
 from paperlib.trials import ReportEpochs, open_study, tell_run
 from paperlib.workers import run_jobs
 
@@ -888,20 +887,6 @@ def _ledger_writer(
     return record
 
 
-def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str] | None) -> None:
-    """Store the tables as JSON by name, and the numbers when given, under the section's state
-    folder, for paperlib/tools/render_assets.py to write the assets from; an earlier run's
-    tables go."""
-    folder = state / "tables"
-    folder.mkdir(parents=True, exist_ok=True)
-    for stale in folder.glob("*.json"):
-        stale.unlink()
-    for name, table in tables.items():
-        (folder / f"{name}.json").write_text(table_json(table))
-    if macros is not None:
-        (state / "numbers.json").write_text(json.dumps(dict(macros)))
-
-
 def _write_section(
     out: Path,
     state: Path,
@@ -918,7 +903,7 @@ def _write_section(
         stale.unlink()
     (out / f"{PARITY}.tex").write_text(figure_tex(variants.parity))
     macros = numbers(fits[NEUTRON_STARS.dataset, "mass"]) | charge_numbers(mares)
-    _store(state, baseline_stored(pairs, config.tables.baseline), macros)
+    store_section(state.parent, SECTION, baseline_stored(pairs, config.tables.baseline), macros)
 
 
 def _latest_baseline(entries: Sequence[LedgerEntry]) -> str:
@@ -1073,7 +1058,7 @@ def main(
     if tables_only:
         keys = [(p.dataset, p.target) for p in found_pairs]
         scored = pair_scores(read_ledger(Path(argv[4]) / "ledger"), keys)
-        _store(state, baseline_stored(scored, config.tables.baseline), None)
+        store_section(state.parent, SECTION, baseline_stored(scored, config.tables.baseline), None)
         out.mkdir(parents=True, exist_ok=True)
         (out / f"{PARITY}.png").unlink(missing_ok=True)
         (out / f"{PARITY}.tex").write_text(figure_tex(section.variants.parity))

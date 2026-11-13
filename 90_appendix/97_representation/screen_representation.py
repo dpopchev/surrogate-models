@@ -9,7 +9,6 @@ and is scored through paperlib/harness.py with the weighted k-NN, the local RBF
 """
 
 import argparse
-import json
 import logging
 import math
 import sys
@@ -70,8 +69,8 @@ from paperlib.tables import (
     make_table,
     render,
     shape_files,
-    to_json,
 )
+from paperlib.tools.render_assets import store_section
 from paperlib.trials import ReportEpochs, open_study, tell_run
 from paperlib.workers import run_jobs
 
@@ -609,18 +608,6 @@ def screen_job(work: Work) -> None:
     )
 
 
-def _store(state: Path, tables: Mapping[str, Table], macros: Mapping[str, str]) -> None:
-    """Store the tables as JSON by name and the numbers under the section's state folder, for
-    paperlib/tools/render_assets.py to write the assets from; an earlier run's tables go."""
-    folder = state / SECTION / "tables"
-    folder.mkdir(parents=True, exist_ok=True)
-    for stale in folder.glob("*.json"):
-        stale.unlink()
-    for name, table in tables.items():
-        (folder / f"{name}.json").write_text(to_json(table))
-    (state / SECTION / "numbers.json").write_text(json.dumps(dict(macros)))
-
-
 def _empty(out: Path) -> None:
     """Empty the section's asset folder of an earlier run's files."""
     out.mkdir(parents=True, exist_ok=True)
@@ -673,7 +660,7 @@ def main(
         found = scores(entries)
         tables = representation_stored(found, config.tables.layout, config.tables.representation)
         _empty(args.assets / SECTION)
-        _store(args.state, tables, numbers(found))
+        store_section(args.state, SECTION, tables, numbers(found))
         logger.info(
             "done: representation table and numbers of batch %s -> %s", batch, args.state / SECTION
         )
