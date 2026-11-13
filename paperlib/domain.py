@@ -129,7 +129,7 @@ def _check_neutron_star(domain: NeutronStarDomain, x: Mapping[str, float]) -> Ve
     keys = np.array(domain.keys)
     beta_in = float(np.clip(beta, keys[:, 0].min(), keys[:, 0].max()))
     lam_in = float(np.clip(lam, keys[:, 1].min(), keys[:, 1].max()))
-    low, high = _edges(domain, keys, (beta_in, lam_in))
+    low, high = stable_edge(domain, beta_in, lam_in)
     if np.isnan(low):
         # Inside the bounding box of the keys but off their hull: snap to the nearest curve.
         i = int(np.argmin(np.hypot(keys[:, 0] - beta_in, keys[:, 1] - lam_in)))
@@ -153,13 +153,12 @@ def _in_box(keys: np.ndarray, beta: float, lam: float) -> bool:
     )
 
 
-def _edges(
-    domain: NeutronStarDomain, keys: np.ndarray, at: tuple[float, float]
-) -> tuple[float, float]:
+def stable_edge(domain: NeutronStarDomain, beta: float, lam: float) -> tuple[float, float]:
     """The interpolated smallest and last rho_c at one coupling pair; nan off the hull."""
-    if len(keys) == 1:
-        same = at == domain.keys[0]
+    if len(domain.keys) == 1:
+        same = (beta, lam) == domain.keys[0]
         return (domain.rho_min[0], domain.rho_max[0]) if same else (np.nan, np.nan)
-    low = LinearNDInterpolator(keys, np.array(domain.rho_min))(*at)
-    high = LinearNDInterpolator(keys, np.array(domain.rho_max))(*at)
+    keys = np.array(domain.keys)
+    low = LinearNDInterpolator(keys, np.array(domain.rho_min))(beta, lam)
+    high = LinearNDInterpolator(keys, np.array(domain.rho_max))(beta, lam)
     return float(low), float(high)

@@ -24,11 +24,10 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Colormap, Normalize
 from matplotlib.figure import Figure
 from pydantic import BaseModel, ConfigDict
-from scipy.interpolate import LinearNDInterpolator
 
 from paperlib.config import NOTATION_TEX, PaperConfig, load_config, load_section
 from paperlib.design import NEUTRON_STARS
-from paperlib.domain import make_neutron_star_domain
+from paperlib.domain import make_neutron_star_domain, stable_edge
 from paperlib.eda import number_tex, text_width_size
 from paperlib.final import load_surrogate
 from paperlib.harness import Predictor
@@ -125,11 +124,10 @@ def predicted_mass_max(table: pd.DataFrame, split: pd.DataFrame, predict: Predic
     labelled = table.merge(own, on=curve, how="left", validate="many_to_one")
     training = labelled[labelled["label"].notna() & (labelled["label"] != "test")]
     domain = make_neutron_star_domain(training)
-    edge_of = LinearNDInterpolator(np.array(domain.keys), np.array(domain.rho_max))
     found: list[CurveMassMax] = []
     skipped = 0
     for (beta, lam), rows in labelled[labelled["label"] == "test"].groupby(curve, sort=True):
-        edge = float(edge_of(float(beta), float(lam)))  # type: ignore[arg-type]
+        edge = stable_edge(domain, float(beta), float(lam))[1]  # type: ignore[arg-type]
         if np.isnan(edge):
             skipped += 1
             continue
