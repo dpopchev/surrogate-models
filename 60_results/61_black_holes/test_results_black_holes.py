@@ -197,4 +197,6 @@ def test_bh_results_figures_folder_holds_each_variant_png(
 @pytest.mark.model
 def test_shipped_section_toml_selects_the_papers_picks() -> None:
     expected = BlackHoleSection.model_validate({"variants": {"errors": "curves"}})
-    assert load_section(BlackHoleSection, SECTION_TOML) == expected
+    assert load_section(BlackHoleSection, SECTION_TOML) == expected, (
+        f"{SECTION_TOML} drifted from the paper's picks"
+    )

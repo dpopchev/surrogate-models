@@ -202,4 +202,6 @@ def test_ns_results_figures_folder_holds_each_variant_png(
 @pytest.mark.model
 def test_shipped_section_toml_selects_the_papers_picks() -> None:
     expected = NeutronStarSection.model_validate({"variants": {"errors": "by_lambda"}})
-    assert load_section(NeutronStarSection, SECTION_TOML) == expected
+    assert load_section(NeutronStarSection, SECTION_TOML) == expected, (
+        f"{SECTION_TOML} drifted from the paper's picks"
+    )
