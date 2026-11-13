@@ -297,6 +297,33 @@ class TestMain:
         assert "departure" in wrapper.read_text()
 
 
+@pytest.mark.functional
+def test_bh_eda_figures_folder_holds_each_variant_png(tmp_path: Path) -> None:
+    table, assets, state = tmp_path / "bh.parquet", tmp_path / "assets", tmp_path / "state"
+    curves().to_parquet(table)
+    config = PaperConfig.model_validate({"plot": {"usetex": False}})
+    main(
+        [str(table), str(assets), "--state", str(state), *KNOBS],
+        config=config,
+        section=BlackHolesSection.model_validate({"figures": [], "tables": []}),
+    )
+    out = tmp_path / "figures"
+    main(["--figures", str(out), "--state", str(state)], config=config)
+    stem = "92_black_holes_fig_"
+    expected = {
+        f"{stem}{name}_{variant}.png"
+        for name, variants in {
+            "mass_radius": ("inset", "departure", "both"),
+            "univariate_continuous": ("histograms", "log_counts", "transposed"),
+            "charge_target": ("two_panels", "log_d"),
+            "existence_edge": ("segments", "edge_line", "zoomed"),
+            "ceilings": ("annotated", "figures_axis", "one_panel"),
+        }.items()
+        for variant in variants
+    }
+    assert {p.name for p in (out / "92_black_holes" / "figures").iterdir()} == expected
+
+
 @pytest.mark.model
 def test_split_strategies_score_every_strategy_in_order() -> None:
     scores = split_strategies(TABLE, "M", folds=3, seed=0)

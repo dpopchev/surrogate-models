@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-016 > W-157 > T-422   | blocked: 0 | todo roots: 2 | done: 495 | pruned: 101
+open path: E-016 > W-157   | blocked: 0 | todo roots: 3 | done: 496 | pruned: 101
 
 ## Tree
 
@@ -11,7 +11,7 @@ E-016         [doing]    The section scripts keep each rule once and each shippe
   W-144  issue  [done]     The shipped section settings are pinned by tests   (filed during T-359) -- T-383 [done]
   W-145  issue  [todo]     One helper stores a section's tables and numbers   (filed during T-364) -- T-384 [todo]
   W-147  issue  [todo]     Code comments and the citation notes name the sections the paper now has   (filed during T-373) -- T-388 [todo]
-  W-157  issue  [doing]    The figures mode of every section script is tested   (filed during T-398) -- T-422 [doing]   <- ACTIVE LEAF
+  W-157  issue  [doing]    The figures mode of every section script is tested   (filed during T-398) -- T-422 [done]
   W-163  issue  [todo]     The stable edge of a coupling pair is read from paperlib/domain.py alone   (filed during T-415) -- T-433 [todo]
   W-166  bug    [todo]     A drifted section toml fails its pin test without naming the toml   (filed during T-383) -- T-437 [todo]
 E-017         [todo]     The article is ready for the supervisors' read
@@ -19,6 +19,7 @@ E-017         [todo]     The article is ready for the supervisors' read
   W-129  bug    [todo]     A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
   W-164  issue  [todo]     Section 2.5 states the sampled neutron-star coupling ranges   (filed during T-419) -- T-435 [todo]
 W-165  issue  [todo]     (standalone) The session context keeps headroom under the hook cap while a root burns -- T-436 [todo]
+W-167  bug    [todo]     (standalone) The all-pairs parity figure of the baseline cannot be saved with LaTeX off   (filed during T-422) -- T-438 [todo]
 ```
 
 ## Closed
@@ -1044,7 +1045,7 @@ flowchart TD
   E016 --> W147["W-147 issue todo: Code comments and the citation notes name the sections the paper now has"]
   W147 --> T388["T-388 todo: Rename the stale section numbers -> comments, help strings, docstrings and 00_metadata/citations.md"]
   E016 --> W157["W-157 issue doing: The figures mode of every section script is tested"]
-  W157 --> T422["T-422 doing: Pin the figures folder of seven scripts test-first -> seven test_*_figures_folder tests -- ACTIVE LEAF"]
+  W157 --> T422["T-422 done: Pin the figures folder of seven scripts test-first -> seven test_*_figures_folder tests"]
   E016 --> W163["W-163 issue todo: The stable edge of a coupling pair is read from paperlib/domain.py alone"]
   W163 --> T433["T-433 todo: Expose the stable edge of a coupling pair -> paperlib/domain.py stable_edge"]
   E016 --> W166["W-166 bug todo: A drifted section toml fails its pin test without naming the toml"]
@@ -1058,12 +1059,14 @@ flowchart TD
   W164 --> T435["T-435 todo: Write the neutron-star coupling ranges as macros -> 90_appendix/91_neutron_stars/eda_neutron_stars.py and 35_domain_boundaries.tex"]
   W165["W-165 issue todo, standalone: The session context keeps headroom under the hook cap while a root burns"]
   W165 --> T436["T-436 todo: Distill the standing findings -> .board/KNOWLEDGE.md with its standing lines under 4500 characters"]
+  W167["W-167 bug todo, standalone: The all-pairs parity figure of the baseline cannot be saved with LaTeX off"]
+  W167 --> T438["T-438 todo: Title the all-pairs parity panels from SYMBOLS -> 90_appendix/95_algorithms/fit_baseline.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E016,W157,T422 doing
-  class W144,T383 done
-  class W132,T347,W143,T382,W145,T384,W147,T388,W163,T433,W166,T437,E017,W061,T118,W129,T341,W164,T435,W165,T436 todo
+  class E016,W157 doing
+  class W144,T383,T422 done
+  class W132,T347,W143,T382,W145,T384,W147,T388,W163,T433,W166,T437,E017,W061,T118,W129,T341,W164,T435,W165,T436,W167,T438 todo
 ```
