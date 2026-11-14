@@ -17,7 +17,7 @@ W-061  spike  [todo]     (standalone) Which real references replace the placehol
 W-167  bug    [todo]     (standalone) The all-pairs parity figure of the baseline cannot be saved with LaTeX off   (filed during T-422) -- T-438 [todo]
 W-168  issue  [todo]     (standalone) store_section's empty-tables and missing-numbers paths are pinned by tests   (filed during T-384) -- T-439 [todo]
 W-176  bug    [todo]     (standalone) A non-default split or two_tables pick drops its second table from the paper -- T-460 [todo], T-461 [todo]
-W-177  issue  [todo]     (standalone) The refusals of the zones run are pinned by tests   (filed during T-441) -- T-462 [todo]
+W-177  issue  [todo]     (standalone) The refusals of the zone scoring are pinned by tests   (filed during T-441) -- T-462 [todo], T-464 [todo]
 W-178  issue  [todo]     (standalone) The stored ceilings are read through one function   (filed during T-441) -- T-463 [todo]
 ```
 
@@ -1123,8 +1123,9 @@ flowchart TD
   W176["W-176 bug todo, standalone: A non-default split or two_tables pick drops its second table from the paper"]
   W176 --> T460["T-460 todo: Remove the table assets no stored table names test-first -> paperlib/tools/render_assets.py"]
   W176 --> T461["T-461 todo: Input the second table of a split or two_tables pick -> 90_appendix/95_algorithms/95_algorithms.tex and 90_appendix/97_representation/97_representation.tex"]
-  W177["W-177 issue todo, standalone: The refusals of the zones run are pinned by tests"]
+  W177["W-177 issue todo, standalone: The refusals of the zone scoring are pinned by tests"]
   W177 --> T462["T-462 todo: Pin the two refusals of the zones run -> two tests in 90_appendix/96_optimization/test_score_zones.py"]
+  W177 --> T464["T-464 todo: Pin the no-edge refusal of the held-out fit -> a test in paperlib/test_zones.py"]
   W178["W-178 issue todo, standalone: The stored ceilings are read through one function"]
   W178 --> T463["T-463 todo: Move the ceilings reader into paperlib test-first -> paperlib/ceilings.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
@@ -1134,5 +1135,5 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E018,W170,T442 doing
   class W169,T440,T441 done
-  class T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,W178,T463 todo
+  class T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463 todo
 ```
