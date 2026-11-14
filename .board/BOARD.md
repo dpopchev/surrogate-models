@@ -1,14 +1,10 @@
 # Board -- surrogate-models
 record: local
-open path: E-017   | blocked: 0 | todo roots: 3 | done: 517 | pruned: 101
+open path: none   | blocked: 0 | todo roots: 4 | done: 518 | pruned: 101
 
 ## Tree
 
 ```text
-E-017         [doing]    The article is ready for the supervisors' read
-  W-061  spike  [todo]     Which real references replace the placeholder citations -- T-118 [todo]
-  W-129  bug    [done]     A table caption above its table touches the top rule   (filed during T-336) -- T-341 [done]
-  W-164  issue  [done]     Section 2.5 states the sampled neutron-star coupling ranges   (filed during T-419) -- T-435 [done]
 E-018         [todo]     The pipeline regenerates both maps with every candidate scored per zone and every cut reported
   W-169  issue  [todo]     make zones prints every tuned candidate per zone from the recorded batches -- T-440 [todo], T-441 [todo]
   W-170  issue  [todo]     make extrapolation scores every tuned candidate on the edge curves it was fitted without -- T-442 [todo], T-443 [todo], T-444 [todo]
@@ -16,6 +12,7 @@ E-018         [todo]     The pipeline regenerates both maps with every candidate
   W-172  issue  [todo]     make surrogates regenerates the surrogates rung by rung and prints the time of each -- T-450 [todo], T-451 [todo]
   W-173  issue  [todo]     The saved surrogate answers beyond the sampled couplings only inside the measured margin -- T-452 [todo], T-453 [todo], T-454 [todo]
   W-174  issue  [todo]     The article reports the zones, the cut candidates and the restated goal -- T-455 [todo], T-456 [todo]
+W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-167  bug    [todo]     (standalone) The all-pairs parity figure of the baseline cannot be saved with LaTeX off   (filed during T-422) -- T-438 [todo]
 W-168  issue  [todo]     (standalone) store_section's empty-tables and missing-numbers paths are pinned by tests   (filed during T-384) -- T-439 [todo]
 ```
@@ -808,6 +805,18 @@ closed 2026-11-14 -- outcome: Every shipped section toml and --figures mode is p
 
 - T-437 [done] Name the section toml in each pin test's failure -> nine assert messages carrying SECTION_TOML
 
+### E-017 [done] The article is ready for the supervisors' read
+
+closed 2026-11-14 -- outcome: Every table caption stands clear of its top rule, and Section 2.5 states the sampled neutron-star beta and lambda ranges from macros; the placeholder citations stay until W-061. -- ledger: ledgers/E-017.md
+
+#### W-129 bug [done] A table caption above its table touches the top rule   (filed during T-336)
+
+- T-341 [done] Give a table caption its skip above the top rule -> paperlib/latex/preamble.tex
+
+#### W-164 issue [done] Section 2.5 states the sampled neutron-star coupling ranges   (filed during T-419)
+
+- T-435 [done] Write the neutron-star coupling ranges as macros -> 90_appendix/91_neutron_stars/eda_neutron_stars.py and 35_domain_boundaries.tex
+
 ### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
 
 closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/python.md, When make check runs, Then it passes with the repository root on pytest pythonpath and the python files matching the add-python COLOCATED templates. -- ledger: ledgers/W-005.md
@@ -1074,13 +1083,6 @@ closed 2026-11-14 -- outcome: Given a burning root adds its paste line and its D
 ## Diagram
 ```mermaid
 flowchart TD
-  E017["E-017 doing: The article is ready for the supervisors' read"]
-  E017 --> W061["W-061 spike todo: Which real references replace the placeholder citations"]
-  W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
-  E017 --> W129["W-129 bug done: A table caption above its table touches the top rule"]
-  W129 --> T341["T-341 done: Give a table caption its skip above the top rule -> paperlib/latex/preamble.tex"]
-  E017 --> W164["W-164 issue done: Section 2.5 states the sampled neutron-star coupling ranges"]
-  W164 --> T435["T-435 done: Write the neutron-star coupling ranges as macros -> 90_appendix/91_neutron_stars/eda_neutron_stars.py and 35_domain_boundaries.tex"]
   E018["E-018 todo: The pipeline regenerates both maps with every candidate scored per zone and every cut reported"]
   E018 --> W169["W-169 issue todo: make zones prints every tuned candidate per zone from the recorded batches"]
   W169 --> T440["T-440 todo: Write the zone masks and scores test-first -> paperlib/zones.py"]
@@ -1105,6 +1107,8 @@ flowchart TD
   E018 --> W174["W-174 issue todo: The article reports the zones, the cut candidates and the restated goal"]
   W174 --> T455["T-455 todo: Write the zone table and the verdicts as assets test-first -> 90_appendix/96_optimization/score_zones.py"]
   W174 --> T456["T-456 todo: Restate the goal and the budget sentences -> 10_abstract/10_abstract.tex, 20_introduction/20_introduction.tex and 40_pipeline/41_algorithm/41_algorithm.tex"]
+  W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
+  W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W167["W-167 bug todo, standalone: The all-pairs parity figure of the baseline cannot be saved with LaTeX off"]
   W167 --> T438["T-438 todo: Title the all-pairs parity panels from SYMBOLS -> 90_appendix/95_algorithms/fit_baseline.py"]
   W168["W-168 issue todo, standalone: store_section's empty-tables and missing-numbers paths are pinned by tests"]
@@ -1114,7 +1118,5 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E017 doing
-  class W129,T341,W164,T435 done
-  class W061,T118,E018,W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W167,T438,W168,T439 todo
+  class E018,W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W061,T118,W167,T438,W168,T439 todo
 ```
