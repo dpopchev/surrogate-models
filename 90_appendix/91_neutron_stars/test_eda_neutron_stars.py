@@ -114,6 +114,14 @@ DENSE = curves({(b, lam): [0.1, 0.2, 0.3, 0.4] for b in (1.0, 50.0) for lam in (
 
 
 @pytest.mark.view
+def test_coupling_range_macros_hold_the_sampled_extremes() -> None:
+    table = curves({(0.5, 0.25): [0.1, 0.2], (2.0, 1.0): [0.3, 0.4], (1.25, 3.0): [0.5, 0.6]})
+    found = numbers(evidence(with_charge_targets(table), folds=2, seed=0, window=WINDOW))
+    names = ("nsEdaBetaLow", "nsEdaBetaHigh", "nsEdaLambdaLow", "nsEdaLambdaHigh")
+    assert [found.get(name) for name in names] == ["0.50", "2.00", "0.25", "3.00"]
+
+
+@pytest.mark.view
 def test_numbers_name_the_grid_fill_in_percent() -> None:
     found = numbers(evidence(with_charge_targets(DENSE), folds=2, seed=0, window=WINDOW))
     assert found["nsEdaGridFillPercent"] == "100.0"
