@@ -34,6 +34,7 @@
 ## Decisions
 - 2026-11-12 W-129: criterion and brief re-pointed at what E-013 left: make section S=90_appendix and paperlib/latex/preamble.tex replace make variants and 00_metadata/preamble.tex (developer: file, 2026-11-12)
 - 2026-11-13 E-017: W-061 last by depends_on: it waits for the sources (developer, 2026-11-13) supersedes: E-017#d1
+- 2026-11-14 E-017: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 8 hours) (developer, 2026-11-14)
 - 2026-11-14 E-018: goal (developer, 2026-11-14): surrogates that minimize the relative error over the whole dataset, extrapolate well and keep the physics, with feedback on the parameters; agent's reading: extrapolation across the couplings, never past a physical edge; replaces E-014's goal
 - 2026-11-14 E-018: plan agreed 2026-11-14 (developer: file): W-169 to W-174; a search's run time becomes a recorded verdict, reversing W-121's prune reason; the pointwise local RBF and the NS-charge ResNet go on fixed points, not dropped
 
