@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 4 | done: 518 | pruned: 101
+open path: none   | blocked: 0 | todo roots: 5 | done: 518 | pruned: 101
 
 ## Tree
 
@@ -12,9 +12,11 @@ E-018         [todo]     The pipeline regenerates both maps with every candidate
   W-172  issue  [todo]     make surrogates regenerates the surrogates rung by rung and prints the time of each -- T-450 [todo], T-451 [todo]
   W-173  issue  [todo]     The saved surrogate answers beyond the sampled couplings only inside the measured margin -- T-452 [todo], T-453 [todo], T-454 [todo]
   W-174  issue  [todo]     The article reports the zones, the cut candidates and the restated goal -- T-455 [todo], T-456 [todo]
+  W-175  issue  [todo]     make zones counts the slope-sign violations of every tuned candidate per zone -- T-458 [todo], T-459 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-167  bug    [todo]     (standalone) The all-pairs parity figure of the baseline cannot be saved with LaTeX off   (filed during T-422) -- T-438 [todo]
 W-168  issue  [todo]     (standalone) store_section's empty-tables and missing-numbers paths are pinned by tests   (filed during T-384) -- T-439 [todo]
+W-176  bug    [todo]     (standalone) A non-default split or two_tables pick drops its second table from the paper -- T-460 [todo], T-461 [todo]
 ```
 
 ## Closed
@@ -1107,16 +1109,22 @@ flowchart TD
   E018 --> W174["W-174 issue todo: The article reports the zones, the cut candidates and the restated goal"]
   W174 --> T455["T-455 todo: Write the zone table and the verdicts as assets test-first -> 90_appendix/96_optimization/score_zones.py"]
   W174 --> T456["T-456 todo: Restate the goal and the budget sentences -> 10_abstract/10_abstract.tex, 20_introduction/20_introduction.tex and 40_pipeline/41_algorithm/41_algorithm.tex"]
+  E018 --> W175["W-175 issue todo: make zones counts the slope-sign violations of every tuned candidate per zone"]
+  W175 --> T458["T-458 todo: Write the slope-sign count test-first -> paperlib/zones.py"]
+  W175 --> T459["T-459 todo: Print the slope-sign counts in the zones run test-first -> 90_appendix/96_optimization/score_zones.py"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W167["W-167 bug todo, standalone: The all-pairs parity figure of the baseline cannot be saved with LaTeX off"]
   W167 --> T438["T-438 todo: Title the all-pairs parity panels from SYMBOLS -> 90_appendix/95_algorithms/fit_baseline.py"]
   W168["W-168 issue todo, standalone: store_section's empty-tables and missing-numbers paths are pinned by tests"]
   W168 --> T439["T-439 todo: Pin store_section's two edge paths -> two tests in paperlib/tools/test_render_assets.py"]
+  W176["W-176 bug todo, standalone: A non-default split or two_tables pick drops its second table from the paper"]
+  W176 --> T460["T-460 todo: Remove the table assets no stored table names test-first -> paperlib/tools/render_assets.py"]
+  W176 --> T461["T-461 todo: Input the second table of a split or two_tables pick -> 90_appendix/95_algorithms/95_algorithms.tex and 90_appendix/97_representation/97_representation.tex"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E018,W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W061,T118,W167,T438,W168,T439 todo
+  class E018,W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461 todo
 ```

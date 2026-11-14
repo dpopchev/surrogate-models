@@ -2,6 +2,7 @@
 
 ## Findings
 - 2026-10-06 W-032: standing: make overleaf refreshes the upload list on every run -> run it only right before an upload, or the removed list of the earlier run is lost supersedes: W-032#1
+- 2026-11-14 E-018: fact: the physics gate is filed as AC7 -> W-175 (developer, 2026-11-14) -> the guard of W-173 keeps the domain, W-175 measures the slopes supersedes: E-018#1
 - 2026-11-14 T-436: standing: --doctest-modules imports each conftest.py as conftest -> per-folder conftest needs --ignore=conftest.py --ignore-glob=*/conftest.py; asset writers iterate in a fixed order -> local/assets-baseline.sha (50 files) seed-independent supersedes: W-091#2, W-117#2
 - 2026-11-14 T-436: standing: BH p95 is its worst of 3 test curves (pointwise RBF M 5e-5 vs 1e-7, D 1e-3 vs 1e-5); BH error arcs between the 8 knots -> E-007 tunes the knots supersedes: T-200#2
 - 2026-11-14 T-436: standing: LaTeX logs never write '<file>.tex: Overfull' -> count Overfull boxes; still typed in Sections 5.2 to the appendix (rows per curve, ripple counts, error readings, GP memory) -> no macro carries them (W-131) supersedes: W-128#3, W-131#3
@@ -24,13 +25,12 @@
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 - 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
-- 2026-11-14 E-018: open: the proposal's physics gate (sign checks per candidate) has no work item -- add a criterion to E-018, or leave physics to W-173's guard? (developer)
 - 2026-11-14 W-093: open: NS-charge ResNet run planned as W-171; float64, L-BFGS and H2 stay untested on networks (precision_options.py warns) -- file them for the ResNet if it leads a zone after W-171, else drop? (developer, re-aim after W-171) supersedes: W-093#1
-- 2026-11-14 W-139: open: answered: a non-default split or two_tables pick writes the second table as an asset that no section inputs (95_algorithms.tex:61, 97_representation.tex:6) -> the paper drops it; file a bug, or remove the two picks? (developer) supersedes: W-139#3
 - 2026-11-14 W-173: open: beyond the sampled couplings, answer with a warning inside the measured margin (the criterion as filed, the agent's suggestion) or keep refusing and only report the measurement? decided by the developer at the re-aim before W-173, on the edge figures of W-170
 
 ## Decisions
 - 2026-11-14 E-018: goal (developer, 2026-11-14): surrogates that minimize the relative error over the whole dataset, extrapolate well and keep the physics, with feedback on the parameters; agent's reading: extrapolation across the couplings, never past a physical edge; replaces E-014's goal
+- 2026-11-14 E-018: physics gate (developer, 2026-11-14: file): AC7 -> W-175, make zones counts per zone the steps whose predicted slope sign differs from the data; a sign check on D is void under the log target; the zone table of W-174 shows the counts (T-455 amended, W-174 depends on W-175)
 - 2026-11-14 E-018: plan agreed 2026-11-14 (developer: file): W-169 to W-174; a search's run time becomes a recorded verdict, reversing W-121's prune reason; the pointwise local RBF and the NS-charge ResNet go on fixed points, not dropped
 
 ## Deviations
