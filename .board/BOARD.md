@@ -1,13 +1,13 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 4 | done: 513 | pruned: 101
+open path: E-017 > W-129 > T-341   | blocked: 0 | todo roots: 3 | done: 513 | pruned: 101
 
 ## Tree
 
 ```text
-E-017         [todo]     The article is ready for the supervisors' read
+E-017         [doing]    The article is ready for the supervisors' read
   W-061  spike  [todo]     Which real references replace the placeholder citations -- T-118 [todo]
-  W-129  bug    [todo]     A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
+  W-129  bug    [doing]    A table caption above its table touches the top rule   (filed during T-336) -- T-341 [doing]   <- ACTIVE LEAF
   W-164  issue  [todo]     Section 2.5 states the sampled neutron-star coupling ranges   (filed during T-419) -- T-435 [todo]
 E-018         [todo]     The pipeline regenerates both maps with every candidate scored per zone and every cut reported
   W-169  issue  [todo]     make zones prints every tuned candidate per zone from the recorded batches -- T-440 [todo], T-441 [todo]
@@ -1074,11 +1074,11 @@ closed 2026-11-14 -- outcome: Given a burning root adds its paste line and its D
 ## Diagram
 ```mermaid
 flowchart TD
-  E017["E-017 todo: The article is ready for the supervisors' read"]
+  E017["E-017 doing: The article is ready for the supervisors' read"]
   E017 --> W061["W-061 spike todo: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
-  E017 --> W129["W-129 bug todo: A table caption above its table touches the top rule"]
-  W129 --> T341["T-341 todo: Give a table caption its skip above the top rule -> paperlib/latex/preamble.tex"]
+  E017 --> W129["W-129 bug doing: A table caption above its table touches the top rule"]
+  W129 --> T341["T-341 doing: Give a table caption its skip above the top rule -> paperlib/latex/preamble.tex -- ACTIVE LEAF"]
   E017 --> W164["W-164 issue todo: Section 2.5 states the sampled neutron-star coupling ranges"]
   W164 --> T435["T-435 todo: Write the neutron-star coupling ranges as macros -> 90_appendix/91_neutron_stars/eda_neutron_stars.py and 35_domain_boundaries.tex"]
   E018["E-018 todo: The pipeline regenerates both maps with every candidate scored per zone and every cut reported"]
@@ -1114,5 +1114,6 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E017,W061,T118,W129,T341,W164,T435,E018,W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W167,T438,W168,T439 todo
+  class E017,W129,T341 doing
+  class W061,T118,W164,T435,E018,W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W167,T438,W168,T439 todo
 ```
