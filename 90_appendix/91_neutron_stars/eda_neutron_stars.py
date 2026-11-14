@@ -298,6 +298,8 @@ class Evidence:
     fill: GridFill
     adjacency: Adjacency
     splits: tuple[SplitScore, ...]
+    beta_range: tuple[float, float]
+    lambda_range: tuple[float, float]
 
 
 def evidence(table: pd.DataFrame, folds: int, seed: int, window: float) -> Evidence:
@@ -317,6 +319,8 @@ def evidence(table: pd.DataFrame, folds: int, seed: int, window: float) -> Evide
         grid_fill(table),
         curve_adjacency(table, NS_SPACE),
         tuple(s for t in SPLIT_TARGETS for s in split_strategies(table, t, folds, seed)),
+        (float(table["beta"].min()), float(table["beta"].max())),
+        (float(table["lambda"].min()), float(table["lambda"].max())),
     )
 
 
@@ -341,6 +345,10 @@ def numbers(found: Evidence) -> dict[str, str]:
         "nsEdaCurves": f"{found.fill.curves}",
         "nsEdaGridCells": f"{found.fill.cells}",
         "nsEdaGridFillPercent": f"{100 * found.fill.fill:.1f}",
+        "nsEdaBetaLow": f"{found.beta_range[0]:.2f}",
+        "nsEdaBetaHigh": f"{found.beta_range[1]:.2f}",
+        "nsEdaLambdaLow": f"{found.lambda_range[0]:.2f}",
+        "nsEdaLambdaHigh": f"{found.lambda_range[1]:.2f}",
         "nsEdaRhocLogMean": f"{rho.mean:.3f}",
         "nsEdaRhocLogMedian": f"{rho.median:.3f}",
         "nsEdaRhocLogStd": f"{rho.std:.3f}",
