@@ -9,7 +9,11 @@
 TUNING        := 90_appendix/99_precision/tune_survivors.py
 TUNING_TOML   := 90_appendix/99_precision/99_precision.toml
 TUNING_ASSETS := $(ASSETS)/99_precision/99_precision_tab_tuning.tex
-TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --workers 3 --within 1.0
+TUNING_KNOBS  := --k 8 --neighbours 100 --knots 8 --trials 40 --minutes 30 --budget-minutes 30 --workers 3 --within 1.0
+# The slow candidates that lead a zone are scored on fixed points in place of a search (W-171):
+# the pointwise local RBF on four neighbour counts, the ResNet at its recorded best point on
+# three seeds. Passed to the script beside the knobs, not cited by the text.
+TUNING_FIXED  := --fixed 'local RBF:pointwise=neighbours=50,100,200,400' --fixed 'ResNet:pointwise=recorded:01a11d49-1647-735a-af05-a58e497428f2' --fixed-seeds 3
 # The text cites them: paper_knobs.py reads the flag, and a change here rebuilds the knobs asset.
 KNOBS_FLAGS   += --tuning "$(TUNING_KNOBS)"
 KNOBS_DEPS    += 90_appendix/99_precision/99_precision.mk
@@ -25,7 +29,7 @@ TUNING_STATE  := $(STATE)/99_precision
 
 $(TUNING_STATE)/numbers.json $(TUNING_STATE)/winners.json $(TUNING_ASSETS) &: $(TUNING) $(RENDER_ASSETS) paper.toml $(TUNING_TOML) $(PAPERLIB) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet
 	$(call log_info,$(if $(TUNING_BATCH),rebuilding the tuning table from batch $(TUNING_BATCH),tuning the short list ($(TUNING_KNOBS)) -- one line per finished job))
-	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) --screen-batch $(FAMILIES_BATCH) $(if $(TUNING_BATCH),--batch $(TUNING_BATCH))
+	@$(RUN) python $(TUNING) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(ASSETS) $(STATE) $(TUNING_KNOBS) $(TUNING_FIXED) --screen-batch $(FAMILIES_BATCH) $(if $(TUNING_BATCH),--batch $(TUNING_BATCH))
 	@$(RUN) python $(RENDER_ASSETS) $(TUNING_STATE) $(ASSETS)
 	$(call log_done,tuning table and numbers rendered to $(dir $(TUNING_ASSETS)))
 
