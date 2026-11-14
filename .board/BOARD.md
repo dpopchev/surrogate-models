@@ -1,19 +1,10 @@
 # Board -- surrogate-models
 record: local
-open path: E-016   | blocked: 0 | todo roots: 4 | done: 509 | pruned: 101
+open path: none   | blocked: 0 | todo roots: 4 | done: 510 | pruned: 101
 
 ## Tree
 
 ```text
-E-016         [doing]    The section scripts keep each rule once and each shipped setting under test
-  W-132  issue  [done]     One home for the family and unit macro tags   (filed during T-346) -- T-347 [done]
-  W-143  issue  [done]     A Table refuses a row whose width differs from its columns   (filed during T-354) -- T-382 [done]
-  W-144  issue  [done]     The shipped section settings are pinned by tests   (filed during T-359) -- T-383 [done]
-  W-145  issue  [done]     One helper stores a section's tables and numbers   (filed during T-364) -- T-384 [done]
-  W-147  issue  [done]     Code comments and the citation notes name the sections the paper now has   (filed during T-373) -- T-388 [done]
-  W-157  issue  [done]     The figures mode of every section script is tested   (filed during T-398) -- T-422 [done]
-  W-163  issue  [done]     The stable edge of a coupling pair is read from paperlib/domain.py alone   (filed during T-415) -- T-433 [done]
-  W-166  bug    [done]     A drifted section toml fails its pin test without naming the toml   (filed during T-383) -- T-437 [done]
 E-017         [todo]     The article is ready for the supervisors' read
   W-061  spike  [todo]     Which real references replace the placeholder citations -- T-118 [todo]
   W-129  bug    [todo]     A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
@@ -775,6 +766,42 @@ closed 2026-11-12 -- outcome: make pipeline and make precision rebuild the four 
 
 - T-428 [done] Make the precision rule depend on PRECISION_PAIRS -> 90_appendix/99_precision/99_precision.mk
 
+### E-016 [done] The section scripts keep each rule once and each shipped setting under test
+
+closed 2026-11-14 -- outcome: Every shipped section toml and --figures mode is pinned by a test, each shared rule has one home in paperlib, a malformed Table is refused at construction, comments and help name the sections the paper has, and make assets-same reports every asset unchanged. -- ledger: ledgers/E-016.md
+
+#### W-132 issue [done] One home for the family and unit macro tags   (filed during T-346)
+
+- T-347 [done] Move the family and unit macro tags into paperlib/candidates.py -> paperlib/candidates.py, screen_families.py, tune_survivors.py, paper_knobs.py
+
+#### W-143 issue [done] A Table refuses a row whose width differs from its columns   (filed during T-354)
+
+- T-382 [done] Add the Table smart constructor -> make_table in paperlib/tables.py
+
+#### W-144 issue [done] The shipped section settings are pinned by tests   (filed during T-359)
+
+- T-383 [done] Pin the picks of each shipped section toml -> one test per section beside its script
+
+#### W-145 issue [done] One helper stores a section's tables and numbers   (filed during T-364)
+
+- T-384 [done] Promote the store step -> paperlib/tools/render_assets.py store_section
+
+#### W-147 issue [done] Code comments and the citation notes name the sections the paper now has   (filed during T-373)
+
+- T-388 [done] Rename the stale section numbers -> comments, help strings, docstrings and 00_metadata/citations.md
+
+#### W-157 issue [done] The figures mode of every section script is tested   (filed during T-398)
+
+- T-422 [done] Pin the figures folder of seven scripts test-first -> seven test_*_figures_folder tests
+
+#### W-163 issue [done] The stable edge of a coupling pair is read from paperlib/domain.py alone   (filed during T-415)
+
+- T-433 [done] Expose the stable edge of a coupling pair -> paperlib/domain.py stable_edge
+
+#### W-166 bug [done] A drifted section toml fails its pin test without naming the toml   (filed during T-383)
+
+- T-437 [done] Name the section toml in each pin test's failure -> nine assert messages carrying SECTION_TOML
+
 ### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
 
 closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/python.md, When make check runs, Then it passes with the repository root on pytest pythonpath and the python files matching the add-python COLOCATED templates. -- ledger: ledgers/W-005.md
@@ -1034,23 +1061,6 @@ closed 2026-11-13 -- pruned: its Given no longer holds: board context prints 839
 ## Diagram
 ```mermaid
 flowchart TD
-  E016["E-016 doing: The section scripts keep each rule once and each shipped setting under test"]
-  E016 --> W132["W-132 issue done: One home for the family and unit macro tags"]
-  W132 --> T347["T-347 done: Move the family and unit macro tags into paperlib/candidates.py -> paperlib/candidates.py, screen_families.py, tune_survivors.py, paper_knobs.py"]
-  E016 --> W143["W-143 issue done: A Table refuses a row whose width differs from its columns"]
-  W143 --> T382["T-382 done: Add the Table smart constructor -> make_table in paperlib/tables.py"]
-  E016 --> W144["W-144 issue done: The shipped section settings are pinned by tests"]
-  W144 --> T383["T-383 done: Pin the picks of each shipped section toml -> one test per section beside its script"]
-  E016 --> W145["W-145 issue done: One helper stores a section's tables and numbers"]
-  W145 --> T384["T-384 done: Promote the store step -> paperlib/tools/render_assets.py store_section"]
-  E016 --> W147["W-147 issue done: Code comments and the citation notes name the sections the paper now has"]
-  W147 --> T388["T-388 done: Rename the stale section numbers -> comments, help strings, docstrings and 00_metadata/citations.md"]
-  E016 --> W157["W-157 issue done: The figures mode of every section script is tested"]
-  W157 --> T422["T-422 done: Pin the figures folder of seven scripts test-first -> seven test_*_figures_folder tests"]
-  E016 --> W163["W-163 issue done: The stable edge of a coupling pair is read from paperlib/domain.py alone"]
-  W163 --> T433["T-433 done: Expose the stable edge of a coupling pair -> paperlib/domain.py stable_edge"]
-  E016 --> W166["W-166 bug done: A drifted section toml fails its pin test without naming the toml"]
-  W166 --> T437["T-437 done: Name the section toml in each pin test's failure -> nine assert messages carrying SECTION_TOML"]
   E017["E-017 todo: The article is ready for the supervisors' read"]
   E017 --> W061["W-061 spike todo: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
@@ -1069,7 +1079,5 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E016 doing
-  class W132,T347,W143,T382,W144,T383,W145,T384,W147,T388,W157,T422,W163,T433,W166,T437 done
   class E017,W061,T118,W129,T341,W164,T435,W165,T436,W167,T438,W168,T439 todo
 ```

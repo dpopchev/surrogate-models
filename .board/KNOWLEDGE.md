@@ -28,7 +28,6 @@
 - 2026-10-12 W-076: standing: across-curve p95 ceilings: NS M 4.1 figures (1.36e-4 M_sun at the median 1.75, 1.70e-4 at M_max 2.19), NS D 2.4 (1.56e-3 dex); BH M 7.1 (3.05e-7 M_sun at 3.58), D 6.0 (4.40e-7 dex), at the existence edge -> the E-006 target per pair supersedes: W-064#1, W-076#1
 - 2026-10-12 W-128: standing: a LaTeX log never writes '<file>.tex: Overfull' (the box follows the file's open paren) -> a check on a table's fit counts the Overfull boxes supersedes: W-128#2
 - 2026-10-12 W-131: standing: still typed in Sections 5.2 to the appendix: about ten/seventy rows per curve, ripple thirty/five times, error-figure readings, GP memory arithmetic -> no macro carries them (W-131) supersedes: W-131#2
-- 2026-10-12 W-132: fact: 00_metadata/paper_knobs.py keeps a third family-tag map, SPACE_TAG, with the two networks as Net (T-348) -> W-132 moves it beside FAMILY_TAG too
 - 2026-11-10 E-012: standing: board close gates on make deliverable, never lint -> a lane runs make lint typecheck before its close supersedes: E-012#1
 - 2026-11-10 W-139: standing: Table.small_spec holds a *{n}{x} repeat spec -> the small layout writes it as given, aligned reads the columns supersedes: W-139#1
 - 2026-11-11 E-013: standing: an attribution trailer was rewritten out on 2026-11-10 -> T-373 cites pre-rewrite shas: 388f1c8 is fa76073, de324d2 is ad290b4, cdb0e87 is 6b166c0 supersedes: E-013#2
@@ -45,11 +44,7 @@
 
 ## Decisions
 - 2026-11-12 W-129: criterion and brief re-pointed at what E-013 left: make section S=90_appendix and paperlib/latex/preamble.tex replace make variants and 00_metadata/preamble.tex (developer: file, 2026-11-12)
-- 2026-11-12 W-132: criterion and brief re-pointed at what E-013 left: paperlib/candidates.py, 98_families_num.tex and 99_precision_num.tex; T-347 now names SPACE_TAG, as the 2026-10-12 finding asked (developer: file, 2026-11-12)
-- 2026-11-12 W-144: criterion and brief re-pointed at what E-013 and E-014 left: the Given names 90_appendix/91_neutron_stars/91_neutron_stars.toml, and T-383 pins nine section tomls instead of five (developer: file, 2026-11-12)
-- 2026-11-13 E-016: AC2, W-157 and T-422 re-pointed at the nine --figures scripts, seven untested; burn order by depends_on: the pins W-144 and W-157 first, W-147 last (developer, 2026-11-13) supersedes: E-016#d2, E-016#d3
-- 2026-11-13 E-016: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 12 hours) (developer, 2026-11-13) supersedes: E-016#d1
 - 2026-11-13 E-017: W-061 last by depends_on: it waits for the sources (developer, 2026-11-13) supersedes: E-017#d1
 
 ## Deviations
-- 2026-11-13 E-016: W-166 bug filed under E-016 from the W-144 criterion run: the pin test fails but never prints the toml path AC1 names
+- none recorded
