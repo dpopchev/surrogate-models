@@ -35,4 +35,4 @@
 - 2026-11-14 E-018: plan agreed 2026-11-14 (developer: file): W-169 to W-174; a search's run time becomes a recorded verdict, reversing W-121's prune reason; the pointwise local RBF and the NS-charge ResNet go on fixed points, not dropped
 
 ## Deviations
-- none recorded
+- 2026-11-14 E-018: W-169 lane findings filed standalone todo: W-177 (the zones run refusals untested), W-178 (the ceilings reader stated in five places)
