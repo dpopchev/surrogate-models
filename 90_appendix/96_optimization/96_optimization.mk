@@ -23,7 +23,7 @@ zones: ## Print every tuned candidate's figures per zone from the recorded tunin
 EXTRAPOLATION        := 90_appendix/96_optimization/measure_extrapolation.py
 EXTRAPOLATION_KNOBS  = --minutes 30 --workers 3 $(PIPELINE_KNOBS) --seed $(PIPELINE_SEED)
 EXTRAPOLATION_PAIRS  ?=
-EXTRAPOLATION_BATCH  ?=
+EXTRAPOLATION_BATCH  ?= 01a1dbc6-1f04-760d-998a-c6e0f9d8c003
 
 .PHONY: extrapolation
 extrapolation: ## Fit every tuned candidate without the edge curves and print its figures on them (hours; EXTRAPOLATION_BATCH= reprints a saved batch)
