@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-018 > W-171 > T-445   | blocked: 0 | todo roots: 8 | done: 525 | pruned: 101
+open path: E-018 > W-171 > T-445   | blocked: 0 | todo roots: 10 | done: 525 | pruned: 101
 
 ## Tree
 
@@ -21,6 +21,8 @@ W-177  issue  [todo]     (standalone) The refusals of the zone scoring are pinne
 W-178  issue  [todo]     (standalone) The stored ceilings are read through one function   (filed during T-441) -- T-463 [todo]
 W-179  issue  [todo]     (standalone) The failure paths of the search are pinned by tests   (filed during T-446) -- T-465 [todo]
 W-180  issue  [todo]     (standalone) The per-dataset knots range of the tuning is pinned by tests   (filed during T-447) -- T-466 [todo]
+W-181  bug    [todo]     (standalone) A recovered tuning batch loses the verdict of each candidate   (filed during T-448) -- T-467 [todo]
+W-182  issue  [todo]     (standalone) The refusals of the tuning run are pinned by tests   (filed during T-448) -- T-468 [todo]
 ```
 
 ## Closed
@@ -1134,6 +1136,10 @@ flowchart TD
   W179 --> T465["T-465 todo: Pin the failure paths of evaluate -> two tests in paperlib/test_search.py"]
   W180["W-180 issue todo, standalone: The per-dataset knots range of the tuning is pinned by tests"]
   W180 --> T466["T-466 todo: Pin the black-hole knots macros and range ends -> tests in paperlib/tools/test_paper_knobs.py and 90_appendix/99_precision/test_tune_survivors.py"]
+  W181["W-181 bug todo, standalone: A recovered tuning batch loses the verdict of each candidate"]
+  W181 --> T467["T-467 todo: Rebuild the verdict of a recovered outcome test-first -> 90_appendix/99_precision/tune_survivors.py"]
+  W182["W-182 issue todo, standalone: The refusals of the tuning run are pinned by tests"]
+  W182 --> T468["T-468 todo: Pin the four refusals of the tuning run -> four tests in 90_appendix/99_precision/test_tune_survivors.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -1141,5 +1147,5 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E018,W171,T445 doing
   class W169,T440,T441,W170,T442,T443,T444 done
-  class T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466 todo
+  class T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468 todo
 ```

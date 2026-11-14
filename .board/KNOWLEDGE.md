@@ -41,4 +41,5 @@
 - 2026-11-14 E-018: T-442 lane finding (edge_held_out no-edge refusal untested) folded into standalone W-177 as T-464, W-177 widened to the refusals of the zone scoring
 - 2026-11-14 E-018: T-446 lane finding filed standalone todo: W-179 (the failure paths of evaluate untested)
 - 2026-11-14 E-018: T-447 lane findings: W-180 filed standalone todo (the black-hole knots macros and range ends untested); the stale black-hole knots text of 99_precision.tex added to T-449, which edits that file
+- 2026-11-14 E-018: T-448 lane findings filed standalone todo: W-181 bug (--recover drops the verdict), W-182 (four tuning refusals untested)
 - 2026-11-14 E-018: W-169 lane findings filed standalone todo: W-177 (the zones run refusals untested), W-178 (the ceilings reader stated in five places)
