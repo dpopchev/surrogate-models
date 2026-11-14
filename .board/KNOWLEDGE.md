@@ -23,12 +23,10 @@
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
-- 2026-10-07 W-047: open: what observational sigma do realistic mock observations of M and D carry (supervisors)? the data ceiling alone allows a surrogate about 1e-4 M_sun on the NS mass and 1.6e-3 dex on the NS charge (W-064) -- the surrogate's error target follows from it
-- 2026-11-10 E-013: T-375: open: make section S=90_appendix prints about 80 'Label multiply defined' warnings (e.g. tab:ns-univariate) while the full article prints none -- a standalone-preview artifact, or new with the appendix move?
 - 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
-- 2026-11-10 W-139: open: a non-default split or two_tables pick stores two tables -- does the paper then show both? (unchecked at the E-012 close) supersedes: W-139#2
-- 2026-11-11 W-093: open: winners all local RBF -> float64, L-BFGS, H2 untested; NS-charge ResNet run (about +6 h) a new item?
 - 2026-11-14 E-018: open: the proposal's physics gate (sign checks per candidate) has no work item -- add a criterion to E-018, or leave physics to W-173's guard? (developer)
+- 2026-11-14 W-093: open: NS-charge ResNet run planned as W-171; float64, L-BFGS and H2 stay untested on networks (precision_options.py warns) -- file them for the ResNet if it leads a zone after W-171, else drop? (developer, re-aim after W-171) supersedes: W-093#1
+- 2026-11-14 W-139: open: answered: a non-default split or two_tables pick writes the second table as an asset that no section inputs (95_algorithms.tex:61, 97_representation.tex:6) -> the paper drops it; file a bug, or remove the two picks? (developer) supersedes: W-139#3
 - 2026-11-14 W-173: open: beyond the sampled couplings, answer with a warning inside the measured margin (the criterion as filed, the agent's suggestion) or keep refusing and only report the measurement? decided by the developer at the re-aim before W-173, on the edge figures of W-170
 
 ## Decisions
