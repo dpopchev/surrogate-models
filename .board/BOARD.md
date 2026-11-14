@@ -1,13 +1,13 @@
 # Board -- surrogate-models
 record: local
-open path: E-018 > W-170 > T-444   | blocked: 0 | todo roots: 6 | done: 523 | pruned: 101
+open path: E-018 > W-170   | blocked: 0 | todo roots: 6 | done: 524 | pruned: 101
 
 ## Tree
 
 ```text
 E-018         [doing]    The pipeline regenerates both maps with every candidate scored per zone and every cut reported
   W-169  issue  [done]     make zones prints every tuned candidate per zone from the recorded batches -- T-440 [done], T-441 [done]
-  W-170  issue  [doing]    make extrapolation scores every tuned candidate on the edge curves it was fitted without -- T-442 [done], T-443 [done], T-444 [doing]   <- ACTIVE LEAF
+  W-170  issue  [doing]    make extrapolation scores every tuned candidate on the edge curves it was fitted without -- T-442 [done], T-443 [done], T-444 [done]
   W-171  issue  [todo]     The tuning records a verdict per candidate under a time budget -- T-445 [todo], T-446 [todo], T-447 [todo], T-448 [todo], T-449 [todo]
   W-172  issue  [todo]     make surrogates regenerates the surrogates rung by rung and prints the time of each -- T-450 [todo], T-451 [todo]
   W-173  issue  [todo]     The saved surrogate answers beyond the sampled couplings only inside the measured margin -- T-452 [todo], T-453 [todo], T-454 [todo]
@@ -1094,7 +1094,7 @@ flowchart TD
   E018 --> W170["W-170 issue doing: make extrapolation scores every tuned candidate on the edge curves it was fitted without"]
   W170 --> T442["T-442 done: Write the leave-edge-out scoring test-first -> paperlib/zones.py"]
   W170 --> T443["T-443 done: Write the extrapolation run test-first -> 90_appendix/96_optimization/measure_extrapolation.py and make extrapolation"]
-  W170 --> T444["T-444 doing: Run the extrapolation on the tuned candidates -> EXTRAPOLATION_BATCH pinned in 90_appendix/96_optimization/96_optimization.mk -- ACTIVE LEAF"]
+  W170 --> T444["T-444 done: Run the extrapolation on the tuned candidates -> EXTRAPOLATION_BATCH pinned in 90_appendix/96_optimization/96_optimization.mk"]
   E018 --> W171["W-171 issue todo: The tuning records a verdict per candidate under a time budget"]
   W171 --> T445["T-445 todo: Stop a search at its time budget test-first -> paperlib/search.py"]
   W171 --> T446["T-446 todo: Score a fixed list of points in place of a search test-first -> paperlib/search.py"]
@@ -1132,7 +1132,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E018,W170,T444 doing
-  class W169,T440,T441,T442,T443 done
+  class E018,W170 doing
+  class W169,T440,T441,T442,T443,T444 done
   class W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,W178,T463 todo
 ```
