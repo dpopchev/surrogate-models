@@ -9,7 +9,7 @@ is a callable that turns one trial's parameters into a harness fitter.
 
 import logging
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, assert_never, get_args
 
@@ -158,6 +158,33 @@ def search(
         failed=failed,
         cut=cut,
     )
+
+
+def evaluate(
+    family: TrialFitter,
+    points: Sequence[dict[str, Any]],
+    design: Design,
+    target: TargetForm,
+    seeds: Sequence[int],
+    valid_fraction: float,
+) -> SearchResult:
+    """Score a fixed list of points in place of a search: each point's figures are the mean of
+    its fold figures over the seeds. A point whose fit raises fails alone (logged); the best
+    point is a Searched with the points run as its trials, NoCompletedTrial when all failed."""
+    scored: list[tuple[float, dict[str, Any]]] = []
+    for index, point in enumerate(points):
+        try:
+            fitter = family(point)
+            figures = [fold_figures(design, target, fitter, s, valid_fraction) for s in seeds]
+        except Exception as error:
+            logger.warning("point %d failed: %s", index, error)
+            continue
+        scored.append((float(np.mean(figures)), point))
+    failed = len(points) - len(scored)
+    if not scored:
+        return NoCompletedTrial(trials=len(points), failed=failed)
+    best_figures, best_point = max(scored, key=lambda pair: pair[0])
+    return Searched(params=best_point, figures=best_figures, trials=len(points), failed=failed)
 
 
 def fold_figures(

@@ -10,7 +10,15 @@ from optuna.distributions import FloatDistribution
 from threadpoolctl import threadpool_info
 
 from paperlib.design import Design
-from paperlib.search import SPACES, NoCompletedTrial, Searched, search, space_of
+from paperlib.search import (
+    SPACES,
+    NoCompletedTrial,
+    Searched,
+    evaluate,
+    fold_figures,
+    search,
+    space_of,
+)
 
 pytestmark = pytest.mark.model
 
@@ -185,3 +193,24 @@ def test_a_search_counts_its_failed_trials() -> None:
     family, _ = raising_second([])
     found = search(family, SPACE, 4, TOY, "mass", seed=0, valid_fraction=0.34)
     assert found.failed == 1
+
+
+def seeded(params):
+    """A toy family whose error moves with the seed; a scale of 0.4 raises."""
+
+    def fit(rows, seed):
+        if params["scale"] == 0.4:
+            raise FloatingPointError("loss is nan")
+        scale = params["scale"] + 0.05 * seed
+        return lambda x: (1.0 + scale) * (1.0 + 0.1 * x[:, 1] + x[:, 0])
+
+    return fit
+
+
+def test_evaluate_returns_the_best_of_the_given_points() -> None:
+    points = [{"scale": 0.3}, {"scale": 0.4}, {"scale": 0.1}]
+    first = fold_figures(TOY, "mass", seeded({"scale": 0.1}), 0, 0.34)
+    second = fold_figures(TOY, "mass", seeded({"scale": 0.1}), 1, 0.34)
+    found = evaluate(seeded, points, TOY, "mass", seeds=(0, 1), valid_fraction=0.34)
+    expected = Searched(params={"scale": 0.1}, figures=(first + second) / 2, trials=3, failed=1)
+    assert found == expected
