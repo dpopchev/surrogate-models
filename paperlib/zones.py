@@ -1,16 +1,18 @@
 """The zones of held-out rows -- interior, edge, physical edge -- and the figures each keeps.
 
-Pure functions on numpy arrays; nothing is fitted.
+Pure functions on numpy arrays; only edge_held_out fits, through the fitter it is given.
 """
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Literal
 
 import numpy as np
 
 from paperlib.ceilings import spread
-from paperlib.scorecard import significant_figures
+from paperlib.design import Design, TargetForm
+from paperlib.harness import Fitter, fit_on
+from paperlib.scorecard import relative_errors, significant_figures
 
 Side = Literal["start", "end"]
 
@@ -21,6 +23,16 @@ class ZoneFigures:
 
     p95: float
     worst: float
+
+
+@dataclass(frozen=True)
+class EdgeHeldOut:
+    """The figures of the edge and interior zones of a fit made without the edge, and the
+    seconds its fit and its prediction took."""
+
+    zones: Mapping[str, ZoneFigures | None]
+    fit_seconds: float
+    predict_seconds: float
 
 
 def curve_position(groups: np.ndarray, along: np.ndarray) -> np.ndarray:
@@ -66,3 +78,29 @@ def zone_figures(
         found = spread(errors[mask])
         figures[name] = ZoneFigures(significant_figures(found.p95), significant_figures(found.max))
     return figures
+
+
+def edge_held_out(
+    design: Design,
+    target: TargetForm,
+    fitter: Fitter,
+    seed: int,
+    valid_fraction: float,
+    clock: Callable[[], float],
+) -> EdgeHeldOut:
+    """One fit made without the edge and the test curves, scored on the edge curves outside
+    the test set and on the interior test curves."""
+    edge = design.ablation & ~design.test
+    if not edge.any():
+        raise ValueError("no edge curve to hold out")
+    started = clock()
+    predict = fit_on(design, ~design.ablation & ~design.test, fitter, seed, valid_fraction)
+    fitted = clock()
+    scored = edge | (~design.ablation & design.test)
+    predictions = np.zeros(len(design.y))
+    predictions[scored] = predict(design.X[scored])
+    predicted = clock()
+    errors = np.zeros(len(design.y))
+    errors[scored] = relative_errors(design.y[scored], predictions[scored], target)
+    masks = {"edge": edge, "interior": ~design.ablation & design.test}
+    return EdgeHeldOut(zone_figures(errors, masks), fitted - started, predicted - fitted)

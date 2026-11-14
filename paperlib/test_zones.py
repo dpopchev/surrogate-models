@@ -3,9 +3,41 @@
 import numpy as np
 import pytest
 
-from paperlib.zones import curve_position, physical_edge, zone_figures, zone_masks
+from paperlib.design import Design
+from paperlib.harness import FitRows, Predictor
+from paperlib.zones import (
+    curve_position,
+    edge_held_out,
+    physical_edge,
+    zone_figures,
+    zone_masks,
+)
 
 pytestmark = pytest.mark.model
+
+# Six curves of two rows, y = 1 + curve: curves 0 and 1 are test, curve 2 is the edge, curves 3
+# to 5 train; the first input is the row's own index.
+CURVES = np.repeat(np.arange(6), 2)
+HELD = Design(
+    X=np.column_stack([np.arange(12.0), CURVES.astype(float)]),
+    y=1.0 + CURVES,
+    groups=CURVES,
+    test=CURVES <= 1,
+    fold=np.full(12, -1),
+    ablation=CURVES == 2,
+)
+
+
+class Clock:
+    """A clock that ticks one second at each reading."""
+
+    def __init__(self) -> None:
+        self.now = 0.0
+
+    def __call__(self) -> float:
+        self.now += 1.0
+        return self.now
+
 
 GROUPS = np.array([0] * 5 + [1] * 5)
 ALONG = np.array([5.0, 1.0, 2.0, 4.0, 3.0, 10.0, 20.0, 30.0, 40.0, 50.0])
@@ -55,3 +87,21 @@ def test_zone_figures_report_p95_and_worst_row_per_zone() -> None:
         "physical": (1.02, 1.0),
         "empty": None,
     }
+
+
+def test_edge_held_out_fits_without_the_edge_curves() -> None:
+    seen: list[FitRows] = []
+
+    def fitter(rows: FitRows, seed: int) -> Predictor:
+        seen.append(rows)
+        return lambda x: np.full(len(x), rows.y_fit.mean())
+
+    found = edge_held_out(HELD, "mass", fitter, 0, 0.34, Clock())
+    (rows,) = seen
+    shown = {int(i) for i in np.concatenate([rows.x_fit[:, 0], rows.x_valid[:, 0]])}
+    assert (shown, sorted(found.zones), found.fit_seconds, found.predict_seconds) == (
+        set(range(6, 12)),
+        ["edge", "interior"],
+        1.0,
+        1.0,
+    )
