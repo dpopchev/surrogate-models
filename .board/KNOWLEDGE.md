@@ -29,6 +29,7 @@
 - 2026-11-14 W-173: open: beyond the sampled couplings, answer with a warning inside the measured margin (the criterion as filed, the agent's suggestion) or keep refusing and only report the measurement? decided by the developer at the re-aim before W-173, on the edge figures of W-170
 
 ## Decisions
+- 2026-11-14 E-018: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 8 hours) (developer, 2026-11-14)
 - 2026-11-14 E-018: goal (developer, 2026-11-14): surrogates that minimize the relative error over the whole dataset, extrapolate well and keep the physics, with feedback on the parameters; agent's reading: extrapolation across the couplings, never past a physical edge; replaces E-014's goal
 - 2026-11-14 E-018: physics gate (developer, 2026-11-14: file): AC7 -> W-175, make zones counts per zone the steps whose predicted slope sign differs from the data; a sign check on D is void under the log target; the zone table of W-174 shows the counts (T-455 amended, W-174 depends on W-175)
 - 2026-11-14 E-018: plan agreed 2026-11-14 (developer: file): W-169 to W-174; a search's run time becomes a recorded verdict, reversing W-121's prune reason; the pointwise local RBF and the NS-charge ResNet go on fixed points, not dropped
