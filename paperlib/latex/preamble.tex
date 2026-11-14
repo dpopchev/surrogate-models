@@ -8,6 +8,10 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
+% A table's caption sits above its tabular (paperlib/tables.py), and article.cls puts its skip
+% above a caption only: position=top moves it between the caption and the top rule (W-129).
+\usepackage{caption}
+\captionsetup[table]{position=top}
 % S columns of the aligned table layout (paper.toml [tables], W-114): a spread prints compact,
 % 1.96(2), so the representation table fits the text width (W-126); a cell led by \bfseries
 % prints its number bold (siunitx v3's form of detect-weight, W-127).
