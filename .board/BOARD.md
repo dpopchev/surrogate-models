@@ -1,12 +1,12 @@
 # Board -- surrogate-models
 record: local
-open path: E-018 > W-169 > T-441   | blocked: 0 | todo roots: 4 | done: 519 | pruned: 101
+open path: E-018 > W-169   | blocked: 0 | todo roots: 4 | done: 520 | pruned: 101
 
 ## Tree
 
 ```text
 E-018         [doing]    The pipeline regenerates both maps with every candidate scored per zone and every cut reported
-  W-169  issue  [doing]    make zones prints every tuned candidate per zone from the recorded batches -- T-440 [done], T-441 [doing]   <- ACTIVE LEAF
+  W-169  issue  [doing]    make zones prints every tuned candidate per zone from the recorded batches -- T-440 [done], T-441 [done]
   W-170  issue  [todo]     make extrapolation scores every tuned candidate on the edge curves it was fitted without -- T-442 [todo], T-443 [todo], T-444 [todo]
   W-171  issue  [todo]     The tuning records a verdict per candidate under a time budget -- T-445 [todo], T-446 [todo], T-447 [todo], T-448 [todo], T-449 [todo]
   W-172  issue  [todo]     make surrogates regenerates the surrogates rung by rung and prints the time of each -- T-450 [todo], T-451 [todo]
@@ -1088,7 +1088,7 @@ flowchart TD
   E018["E-018 doing: The pipeline regenerates both maps with every candidate scored per zone and every cut reported"]
   E018 --> W169["W-169 issue doing: make zones prints every tuned candidate per zone from the recorded batches"]
   W169 --> T440["T-440 done: Write the zone masks and scores test-first -> paperlib/zones.py"]
-  W169 --> T441["T-441 doing: Write the zones run test-first -> 90_appendix/96_optimization/score_zones.py and make zones -- ACTIVE LEAF"]
+  W169 --> T441["T-441 done: Write the zones run test-first -> 90_appendix/96_optimization/score_zones.py and make zones"]
   E018 --> W170["W-170 issue todo: make extrapolation scores every tuned candidate on the edge curves it was fitted without"]
   W170 --> T442["T-442 todo: Write the leave-edge-out scoring test-first -> paperlib/zones.py"]
   W170 --> T443["T-443 todo: Write the extrapolation run test-first -> 90_appendix/96_optimization/measure_extrapolation.py and make extrapolation"]
@@ -1126,7 +1126,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E018,W169,T441 doing
-  class T440 done
+  class E018,W169 doing
+  class T440,T441 done
   class W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461 todo
 ```
