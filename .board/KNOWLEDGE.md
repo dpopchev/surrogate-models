@@ -22,10 +22,7 @@
 - 2026-11-14 T-457: standing: batch 01a11d49 folds/test vs ceiling, cw curve-wise, pw pointwise: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet pw 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure supersedes: T-436#13
 - 2026-11-14 T-457: standing: p95 across-curve ceilings (across neighbouring curves): NS M 4.1 figures (1.36e-4 M_sun at median 1.75, 1.70e-4 at M_max 2.19), NS D 2.4 (1.56e-3 dex); BH M 7.1 (3.05e-7 M_sun), D 6.0 (4.40e-7 dex), at the existence edge -> E-006 target per pair supersedes: T-436#12
 - 2026-11-14 T-457: standing: worst NS mass curves short, low-mass, beta 0.4-2.4, lambda \~4 -> E-006 error map, H2; every prepared D > 0; the 1004 NS rows below 1e-5 open 110 of 1611 curves at low rho_c -> floor dropped (W-063) supersedes: T-436#6
-- 2026-11-14 W-170: fact: black_holes charge: edge p95 1.78-2.94 vs interior 1.82-2.97, worst 0.85-1.55 -> all four hold, W-173's margin keeps the winner
-- 2026-11-14 W-170: fact: black_holes mass: edge p95 2.73-3.80 vs interior 2.73-3.78, worst 1.85-2.15 -> all four hold, W-173's margin keeps the winner
-- 2026-11-14 W-170: fact: neutron_stars charge: edge p95 RBF -0.01/-0.05, ResNet -0.48, k-NN -0.48, worst all negative (-0.14 to -0.88), interior 0.48-1.81 -> no candidate holds, W-173's margin fails them all
-- 2026-11-14 W-170: fact: neutron_stars mass: pointwise RBF edge p95 2.70, worst 1.92, interior 3.43 holds; curve-wise RBF edge 2.64, worst -4.60, interior 3.66 fails -> W-173's margin must not admit curve-wise RBF on mass
+- 2026-11-14 W-170: fact: edge held (batch 01a1dbc6): BH M and D all 4 candidates; NS M pointwise RBF only (curve-wise worst -4.60); NS D none, edge p95 <= 0 -> W-173 margin: BH one step, NS zero supersedes: W-170#1, W-170#2, W-170#3, W-170#4
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
@@ -43,4 +40,5 @@
 ## Deviations
 - 2026-11-14 E-018: T-442 lane finding (edge_held_out no-edge refusal untested) folded into standalone W-177 as T-464, W-177 widened to the refusals of the zone scoring
 - 2026-11-14 E-018: T-446 lane finding filed standalone todo: W-179 (the failure paths of evaluate untested)
+- 2026-11-14 E-018: T-447 lane findings: W-180 filed standalone todo (the black-hole knots macros and range ends untested); the stale black-hole knots text of 99_precision.tex added to T-449, which edits that file
 - 2026-11-14 E-018: W-169 lane findings filed standalone todo: W-177 (the zones run refusals untested), W-178 (the ceilings reader stated in five places)
