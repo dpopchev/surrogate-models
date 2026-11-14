@@ -2,6 +2,7 @@
 
 ## Findings
 - 2026-10-06 W-032: standing: make overleaf refreshes the upload list on every run -> run it only right before an upload, or the removed list of the earlier run is lost supersedes: W-032#1
+- 2026-11-14 E-018: fact: make zones (batch 01a11d49): the physical edge costs every BH winner 1.4 figures at p95 (M 3.78 -> 2.40, D 2.98 -> 1.63) and NS charge edge curves 1 figure (1.22 -> 0.25) -> the zones, not the one p95, decide the cuts of W-171
 - 2026-11-14 E-018: fact: the physics gate is filed as AC7 -> W-175 (developer, 2026-11-14) -> the guard of W-173 keeps the domain, W-175 measures the slopes supersedes: E-018#1
 - 2026-11-14 T-436: standing: --doctest-modules imports each conftest.py as conftest -> per-folder conftest needs --ignore=conftest.py --ignore-glob=*/conftest.py; asset writers iterate in a fixed order -> local/assets-baseline.sha (50 files) seed-independent supersedes: W-091#2, W-117#2
 - 2026-11-14 T-436: standing: BH p95 is its worst of 3 test curves (pointwise RBF M 5e-5 vs 1e-7, D 1e-3 vs 1e-5); BH error arcs between the 8 knots -> E-007 tunes the knots supersedes: T-200#2
