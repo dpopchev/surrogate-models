@@ -8,6 +8,7 @@ is a callable that turns one trial's parameters into a harness fitter.
 """
 
 import logging
+import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, assert_never, get_args
@@ -79,6 +80,7 @@ class Searched:
     figures: float
     trials: int
     failed: int
+    cut: bool = False
 
 
 @dataclass(frozen=True)
@@ -117,17 +119,26 @@ def search(
     seed: int,
     valid_fraction: float,
     study: optuna.Study | None = None,
+    seconds: float | None = None,
+    clock: Callable[[], float] = time.perf_counter,
 ) -> SearchResult:
     """Run `budget` trials of the family over its space on the design's frozen folds, in the
     given study (a journal one, for the dashboard) or an in-memory one sampled from the seed.
     The ask / tell loop is the trial's boundary: a fit that raises fails only its trial (told
     FAIL, logged), as a nan score does; the search runs its whole budget. NoCompletedTrial when
-    the study holds no completed trial."""
+    the study holds no completed trial. With `seconds`, the loop ends before asking a trial
+    once the clock has passed it since the start (the first trial always runs): the trials
+    reported are those run, and a Searched says it was cut."""
     if study is None:
         sampler = optuna.samplers.TPESampler(seed=seed)
         study = optuna.create_study(direction="maximize", sampler=sampler)
+    start = clock()
     numbers: list[int] = []
-    for _ in range(budget):
+    cut = False
+    for index in range(budget):
+        if seconds is not None and index > 0 and clock() - start > seconds:
+            cut = True
+            break
         trial = study.ask(dict(space))
         numbers.append(trial.number)
         try:
@@ -139,9 +150,13 @@ def search(
     states = {trial.number: trial.state for trial in study.get_trials(deepcopy=False)}
     failed = sum(states[number] == TrialState.FAIL for number in numbers)
     if TrialState.COMPLETE not in states.values():
-        return NoCompletedTrial(trials=budget, failed=failed)
+        return NoCompletedTrial(trials=len(numbers), failed=failed)
     return Searched(
-        params=study.best_params, figures=study.best_value, trials=budget, failed=failed
+        params=study.best_params,
+        figures=study.best_value,
+        trials=len(numbers),
+        failed=failed,
+        cut=cut,
     )
 
 

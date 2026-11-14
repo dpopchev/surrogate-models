@@ -160,6 +160,27 @@ def test_the_best_params_come_from_the_trials_that_did_not_raise() -> None:
     assert cast(Searched, found).params != raised[0]
 
 
+def test_search_stops_asking_trials_past_its_seconds() -> None:
+    now = [0.0]
+
+    def ticking(params):
+        now[0] += 10.0
+        return scaled(params)
+
+    found = search(
+        ticking,
+        SPACE,
+        40,
+        TOY,
+        "mass",
+        seed=0,
+        valid_fraction=0.34,
+        seconds=25.0,
+        clock=lambda: now[0],
+    )
+    assert (found.trials, cast(Searched, found).cut) == (3, True)
+
+
 def test_a_search_counts_its_failed_trials() -> None:
     family, _ = raising_second([])
     found = search(family, SPACE, 4, TOY, "mass", seed=0, valid_fraction=0.34)
