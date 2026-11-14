@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 4 | done: 510 | pruned: 101
+open path: none   | blocked: 0 | todo roots: 5 | done: 510 | pruned: 101
 
 ## Tree
 
@@ -9,6 +9,13 @@ E-017         [todo]     The article is ready for the supervisors' read
   W-061  spike  [todo]     Which real references replace the placeholder citations -- T-118 [todo]
   W-129  bug    [todo]     A table caption above its table touches the top rule   (filed during T-336) -- T-341 [todo]
   W-164  issue  [todo]     Section 2.5 states the sampled neutron-star coupling ranges   (filed during T-419) -- T-435 [todo]
+E-018         [todo]     The pipeline regenerates both maps with every candidate scored per zone and every cut reported
+  W-169  issue  [todo]     make zones prints every tuned candidate per zone from the recorded batches -- T-440 [todo], T-441 [todo]
+  W-170  issue  [todo]     make extrapolation scores every tuned candidate on the edge curves it was fitted without -- T-442 [todo], T-443 [todo], T-444 [todo]
+  W-171  issue  [todo]     The tuning records a verdict per candidate under a time budget -- T-445 [todo], T-446 [todo], T-447 [todo], T-448 [todo], T-449 [todo]
+  W-172  issue  [todo]     make surrogates regenerates the surrogates rung by rung and prints the time of each -- T-450 [todo], T-451 [todo]
+  W-173  issue  [todo]     The saved surrogate answers beyond the sampled couplings only inside the measured margin -- T-452 [todo], T-453 [todo], T-454 [todo]
+  W-174  issue  [todo]     The article reports the zones, the cut candidates and the restated goal -- T-455 [todo], T-456 [todo]
 W-165  issue  [todo]     (standalone) The session context keeps headroom under the hook cap while a root burns -- T-436 [todo]
 W-167  bug    [todo]     (standalone) The all-pairs parity figure of the baseline cannot be saved with LaTeX off   (filed during T-422) -- T-438 [todo]
 W-168  issue  [todo]     (standalone) store_section's empty-tables and missing-numbers paths are pinned by tests   (filed during T-384) -- T-439 [todo]
@@ -1068,6 +1075,30 @@ flowchart TD
   W129 --> T341["T-341 todo: Give a table caption its skip above the top rule -> paperlib/latex/preamble.tex"]
   E017 --> W164["W-164 issue todo: Section 2.5 states the sampled neutron-star coupling ranges"]
   W164 --> T435["T-435 todo: Write the neutron-star coupling ranges as macros -> 90_appendix/91_neutron_stars/eda_neutron_stars.py and 35_domain_boundaries.tex"]
+  E018["E-018 todo: The pipeline regenerates both maps with every candidate scored per zone and every cut reported"]
+  E018 --> W169["W-169 issue todo: make zones prints every tuned candidate per zone from the recorded batches"]
+  W169 --> T440["T-440 todo: Write the zone masks and scores test-first -> paperlib/zones.py"]
+  W169 --> T441["T-441 todo: Write the zones run test-first -> 90_appendix/96_optimization/score_zones.py and make zones"]
+  E018 --> W170["W-170 issue todo: make extrapolation scores every tuned candidate on the edge curves it was fitted without"]
+  W170 --> T442["T-442 todo: Write the leave-edge-out scoring test-first -> paperlib/zones.py"]
+  W170 --> T443["T-443 todo: Write the extrapolation run test-first -> 90_appendix/96_optimization/measure_extrapolation.py and make extrapolation"]
+  W170 --> T444["T-444 todo: Run the extrapolation on the tuned candidates -> EXTRAPOLATION_BATCH pinned in 90_appendix/96_optimization/96_optimization.mk"]
+  E018 --> W171["W-171 issue todo: The tuning records a verdict per candidate under a time budget"]
+  W171 --> T445["T-445 todo: Stop a search at its time budget test-first -> paperlib/search.py"]
+  W171 --> T446["T-446 todo: Score a fixed list of points in place of a search test-first -> paperlib/search.py"]
+  W171 --> T447["T-447 todo: Widen the black-hole knots range test-first -> paperlib/search.py"]
+  W171 --> T448["T-448 todo: Record the verdict of each candidate in the tuning run test-first -> 90_appendix/99_precision/tune_survivors.py and 90_appendix/99_precision/99_precision.mk"]
+  W171 --> T449["T-449 todo: Run the tuning under the gates -> TUNING_BATCH pinned in 90_appendix/99_precision/99_precision.mk"]
+  E018 --> W172["W-172 issue todo: make surrogates regenerates the surrogates rung by rung and prints the time of each"]
+  W172 --> T450["T-450 todo: Write the rung chain test-first -> paperlib/tools/regenerate.py and make surrogates"]
+  W172 --> T451["T-451 todo: Run the chain end to end -> the regenerated batches pinned in 90_appendix/98_families/98_families.mk, 90_appendix/99_precision/99_precision.mk and 90_appendix/96_optimization/96_optimization.mk"]
+  E018 --> W173["W-173 issue todo: The saved surrogate answers beyond the sampled couplings only inside the measured margin"]
+  W173 --> T452["T-452 todo: Add the warned verdict and the margin to the domain check test-first -> paperlib/domain.py"]
+  W173 --> T453["T-453 todo: Derive the margin of each map from the extrapolation batch test-first -> paperlib/zones.py and 40_pipeline/41_algorithm/build_surrogates.py"]
+  W173 --> T454["T-454 todo: Show the warned probes in the validity section -> 50_validity/check_domain.py and 50_validity/50_validity.tex"]
+  E018 --> W174["W-174 issue todo: The article reports the zones, the cut candidates and the restated goal"]
+  W174 --> T455["T-455 todo: Write the zone table and the verdicts as assets test-first -> 90_appendix/96_optimization/score_zones.py"]
+  W174 --> T456["T-456 todo: Restate the goal and the budget sentences -> 10_abstract/10_abstract.tex, 20_introduction/20_introduction.tex and 40_pipeline/41_algorithm/41_algorithm.tex"]
   W165["W-165 issue todo, standalone: The session context keeps headroom under the hook cap while a root burns"]
   W165 --> T436["T-436 todo: Distill the standing findings -> .board/KNOWLEDGE.md with its standing lines under 4500 characters"]
   W167["W-167 bug todo, standalone: The all-pairs parity figure of the baseline cannot be saved with LaTeX off"]
@@ -1079,5 +1110,5 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E017,W061,T118,W129,T341,W164,T435,W165,T436,W167,T438,W168,T439 todo
+  class E017,W061,T118,W129,T341,W164,T435,E018,W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W165,T436,W167,T438,W168,T439 todo
 ```

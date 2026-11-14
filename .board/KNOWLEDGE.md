@@ -41,10 +41,14 @@
 - 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
 - 2026-11-10 W-139: open: a non-default split or two_tables pick stores two tables -- does the paper then show both? (unchecked at the E-012 close) supersedes: W-139#2
 - 2026-11-11 W-093: open: winners all local RBF -> float64, L-BFGS, H2 untested; NS-charge ResNet run (about +6 h) a new item?
+- 2026-11-14 E-018: open: the proposal's physics gate (sign checks per candidate) has no work item -- add a criterion to E-018, or leave physics to W-173's guard? (developer)
+- 2026-11-14 W-173: open: beyond the sampled couplings, answer with a warning inside the measured margin (the criterion as filed, the agent's suggestion) or keep refusing and only report the measurement? decided by the developer at the re-aim before W-173, on the edge figures of W-170
 
 ## Decisions
 - 2026-11-12 W-129: criterion and brief re-pointed at what E-013 left: make section S=90_appendix and paperlib/latex/preamble.tex replace make variants and 00_metadata/preamble.tex (developer: file, 2026-11-12)
 - 2026-11-13 E-017: W-061 last by depends_on: it waits for the sources (developer, 2026-11-13) supersedes: E-017#d1
+- 2026-11-14 E-018: goal (developer, 2026-11-14): surrogates that minimize the relative error over the whole dataset, extrapolate well and keep the physics, with feedback on the parameters; agent's reading: extrapolation across the couplings, never past a physical edge; replaces E-014's goal
+- 2026-11-14 E-018: plan agreed 2026-11-14 (developer: file): W-169 to W-174; a search's run time becomes a recorded verdict, reversing W-121's prune reason; the pointwise local RBF and the NS-charge ResNet go on fixed points, not dropped
 
 ## Deviations
 - none recorded
