@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: W-165   | blocked: 0 | todo roots: 4 | done: 511 | pruned: 101
+open path: W-165   | blocked: 0 | todo roots: 4 | done: 512 | pruned: 101
 
 ## Tree
 
@@ -16,7 +16,7 @@ E-018         [todo]     The pipeline regenerates both maps with every candidate
   W-172  issue  [todo]     make surrogates regenerates the surrogates rung by rung and prints the time of each -- T-450 [todo], T-451 [todo]
   W-173  issue  [todo]     The saved surrogate answers beyond the sampled couplings only inside the measured margin -- T-452 [todo], T-453 [todo], T-454 [todo]
   W-174  issue  [todo]     The article reports the zones, the cut candidates and the restated goal -- T-455 [todo], T-456 [todo]
-W-165  issue  [doing]    (standalone) The session context keeps headroom under the hook cap while a root burns -- T-436 [done], T-457 [todo]
+W-165  issue  [doing]    (standalone) The session context keeps headroom under the hook cap while a root burns -- T-436 [done], T-457 [done]
 W-167  bug    [todo]     (standalone) The all-pairs parity figure of the baseline cannot be saved with LaTeX off   (filed during T-422) -- T-438 [todo]
 W-168  issue  [todo]     (standalone) store_section's empty-tables and missing-numbers paths are pinned by tests   (filed during T-384) -- T-439 [todo]
 ```
@@ -1101,7 +1101,7 @@ flowchart TD
   W174 --> T456["T-456 todo: Restate the goal and the budget sentences -> 10_abstract/10_abstract.tex, 20_introduction/20_introduction.tex and 40_pipeline/41_algorithm/41_algorithm.tex"]
   W165["W-165 issue doing, standalone: The session context keeps headroom under the hook cap while a root burns"]
   W165 --> T436["T-436 done: Distill the standing findings -> .board/KNOWLEDGE.md with its standing lines under 4500 characters"]
-  W165 --> T457["T-457 todo: Restore the standing facts the distill lost -> .board/KNOWLEDGE.md with the black-hole edge range and the across-curve ceilings"]
+  W165 --> T457["T-457 done: Restore the standing facts the distill lost -> .board/KNOWLEDGE.md with the black-hole edge range and the across-curve ceilings"]
   W167["W-167 bug todo, standalone: The all-pairs parity figure of the baseline cannot be saved with LaTeX off"]
   W167 --> T438["T-438 todo: Title the all-pairs parity panels from SYMBOLS -> 90_appendix/95_algorithms/fit_baseline.py"]
   W168["W-168 issue todo, standalone: store_section's empty-tables and missing-numbers paths are pinned by tests"]
@@ -1112,6 +1112,6 @@ flowchart TD
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class W165 doing
-  class T436 done
-  class E017,W061,T118,W129,T341,W164,T435,E018,W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,T457,W167,T438,W168,T439 todo
+  class T436,T457 done
+  class E017,W061,T118,W129,T341,W164,T435,E018,W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W167,T438,W168,T439 todo
 ```
