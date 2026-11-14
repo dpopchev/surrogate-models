@@ -23,7 +23,7 @@ from optuna.distributions import FloatDistribution, IntDistribution
 from paperlib.candidates import SPACE_TAG
 from paperlib.config import NetworkSettings, load_config
 from paperlib.eda import camel, number_tex, render_macros
-from paperlib.search import KNOTS, SPACES, Space
+from paperlib.search import BLACK_HOLE_KNOTS, KNOTS, SPACES, Space
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +132,10 @@ def main(argv: list[str]) -> None:
     screens = {tag: getattr(args, screen) for screen, tag in SCREENS.items()}
     found = knob_numbers(load_config().network, screens)
     found |= space_numbers({SPACE_TAG[f]: space for f, space in SPACES.items()}, KNOTS)
+    found |= {
+        name.replace("Knots", "KnotsBh"): value
+        for name, value in space_numbers({}, BLACK_HOLE_KNOTS).items()
+    }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(render_macros(found))
     logger.info("done: %d knobs -> %s", len(found), args.out)

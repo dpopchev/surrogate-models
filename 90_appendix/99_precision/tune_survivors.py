@@ -97,7 +97,6 @@ from paperlib.plots import (
 from paperlib.runs import LedgerEntry, RunMetadata, Setting
 from paperlib.scorecard import significant_figures
 from paperlib.search import (
-    KNOTS,
     SPACES,
     NoCompletedTrial,
     Searched,
@@ -665,7 +664,7 @@ def _importances(
 ) -> dict[str, float]:
     """The fANOVA importance of each param a search varies, over its scored trials; none for a
     space of one param."""
-    space = space_of(job.candidate.family, job.candidate.unit)
+    space = space_of(job.candidate.family, job.candidate.unit, job.dataset)
     if len(space) < 2 or len(scored) < 2:
         return {}
     study = optuna.create_study(direction="maximize")
@@ -953,7 +952,11 @@ def ranges_figure(
     neighbours_axes.set_xscale("log")
     _plain_log_ticks(neighbours_axes.xaxis, (50, 100, 200, 400))
     ranged: list[tuple[Axes, BaseDistribution]] = [
-        *((axes, KNOTS) for axes, _ in knots),
+        *(
+            (axes, space_of("k-NN", "curve-wise", dataset)["knots"])
+            for axes, chosen in knots
+            for dataset in sorted({p.job.dataset for p in chosen} or {"neutron_stars"})
+        ),
         (neighbours_axes, SPACES["local RBF"]["neighbours"]),
     ]
     if network_axes is not None:
@@ -1330,7 +1333,7 @@ def tune_job(work: Work) -> Outcome:
         lambda params: tuned_fitter(
             candidate, work.pair.space, context.knobs, context.training, params
         ),
-        space_of(candidate.family, candidate.unit),
+        space_of(candidate.family, candidate.unit, job.dataset),
         context.trials,
         context.training.seed,
         context.training.valid_fraction,

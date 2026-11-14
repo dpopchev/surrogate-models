@@ -69,6 +69,9 @@ SPACES: Mapping[str, Space] = {
 
 # The curve-wise unit's cubic spline knots along s, ends included (the screen ran 8).
 KNOTS = IntDistribution(6, 24)
+# A black-hole curve holds about 5700 rows against a neutron-star curve's 6 at the fewest, and
+# its best knots sat at the top of KNOTS (W-068), so its range runs wider.
+BLACK_HOLE_KNOTS = IntDistribution(6, 384, log=True)
 
 
 @dataclass(frozen=True)
@@ -98,14 +101,16 @@ SearchResult = Searched | NoCompletedTrial
 # --- pure functions ---------------------------------------------------------------------------
 
 
-def space_of(family: str, unit: Unit) -> Space:
-    """The space a candidate -- a family in one unit of prediction -- is searched over: a
-    curve-wise one also searches its spline's knots."""
+def space_of(family: str, unit: Unit, dataset: str) -> Space:
+    """The space a candidate -- a family in one unit of prediction -- is searched over on one
+    dataset: a curve-wise one also searches its spline's knots, over the wider black-hole range
+    on black_holes."""
     match unit:
         case "pointwise":
             return SPACES[family]
         case "curve-wise":
-            return {**SPACES[family], "knots": KNOTS}
+            knots = BLACK_HOLE_KNOTS if dataset == "black_holes" else KNOTS
+            return {**SPACES[family], "knots": knots}
         case _:
             assert_never(unit)
 

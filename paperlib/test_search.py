@@ -6,7 +6,7 @@ import numpy as np
 import optuna
 import pytest
 import torch
-from optuna.distributions import FloatDistribution
+from optuna.distributions import FloatDistribution, IntDistribution
 from threadpoolctl import threadpool_info
 
 from paperlib.design import Design
@@ -74,11 +74,19 @@ def test_every_family_of_the_screen_has_a_space() -> None:
 
 
 def test_a_curve_wise_candidate_also_tunes_the_spline_knots() -> None:
-    assert "knots" in space_of("k-NN", "curve-wise")
+    assert "knots" in space_of("k-NN", "curve-wise", "neutron_stars")
 
 
 def test_a_pointwise_candidate_has_no_spline_knots() -> None:
-    assert "knots" not in space_of("k-NN", "pointwise")
+    assert "knots" not in space_of("k-NN", "pointwise", "black_holes")
+
+
+def test_space_of_widens_the_knots_for_black_holes() -> None:
+    highs = [
+        cast(IntDistribution, space_of("k-NN", "curve-wise", dataset)["knots"]).high
+        for dataset in ("black_holes", "neutron_stars")
+    ]
+    assert highs == [384, 24]
 
 
 def test_one_seed_gives_one_search() -> None:
