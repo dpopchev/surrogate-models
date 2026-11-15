@@ -153,7 +153,9 @@ def score(
         along[design.test],
         masks,
     )
-    return zone_figures(errors, masks), slopes, {d: asdict(s) for d, s in decades.items()}
+    # The stored pair counts a flat step as a violation until the record shows both (W-189).
+    pairs = {name: (found.reversed + found.flat, found.steps) for name, found in slopes.items()}
+    return zone_figures(errors, masks), pairs, {d: asdict(s) for d, s in decades.items()}
 
 
 def saved_text(found: Sequence[Zoned]) -> str:
