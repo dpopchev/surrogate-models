@@ -30,20 +30,7 @@
 - 2026-11-15 W-187: open: also restate the framing question of 94_hypotheses.tex line 4 (E-014's, inside the sampled domain) to the E-018 goal? (developer, when ordered)
 
 ## Decisions
-- 2026-11-14 E-018: goal (developer, 2026-11-14): surrogates that minimize the relative error over the whole dataset, extrapolate well and keep the physics, with feedback on the parameters; agent's reading: extrapolation across the couplings, never past a physical edge; replaces E-014's goal
-- 2026-11-14 E-018: physics gate (developer, 2026-11-14: file): AC7 -> W-175, make zones counts per zone the steps whose predicted slope sign differs from the data; a sign check on D is void under the log target; the zone table of W-174 shows the counts (T-455 amended, W-174 depends on W-175)
-- 2026-11-14 E-018: plan agreed 2026-11-14 (developer: file): W-169 to W-174; a search's run time becomes a recorded verdict, reversing W-121's prune reason; the pointwise local RBF and the NS-charge ResNet go on fixed points, not dropped
-- 2026-11-15 E-018: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 6 hours) (developer, 2026-11-15) supersedes: E-018#d4
-- 2026-11-15 W-173: margin (developer, 2026-11-15: resume): answer beyond the sampled couplings with a warning inside the measured margin, as filed -- BH one grid step, NS zero (W-170)
+- none recorded
 
 ## Deviations
-- 2026-11-14 E-018: T-442 lane finding (edge_held_out no-edge refusal untested) folded into standalone W-177 as T-464, W-177 widened to the refusals of the zone scoring
-- 2026-11-14 E-018: T-446 lane finding filed standalone todo: W-179 (the failure paths of evaluate untested)
-- 2026-11-14 E-018: T-447 lane findings: W-180 filed standalone todo (the black-hole knots macros and range ends untested); the stale black-hole knots text of 99_precision.tex added to T-449, which edits that file
-- 2026-11-14 E-018: T-448 lane findings filed standalone todo: W-181 bug (--recover drops the verdict), W-182 (four tuning refusals untested)
-- 2026-11-14 E-018: W-169 lane findings filed standalone todo: W-177 (the zones run refusals untested), W-178 (the ceilings reader stated in five places)
-- 2026-11-15 E-018: T-450 lane finding filed standalone todo: W-183
-- 2026-11-15 E-018: T-452 lane finding filed standalone todo: W-184 (the neutron-star warned verdict untested)
-- 2026-11-15 E-018: T-455 lane finding filed standalone todo: W-186
-- 2026-11-15 E-018: T-456 lane findings filed standalone todo: W-187
-- 2026-11-15 E-018: W-173 run failed (0 BH warned): bug W-185 amends W-173; T-454 ref finding -> T-456 (6)
+- none recorded

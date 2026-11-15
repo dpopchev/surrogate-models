@@ -1,19 +1,10 @@
 # Board -- surrogate-models
 record: local
-open path: E-018   | blocked: 0 | todo roots: 14 | done: 548 | pruned: 101
+open path: none   | blocked: 0 | todo roots: 14 | done: 549 | pruned: 101
 
 ## Tree
 
 ```text
-E-018         [doing]    The pipeline regenerates both maps with every candidate scored per zone and every cut reported
-  W-169  issue  [done]     make zones prints every tuned candidate per zone from the recorded batches -- T-440 [done], T-441 [done]
-  W-170  issue  [done]     make extrapolation scores every tuned candidate on the edge curves it was fitted without -- T-442 [done], T-443 [done], T-444 [done]
-  W-171  issue  [done]     The tuning records a verdict per candidate under a time budget -- T-445 [done], T-446 [done], T-447 [done], T-448 [done], T-449 [done]
-  W-172  issue  [done]     make surrogates regenerates the surrogates rung by rung and prints the time of each -- T-450 [done], T-451 [done]
-  W-173  issue  [done]     The saved surrogate answers beyond the sampled couplings only inside the measured margin -- T-452 [done], T-453 [done], T-454 [done]
-  W-174  issue  [done]     The article reports the zones, the cut candidates and the restated goal -- T-455 [done], T-456 [done]
-  W-175  issue  [done]     make zones counts the slope-sign violations of every tuned candidate per zone -- T-458 [done], T-459 [done]
-  W-185  bug    [done]     The black-hole surrogate answers no probe with a warning inside its margin   (filed during W-173) -- T-471 [done], T-472 [done], T-475 [done]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-167  bug    [todo]     (standalone) The all-pairs parity figure of the baseline cannot be saved with LaTeX off   (filed during T-422) -- T-438 [todo]
 W-168  issue  [todo]     (standalone) store_section's empty-tables and missing-numbers paths are pinned by tests   (filed during T-384) -- T-439 [todo]
@@ -830,6 +821,56 @@ closed 2026-11-14 -- outcome: Every table caption stands clear of its top rule, 
 
 - T-435 [done] Write the neutron-star coupling ranges as macros -> 90_appendix/91_neutron_stars/eda_neutron_stars.py and 35_domain_boundaries.tex
 
+### E-018 [done] The pipeline regenerates both maps with every candidate scored per zone and every cut reported
+
+closed 2026-11-15 -- outcome: make surrogates regenerates the four surrogates rung by rung; make zones and make extrapolation print every candidate per zone beside its ceiling; the tuning records a verdict per candidate; the guard answers beyond the sampled couplings only as far as the extrapolation was measured to hold; the article reports the zones, the cuts and the restated goal. -- ledger: ledgers/E-018.md
+
+#### W-169 issue [done] make zones prints every tuned candidate per zone from the recorded batches
+
+- T-440 [done] Write the zone masks and scores test-first -> paperlib/zones.py
+- T-441 [done] Write the zones run test-first -> 90_appendix/96_optimization/score_zones.py and make zones
+
+#### W-170 issue [done] make extrapolation scores every tuned candidate on the edge curves it was fitted without
+
+- T-442 [done] Write the leave-edge-out scoring test-first -> paperlib/zones.py
+- T-443 [done] Write the extrapolation run test-first -> 90_appendix/96_optimization/measure_extrapolation.py and make extrapolation
+- T-444 [done] Run the extrapolation on the tuned candidates -> EXTRAPOLATION_BATCH pinned in 90_appendix/96_optimization/96_optimization.mk
+
+#### W-171 issue [done] The tuning records a verdict per candidate under a time budget
+
+- T-445 [done] Stop a search at its time budget test-first -> paperlib/search.py
+- T-446 [done] Score a fixed list of points in place of a search test-first -> paperlib/search.py
+- T-447 [done] Widen the black-hole knots range test-first -> paperlib/search.py
+- T-448 [done] Record the verdict of each candidate in the tuning run test-first -> 90_appendix/99_precision/tune_survivors.py and 90_appendix/99_precision/99_precision.mk
+- T-449 [done] Run the tuning under the gates -> TUNING_BATCH pinned in 90_appendix/99_precision/99_precision.mk
+
+#### W-172 issue [done] make surrogates regenerates the surrogates rung by rung and prints the time of each
+
+- T-450 [done] Write the rung chain test-first -> paperlib/tools/regenerate.py and make surrogates
+- T-451 [done] Run the chain end to end -> the regenerated batches pinned in 90_appendix/98_families/98_families.mk, 90_appendix/99_precision/99_precision.mk and 90_appendix/96_optimization/96_optimization.mk
+
+#### W-173 issue [done] The saved surrogate answers beyond the sampled couplings only inside the measured margin
+
+- T-452 [done] Add the warned verdict and the margin to the domain check test-first -> paperlib/domain.py
+- T-453 [done] Derive the margin of each map from the extrapolation batch test-first -> paperlib/zones.py and 40_pipeline/41_algorithm/build_surrogates.py
+- T-454 [done] Show the warned probes in the validity section -> 50_validity/check_domain.py and 50_validity/50_validity.tex
+
+#### W-174 issue [done] The article reports the zones, the cut candidates and the restated goal
+
+- T-455 [done] Write the zone table and the verdicts as assets test-first -> 90_appendix/96_optimization/score_zones.py
+- T-456 [done] Restate the goal and the budget sentences -> 10_abstract/10_abstract.tex, 20_introduction/20_introduction.tex and 40_pipeline/41_algorithm/41_algorithm.tex
+
+#### W-175 issue [done] make zones counts the slope-sign violations of every tuned candidate per zone
+
+- T-458 [done] Write the slope-sign count test-first -> paperlib/zones.py
+- T-459 [done] Print the slope-sign counts in the zones run test-first -> 90_appendix/96_optimization/score_zones.py
+
+#### W-185 bug [done] The black-hole surrogate answers no probe with a warning inside its margin   (filed during W-173)
+
+- T-471 [done] Answer a warned row with its prediction and its warning test-first -> paperlib/final.py
+- T-472 [done] Probe inside the margin in the validity grid test-first -> 50_validity/check_domain.py
+- T-475 [done] Type the validity probes against the three-way predict result -> 50_validity/check_domain.py
+
 ### W-005 issue [done] (standalone) Python layer follows the COLOCATED level
 
 closed 2026-10-04 -- outcome: Given the COLOCATED mechanics of \~/.claude/rules/python.md, When make check runs, Then it passes with the repository root on pytest pythonpath and the python files matching the add-python COLOCATED templates. -- ledger: ledgers/W-005.md
@@ -1096,37 +1137,6 @@ closed 2026-11-14 -- outcome: Given a burning root adds its paste line and its D
 ## Diagram
 ```mermaid
 flowchart TD
-  E018["E-018 doing: The pipeline regenerates both maps with every candidate scored per zone and every cut reported"]
-  E018 --> W169["W-169 issue done: make zones prints every tuned candidate per zone from the recorded batches"]
-  W169 --> T440["T-440 done: Write the zone masks and scores test-first -> paperlib/zones.py"]
-  W169 --> T441["T-441 done: Write the zones run test-first -> 90_appendix/96_optimization/score_zones.py and make zones"]
-  E018 --> W170["W-170 issue done: make extrapolation scores every tuned candidate on the edge curves it was fitted without"]
-  W170 --> T442["T-442 done: Write the leave-edge-out scoring test-first -> paperlib/zones.py"]
-  W170 --> T443["T-443 done: Write the extrapolation run test-first -> 90_appendix/96_optimization/measure_extrapolation.py and make extrapolation"]
-  W170 --> T444["T-444 done: Run the extrapolation on the tuned candidates -> EXTRAPOLATION_BATCH pinned in 90_appendix/96_optimization/96_optimization.mk"]
-  E018 --> W171["W-171 issue done: The tuning records a verdict per candidate under a time budget"]
-  W171 --> T445["T-445 done: Stop a search at its time budget test-first -> paperlib/search.py"]
-  W171 --> T446["T-446 done: Score a fixed list of points in place of a search test-first -> paperlib/search.py"]
-  W171 --> T447["T-447 done: Widen the black-hole knots range test-first -> paperlib/search.py"]
-  W171 --> T448["T-448 done: Record the verdict of each candidate in the tuning run test-first -> 90_appendix/99_precision/tune_survivors.py and 90_appendix/99_precision/99_precision.mk"]
-  W171 --> T449["T-449 done: Run the tuning under the gates -> TUNING_BATCH pinned in 90_appendix/99_precision/99_precision.mk"]
-  E018 --> W172["W-172 issue done: make surrogates regenerates the surrogates rung by rung and prints the time of each"]
-  W172 --> T450["T-450 done: Write the rung chain test-first -> paperlib/tools/regenerate.py and make surrogates"]
-  W172 --> T451["T-451 done: Run the chain end to end -> the regenerated batches pinned in 90_appendix/98_families/98_families.mk, 90_appendix/99_precision/99_precision.mk and 90_appendix/96_optimization/96_optimization.mk"]
-  E018 --> W173["W-173 issue done: The saved surrogate answers beyond the sampled couplings only inside the measured margin"]
-  W173 --> T452["T-452 done: Add the warned verdict and the margin to the domain check test-first -> paperlib/domain.py"]
-  W173 --> T453["T-453 done: Derive the margin of each map from the extrapolation batch test-first -> paperlib/zones.py and 40_pipeline/41_algorithm/build_surrogates.py"]
-  W173 --> T454["T-454 done: Show the warned probes in the validity section -> 50_validity/check_domain.py and 50_validity/50_validity.tex"]
-  E018 --> W174["W-174 issue done: The article reports the zones, the cut candidates and the restated goal"]
-  W174 --> T455["T-455 done: Write the zone table and the verdicts as assets test-first -> 90_appendix/96_optimization/score_zones.py"]
-  W174 --> T456["T-456 done: Restate the goal and the budget sentences -> 10_abstract/10_abstract.tex, 20_introduction/20_introduction.tex and 40_pipeline/41_algorithm/41_algorithm.tex"]
-  E018 --> W175["W-175 issue done: make zones counts the slope-sign violations of every tuned candidate per zone"]
-  W175 --> T458["T-458 done: Write the slope-sign count test-first -> paperlib/zones.py"]
-  W175 --> T459["T-459 done: Print the slope-sign counts in the zones run test-first -> 90_appendix/96_optimization/score_zones.py"]
-  E018 --> W185["W-185 bug done: The black-hole surrogate answers no probe with a warning inside its margin"]
-  W185 --> T471["T-471 done: Answer a warned row with its prediction and its warning test-first -> paperlib/final.py"]
-  W185 --> T472["T-472 done: Probe inside the margin in the validity grid test-first -> 50_validity/check_domain.py"]
-  W185 --> T475["T-475 done: Type the validity probes against the three-way predict result -> 50_validity/check_domain.py"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W167["W-167 bug todo, standalone: The all-pairs parity figure of the baseline cannot be saved with LaTeX off"]
@@ -1162,7 +1172,5 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E018 doing
-  class W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,W185,T471,T472,T475 done
   class W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468,W183,T469,W184,T470,W186,T473,W187,T474 todo
 ```
