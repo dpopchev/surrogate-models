@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-019 > W-196 > T-507   | blocked: 0 | todo roots: 14 | done: 572 | pruned: 101
+open path: E-019 > W-196 > T-508   | blocked: 0 | todo roots: 14 | done: 573 | pruned: 101
 
 ## Tree
 
@@ -15,7 +15,7 @@ E-019         [doing]    The main text carries the results and the appendix only
   W-193  issue  [done]     The pipeline section states the search, its hypotheses and its gates -- T-485 [done], T-486 [done]
   W-194  issue  [done]     The relative-error subsection shows the ceilings of both datasets -- T-487 [done]
   W-195  spike  [done]     Which appendix content stays, moves or goes -- T-488 [done], T-489 [done]
-  W-196  issue  [doing]    The appendix is no longer than the main text -- T-490 [done], T-491 [done], T-507 [doing]   <- ACTIVE LEAF, T-508 [todo], T-509 [todo], T-510 [todo], T-511 [todo], T-512 [todo], T-513 [todo]
+  W-196  issue  [doing]    The appendix is no longer than the main text -- T-490 [done], T-491 [done], T-507 [done], T-508 [doing]   <- ACTIVE LEAF, T-509 [todo], T-510 [todo], T-511 [todo], T-512 [todo], T-513 [todo], T-514 [todo]
   W-197  issue  [todo]     No review mark is left in the article -- T-492 [todo], T-493 [todo]
 E-020         [todo]     A rerun fits only what changed
   W-181  bug    [todo]     A recovered tuning batch loses the verdict of each candidate   (filed during T-448) -- T-467 [todo]
@@ -1183,13 +1183,14 @@ flowchart TD
   E019 --> W196["W-196 issue doing: The appendix is no longer than the main text"]
   W196 --> T490["T-490 done: Print the pages of the main text and the appendix test-first -> paperlib/tools/page_count.py"]
   W196 --> T491["T-491 done: Cut the neutron-star analysis to its decided floats -> 90_appendix/91_neutron_stars/91_neutron_stars.tex"]
-  W196 --> T507["T-507 doing: Cut the black-hole analysis to its decided floats -> 90_appendix/92_black_holes/92_black_holes.tex -- ACTIVE LEAF"]
-  W196 --> T508["T-508 todo: Merge the two decision tables of the preprocessing -> 90_appendix/93_preprocessing/93_preprocessing.tex"]
+  W196 --> T507["T-507 done: Cut the black-hole analysis to its decided floats -> 90_appendix/92_black_holes/92_black_holes.tex"]
+  W196 --> T508["T-508 doing: Merge the two decision tables of the preprocessing -> 90_appendix/93_preprocessing/93_preprocessing.tex -- ACTIVE LEAF"]
   W196 --> T509["T-509 todo: Drop the baseline appendix -> 90_appendix/90_appendix.tex"]
   W196 --> T510["T-510 todo: Shorten the scoring and representation appendices -> 90_appendix/96_optimization/96_optimization.tex"]
   W196 --> T511["T-511 todo: Cut the families appendix to its table and scaling figure -> 90_appendix/98_families/98_families.tex"]
   W196 --> T512["T-512 todo: Condense the model families subsection into one table -> 90_appendix/98_families/98_families_models.tex"]
   W196 --> T513["T-513 todo: Cut the tuning appendix to its ranges figure -> 90_appendix/99_precision/99_precision.tex"]
+  W196 --> T514["T-514 todo: Pin the decided figure picks of the three section tomls -> 90_appendix/91_neutron_stars/test_eda_neutron_stars.py"]
   E019 --> W197["W-197 issue todo: No review mark is left in the article"]
   W197 --> T492["T-492 todo: Resolve the two marks the W-017 finding answers -> 90_appendix/91_neutron_stars/91_neutron_stars.tex"]
   W197 --> T493["T-493 todo: Resolve the remaining marks with the supervisors' answers -> 30_physical_framework/33_black_holes/33_black_holes.tex"]
@@ -1248,7 +1249,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E019,W196,T507 doing
-  class W187,T474,W188,T476,W189,T477,T478,T479,W191,T482,W192,T483,T484,W193,T485,T486,W194,T487,W195,T488,T489,T490,T491 done
-  class W061,T118,T508,T509,T510,T511,T512,T513,W197,T492,T493,E020,W181,T467,W183,T469,W190,T480,T481,W198,T494,T495,T496,W199,T497,T498,W200,T499,T500,T501,W201,T502,T503,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W182,T468,W184,T470,W186,T473,W202,T504,W203,T505,W204,T506 todo
+  class E019,W196,T508 doing
+  class W187,T474,W188,T476,W189,T477,T478,T479,W191,T482,W192,T483,T484,W193,T485,T486,W194,T487,W195,T488,T489,T490,T491,T507 done
+  class W061,T118,T509,T510,T511,T512,T513,T514,W197,T492,T493,E020,W181,T467,W183,T469,W190,T480,T481,W198,T494,T495,T496,W199,T497,T498,W200,T499,T500,T501,W201,T502,T503,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W182,T468,W184,T470,W186,T473,W202,T504,W203,T505,W204,T506 todo
 ```
