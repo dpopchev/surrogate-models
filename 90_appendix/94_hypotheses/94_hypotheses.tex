@@ -8,7 +8,7 @@ They are fixed in this order, because the earlier ones carry across models and t
 \begin{enumerate}
   \item \emph{representation}: the scale of the inputs, the target of each model ($M$ or $\log_{10} M$; $Y$ or $\Dch$ itself), and whether a row or a whole curve is the unit of prediction (Section~\ref{sec:representation});
   \item \emph{model family}: lookup and interpolation between curves, Gaussian process regression, gradient-boosted trees, multilayer perceptrons and residual networks (Section~\ref{sec:families});
-  \item \emph{hyperparameters} of each surviving family, every family under the same search budget;
+  \item \emph{hyperparameters} of each surviving family, each search stopped at a time budget of $\knobTuningBudgetMinutes$ minutes and given a verdict: searched, grid when fixed points are scored in place of a search, or cut when the search ended on the clock (Section~\ref{sec:precision});
   \item \emph{training regime}: the loss, the activation, the optimizer and the numerical precision (Section~\ref{sec:precision});
   \item \emph{data budget}: how the error falls with the number of training curves.
 \end{enumerate}

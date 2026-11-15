@@ -8,13 +8,14 @@ The pipeline is one algorithm that builds a surrogate from a dataset of solution
 \label{alg:surrogate}
 \begin{algorithmic}[1]
 \Require a dataset of solution curves, its data ceiling per target, its physical domain
-\Ensure per target, a surrogate with its relative error beside the ceiling, which refuses an input outside the domain
+\Ensure per target, a surrogate with the least relative error on the interior beside the ceiling, which answers beyond the sampled couplings only inside the margin its held-out edge curves measured, none where the extrapolation did not hold, and past the physical edge refuses with its reason and the nearest valid input
 \State prepare the dataset and cut each curve at its stable edge (Section~\ref{sec:preprocessing})
 \State split by whole curves, so no curve is in training and test at once
 \State choose the representation: input scale and target transform (Section~\ref{sec:representation})
 \State screen the model families on the same folds (Section~\ref{sec:families})
-\State tune the survivors under one search budget (Section~\ref{sec:optimization})
+\State tune each survivor by a search under a time budget, with a verdict: searched, grid or cut (Section~\ref{sec:precision})
+\State score each candidate on the interior, the held-out edge and the physical edge (Section~\ref{sec:optimization})
 \State refit the winner with its numerical precision (Section~\ref{sec:precision})
-\State guard it with the physical domain (Section~\ref{sec:validity})
+\State guard it with the measured margin and the physical domain (Section~\ref{sec:validity})
 \end{algorithmic}
 \end{algorithm}

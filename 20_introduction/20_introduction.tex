@@ -7,9 +7,9 @@ The field equations are non-linear, and each solution is a shooting problem with
 
 This work gives both. Its contributions are:
 \begin{enumerate}
-  \item a processing pipeline as the algorithm for building surrogates of compact-object maps, which aims at the relative error the dataset allows, its data ceiling (Section~\ref{sec:pipeline});
-  \item a domain of validity set by the physics, the existence edge of black holes and the stability edge of neutron stars: the surrogate never extrapolates beyond stable solutions, and refuses an input outside the domain and returns the nearest valid one (Section~\ref{sec:validity});
-  \item the demonstration of the same pipeline on a two-parameter black-hole map and on a three-parameter neutron-star map, with the error of each target beside its ceiling (Section~\ref{sec:results}).
+  \item a processing pipeline as the algorithm for building surrogates of compact-object maps, which minimizes the relative error on the interior of the dataset against its data ceiling and scores every candidate on its interior curves, on edge curves held out of its fit and at the physical edge (Section~\ref{sec:pipeline});
+  \item a domain of validity set by the measured extrapolation and by the physics: the surrogate answers beyond the sampled couplings only as far as the held-out edge curves show the extrapolation holds, and not at all where it did not hold; past the physical edge -- the existence edge of black holes, the stability edge of neutron stars -- it refuses the input with its reason and returns the nearest valid one (Section~\ref{sec:validity});
+  \item the demonstration of the same pipeline on a two-parameter black-hole map and on a three-parameter neutron-star map, with the error of each target beside its ceiling (Section~\ref{sec:results}) and every candidate per zone (\cref{tab:zones}).
 \end{enumerate}
 The data science behind the design, the exploratory analysis and the three testable hypotheses $H_1$, $H_2$ and $H_3$, is in the appendix (Section~\ref{sec:hypotheses}).
 
