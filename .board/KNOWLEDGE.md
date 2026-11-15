@@ -2,8 +2,8 @@
 
 ## Findings
 - 2026-10-06 W-032: standing: make overleaf refreshes the upload list on every run -> run it only right before an upload, or the removed list of the earlier run is lost supersedes: W-032#1
-- 2026-11-14 E-018: fact: make zones (batch 01a11d49): the physical edge costs every BH winner 1.4 figures at p95 (M 3.78 -> 2.40, D 2.98 -> 1.63) and NS charge edge curves 1 figure (1.22 -> 0.25) -> the zones, not the one p95, decide the cuts of W-171
-- 2026-11-14 E-018: fact: the physics gate is filed as AC7 -> W-175 (developer, 2026-11-14) -> the guard of W-173 keeps the domain, W-175 measures the slopes supersedes: E-018#1
+- 2026-11-14 E-018: fact: make zones (01a11d49): the physical edge costs BH winners about 1.4 figures at p95, NS charge edge curves 1 -> the zones decide the cuts
+- 2026-11-14 E-018: fact: physics gate -> AC7, W-175 (developer) supersedes: E-018#1
 - 2026-11-14 T-436: standing: --doctest-modules imports each conftest.py as conftest -> per-folder conftest needs --ignore=conftest.py --ignore-glob=*/conftest.py; asset writers iterate in a fixed order -> local/assets-baseline.sha (50 files) seed-independent supersedes: W-091#2, W-117#2
 - 2026-11-14 T-436: standing: BH p95 is its worst of 3 test curves (pointwise RBF M 5e-5 vs 1e-7, D 1e-3 vs 1e-5); BH error arcs between the 8 knots -> E-007 tunes the knots supersedes: T-200#2
 - 2026-11-14 T-436: standing: LaTeX logs never write '<file>.tex: Overfull' -> count Overfull boxes; still typed in Sections 5.2 to the appendix (rows per curve, ripple counts, error readings, GP memory) -> no macro carries them (W-131) supersedes: W-128#3, W-131#3
@@ -27,7 +27,7 @@
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 - 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
-- 2026-11-14 E-018: open: make extrapolation's interior figures differ from make zones on the same curves (NS charge pointwise RBF 1.70 vs 1.07, ResNet 0.48 vs 1.44, a 334 s fit): fewer training curves, or a fit unlike the tuned one? -> settle before W-174 puts both in the paper
+- 2026-11-14 E-018: open: make extrapolation's interior figures differ from make zones (NS charge RBF pw 1.70 vs 1.07, ResNet 0.48 vs 1.44): fewer curves or another fit? -> settle before W-174
 - 2026-11-14 W-093: open: NS-charge ResNet run planned as W-171; float64, L-BFGS and H2 stay untested on networks (precision_options.py warns) -- file them for the ResNet if it leads a zone after W-171, else drop? (developer, re-aim after W-171) supersedes: W-093#1
 - 2026-11-14 W-173: open: beyond the sampled couplings, answer with a warning inside the measured margin (the criterion as filed, the agent's suggestion) or keep refusing and only report the measurement? decided by the developer at the re-aim before W-173, on the edge figures of W-170
 
