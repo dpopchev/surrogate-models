@@ -23,12 +23,12 @@
 - 2026-11-14 T-457: standing: worst NS mass curves short, low-mass, beta 0.4-2.4, lambda \~4 -> E-006 error map, H2; every prepared D > 0; the 1004 NS rows below 1e-5 open 110 of 1611 curves at low rho_c -> floor dropped (W-063) supersedes: T-436#6
 - 2026-11-14 W-170: fact: edge held (batch 01a1dbc6): BH M and D all 4 candidates; NS M pointwise RBF only (curve-wise worst -4.60); NS D none, edge p95 <= 0 -> W-173 margin: BH one step, NS zero supersedes: W-170#1, W-170#2, W-170#3, W-170#4
 - 2026-11-15 E-018: fact: answered in the Decisions -> physics gate, margin supersedes: E-018#2, W-173#2
+- 2026-11-15 E-018: fact: same interior rows (zones.py:63, :144); edge_held_out refits without the edge curves -> its interior is a refit, not the zone figure supersedes: E-018#4
 - 2026-11-15 E-018: fact: tuned winners 01a1dbf7 test vs ceiling: NS M RBF cw 3.58/4.11, NS D RBF cw 1.13/2.44, BH M GPR cw 6.76/7.07, BH D RBF cw 5.12/5.99; BH knots 378-381/384; rebuild 4h57m -> BH within one figure, NS D 1.3 short supersedes: W-171#1, W-171#2, W-171#3, W-172#1
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 - 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
-- 2026-11-14 E-018: open: make extrapolation's interior figures differ from make zones (NS charge RBF pw 1.70 vs 1.07, ResNet 0.48 vs 1.44): fewer curves or another fit? -> settle before W-174
 - 2026-11-14 W-093: open: NS-charge ResNet run planned as W-171; float64, L-BFGS and H2 stay untested on networks (precision_options.py warns) -- file them for the ResNet if it leads a zone after W-171, else drop? (developer, re-aim after W-171) supersedes: W-093#1
 - 2026-11-15 E-018: open: slope violations count a flat predicted step as one (XGBoost pw 16493/17250, T-459) -- split flats from reversals for the physics gate? (developer, at the close)
 
