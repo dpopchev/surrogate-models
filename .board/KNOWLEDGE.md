@@ -23,6 +23,7 @@
 - 2026-11-15 E-018: standing: winners 01a1dbf7 test/ceiling NS M 3.58/4.11, D 1.13/2.44, BH M 6.76/7.07, D 5.12/5.99; edge held (01a1dbc6) BH all, NS M RBF pw -> margin BH 1, NS 0; extrapolation interior is a refit supersedes: E-018#6, E-018#8, E-018#9
 - 2026-11-15 W-017: standing: lambda, the Gauss-Bonnet coupling, is alone in the linear equation; beta enters f at fourth order; V = 0, no self-interaction; M_max 2.19 is the EOS limit at small lambda for every beta -> lambda leads, beta shapes the branch supersedes: W-017#4
 - 2026-11-15 W-187: fact: line 4 of 94_hypotheses.tex is the only sentence limiting the goal to inside the sampled domain -> restated by W-191, its own work item (developer: file, 2026-11-15) supersedes: W-187#1
+- 2026-11-16 W-204: fact: bug W-205 drops fig:families-scaling (the second reserve cut of W-195) -> T-506 must drop the data-budget axis, not cite the figure
 
 ## Open questions
 - 2026-11-15 E-019: open: length target assumed (main text about 18-20 pages, appendix no longer); which venue, and its cap? (developer)
