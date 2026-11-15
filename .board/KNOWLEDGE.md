@@ -25,16 +25,20 @@
 - 2026-11-15 W-187: fact: line 4 of 94_hypotheses.tex is the only sentence limiting the goal to inside the sampled domain -> restated by W-191, its own work item (developer: file, 2026-11-15) supersedes: W-187#1
 
 ## Open questions
-- 2026-11-15 E-019: open: length target assumed -- a main text of about 18 to 20 pages, an appendix no longer than it; which venue, and does it cap the main text? (developer)
-- 2026-11-15 E-020: open: a job is reused when its pair, candidate, parameters, seed and data are unchanged, a code change needs REFIT= -- or should the key hold a digest of the family's code? (developer)
+- 2026-11-15 E-019: open: length target assumed (main text about 18-20 pages, appendix no longer); which venue, and its cap? (developer)
+- 2026-11-15 E-020: open: reuse key is pair, candidate, parameters, seed, data, a code change needs REFIT= -- or a digest of the code? (developer)
 - 2026-11-15 W-017: open: is the lambda column of the neutron-star dataset the Gauss-Bonnet coupling of the action, and in which units? (supervisors; review mark of 34_neutron_stars.tex line 9)
-- 2026-11-15 W-202: open: which fix -- abbreviate the units and tighten the columns (the default of T-504), fold Flat into the Slopes cell, move Edge worst to the text, or scale the table to the text width? (developer, when ordered; W-192 moves the table into the main text)
+- 2026-11-15 W-202: open: fix -- short unit cells and tight columns (T-504), Flat in the Slopes cell, or a scaled table? (developer)
+- 2026-11-15 W-204: open: cite fig:families-scaling (T-506) or drop the axis? (developer)
 
 ## Decisions
 - 2026-11-15 E-019: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 8 hours) (developer, 2026-11-15)
 - 2026-11-15 E-019: re-plan, not a restart (developer: plan, 2026-11-15): the main text carries the results, the appendix only what it cites; this replaces the main body short of E-014#d3, physics before data science stays; E-019 is worked before E-020; W-061, W-187, W-188, W-189, W-191 adopted
 - 2026-11-15 E-020: plan agreed (developer: plan, 2026-11-15): a rerun reuses every recorded fit and evaluation whose inputs are unchanged, the family screen first; W-181, W-183, W-190 adopted; worked after E-019
+- 2026-11-15 W-195: Cut the appendix to what the main text needs, per W-195 Decisions: A, B keep split and ceiling tables, a map figure each to Sections 2.3, 2.4; C merges its tables; D goes; E, F shortened; G, H keep one figure each; two reserve cuts if still longer (developer: accept, 2026-11-15)
+- 2026-11-15 W-195: appendix (developer: accept, 2026-11-15): A, B keep split and ceiling tables, a map figure each moves to main text; C one table; D goes; E, F shorter; G, H one figure each; reserve: A+B merged, then no scaling figure supersedes: W-195#d1, W-195#d2, W-195#d3, W-195#d4, W-195#d5
 
 ## Deviations
 - 2026-11-15 E-019: T-487 hand-back finding filed standalone todo: W-203 bug (a sentence of Section 3.2 starts with a lowercase cross-reference)
+- 2026-11-15 E-019: T-488 lane finding filed standalone todo: W-204 bug (the data-budget axis of Section 3.3 cites nothing)
 - 2026-11-15 E-019: W-189 criterion run finding filed standalone todo: W-202 bug (the zone table is 154 pt wider than the text block)
