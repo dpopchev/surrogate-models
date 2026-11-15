@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: none   | blocked: 0 | todo roots: 14 | done: 549 | pruned: 101
+open path: none   | blocked: 0 | todo roots: 18 | done: 549 | pruned: 101
 
 ## Tree
 
@@ -19,6 +19,10 @@ W-183  issue  [todo]     (standalone) The edge paths of the rung chain are pinne
 W-184  issue  [todo]     (standalone) The neutron-star warned verdict of the domain guard is pinned by a test   (filed during T-452) -- T-470 [todo]
 W-186  issue  [todo]     (standalone) The ceiling macro names of the tables live in one place   (filed during T-455) -- T-473 [todo]
 W-187  issue  [todo]     (standalone) The generated tuning table names the time budget per search   (filed during T-456) -- T-474 [todo]
+W-188  bug    [todo]     (standalone) The Slopes column of the zone table counts the physical-edge steps twice -- T-476 [todo]
+W-189  issue  [todo]     (standalone) The zone table shows reversed and flat steps apart -- T-477 [todo], T-478 [todo], T-479 [todo]
+W-190  spike  [todo]     (standalone) Where the 14 minutes of the neutron-star results section go -- T-480 [todo], T-481 [todo]
+W-191  issue  [todo]     (standalone) The framing question of the hypotheses appendix states the E-018 goal -- T-482 [todo]
 ```
 
 ## Closed
@@ -1167,10 +1171,21 @@ flowchart TD
   W186 --> T473["T-473 todo: Move the ceiling macro map into paperlib test-first -> paperlib/ceilings.py"]
   W187["W-187 issue todo, standalone: The generated tuning table names the time budget per search"]
   W187 --> T474["T-474 todo: State the time budget in the tuning table caption test-first -> 90_appendix/99_precision/tune_survivors.py"]
+  W188["W-188 bug todo, standalone: The Slopes column of the zone table counts the physical-edge steps twice"]
+  W188 --> T476["T-476 todo: Count each step once in the Slopes column test-first -> 90_appendix/96_optimization/score_zones.py"]
+  W189["W-189 issue todo, standalone: The zone table shows reversed and flat steps apart"]
+  W189 --> T477["T-477 todo: Count reversed and flat steps apart test-first -> paperlib/zones.py"]
+  W189 --> T478["T-478 todo: Print and tabulate the reversed and flat steps test-first -> 90_appendix/96_optimization/score_zones.py"]
+  W189 --> T479["T-479 todo: State the flat steps in the physics gate text -> 90_appendix/96_optimization/96_optimization.tex"]
+  W190["W-190 spike todo, standalone: Where the 14 minutes of the neutron-star results section go"]
+  W190 --> T480["T-480 todo: Profile one run of the neutron-star results section -> local/scratch/profile_results_neutron_stars.txt"]
+  W190 --> T481["T-481 todo: Record the rebuild-time decision -> W-190 spike.decision"]
+  W191["W-191 issue todo, standalone: The framing question of the hypotheses appendix states the E-018 goal"]
+  W191 --> T482["T-482 todo: Restate the framing question -> 90_appendix/94_hypotheses/94_hypotheses.tex"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468,W183,T469,W184,T470,W186,T473,W187,T474 todo
+  class W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468,W183,T469,W184,T470,W186,T473,W187,T474,W188,T476,W189,T477,T478,T479,W190,T480,T481,W191,T482 todo
 ```

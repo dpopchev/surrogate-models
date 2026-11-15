@@ -21,13 +21,11 @@
 - 2026-11-14 T-457: standing: p95 across-curve ceilings (across neighbouring curves): NS M 4.1 figures (1.36e-4 M_sun at median 1.75, 1.70e-4 at M_max 2.19), NS D 2.4 (1.56e-3 dex); BH M 7.1 (3.05e-7 M_sun), D 6.0 (4.40e-7 dex), at the existence edge -> E-006 target per pair supersedes: T-436#12
 - 2026-11-14 T-457: standing: worst NS mass curves short, low-mass, beta 0.4-2.4, lambda \~4 -> E-006 error map, H2; every prepared D > 0; the 1004 NS rows below 1e-5 open 110 of 1611 curves at low rho_c -> floor dropped (W-063) supersedes: T-436#6
 - 2026-11-15 E-018: standing: winners 01a1dbf7 test/ceiling NS M 3.58/4.11, D 1.13/2.44, BH M 6.76/7.07, D 5.12/5.99; edge held (01a1dbc6) BH all, NS M RBF pw -> margin BH 1, NS 0; extrapolation interior is a refit supersedes: E-018#6, E-018#8, E-018#9
+- 2026-11-15 W-017: standing: lambda, the Gauss-Bonnet coupling, is alone in the linear equation; beta enters f at fourth order; V = 0, no self-interaction; M_max 2.19 is the EOS limit at small lambda for every beta -> lambda leads, beta shapes the branch supersedes: W-017#4
+- 2026-11-15 W-187: fact: line 4 of 94_hypotheses.tex is the only sentence limiting the goal to inside the sampled domain -> restated by W-191, its own work item (developer: file, 2026-11-15) supersedes: W-187#1
 
 ## Open questions
-- 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
-- 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
-- 2026-11-14 W-093: open: NS-charge ResNet run planned as W-171; float64, L-BFGS and H2 stay untested on networks (precision_options.py warns) -- file them for the ResNet if it leads a zone after W-171, else drop? (developer, re-aim after W-171) supersedes: W-093#1
-- 2026-11-15 E-018: open: slope violations count a flat predicted step as one (XGBoost pw 16493/17250, T-459) -- split flats from reversals for the physics gate? (developer, at the close)
-- 2026-11-15 W-187: open: also restate the framing question of 94_hypotheses.tex line 4 (E-014's, inside the sampled domain) to the E-018 goal? (developer, when ordered)
+- 2026-11-15 W-017: open: is the lambda column of the neutron-star dataset the Gauss-Bonnet coupling of the action, and in which units? (supervisors; review mark of 34_neutron_stars.tex line 9)
 
 ## Decisions
 - none recorded
