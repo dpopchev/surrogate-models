@@ -25,10 +25,13 @@
 - 2026-11-15 W-187: fact: line 4 of 94_hypotheses.tex is the only sentence limiting the goal to inside the sampled domain -> restated by W-191, its own work item (developer: file, 2026-11-15) supersedes: W-187#1
 
 ## Open questions
+- 2026-11-15 E-019: open: length target assumed -- a main text of about 18 to 20 pages, an appendix no longer than it; which venue, and does it cap the main text? (developer)
+- 2026-11-15 E-020: open: a job is reused when its pair, candidate, parameters, seed and data are unchanged, a code change needs REFIT= -- or should the key hold a digest of the family's code? (developer)
 - 2026-11-15 W-017: open: is the lambda column of the neutron-star dataset the Gauss-Bonnet coupling of the action, and in which units? (supervisors; review mark of 34_neutron_stars.tex line 9)
 
 ## Decisions
-- none recorded
+- 2026-11-15 E-019: re-plan, not a restart (developer: plan, 2026-11-15): the main text carries the results, the appendix only what it cites; this replaces the main body short of E-014#d3, physics before data science stays; E-019 is worked before E-020; W-061, W-187, W-188, W-189, W-191 adopted
+- 2026-11-15 E-020: plan agreed (developer: plan, 2026-11-15): a rerun reuses every recorded fit and evaluation whose inputs are unchanged, the family screen first; W-181, W-183, W-190 adopted; worked after E-019
 
 ## Deviations
 - none recorded
