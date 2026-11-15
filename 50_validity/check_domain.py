@@ -33,6 +33,7 @@ from paperlib.final import (
     NEUTRON_STAR_COLUMNS,
     FinalSurrogate,
     Refused,
+    WarnedAnswer,
     load_domain,
     load_surrogate,
     predict,
@@ -158,7 +159,8 @@ def _probes(
         elif isinstance(answer, Refused):
             probes.append(Probe(x, False, None, dict(answer.nearest)))
         else:
-            probes.append(Probe(x, True, answer, None))
+            value = answer.value if isinstance(answer, WarnedAnswer) else answer
+            probes.append(Probe(x, True, value, None))
     return tuple(probes)
 
 
