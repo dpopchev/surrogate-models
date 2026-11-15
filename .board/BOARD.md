@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-019 > W-188   | blocked: 0 | todo roots: 11 | done: 550 | pruned: 101
+open path: E-019   | blocked: 0 | todo roots: 11 | done: 551 | pruned: 101
 
 ## Tree
 
@@ -8,7 +8,7 @@ open path: E-019 > W-188   | blocked: 0 | todo roots: 11 | done: 550 | pruned: 1
 E-019         [doing]    The main text carries the results and the appendix only what it cites
   W-061  spike  [todo]     Which real references replace the placeholder citations -- T-118 [todo]
   W-187  issue  [todo]     The generated tuning table names the time budget per search   (filed during T-456) -- T-474 [todo]
-  W-188  bug    [doing]    The Slopes column of the zone table counts the physical-edge steps twice -- T-476 [done]
+  W-188  bug    [done]     The Slopes column of the zone table counts the physical-edge steps twice -- T-476 [done]
   W-189  issue  [todo]     The zone table shows reversed and flat steps apart -- T-477 [todo], T-478 [todo], T-479 [todo]
   W-191  issue  [todo]     The framing question of the hypotheses appendix states the E-018 goal -- T-482 [todo]
   W-192  issue  [todo]     The zone and tuning tables stand in the results section -- T-483 [todo], T-484 [todo]
@@ -1158,7 +1158,7 @@ flowchart TD
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   E019 --> W187["W-187 issue todo: The generated tuning table names the time budget per search"]
   W187 --> T474["T-474 todo: State the time budget in the tuning table caption test-first -> 90_appendix/99_precision/tune_survivors.py"]
-  E019 --> W188["W-188 bug doing: The Slopes column of the zone table counts the physical-edge steps twice"]
+  E019 --> W188["W-188 bug done: The Slopes column of the zone table counts the physical-edge steps twice"]
   W188 --> T476["T-476 done: Count each step once in the Slopes column test-first -> 90_appendix/96_optimization/score_zones.py"]
   E019 --> W189["W-189 issue todo: The zone table shows reversed and flat steps apart"]
   W189 --> T477["T-477 todo: Count reversed and flat steps apart test-first -> paperlib/zones.py"]
@@ -1232,7 +1232,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E019,W188 doing
-  class T476 done
+  class E019 doing
+  class W188,T476 done
   class W061,T118,W187,T474,W189,T477,T478,T479,W191,T482,W192,T483,T484,W193,T485,T486,W194,T487,W195,T488,T489,W196,T490,T491,W197,T492,T493,E020,W181,T467,W183,T469,W190,T480,T481,W198,T494,T495,T496,W199,T497,T498,W200,T499,T500,T501,W201,T502,T503,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W182,T468,W184,T470,W186,T473 todo
 ```
