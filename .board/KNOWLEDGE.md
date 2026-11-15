@@ -36,4 +36,5 @@
 - 2026-11-15 E-020: plan agreed (developer: plan, 2026-11-15): a rerun reuses every recorded fit and evaluation whose inputs are unchanged, the family screen first; W-181, W-183, W-190 adopted; worked after E-019
 
 ## Deviations
+- 2026-11-15 E-019: T-487 hand-back finding filed standalone todo: W-203 bug (a sentence of Section 3.2 starts with a lowercase cross-reference)
 - 2026-11-15 E-019: W-189 criterion run finding filed standalone todo: W-202 bug (the zone table is 154 pt wider than the text block)
