@@ -19,7 +19,7 @@ KNOBS_FLAGS   += --tuning "$(TUNING_KNOBS)"
 KNOBS_DEPS    += 90_appendix/99_precision/99_precision.mk
 # The recorded batch (T-206, 2026-10-10): make tuning rebuilds the table from its outcomes in
 # seconds; TUNING_BATCH= (empty) runs the whole tuning again (about 33 hours).
-TUNING_BATCH  ?= 01a11d49-1647-735a-af05-a58e497428f2
+TUNING_BATCH  ?= 01a1dbf7-ffe2-7687-95a4-b342566ab163
 
 # The script stores the table and numbers as JSON under $(STATE)/99_precision/ and still writes
 # the figures; render_assets.py writes the table and numbers assets from the JSON. One grouped
