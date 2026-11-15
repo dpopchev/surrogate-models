@@ -1,6 +1,7 @@
 """The zones of every tuned candidate (W-169): its recorded test predictions scored on the
 interior curves, the edge curves and the physical edge, at the 95th percentile and at the worst
-row, beside the ceiling of its pair. Nothing is fitted.
+row, and the steps along its curves whose slope turns against the data, beside the ceiling of
+its pair. Nothing is fitted.
 
 Per tuned outcome of a recorded tuning batch, the ledger entry of its refit holds the test
 predictions; they are scored against the test rows of the pair's design. One line per pair and
@@ -24,7 +25,14 @@ from paperlib.batches import outcomes_path, read_ledger, write_checked
 from paperlib.design import BLACK_HOLES, NEUTRON_STARS, SPECS, TARGETS, Design, Target, pairs
 from paperlib.runs import LedgerEntry
 from paperlib.scorecard import relative_errors, scorecard
-from paperlib.zones import Side, ZoneFigures, curve_position, zone_figures, zone_masks
+from paperlib.zones import (
+    Side,
+    ZoneFigures,
+    curve_position,
+    slope_violations,
+    zone_figures,
+    zone_masks,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +61,7 @@ class Zoned:
     unit: str
     entry: str
     zones: Mapping[str, ZoneFigures | None]
+    slopes: Mapping[str, tuple[int, int]]
     decades: Mapping[int, Mapping[str, float]]
     ceiling: float
 
@@ -67,9 +76,17 @@ def figures_text(found: ZoneFigures | None) -> str:
     return f"p95 {found.p95:.2f} worst {found.worst:.2f}"
 
 
+def slopes_text(violations: int, steps: int) -> str:
+    """A zone's slope count as "<violations>/<steps>", or n/a for a zone without a step."""
+    return f"{violations}/{steps}" if steps else "n/a"
+
+
 def line(zoned: Zoned) -> str:
     """The printed line of one pair and candidate."""
-    zones = ", ".join(f"{name} {figures_text(found)}" for name, found in zoned.zones.items())
+    zones = ", ".join(
+        f"{name} {figures_text(found)} slopes {slopes_text(*zoned.slopes[name])}"
+        for name, found in zoned.zones.items()
+    )
     return (
         f"{zoned.dataset} {zoned.target} {zoned.family} {zoned.unit}: {zones}, "
         f"ceiling {zoned.ceiling:.2f}"
@@ -84,8 +101,13 @@ def score(
     target: Target,
     side: Side,
     fraction: float,
-) -> tuple[Mapping[str, ZoneFigures | None], Mapping[int, Mapping[str, float]]]:
-    """The zone figures and the per-decade spread of the entry's stored test predictions.
+) -> tuple[
+    Mapping[str, ZoneFigures | None],
+    Mapping[str, tuple[int, int]],
+    Mapping[int, Mapping[str, float]],
+]:
+    """The zone figures, the slope violations per zone and the per-decade spread of the entry's
+    stored test predictions.
 
     Raises ValueError naming the entry when its predictions do not match the test rows.
     """
@@ -99,7 +121,14 @@ def score(
     position = curve_position(design.groups[design.test], along[design.test])
     masks = zone_masks(design.ablation[design.test], position, side, fraction)
     decades = scorecard(errors, {}, charge[design.test] if target == "charge" else None).decades
-    return zone_figures(errors, masks), {d: asdict(s) for d, s in decades.items()}
+    slopes = slope_violations(
+        truth,
+        np.array(entry.predictions),
+        design.groups[design.test],
+        along[design.test],
+        masks,
+    )
+    return zone_figures(errors, masks), slopes, {d: asdict(s) for d, s in decades.items()}
 
 
 def saved_text(found: Sequence[Zoned]) -> str:
@@ -145,7 +174,7 @@ def run(args: argparse.Namespace, say: Callable[[str], None]) -> tuple[Zoned, ..
             raise ValueError(f"no ledger entry {fields['entry']} in {args.state / 'ledger'}")
         column, side = ALONG[dataset]
         table = tables[dataset]
-        zones, decades = score(
+        zones, slopes, decades = score(
             entries[fields["entry"]],
             by_key[dataset, target].design,
             table[column].to_numpy(),
@@ -163,6 +192,7 @@ def run(args: argparse.Namespace, say: Callable[[str], None]) -> tuple[Zoned, ..
                 candidate["unit"],
                 fields["entry"],
                 zones,
+                slopes,
                 decades,
                 ceilings[dataset][target],
             )
