@@ -20,15 +20,14 @@
 - 2026-11-14 T-457: standing: batch 01a11d49 folds/test vs ceiling, cw curve-wise, pw pointwise: NS M RBF cw 3.41/3.58 vs 4.1; NS D RBF cw 1.26/1.13, ResNet pw 1.10/1.16 vs 2.4; BH M RBF = GPR cw 3.79/3.78 vs 7.1; BH D RBF cw 2.97/2.98 vs 6.0 -> only NS M within one figure supersedes: T-436#13
 - 2026-11-14 T-457: standing: p95 across-curve ceilings (across neighbouring curves): NS M 4.1 figures (1.36e-4 M_sun at median 1.75, 1.70e-4 at M_max 2.19), NS D 2.4 (1.56e-3 dex); BH M 7.1 (3.05e-7 M_sun), D 6.0 (4.40e-7 dex), at the existence edge -> E-006 target per pair supersedes: T-436#12
 - 2026-11-14 T-457: standing: worst NS mass curves short, low-mass, beta 0.4-2.4, lambda \~4 -> E-006 error map, H2; every prepared D > 0; the 1004 NS rows below 1e-5 open 110 of 1611 curves at low rho_c -> floor dropped (W-063) supersedes: T-436#6
-- 2026-11-15 E-018: fact: answered in the Decisions -> physics gate, margin supersedes: E-018#2, W-173#2
-- 2026-11-15 E-018: fact: same interior rows (zones.py:63, :144); edge_held_out refits without the edge curves -> its interior is a refit, not the zone figure supersedes: E-018#4
-- 2026-11-15 E-018: fact: winners 01a1dbf7 test/ceiling NS M 3.58/4.11, D 1.13/2.44, BH M 6.76/7.07, D 5.12/5.99; edge held (01a1dbc6) BH all, NS M RBF pw only -> margin BH 1 step, NS 0 supersedes: E-018#3, E-018#5, W-170#5
+- 2026-11-15 E-018: fact: winners 01a1dbf7 test/ceiling NS M 3.58/4.11, D 1.13/2.44, BH M 6.76/7.07, D 5.12/5.99; edge held (01a1dbc6) BH all, NS M RBF pw -> margin BH 1, NS 0; extrapolation interior is a refit supersedes: E-018#6, E-018#8, E-018#9
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 - 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
 - 2026-11-14 W-093: open: NS-charge ResNet run planned as W-171; float64, L-BFGS and H2 stay untested on networks (precision_options.py warns) -- file them for the ResNet if it leads a zone after W-171, else drop? (developer, re-aim after W-171) supersedes: W-093#1
 - 2026-11-15 E-018: open: slope violations count a flat predicted step as one (XGBoost pw 16493/17250, T-459) -- split flats from reversals for the physics gate? (developer, at the close)
+- 2026-11-15 W-187: open: also restate the framing question of 94_hypotheses.tex line 4 (E-014's, inside the sampled domain) to the E-018 goal? (developer, when ordered)
 
 ## Decisions
 - 2026-11-14 E-018: goal (developer, 2026-11-14): surrogates that minimize the relative error over the whole dataset, extrapolate well and keep the physics, with feedback on the parameters; agent's reading: extrapolation across the couplings, never past a physical edge; replaces E-014's goal
@@ -46,4 +45,5 @@
 - 2026-11-15 E-018: T-450 lane finding filed standalone todo: W-183
 - 2026-11-15 E-018: T-452 lane finding filed standalone todo: W-184 (the neutron-star warned verdict untested)
 - 2026-11-15 E-018: T-455 lane finding filed standalone todo: W-186
+- 2026-11-15 E-018: T-456 lane findings filed standalone todo: W-187
 - 2026-11-15 E-018: W-173 run failed (0 BH warned): bug W-185 amends W-173; T-454 ref finding -> T-456 (6)

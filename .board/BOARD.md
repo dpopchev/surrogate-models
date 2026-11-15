@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-018   | blocked: 0 | todo roots: 13 | done: 544 | pruned: 101
+open path: E-018   | blocked: 0 | todo roots: 14 | done: 544 | pruned: 101
 
 ## Tree
 
@@ -27,6 +27,7 @@ W-182  issue  [todo]     (standalone) The refusals of the tuning run are pinned 
 W-183  issue  [todo]     (standalone) The edge paths of the rung chain are pinned by tests   (filed during T-450) -- T-469 [todo]
 W-184  issue  [todo]     (standalone) The neutron-star warned verdict of the domain guard is pinned by a test   (filed during T-452) -- T-470 [todo]
 W-186  issue  [todo]     (standalone) The ceiling macro names of the tables live in one place   (filed during T-455) -- T-473 [todo]
+W-187  issue  [todo]     (standalone) The generated tuning table names the time budget per search   (filed during T-456) -- T-474 [todo]
 ```
 
 ## Closed
@@ -1153,6 +1154,8 @@ flowchart TD
   W184 --> T470["T-470 todo: Pin the neutron-star warned verdict -> a test in paperlib/test_domain.py"]
   W186["W-186 issue todo, standalone: The ceiling macro names of the tables live in one place"]
   W186 --> T473["T-473 todo: Move the ceiling macro map into paperlib test-first -> paperlib/ceilings.py"]
+  W187["W-187 issue todo, standalone: The generated tuning table names the time budget per search"]
+  W187 --> T474["T-474 todo: State the time budget in the tuning table caption test-first -> 90_appendix/99_precision/tune_survivors.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -1160,5 +1163,5 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E018 doing
   class W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459 done
-  class W185,T471,T472,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468,W183,T469,W184,T470,W186,T473 todo
+  class W185,T471,T472,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468,W183,T469,W184,T470,W186,T473,W187,T474 todo
 ```
