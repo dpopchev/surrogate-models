@@ -17,6 +17,7 @@ from paperlib.final import (
     InvalidWinnerError,
     Refused,
     SavedSurrogateError,
+    WarnedAnswer,
     Winner,
     fit_winner,
     held_out_errors,
@@ -173,6 +174,17 @@ def test_guarded_predict_refuses_outside_the_domain() -> None:
     # Columns r_h, beta: the first row is below the existence edge 2.0, the second inside.
     result = predict(toy, domain, np.array([[1.0, 0.0], [4.0, 0.0]]))
     assert result == (Refused("existence edge", {"beta": 0.0, "r_h": 2.0}), 8.0)
+
+
+def test_predict_answers_a_warned_row_with_its_warning() -> None:
+    domain = replace(make_black_hole_domain(BH_TABLE), margin=1.0)
+    toy = FinalSurrogate("bh", "mass", "k-NN", "pointwise", {}, 1.0, 1.0, lambda x: x[:, 0] * 2.0)
+    # Columns r_h, beta: half a step beyond the last beta 1.0, two steps beyond it.
+    result = predict(toy, domain, np.array([[5.0, 1.5], [5.0, 3.0]]))
+    assert result == (
+        WarnedAnswer(10.0, "coupling range", 0.5),
+        Refused("coupling range", {"beta": 1.0, "r_h": 5.0}),
+    )
 
 
 def test_held_out_errors_cover_only_test_rows() -> None:

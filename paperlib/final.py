@@ -10,7 +10,7 @@ import pickle
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, assert_never, cast
 
 import cloudpickle
 import numpy as np
@@ -22,7 +22,10 @@ from paperlib.domain import (
     Domain,
     Inside,
     NeutronStarDomain,
+    Outside,
     Reason,
+    Verdict,
+    Warned,
     check,
 )
 from paperlib.harness import Predictor, fit_on, one_thread
@@ -106,6 +109,16 @@ class Refused:
     nearest: Mapping[str, float]
 
 
+@dataclass(frozen=True)
+class WarnedAnswer:
+    """A query beyond the sampled couplings, inside the margin: the prediction, the reason and
+    the steps of the coupling grid beyond the sampled couplings."""
+
+    value: float
+    reason: Literal["coupling range"]
+    steps: float
+
+
 # The columns of an input row by domain, in the order of the dataset's curve space; a neutron-star
 # rho_c is the physical value, the surrogate reads its log10.
 BLACK_HOLE_COLUMNS = ("r_h", "beta")
@@ -116,22 +129,33 @@ NEUTRON_STAR_COLUMNS = ("rho_c", "beta", "lambda")
 
 def predict(
     surrogate: FinalSurrogate, domain: Domain, x: np.ndarray
-) -> tuple[float | Refused, ...]:
-    """Per input row the prediction when the row lies inside the domain, else Refused; the
-    surrogate is never evaluated on a refused row."""
+) -> tuple[float | WarnedAnswer | Refused, ...]:
+    """Per input row the prediction when the row lies inside the domain, a WarnedAnswer when it
+    lies beyond the sampled couplings inside the margin, else Refused; the surrogate is never
+    evaluated on a refused row."""
     columns = BLACK_HOLE_COLUMNS if isinstance(domain, BlackHoleDomain) else NEUTRON_STAR_COLUMNS
     verdicts = [check(domain, dict(zip(columns, map(float, row), strict=True))) for row in x]
-    inside = np.array([isinstance(v, Inside) for v in verdicts], dtype=bool)
+    answered = np.array([not isinstance(v, Outside) for v in verdicts], dtype=bool)
     values = np.empty(len(x))
-    if inside.any():
-        rows = np.array(x[inside], dtype=np.float64)
+    if answered.any():
+        rows = np.array(x[answered], dtype=np.float64)
         if isinstance(domain, NeutronStarDomain):
             rows[:, 0] = np.log10(rows[:, 0])
-        values[inside] = surrogate.predict(rows)
-    return tuple(
-        float(values[i]) if isinstance(v, Inside) else Refused(v.reason, v.nearest)
-        for i, v in enumerate(verdicts)
-    )
+        values[answered] = surrogate.predict(rows)
+    return tuple(_answer(float(values[i]), v) for i, v in enumerate(verdicts))
+
+
+def _answer(value: float, verdict: Verdict) -> float | WarnedAnswer | Refused:
+    """The answer to one row from its prediction and its verdict."""
+    match verdict:
+        case Inside():
+            return value
+        case Warned():
+            return WarnedAnswer(value, verdict.reason, verdict.steps)
+        case Outside():
+            return Refused(verdict.reason, verdict.nearest)
+        case _:
+            assert_never(verdict)
 
 
 def held_out_errors(surrogate: FinalSurrogate, pair: Pair, charge: np.ndarray | None) -> HeldOut:
