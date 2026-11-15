@@ -9,11 +9,12 @@ PIPELINE       := 40_pipeline/41_algorithm/build_surrogates.py
 PIPELINE_DIR   := $(STATE)/41_algorithm
 PIPELINE_KNOBS = $(foreach f,--k --neighbours --knots,$(subst @, ,$(filter $(f)@%,$(subst $(f) ,$(f)@,$(TUNING_KNOBS)))))
 PIPELINE_SEED  := $(shell sed -n 's/^seed = \([0-9]*\).*/\1/p' paper.toml)
+PIPELINE_BATCH  = $(if $(EXTRAPOLATION_BATCH),--extrapolation $(STATE)/96_optimization/$(EXTRAPOLATION_BATCH)-extrapolation.json)
 PIPELINE_JSON  := $(STATE)/91_neutron_stars/reachable_figures.json $(STATE)/92_black_holes/reachable_figures.json $(STATE)/99_precision/winners.json
 
 .PHONY: pipeline 41_algorithm
 pipeline: $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(PIPELINE_JSON) $(PAPERLIB) ## Fit and save the surrogate of each map and target under local/state/41_algorithm/ (minutes)
-	@$(RUN) python $(PIPELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(STATE) $(PIPELINE_KNOBS) --seed $(PIPELINE_SEED)
+	@$(RUN) python $(PIPELINE) $(STATE)/neutron_stars.parquet $(STATE)/black_holes.parquet $(STATE)/split.parquet $(STATE) $(PIPELINE_KNOBS) --seed $(PIPELINE_SEED) $(PIPELINE_BATCH)
 	$(call log_done,4 surrogates and 2 domains saved under $(notdir $(LOCAL))/state/41_algorithm/)
 
 41_algorithm: pipeline ## Run the pipeline --the same as make pipeline

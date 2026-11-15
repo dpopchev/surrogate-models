@@ -80,6 +80,14 @@ def zone_figures(
     return figures
 
 
+def margin_steps(
+    edge_p95: float, edge_worst: float, interior_p95: float, within: float = 1.0
+) -> int:
+    """One step of the coupling grid when the edge p95 figures are at least the interior p95
+    figures less `within` and the worst edge row keeps positive figures, else zero."""
+    return int(edge_p95 >= interior_p95 - within and edge_worst > 0.0)
+
+
 def edge_held_out(
     design: Design,
     target: TargetForm,

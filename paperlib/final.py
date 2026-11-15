@@ -222,6 +222,7 @@ def domain_json(domain: Domain) -> str:
             "betas": domain.betas,
             "r_min": domain.r_min,
             "r_max": domain.r_max,
+            "margin": domain.margin,
         }
     else:
         body = {
@@ -229,6 +230,7 @@ def domain_json(domain: Domain) -> str:
             "keys": domain.keys,
             "rho_min": domain.rho_min,
             "rho_max": domain.rho_max,
+            "margin": domain.margin,
         }
     return json.dumps(body, indent=2) + "\n"
 
@@ -248,16 +250,21 @@ def save_domain(path: Path, domain: Domain) -> None:
 
 
 def load_domain(path: Path) -> Domain:
-    """The domain saved at path; a missing file raises naming the path."""
+    """The domain saved at path, a saved domain without a margin loading with 0; a missing file
+    raises naming the path."""
     if not path.is_file():
         raise FileNotFoundError(f"no domain at {path}: run make pipeline first")
     body = json.loads(path.read_text())
+    margin = float(body.get("margin", 0.0))
     if body["kind"] == "black_hole":
-        return BlackHoleDomain(tuple(body["betas"]), tuple(body["r_min"]), tuple(body["r_max"]))
+        return BlackHoleDomain(
+            tuple(body["betas"]), tuple(body["r_min"]), tuple(body["r_max"]), margin
+        )
     return NeutronStarDomain(
         tuple((float(b), float(lam)) for b, lam in body["keys"]),
         tuple(body["rho_min"]),
         tuple(body["rho_max"]),
+        margin,
     )
 
 

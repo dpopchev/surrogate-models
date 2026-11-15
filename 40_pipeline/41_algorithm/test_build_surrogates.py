@@ -102,6 +102,65 @@ def test_run_summarises_the_pairs_as_plain_data(toy_run: Recorded) -> None:
     ]
 
 
+def batch_row(dataset: str, target: str, edge_p95: float) -> dict[str, object]:
+    """One saved extrapolation outcome of the toy winner, its interior p95 at 3 figures."""
+    return {
+        "dataset": dataset,
+        "target": target,
+        "family": "k-NN",
+        "unit": "pointwise",
+        "params": {"weights": "distance"},
+        "zones": {
+            "edge": {"p95": edge_p95, "worst": 1.0},
+            "interior": {"p95": 3.0, "worst": 1.0},
+        },
+    }
+
+
+@pytest.mark.functional
+def test_run_saves_the_margin_of_each_map_from_the_extrapolation_batch(
+    tmp_path: Path, toy_inputs: ToyInputs
+) -> None:
+    batch = tmp_path / "batch.json"
+    rows = [
+        batch_row("neutron_stars", "mass", 2.5),
+        batch_row("neutron_stars", "charge", 2.1),
+        batch_row("black_holes", "mass", 2.5),
+        batch_row("black_holes", "charge", 1.0),
+    ]
+    batch.write_text(json.dumps(rows))
+    ns, bh, split = toy_inputs(tmp_path)
+    write_state(tmp_path / "state")
+    done = Recorded()
+    run(
+        Sources(ns, bh, split, tmp_path / "state"),
+        KNOBS,
+        make_training(NetworkSettings()),
+        seed=1,
+        save=done.saved.__setitem__,
+        save_domain=done.domains.__setitem__,
+        write=done.written.__setitem__,
+        say=done.lines.append,
+        extrapolation=batch,
+    )
+    assert {path.name: domain.margin for path, domain in done.domains.items()} == {
+        "neutron_stars-domain.json": 1.0,
+        "black_holes-domain.json": 0.0,
+    }
+
+
+@pytest.mark.functional
+def test_run_without_the_extrapolation_batch_warns_and_saves_margin_zero(
+    tmp_path: Path, toy_inputs: ToyInputs, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level("WARNING"):
+        done = run_toy(tmp_path, toy_inputs)
+    assert ([d.margin for d in done.domains.values()], "no extrapolation batch: margin 0") == (
+        [0.0, 0.0],
+        next(r.getMessage() for r in caplog.records),
+    )
+
+
 @pytest.mark.edge
 def test_a_missing_input_fails_naming_its_path(tmp_path: Path, toy_inputs: ToyInputs) -> None:
     ns, bh, split = toy_inputs(tmp_path)

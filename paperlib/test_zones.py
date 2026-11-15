@@ -8,6 +8,7 @@ from paperlib.harness import FitRows, Predictor
 from paperlib.zones import (
     curve_position,
     edge_held_out,
+    margin_steps,
     physical_edge,
     zone_figures,
     zone_masks,
@@ -87,6 +88,13 @@ def test_zone_figures_report_p95_and_worst_row_per_zone() -> None:
         "physical": (1.02, 1.0),
         "empty": None,
     }
+
+
+def test_margin_is_one_step_only_when_the_edge_holds() -> None:
+    held = margin_steps(edge_p95=2.5, edge_worst=1.0, interior_p95=3.4)
+    short = margin_steps(edge_p95=2.3, edge_worst=1.0, interior_p95=3.4)
+    negative = margin_steps(edge_p95=3.4, edge_worst=-0.5, interior_p95=3.4)
+    assert (held, short, negative) == (1, 0, 0)
 
 
 def test_edge_held_out_fits_without_the_edge_curves() -> None:

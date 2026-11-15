@@ -11,8 +11,9 @@ import json
 import logging
 import sys
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import Any, cast
 
 import pandas as pd
 
@@ -29,6 +30,7 @@ from paperlib.final import (
     save_surrogate,
 )
 from paperlib.surrogate import Training, make_training
+from paperlib.zones import margin_steps
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +94,33 @@ def summary_json(surrogates: Sequence[FinalSurrogate]) -> str:
     return json.dumps(rows, indent=2) + "\n"
 
 
+def map_margins(outcomes: Sequence[Mapping[str, Any]], winners: Sequence[Winner]) -> dict[str, int]:
+    """Per dataset the smallest margin over its winners' two targets, each read from the saved
+    extrapolation outcome of that winner (a winner without an outcome keeps margin 0)."""
+    margins: dict[str, int] = {}
+    for winner in winners:
+        found = [
+            o
+            for o in outcomes
+            if (o["dataset"], o["target"], o["family"], o["unit"], dict(o["params"]))
+            == (
+                winner.dataset,
+                winner.target,
+                winner.candidate.family,
+                winner.candidate.unit,
+                dict(winner.params),
+            )
+        ]
+        steps = 0
+        if found:
+            zones = found[0]["zones"]
+            steps = margin_steps(
+                zones["edge"]["p95"], zones["edge"]["worst"], zones["interior"]["p95"]
+            )
+        margins[winner.dataset] = min(margins.get(winner.dataset, steps), steps)
+    return margins
+
+
 # --- adapters and the run ---------------------------------------------------------------------
 
 
@@ -106,6 +135,17 @@ def read_ceilings(state: Path) -> Mapping[str, Mapping[str, float]]:
     return found
 
 
+def read_outcomes(path: Path | None) -> Sequence[Mapping[str, Any]]:
+    """The outcomes of a saved extrapolation batch; none (warned) without one, a missing file
+    raises naming the path."""
+    if path is None:
+        logger.warning("no extrapolation batch: margin 0")
+        return ()
+    if not path.is_file():
+        raise FileNotFoundError(f"no extrapolation batch at {path}: run make extrapolation first")
+    return cast(Sequence[Mapping[str, Any]], json.loads(path.read_text()))
+
+
 def run(
     sources: Sources,
     knobs: Knobs,
@@ -115,23 +155,32 @@ def run(
     save_domain: Callable[[Path, Domain], None],
     write: Callable[[Path, str], None],
     say: Callable[[str], None],
+    extrapolation: Path | None = None,
 ) -> tuple[FinalSurrogate, ...]:
-    """Fit, save and print the winner of every pair, save the physical domain of each map, then
-    write the summary; every effect past reading the inputs is injected."""
+    """Fit, save and print the winner of every pair, save the physical domain of each map with
+    its margin from the saved extrapolation batch (0 without one), then write the summary; every
+    effect past reading the inputs is injected."""
     state = sources.state
-    winners = {
-        (w.dataset, w.target): w for w in read_winners(state / "99_precision" / "winners.json")
-    }
+    read = read_winners(state / "99_precision" / "winners.json")
+    winners = {(w.dataset, w.target): w for w in read}
     ceilings = read_ceilings(state)
     tables = {NEUTRON_STARS.dataset: pd.read_parquet(sources.ns)}
     tables[BLACK_HOLES.dataset] = pd.read_parquet(sources.bh)
     split = pd.read_parquet(sources.split)
+    margins = map_margins(read_outcomes(extrapolation), read)
     save_domain(
         domain_path(state, NEUTRON_STARS.dataset),
-        make_neutron_star_domain(tables[NEUTRON_STARS.dataset]),
+        replace(
+            make_neutron_star_domain(tables[NEUTRON_STARS.dataset]),
+            margin=float(margins.get(NEUTRON_STARS.dataset, 0)),
+        ),
     )
     save_domain(
-        domain_path(state, BLACK_HOLES.dataset), make_black_hole_domain(tables[BLACK_HOLES.dataset])
+        domain_path(state, BLACK_HOLES.dataset),
+        replace(
+            make_black_hole_domain(tables[BLACK_HOLES.dataset]),
+            margin=float(margins.get(BLACK_HOLES.dataset, 0)),
+        ),
     )
     fitted: list[FinalSurrogate] = []
     for pair in pairs(tables, split, SPECS, TARGETS):
@@ -161,6 +210,7 @@ def _arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--neighbours", type=int, required=True)
     parser.add_argument("--knots", type=int, required=True)
     parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--extrapolation", type=Path, default=None)
     return parser.parse_args(argv)
 
 
@@ -170,7 +220,17 @@ def main(argv: Sequence[str]) -> None:
     training = make_training(load_config().network)
     knobs = Knobs(args.k, args.neighbours, args.knots, per_curve=0)
     sources = Sources(args.ns, args.bh, args.split, args.state)
-    run(sources, knobs, training, args.seed, save_surrogate, save_domain, _write_text, print)
+    run(
+        sources,
+        knobs,
+        training,
+        args.seed,
+        save_surrogate,
+        save_domain,
+        _write_text,
+        print,
+        args.extrapolation,
+    )
 
 
 if __name__ == "__main__":
