@@ -90,6 +90,17 @@ dashboard: ## Follow the fits live in optuna-dashboard -- the newest study journ
 	@$(RUN) optuna-dashboard $(JOURNAL) --port $(DASHBOARD_PORT)
 	$(call log_done,stopped optuna-dashboard)
 
+# The surrogates regenerated rung by rung (W-172): families, tuning, pipeline, extrapolation and
+# precision, each fitted again on a fresh batch handed to the next; the record under
+# $(STATE)/surrogates/ lets an interrupted run resume. Hours: never part of make assets.
+REGENERATE := paperlib/tools/regenerate.py
+FRESH      ?=
+
+.PHONY: surrogates
+surrogates: ## Regenerate the surrogates rung by rung with the time of each (about 8 h; resumes, FRESH=1 starts over)
+	@nice -n 10 $(RUN) python $(REGENERATE) $(STATE) $(if $(FRESH),--fresh)
+	$(call log_done,surrogates regenerated -- pin the batches above in the three .mk files)
+
 # The knobs the text cites (W-116): the baseline network's settings from paper.toml and the
 # screens' knobs. Each screen's .mk appends its flag to KNOBS_FLAGS and its own path to
 # KNOBS_DEPS, so the knobs are rebuilt when a screen's knobs change; the Makefile gives the
