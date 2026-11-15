@@ -1,5 +1,7 @@
 """Facts about the physical domain of each map, on tiny synthetic curves."""
 
+from dataclasses import replace
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -8,6 +10,7 @@ from paperlib.domain import (
     Inside,
     Outside,
     Verdict,
+    Warned,
     check,
     make_black_hole_domain,
     make_neutron_star_domain,
@@ -71,6 +74,27 @@ def test_nearest_of_a_refused_query_is_inside() -> None:
     domain = make_black_hole_domain(BLACK_HOLES)
     verdict = check(domain, {"beta": 1.0, "r_h": 1.5})
     assert check(domain, nearest_of(verdict)) == Inside()
+
+
+@pytest.mark.model
+def test_check_warns_inside_the_margin_and_refuses_beyond_it() -> None:
+    # Three curves at beta 0, 1, 2 (a step is 1); the edge r_h,min is 1, 2, 3, so it continues
+    # as 3.5 at beta 2.5; the curves end at 5.
+    table = pd.DataFrame(
+        {
+            "beta": [0.0] * 2 + [1.0] * 2 + [2.0] * 2,
+            "r_h": [1.0, 5.0, 2.0, 5.0, 3.0, 5.0],
+        }
+    )
+    domain = replace(make_black_hole_domain(table), margin=1.0)
+    warned = check(domain, {"beta": 2.5, "r_h": 4.0})
+    refused = check(domain, {"beta": 4.0, "r_h": 4.0})
+    low = check(domain, {"beta": 2.5, "r_h": 3.2})  # above the sampled edge, below the continued
+    assert (warned, reason_of(refused), reason_of(low)) == (
+        Warned("coupling range", 0.5, {"beta": 2.0, "r_h": 4.0}),
+        "coupling range",
+        "existence edge",
+    )
 
 
 @pytest.mark.model

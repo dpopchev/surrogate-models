@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-018 > W-173 > T-452   | blocked: 0 | todo roots: 12 | done: 534 | pruned: 101
+open path: E-018 > W-173   | blocked: 0 | todo roots: 12 | done: 537 | pruned: 101
 
 ## Tree
 
@@ -10,7 +10,7 @@ E-018         [doing]    The pipeline regenerates both maps with every candidate
   W-170  issue  [done]     make extrapolation scores every tuned candidate on the edge curves it was fitted without -- T-442 [done], T-443 [done], T-444 [done]
   W-171  issue  [done]     The tuning records a verdict per candidate under a time budget -- T-445 [done], T-446 [done], T-447 [done], T-448 [done], T-449 [done]
   W-172  issue  [done]     make surrogates regenerates the surrogates rung by rung and prints the time of each -- T-450 [done], T-451 [done]
-  W-173  issue  [doing]    The saved surrogate answers beyond the sampled couplings only inside the measured margin -- T-452 [doing]   <- ACTIVE LEAF, T-453 [todo], T-454 [todo]
+  W-173  issue  [doing]    The saved surrogate answers beyond the sampled couplings only inside the measured margin -- T-452 [done], T-453 [done], T-454 [done]
   W-174  issue  [todo]     The article reports the zones, the cut candidates and the restated goal -- T-455 [todo], T-456 [todo]
   W-175  issue  [todo]     make zones counts the slope-sign violations of every tuned candidate per zone -- T-458 [todo], T-459 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
@@ -1111,9 +1111,9 @@ flowchart TD
   W172 --> T450["T-450 done: Write the rung chain test-first -> paperlib/tools/regenerate.py and make surrogates"]
   W172 --> T451["T-451 done: Run the chain end to end -> the regenerated batches pinned in 90_appendix/98_families/98_families.mk, 90_appendix/99_precision/99_precision.mk and 90_appendix/96_optimization/96_optimization.mk"]
   E018 --> W173["W-173 issue doing: The saved surrogate answers beyond the sampled couplings only inside the measured margin"]
-  W173 --> T452["T-452 doing: Add the warned verdict and the margin to the domain check test-first -> paperlib/domain.py -- ACTIVE LEAF"]
-  W173 --> T453["T-453 todo: Derive the margin of each map from the extrapolation batch test-first -> paperlib/zones.py and 40_pipeline/41_algorithm/build_surrogates.py"]
-  W173 --> T454["T-454 todo: Show the warned probes in the validity section -> 50_validity/check_domain.py and 50_validity/50_validity.tex"]
+  W173 --> T452["T-452 done: Add the warned verdict and the margin to the domain check test-first -> paperlib/domain.py"]
+  W173 --> T453["T-453 done: Derive the margin of each map from the extrapolation batch test-first -> paperlib/zones.py and 40_pipeline/41_algorithm/build_surrogates.py"]
+  W173 --> T454["T-454 done: Show the warned probes in the validity section -> 50_validity/check_domain.py and 50_validity/50_validity.tex"]
   E018 --> W174["W-174 issue todo: The article reports the zones, the cut candidates and the restated goal"]
   W174 --> T455["T-455 todo: Write the zone table and the verdicts as assets test-first -> 90_appendix/96_optimization/score_zones.py"]
   W174 --> T456["T-456 todo: Restate the goal and the budget sentences -> 10_abstract/10_abstract.tex, 20_introduction/20_introduction.tex and 40_pipeline/41_algorithm/41_algorithm.tex"]
@@ -1151,7 +1151,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E018,W173,T452 doing
-  class W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451 done
-  class T453,T454,W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468,W183,T469,W184,T470 todo
+  class E018,W173 doing
+  class W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,T452,T453,T454 done
+  class W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468,W183,T469,W184,T470 todo
 ```

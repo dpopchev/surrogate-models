@@ -1,6 +1,7 @@
 """Facts about the domain figure, on tiny synthetic maps and a toy surrogate."""
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import matplotlib
@@ -143,6 +144,26 @@ def test_the_legend_is_one_figure_legend_below_every_panel(variant: DomainVarian
 def test_every_test_row_of_a_map_is_inside_its_domain() -> None:
     macros = numbers(run((bh_map(), ns_map())))
     assert (macros["validityBhTestInside"], macros["validityNsTestInside"]) == ("100", "100")
+
+
+@pytest.mark.model
+def test_numbers_count_the_warned_probes() -> None:
+    table = black_holes()
+    margin_map = MapInput(
+        "black_holes",
+        table,
+        replace(make_black_hole_domain(table), margin=1.0),
+        toy_surrogate("black_holes"),
+        np.arange(len(table)) % 5 == 4,
+    )
+    macros = numbers(run((margin_map,)))
+    counts = (
+        macros["validityBhAnswered"],
+        macros["validityBhWarned"],
+        macros["validityBhRefused"],
+        macros["validityBhMarginSteps"],
+    )
+    assert counts == ("37", "10", "34", "1")
 
 
 @pytest.mark.model

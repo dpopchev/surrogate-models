@@ -1,6 +1,7 @@
 """Facts about the final surrogate: read a winner, fit it, save it and load it back."""
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -183,3 +184,15 @@ def test_a_domain_is_saved_and_loaded_back(tmp_path: Path) -> None:
     domain = make_black_hole_domain(BH_TABLE)
     save_domain(tmp_path / "bh-domain.json", domain)
     assert load_domain(tmp_path / "bh-domain.json") == domain
+
+
+def test_a_domain_margin_is_saved_and_a_saved_domain_without_one_loads_zero(
+    tmp_path: Path,
+) -> None:
+    domain = replace(make_black_hole_domain(BH_TABLE), margin=1.0)
+    save_domain(tmp_path / "bh-domain.json", domain)
+    loaded = load_domain(tmp_path / "bh-domain.json")
+    body = json.loads((tmp_path / "bh-domain.json").read_text())
+    del body["margin"]
+    (tmp_path / "old-domain.json").write_text(json.dumps(body))
+    assert (loaded.margin, load_domain(tmp_path / "old-domain.json").margin) == (1.0, 0.0)
