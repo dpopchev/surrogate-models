@@ -1,8 +1,6 @@
 # The family screen appendix -- which family-screen figures screen_families.py writes (W-102); placed by the
 # text like the data appendices', a deselected one drops out. The family table is always written.
-figures = [
-  "scaling",                # folds' figures and the final fit's seconds against the training rows
-]
+figures = []                # none placed: the scaling figure was cut from the appendix (W-205)
 
 # Which variant of each family screen appendix figure the paper places; `make figures` draws them from
 # FAMILIES_BATCH, nothing fitted (W-113).
