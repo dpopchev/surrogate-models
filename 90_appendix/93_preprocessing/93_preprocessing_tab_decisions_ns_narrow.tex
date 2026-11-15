@@ -1,27 +1,34 @@
 \begin{table}[!htb]
 \centering
-\caption{Neutron stars: preprocessing and feature decisions with their grounds.}
-\label{tab:decisions-ns}
+\caption{Preprocessing and feature decisions of both datasets with their grounds.}
+\label{tab:decisions}
 \renewcommand{\arraystretch}{1.2}
 \small
-\begin{tabular}{p{4.2cm} p{7.4cm}}
+\begin{tabular}{p{2.6cm} p{4.5cm} p{4.5cm}}
 \toprule
-Decision & Grounds \\
+Decision & Neutron stars & Black holes \\
 \midrule
-\textbf{$\rhoc$ input}\newline $\log_{10}\rhoc$, standardized &
-Positive and multiplicative; $M$ follows $\log_{10}\rhoc$ as one smooth curve per $(\beta, \lambda)$ pair; skew $\nsEdaRhocRawSkew \to \nsEdaRhocLogSkew$, supporting only (the grid is about even in $\rhoc$). \\
-\textbf{$\beta, \lambda$ inputs}\newline Linear, standardized; \emph{both retained} &
-A straight line in $\lambda$ explains $\nsEdaLambdaLinearPercentLogDM\%$ of the charge target's variance; at fixed $\lambda$, $\beta$ explains $\nsEdaBetaSharePercent\%$: they interact. \\
-\textbf{Charge target}\newline $\log_{10}(\Dch/M)$ &
-$\Dch$ spans $\nsEdaDOrders$ orders of magnitude, every value positive; dividing by $M$ lowers the Spearman correlation with $M$ from $\nsEdaCorrMLogD$ to $\nsEdaCorrMLogDM$ and raises the Pearson correlation with $\lambda$ from $\nsEdaCorrLambdaLogD$ to $\nsEdaCorrLambdaLogDM$. \\
-\textbf{Mass target}\newline $M$, in $\Msun$ &
-Bounded and of order one (up to $\nsEdaMassMax\,\Msun$); $\nsEdaPileUpPercent\%$ of rows lie within $\nsEdaPileUpWindow\,\Msun$ of their curve's maximum, a sampling artefact, disclosed. \\
-\textbf{Input scaling}\newline Standardization fitted on the training folds only &
-The inputs differ in scale by orders of magnitude; fitting on training folds only keeps held-out curves out of the model. \\
-\textbf{Split}\newline $\prepNsTestPercent\%$ of curves frozen as test; GroupKFold ($\prepNsFolds$ folds) over $(\beta, \lambda)$ curves &
-$\nsEdaSameCurvePercent\%$ of rows have their nearest neighbour on their own curve; a row-random split scores $\nsEdaSplitRandomRowsDM$ against $\nsEdaSplitCurvesDM$ for whole curves. \\
-\textbf{Domain of validity}\newline The filled $(\beta, \lambda)$ triangle and the sampled $\rhoc$ range; no extrapolation claimed &
-$\nsEdaGridFillPercent\%$ grid fill; predicting the rim from the interior scores $\nsEdaSplitRimDM$ (ablation). \\
+\textbf{Main input} &
+$\log_{10}\rhoc$, standardized. Positive and multiplicative; $M$ follows it as one smooth curve per $(\beta, \lambda)$ pair; skew $\nsEdaRhocRawSkew \to \nsEdaRhocLogSkew$, supporting only. &
+$\rh$, linear, standardized. Uniform grid of step $\bhEdaRhStep$ over $\bhEdaRhOrders$ orders of magnitude, skew $\bhEdaRhRawSkew$; a logarithm would only add skew. \\
+\textbf{Coupling inputs} &
+$\beta, \lambda$ linear, standardized, \emph{both retained}. A straight line in $\lambda$ explains $\nsEdaLambdaLinearPercentLogDM\%$ of the charge target's variance; at fixed $\lambda$, $\beta$ explains $\nsEdaBetaSharePercent\%$: they interact. &
+$\beta$ linear, standardized, retained. At fixed $\rh$ it moves $M$ by $\bhEdaBetaEffectPercentM\%$ and $\log_{10}\Dch$ by $\bhEdaBetaEffectPercentLD\%$ of their spread, but it sets the existence edge, $\rh^{\min}$ from $\bhEdaEdgeRhMinLow$ to $\bhEdaEdgeRhMinHigh$. \\
+\textbf{Charge target} &
+$\log_{10}(\Dch/M)$. $\Dch$ spans $\nsEdaDOrders$ orders of magnitude, every value positive; dividing by $M$ lowers the Spearman correlation with $M$ from $\nsEdaCorrMLogD$ to $\nsEdaCorrMLogDM$ and raises the Pearson correlation with $\lambda$ from $\nsEdaCorrLambdaLogD$ to $\nsEdaCorrLambdaLogDM$. &
+$\log_{10}(\Dch/M)$, as for neutron stars. Dividing by $M$ brings no gain here (Spearman with $M$: $\bhEdaSpearmanMLogD$ against $\bhEdaSpearmanMLogDM$); kept for one definition across both datasets; smallest $\Dch$ $\bhEdaDMin$. \\
+\textbf{Mass target} &
+$M$, in $\Msun$. Bounded and of order one (up to $\nsEdaMassMax\,\Msun$); $\nsEdaPileUpPercent\%$ of rows lie within $\nsEdaPileUpWindow\,\Msun$ of their curve's maximum, a sampling artefact, disclosed. &
+$M$, in $\Msun$. Bounded and of order one ($\bhEdaMMin$ to $\bhEdaMMax\,\Msun$); follows $\rh$ with Pearson $r = \bhEdaPearsonMRh$; $\beta$ moves it by $\bhEdaBetaEffectPercentM\%$ at fixed $\rh$. \\
+\textbf{Input scaling} &
+Standardization fitted on the training folds only. The inputs differ in scale by orders of magnitude; fitting on training folds only keeps held-out curves out of the model. &
+Standardization fitted on the training folds only, as for neutron stars. \\
+\textbf{Split} &
+$\prepNsTestPercent\%$ of curves frozen as test; GroupKFold ($\prepNsFolds$ folds) over $(\beta, \lambda)$ curves. $\nsEdaSameCurvePercent\%$ of rows have their nearest neighbour on their own curve; a row-random split scores $\nsEdaSplitRandomRowsDM$ against $\nsEdaSplitCurvesDM$ for whole curves. &
+$\prepBhTestCurves$ of $\prepBhCurves$ curves frozen as test; GroupKFold ($\prepBhFolds$ folds) over $\beta$ curves. $\bhEdaSameCurvePercent\%$ of rows have their nearest neighbour on their own curve; for $\log_{10}\Dch$ a row-random split scores $\bhEdaSplitRandomRowsLD$ against $\bhEdaSplitCurvesLD$ for whole curves. \\
+\textbf{Domain of validity} &
+The filled $(\beta, \lambda)$ triangle and the sampled $\rhoc$ range; no extrapolation claimed. $\nsEdaGridFillPercent\%$ grid fill; predicting the rim from the interior scores $\nsEdaSplitRimDM$ (ablation). &
+$\beta$ from $\bhEdaEdgeBetaLow$ to $\bhEdaEdgeBetaHigh$, $\rh$ from the existence edge to $\bhEdaRhMax$. The outermost curves score as any other ($\bhEdaSplitOuterCurvesLD$, ablation). \\
 \bottomrule
 \end{tabular}
 \end{table}

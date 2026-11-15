@@ -449,8 +449,8 @@ def test_ns_eda_writes_its_five_tables_as_json(tmp_path: Path) -> None:
 def test_shipped_section_toml_selects_the_papers_picks() -> None:
     expected = NeutronStarsSection.model_validate(
         {
-            "figures": ["univariate_continuous", "mass_density", "charge_target", "mass_max"],
-            "tables": ["univariate", "charge_correlation", "split_strategies"],
+            "figures": ["mass_density"],
+            "tables": ["charge_correlation", "split_strategies"],
             "variants": {
                 "charge_target": "scatter",
                 "mass_density": "by_lambda",

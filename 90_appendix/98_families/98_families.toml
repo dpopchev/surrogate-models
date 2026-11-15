@@ -1,8 +1,6 @@
 # The family screen appendix -- which family-screen figures screen_families.py writes (W-102); placed by the
 # text like the data appendices', a deselected one drops out. The family table is always written.
 figures = [
-  "parity",                 # each unit's best per pair: predicted against true on the test curves
-  "errors",                 # the same candidates' relative error per test row, median and p95
   "scaling",                # folds' figures and the final fit's seconds against the training rows
 ]
 
