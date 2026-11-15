@@ -34,6 +34,8 @@
 - 2026-11-15 E-019: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 8 hours) (developer, 2026-11-15)
 - 2026-11-15 E-019: re-plan, not a restart (developer: plan, 2026-11-15): the main text carries the results, the appendix only what it cites; this replaces the main body short of E-014#d3, physics before data science stays; E-019 is worked before E-020; W-061, W-187, W-188, W-189, W-191 adopted
 - 2026-11-15 E-020: plan agreed (developer: plan, 2026-11-15): a rerun reuses every recorded fit and evaluation whose inputs are unchanged, the family screen first; W-181, W-183, W-190 adopted; worked after E-019
+- 2026-11-15 W-195: Cut the appendix to what the main text needs, per W-195 Decisions: A, B keep split and ceiling tables, a map figure each to Sections 2.3, 2.4; C merges its tables; D goes; E, F shortened; G, H keep one figure each; two reserve cuts if still longer (developer: accept, 2026-11-15)
+- 2026-11-15 W-195: appendix (developer: accept, 2026-11-15): A, B keep split and ceiling tables, a map figure each moves to main text; C one table; D goes; E, F shorter; G, H one figure each; reserve: A+B merged, then no scaling figure supersedes: W-195#d1, W-195#d2, W-195#d3, W-195#d4, W-195#d5
 
 ## Deviations
 - 2026-11-15 E-019: T-487 hand-back finding filed standalone todo: W-203 bug (a sentence of Section 3.2 starts with a lowercase cross-reference)
