@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from score_zones import main
+from score_zones import Zoned, main, zone_table
 
 from paperlib.batches import write_checked
 from paperlib.ceilings import Spread
@@ -17,6 +17,7 @@ from paperlib.harness import Run, Timing
 from paperlib.runs import RunMetadata, entry_from_run, entry_name, entry_to_json
 from paperlib.scorecard import Scorecard
 from paperlib.tables import Cell, Text, from_json
+from paperlib.zones import ZoneFigures
 
 BATCH = "toy-batch"
 ENTRY = "toy-entry"
@@ -175,3 +176,23 @@ def test_zone_table_holds_one_row_per_candidate_with_its_verdict(
             "grid",
         )
     ]
+
+
+@pytest.mark.functional
+def test_slopes_column_counts_a_physical_edge_step_once() -> None:
+    """A step in the physical zone and in the interior zone is one step of the test curves."""
+    figures = ZoneFigures(p95=3.0, worst=2.0)
+    zoned = Zoned(
+        dataset="neutron_stars",
+        target="mass",
+        family="local RBF",
+        unit="pointwise",
+        entry="toy",
+        zones={"interior": figures, "edge": None, "physical": figures},
+        slopes={"interior": (4, 100), "edge": (0, 10), "physical": (4, 5)},
+        decades={},
+        ceiling=3.0,
+    )
+    key = ("neutron_stars", "mass", "local RBF", "pointwise")
+    table = zone_table([zoned], {}, {key: "grid"})
+    assert cell_text(table.rows[0][7]) == "4/110"
