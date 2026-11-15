@@ -45,7 +45,7 @@ This appendix describes each candidate of the family screen of Section~\ref{sec:
 
 \subsubsection{The Multilayer Perceptron}
 
-\paragraph{What it is.} The baseline network of Section~\ref{sec:algorithms}: $\knobNetDepth$ hidden layers of $\knobNetWidth$ units with ReLU activations, trained by AdamW~\citep{Loshchilov2017_AdamW} at a learning rate of $\knobNetLr$ on a cosine schedule, batches of $\knobNetBatchSize$ rows and the mean squared error of the standardized target. It stops early when the loss on a share of $\knobNetValidFraction$ of the training curves has not improved for $\knobNetPatience$ epochs, at most $\knobNetMaxEpochs$, and keeps its best epoch~\citep{PyTorch2019}. Curve-wise, its output layer has one unit per output of a curve.
+\paragraph{What it is.} A multilayer perceptron of $\knobNetDepth$ hidden layers of $\knobNetWidth$ units with ReLU activations, trained by AdamW~\citep{Loshchilov2017_AdamW} at a learning rate of $\knobNetLr$ on a cosine schedule, batches of $\knobNetBatchSize$ rows and the mean squared error of the standardized target. It stops early when the loss on a share of $\knobNetValidFraction$ of the training curves has not improved for $\knobNetPatience$ epochs, at most $\knobNetMaxEpochs$, and keeps its best epoch~\citep{PyTorch2019}. Curve-wise, its output layer has one unit per output of a curve.
 
 \paragraph{Cost.} An epoch costs about $N$ operations, so its time grows linearly with $N$; it never meets the memory wall, but at $10^5$ rows a fit takes minutes.
 
