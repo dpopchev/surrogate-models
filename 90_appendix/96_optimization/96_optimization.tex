@@ -1,5 +1,6 @@
 \section{How Models Are Scored: Folds, Error Measures and Budgets}
 \label{sec:optimization}
+\InputIfFileExists{96_optimization_num}{}{}
 
 The search of Section~\ref{sec:hypotheses} compares candidates of very different kinds -- a lookup, an interpolation, a Gaussian process, boosted trees, networks. The comparison is fair only if everything but the candidate is fixed, so every candidate passes through one harness and is judged by one scorecard.
 
@@ -11,3 +12,5 @@ A prediction is scored by its relative error on the held-out rows: the error of 
 
 \paragraph{The search eliminates candidates in a fixed order.}
 The representation is chosen first, at equal model, because it carries across families (Section~\ref{sec:representation}). The families are then screened at a small fixed budget each, and the best two or three per dataset and target survive by successive halving (Section~\ref{sec:families}). The survivors are tuned under the same search budget over their own hyperparameters -- for networks the width, the depth, the activation, the loss (the mean squared error against the Huber loss~\citep{Huber1964} of $H_2$) and the schedule of AdamW~\citep{Loshchilov2017_AdamW} with cosine annealing~\citep{TODO_SGDR} -- and then given the precision regime: double precision, a second-order L-BFGS stage after AdamW~\citep{Michaud2023_PrecisionML}, and a second model fitted to the residuals of the first (Section~\ref{sec:precision}). At every step a change is kept only when its gain exceeds the spread of the fold and seed scores; a change within that spread is reported and dropped.
+
+\InputIfFileExists{96_optimization_tab_zones}{}{}

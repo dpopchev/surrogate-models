@@ -7,6 +7,11 @@ Per tuned outcome of a recorded tuning batch, the ledger entry of its refit hold
 predictions; they are scored against the test rows of the pair's design. One line per pair and
 candidate is printed and the same is saved as JSON under <state>/96_optimization/zones.json.
 A section never imports another: the outcomes and the ceilings are read from the state folder.
+
+With --extrapolation-batch the zone table (label tab:zones) and its macros are stored as JSON
+under <state>/96_optimization/ (tables/zones.json, numbers.json) for render_assets.py: the
+interior and physical-edge figures are the zones run's, the edge figures the batch's refit
+without the edge curves, whose interior only decides the margin.
 """
 
 import argparse
@@ -22,13 +27,26 @@ import numpy as np
 import pandas as pd
 
 from paperlib.batches import outcomes_path, read_ledger, write_checked
-from paperlib.design import BLACK_HOLES, NEUTRON_STARS, SPECS, TARGETS, Design, Target, pairs
+from paperlib.design import (
+    BLACK_HOLES,
+    DATASET_TEX,
+    NEUTRON_STARS,
+    SPECS,
+    TARGETS,
+    Design,
+    Target,
+    pair_tex,
+    pairs,
+)
 from paperlib.runs import LedgerEntry
 from paperlib.scorecard import relative_errors, scorecard
+from paperlib.tables import Cell, Column, Plain, Table, Text, make_table
+from paperlib.tools.render_assets import store_section
 from paperlib.zones import (
     Side,
     ZoneFigures,
     curve_position,
+    margin_steps,
     slope_violations,
     zone_figures,
     zone_masks,
@@ -45,6 +63,13 @@ CEILING_FOLDERS = {NEUTRON_STARS.dataset: "91_neutron_stars", BLACK_HOLES.datase
 ALONG: Mapping[str, tuple[str, Side]] = {
     NEUTRON_STARS.dataset: ("rho_c", "end"),
     BLACK_HOLES.dataset: ("r_h", "start"),
+}
+# The data ceilings of the relative-error section in significant figures, as their macros.
+CEILING_TEX: Mapping[tuple[str, str], str] = {
+    ("neutron_stars", "mass"): "\\nsEdaCeilMFigures",
+    ("neutron_stars", "charge"): "\\nsEdaCeilDFigures",
+    ("black_holes", "mass"): "\\bhEdaCeilMFigures",
+    ("black_holes", "charge"): "\\bhEdaCeilDFigures",
 }
 
 # --- vocabulary and types ---------------------------------------------------------------------
@@ -136,7 +161,132 @@ def saved_text(found: Sequence[Zoned]) -> str:
     return json.dumps([asdict(zoned) for zoned in found], indent=2) + "\n"
 
 
+# A candidate's identity on a pair, the key its refit and its verdict are found by.
+Key = tuple[str, str, str, str]
+# The zone figures of a candidate's refit without the edge curves; None when its fit was walled.
+Refit = Mapping[str, ZoneFigures | None] | None
+
+TABLE_CAPTION = (
+    "Every tuned candidate of \\cref{tab:tuning} per zone: the significant figures kept at the "
+    "95th percentile of the error ($-\\log_{10}$) on the interior test curves and at the "
+    "physical edge, from the refit of the tuning; on the edge curves from a refit made without "
+    "them, at the 95th percentile and at the worst row; the steps of the test curves, all "
+    "zones together, whose predicted slope has another sign than the data (violations over "
+    "steps); the pair's data ceiling; and the verdict of the tuning. A wall: the refit ran "
+    "past the time budget."
+)
+HEADS = ("Pair", "Family", "Unit", "Interior", "Edge", "Edge worst", "Physical", "Slopes")
+
+
+def _figure(found: ZoneFigures | None, worst: bool = False) -> Cell:
+    """A zone's figures in math mode, n/a for an empty zone."""
+    if found is None:
+        return Text("n/a")
+    return Plain(f"{found.worst if worst else found.p95:.2f}", math=True)
+
+
+def _edge_cells(refit: Refit) -> tuple[Cell, Cell]:
+    """The edge p95 and worst figures of a refit, wall when it was walled."""
+    if refit is None:
+        return Text("wall"), Text("wall")
+    return _figure(refit["edge"]), _figure(refit["edge"], worst=True)
+
+
+def zone_table(
+    found: Sequence[Zoned], refits: Mapping[Key, Refit], verdicts: Mapping[Key, str]
+) -> Table:
+    """The zone table: one row per pair and tuned candidate, a candidate without a refit
+    showing -- in its edge columns."""
+    rows: list[tuple[Cell, ...]] = []
+    for zoned in found:
+        key = (zoned.dataset, zoned.target, zoned.family, zoned.unit)
+        edge = (Text("--"), Text("--")) if key not in refits else _edge_cells(refits[key])
+        violations = sum(v for v, _ in zoned.slopes.values())
+        steps = sum(s for _, s in zoned.slopes.values())
+        rows.append(
+            (
+                Text(pair_tex(zoned.dataset, zoned.target)),
+                Text(zoned.family),
+                Text(zoned.unit),
+                _figure(zoned.zones["interior"]),
+                *edge,
+                _figure(zoned.zones["physical"]),
+                Text(slopes_text(violations, steps)),
+                Text(f"${CEILING_TEX[zoned.dataset, zoned.target]}$"),
+                Text(verdicts[key]),
+            )
+        )
+    columns = (
+        Column("l", before="@{}"),
+        Column("l"),
+        Column("l"),
+        *(Column("r") for _ in range(6)),
+        Column("l", after="@{}"),
+    )
+    header = (tuple(Text(h) for h in (*HEADS, "Ceiling", "Verdict")),)
+    return make_table("zones", TABLE_CAPTION, columns, header, tuple(rows), "@{}lll*{6}{r}l@{}")
+
+
+def zone_numbers(
+    found: Sequence[Zoned], refits: Mapping[Key, Refit], winners: Sequence[Key]
+) -> dict[str, str]:
+    """Per pair the three zone figures of its winner (zone<Pair>Interior, Edge, Physical) and
+    whether its margin holds (zone<Pair>Margin: holds, or fails).
+
+    Raises ValueError naming the winner when no tuned candidate of the zones run is it.
+    """
+    zoned_by = {(z.dataset, z.target, z.family, z.unit): z for z in found}
+    macros: dict[str, str] = {}
+    for key in winners:
+        if key not in zoned_by:
+            raise ValueError(f"winner {key} is not a tuned candidate of the zones run")
+        zoned, refit = zoned_by[key], refits.get(key)
+        dataset, target = key[:2]
+        name = f"zone{DATASET_TEX[dataset].capitalize()}{target.capitalize()}"
+        edge = None if refit is None else refit["edge"]
+        refit_interior = None if refit is None else refit["interior"]
+        held = (
+            edge is not None
+            and refit_interior is not None
+            and margin_steps(edge.p95, edge.worst, refit_interior.p95) > 0
+        )
+        macros |= {
+            f"{name}Interior": figures_value(zoned.zones["interior"]),
+            f"{name}Edge": figures_value(edge),
+            f"{name}Physical": figures_value(zoned.zones["physical"]),
+            f"{name}Margin": "holds" if held else "fails",
+        }
+    return macros
+
+
+def figures_value(found: ZoneFigures | None) -> str:
+    """A zone's p95 figures as the text a macro holds, n/a for an empty zone."""
+    return "n/a" if found is None else f"{found.p95:.2f}"
+
+
 # --- shell: reads the state ---------------------------------------------------------------------
+
+
+def read_refits(path: Path) -> dict[Key, Refit]:
+    """The outcomes of a saved extrapolation batch by candidate; a walled one is None."""
+    found: dict[Key, Refit] = {}
+    for fields in json.loads(path.read_text()):
+        key = (fields["dataset"], fields["target"], fields["family"], fields["unit"])
+        if fields["kind"] == "walled":
+            found[key] = None
+            continue
+        found[key] = {
+            name: None if zone is None else ZoneFigures(**zone)
+            for name, zone in fields["zones"].items()
+        }
+    return found
+
+
+def read_winners(path: Path) -> list[Key]:
+    """The winners of a recorded tuning, per pair its candidate."""
+    return [
+        (w["dataset"], w["target"], w["family"], w["unit"]) for w in json.loads(path.read_text())
+    ]
 
 
 def read_tuned(path: Path) -> list[dict[str, Any]]:
@@ -167,6 +317,7 @@ def run(args: argparse.Namespace, say: Callable[[str], None]) -> tuple[Zoned, ..
     ceilings = read_ceilings(args.state)
     fractions = {NEUTRON_STARS.dataset: args.ns_edge, BLACK_HOLES.dataset: args.bh_edge}
     found: list[Zoned] = []
+    verdicts: dict[Key, str] = {}
     for fields in read_tuned(outcomes_path(args.state, TUNING_SECTION, args.batch)):
         job = fields["job"]
         dataset, target = job["dataset"], job["target"]
@@ -184,6 +335,10 @@ def run(args: argparse.Namespace, say: Callable[[str], None]) -> tuple[Zoned, ..
             fractions[dataset],
         )
         candidate = job["candidate"]
+        # A batch recorded before the verdicts (W-171) holds none: its searches ran whole.
+        verdicts[dataset, target, candidate["family"], candidate["unit"]] = fields.get(
+            "verdict", "searched"
+        )
         found.append(
             Zoned(
                 dataset,
@@ -201,6 +356,17 @@ def run(args: argparse.Namespace, say: Callable[[str], None]) -> tuple[Zoned, ..
         say(line(zoned))
     (args.state / SECTION).mkdir(parents=True, exist_ok=True)
     write_checked(args.state / SECTION / "zones.json", saved_text(found))
+    if args.extrapolation_batch:
+        refits = read_refits(
+            args.state / SECTION / f"{args.extrapolation_batch}-extrapolation.json"
+        )
+        winners = read_winners(args.state / TUNING_SECTION / "winners.json")
+        store_section(
+            args.state,
+            SECTION,
+            {"zones": zone_table(found, refits, verdicts)},
+            zone_numbers(found, refits, winners),
+        )
     return tuple(found)
 
 
@@ -210,6 +376,11 @@ def _arguments(argv: Sequence[str]) -> argparse.Namespace:
     for name in ("ns", "bh", "split", "state"):
         parser.add_argument(name, type=Path)
     parser.add_argument("--batch", required=True, help="the recorded tuning batch to score")
+    parser.add_argument(
+        "--extrapolation-batch",
+        default="",
+        help="the recorded extrapolation batch whose edge figures join the stored zone table",
+    )
     parser.add_argument("--bh-edge", type=float, required=True, help="the black holes' fraction")
     parser.add_argument("--ns-edge", type=float, required=True, help="the neutron stars' fraction")
     return parser.parse_args(argv)
