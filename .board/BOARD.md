@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-018 > W-172 > T-450   | blocked: 0 | todo roots: 10 | done: 531 | pruned: 101
+open path: E-018 > W-172 > T-450   | blocked: 0 | todo roots: 11 | done: 531 | pruned: 101
 
 ## Tree
 
@@ -23,6 +23,7 @@ W-179  issue  [todo]     (standalone) The failure paths of the search are pinned
 W-180  issue  [todo]     (standalone) The per-dataset knots range of the tuning is pinned by tests   (filed during T-447) -- T-466 [todo]
 W-181  bug    [todo]     (standalone) A recovered tuning batch loses the verdict of each candidate   (filed during T-448) -- T-467 [todo]
 W-182  issue  [todo]     (standalone) The refusals of the tuning run are pinned by tests   (filed during T-448) -- T-468 [todo]
+W-183  issue  [todo]     (standalone) The edge paths of the rung chain are pinned by tests   (filed during T-450) -- T-469 [todo]
 ```
 
 ## Closed
@@ -1140,6 +1141,8 @@ flowchart TD
   W181 --> T467["T-467 todo: Rebuild the verdict of a recovered outcome test-first -> 90_appendix/99_precision/tune_survivors.py"]
   W182["W-182 issue todo, standalone: The refusals of the tuning run are pinned by tests"]
   W182 --> T468["T-468 todo: Pin the four refusals of the tuning run -> four tests in 90_appendix/99_precision/test_tune_survivors.py"]
+  W183["W-183 issue todo, standalone: The edge paths of the rung chain are pinned by tests"]
+  W183 --> T469["T-469 todo: Pin the three edge paths of the rung chain -> tests in paperlib/tools/test_regenerate.py"]
   classDef doing fill:#fff3bf,stroke:#b58900,color:#000;
   classDef blocked fill:#ffe3e3,stroke:#c92a2a,color:#000;
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
@@ -1147,5 +1150,5 @@ flowchart TD
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
   class E018,W172,T450 doing
   class W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449 done
-  class T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468 todo
+  class T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468,W183,T469 todo
 ```
