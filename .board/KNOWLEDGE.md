@@ -26,6 +26,7 @@
 - 2026-11-15 W-171: fact: batch 01a1dbf7, 2 h 17 m, none walled, test vs ceiling: NS M RBF cw 3.58/4.1, NS D RBF cw 1.13/2.4, BH M GPR cw 6.76/7.1, BH D RBF cw 5.12/6.0; BH knots 378-381 of 384 -> BH within one figure, NS D 1.3 short
 - 2026-11-15 W-171: fact: in W-171#1 -> none
 - 2026-11-15 W-171: fact: in W-171#1 -> none
+- 2026-11-15 W-172: fact: 4h57m: fam 2h27 tun 2h11 pipe 50s ext 4m26 prec 14m; NS M 3.58/4.11 D 1.13/2.44, BH M 6.76/7.07 D 5.12/5.99 -> inside the 8 h arrow
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)

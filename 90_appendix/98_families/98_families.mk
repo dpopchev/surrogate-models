@@ -16,7 +16,7 @@ KNOBS_DEPS      += 90_appendix/98_families/98_families.mk
 # The recorded batch the family screen appendix reports (2026-10-08, clean at 037443f; 88 outcomes): its saved
 # outcomes (local/state/98_families/<batch>.json) rebuild the table and figures in seconds.
 # Empty it to refit the whole screen (hours): make families FAMILIES_BATCH=
-FAMILIES_BATCH  ?= 01a11be4-6eca-7427-a5dd-a97dd7a0194d
+FAMILIES_BATCH  ?= 01a1dc9a-5f30-746a-abab-01d248a92b12
 
 # The script stores the table and numbers as JSON under $(STATE)/98_families/ and still writes
 # the figures; render_assets.py writes the table and numbers assets from the JSON, after the
