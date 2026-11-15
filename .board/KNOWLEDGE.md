@@ -30,6 +30,7 @@
 - 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
 - 2026-11-14 E-018: open: make extrapolation's interior figures differ from make zones (NS charge RBF pw 1.70 vs 1.07, ResNet 0.48 vs 1.44): fewer curves or another fit? -> settle before W-174
 - 2026-11-14 W-093: open: NS-charge ResNet run planned as W-171; float64, L-BFGS and H2 stay untested on networks (precision_options.py warns) -- file them for the ResNet if it leads a zone after W-171, else drop? (developer, re-aim after W-171) supersedes: W-093#1
+- 2026-11-15 E-018: open: slope violations count a flat predicted step as one (XGBoost pw 16493/17250, T-459) -- split flats from reversals for the physics gate? (developer, at the close)
 
 ## Decisions
 - 2026-11-14 E-018: goal (developer, 2026-11-14): surrogates that minimize the relative error over the whole dataset, extrapolate well and keep the physics, with feedback on the parameters; agent's reading: extrapolation across the couplings, never past a physical edge; replaces E-014's goal
