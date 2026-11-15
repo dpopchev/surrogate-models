@@ -129,11 +129,19 @@ class MapEvidence:
 # --- pure functions ---------------------------------------------------------------------------
 
 
-def _axis(low: float, high: float, floor: float | None = None) -> np.ndarray:
-    """A regular grid over [low, high] padded by PAD of its span on each side, not below floor."""
+def _step(values: Sequence[float] | np.ndarray) -> float:
+    """The median spacing of the distinct sampled values of one coupling; 0 when fewer than two."""
+    distinct = np.unique(values)
+    return float(np.median(np.diff(distinct))) if len(distinct) > 1 else 0.0
+
+
+def _axis(low: float, high: float, floor: float | None = None, step: float = 0.0) -> np.ndarray:
+    """A regular grid over [low, high] padded by PAD of its span on each side, not below floor;
+    a coupling's step adds the two probes half a step beyond its sampled range, inside a margin."""
     pad = PAD * (high - low)
     start = low - pad if floor is None else max(low - pad, floor)
-    return np.linspace(start, high + pad, GRID)
+    grid = np.linspace(start, high + pad, GRID)
+    return np.unique(np.append(grid, [low - step / 2, high + step / 2])) if step > 0 else grid
 
 
 def _probes(
@@ -158,7 +166,7 @@ def _black_hole_probes(found: MapInput) -> tuple[Probe, ...]:
     """A grid over beta and r_h around the sampled ranges."""
     domain = found.domain
     assert isinstance(domain, BlackHoleDomain)
-    betas = _axis(domain.betas[0], domain.betas[-1])
+    betas = _axis(domain.betas[0], domain.betas[-1], step=_step(domain.betas))
     radii = _axis(min(domain.r_min), max(domain.r_max), floor=0.0)
     rows = np.array([(r, b) for b in betas for r in radii])
     return _probes(found.surrogate, domain, BLACK_HOLE_COLUMNS, rows)
@@ -170,8 +178,8 @@ def _neutron_star_probes(found: MapInput) -> tuple[Probe, ...]:
     assert isinstance(domain, NeutronStarDomain)
     keys = np.array(domain.keys)
     rho = float(10 ** np.median(np.log10(found.table["rho_c"])))
-    betas = _axis(keys[:, 0].min(), keys[:, 0].max())
-    lambdas = _axis(keys[:, 1].min(), keys[:, 1].max())
+    betas = _axis(keys[:, 0].min(), keys[:, 0].max(), step=_step(keys[:, 0]))
+    lambdas = _axis(keys[:, 1].min(), keys[:, 1].max(), step=_step(keys[:, 1]))
     rows = np.array([(rho, b, lam) for b in betas for lam in lambdas])
     return _probes(found.surrogate, domain, NEUTRON_STAR_COLUMNS, rows)
 
