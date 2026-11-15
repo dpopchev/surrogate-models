@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-018 > W-185 > T-475   | blocked: 0 | todo roots: 14 | done: 546 | pruned: 101
+open path: E-018 > W-185   | blocked: 0 | todo roots: 14 | done: 547 | pruned: 101
 
 ## Tree
 
@@ -13,7 +13,7 @@ E-018         [doing]    The pipeline regenerates both maps with every candidate
   W-173  issue  [done]     The saved surrogate answers beyond the sampled couplings only inside the measured margin -- T-452 [done], T-453 [done], T-454 [done]
   W-174  issue  [done]     The article reports the zones, the cut candidates and the restated goal -- T-455 [done], T-456 [done]
   W-175  issue  [done]     make zones counts the slope-sign violations of every tuned candidate per zone -- T-458 [done], T-459 [done]
-  W-185  bug    [doing]    The black-hole surrogate answers no probe with a warning inside its margin   (filed during W-173) -- T-471 [done], T-472 [done], T-475 [doing]   <- ACTIVE LEAF
+  W-185  bug    [doing]    The black-hole surrogate answers no probe with a warning inside its margin   (filed during W-173) -- T-471 [done], T-472 [done], T-475 [done]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
 W-167  bug    [todo]     (standalone) The all-pairs parity figure of the baseline cannot be saved with LaTeX off   (filed during T-422) -- T-438 [todo]
 W-168  issue  [todo]     (standalone) store_section's empty-tables and missing-numbers paths are pinned by tests   (filed during T-384) -- T-439 [todo]
@@ -1126,7 +1126,7 @@ flowchart TD
   E018 --> W185["W-185 bug doing: The black-hole surrogate answers no probe with a warning inside its margin"]
   W185 --> T471["T-471 done: Answer a warned row with its prediction and its warning test-first -> paperlib/final.py"]
   W185 --> T472["T-472 done: Probe inside the margin in the validity grid test-first -> 50_validity/check_domain.py"]
-  W185 --> T475["T-475 doing: Type the validity probes against the three-way predict result -> 50_validity/check_domain.py -- ACTIVE LEAF"]
+  W185 --> T475["T-475 done: Type the validity probes against the three-way predict result -> 50_validity/check_domain.py"]
   W061["W-061 spike todo, standalone: Which real references replace the placeholder citations"]
   W061 --> T118["T-118 todo: Replace each placeholder with its real reference -> 00_metadata/refs.bib and 00_metadata/citations.md"]
   W167["W-167 bug todo, standalone: The all-pairs parity figure of the baseline cannot be saved with LaTeX off"]
@@ -1162,7 +1162,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E018,W185,T475 doing
-  class W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,T471,T472 done
+  class E018,W185 doing
+  class W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,T471,T472,T475 done
   class W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468,W183,T469,W184,T470,W186,T473,W187,T474 todo
 ```
