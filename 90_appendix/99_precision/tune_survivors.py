@@ -83,7 +83,7 @@ from paperlib.design import (
     target_symbol,
 )
 from paperlib.eda import camel, number_tex
-from paperlib.harness import Run, harness
+from paperlib.harness import Fitter, Run, harness
 from paperlib.plots import (
     SYMBOLS,
     PlotStyle,
@@ -97,12 +97,12 @@ from paperlib.plots import (
 from paperlib.runs import LedgerEntry, RunMetadata, Setting
 from paperlib.scorecard import significant_figures
 from paperlib.search import (
-    KNOTS,
     SPACES,
     NoCompletedTrial,
     Searched,
     Space,
     TrialFitter,
+    evaluate,
     search,
     space_of,
 )
@@ -176,11 +176,16 @@ class Job:
     candidate: Candidate
 
 
+# Why a candidate's figures stand: its search ran its trials inside the time budget, a fixed list
+# of points was scored in place of a search, or the search ended on the clock (W-171).
+Verdict = Literal["searched", "grid", "cut: too slow"]
+
+
 @dataclass(frozen=True)
 class Tuned:
     """A job whose search ended: the best trial's params, its mean fold figures, the test
-    figures of its refit, the trials run and how many of them met the wall, and the refit's
-    ledger entry."""
+    figures of its refit, the trials (or points) finished and how many of them met the wall,
+    the refit's ledger entry and the verdict."""
 
     job: Job
     params: Mapping[str, Setting]
@@ -189,6 +194,39 @@ class Tuned:
     trials: int
     walls: int
     entry: str
+    verdict: Verdict = "searched"
+
+
+@dataclass(frozen=True)
+class Grid:
+    """A fixed list of one param's values, one point per value."""
+
+    param: str
+    values: tuple[Setting, ...]
+
+
+@dataclass(frozen=True)
+class Recorded:
+    """The one point a job holds as its best params in a saved tuning batch."""
+
+    batch: str
+
+
+@dataclass(frozen=True)
+class FixedSpec:
+    """The candidate (family and unit) scored on a fixed source of points in place of a search."""
+
+    family: str
+    unit: str
+    source: Grid | Recorded
+
+
+@dataclass(frozen=True)
+class Fixed:
+    """A job's fixed points and the seeds each is scored on."""
+
+    points: tuple[Mapping[str, Setting], ...]
+    seeds: tuple[int, ...]
 
 
 @dataclass(frozen=True)
@@ -240,40 +278,119 @@ def run_job(
     valid_fraction: float,
     seconds: float,
     study: optuna.Study,
-    record: Callable[[Run], str],
+    record: Callable[[Run, Mapping[str, Setting]], str],
+    budget: float | None = None,
+    fixed: Fixed | None = None,
 ) -> Outcome:
-    """Search the job's space with `trials` trials, each fit within `seconds`, then refit the
-    best params once through the harness; record keeps that run and names its entry. A Walled
-    when no trial completes."""
-    found = search(
-        lambda params: walled(family(params), seconds),
-        space,
-        trials,
-        data,
-        job.target,
-        seed,
-        valid_fraction,
-        study,
-    )
+    """Search the job's space with `trials` trials, each fit within `seconds` and the search
+    within `budget` seconds (none: no limit), then refit the best params once through the
+    harness; record keeps that run with its params and names its entry. Given `fixed`, its
+    points are scored in place of a search. A Walled when no trial completes."""
+
+    def fitter(params: dict[str, Any]) -> Fitter:
+        return walled(family(params), seconds)
+
+    if fixed is None:
+        found = search(fitter, space, trials, data, job.target, seed, valid_fraction, study, budget)
+    else:
+        found = evaluate(
+            fitter,
+            [dict(point) for point in fixed.points],
+            data,
+            job.target,
+            fixed.seeds,
+            valid_fraction,
+        )
     match found:
         case NoCompletedTrial():
-            return Walled(job, f"all {trials} trials past {seconds / 60:g} min")
+            noun = "trials" if fixed is None else "points"
+            return Walled(job, f"all {found.trials} {noun} past {seconds / 60:g} min")
         case Searched():
             pass
         case _:
             assert_never(found)
-    walls = sum(trial.state == TrialState.FAIL for trial in study.trials)
+    walls = (
+        found.failed
+        if fixed is not None
+        else sum(trial.state == TrialState.FAIL for trial in study.trials)
+    )
     entries: list[str] = []
     (run,) = harness(
         data,
         job.target,
-        walled(family(dict(found.params)), seconds),
+        fitter(dict(found.params)),
         [seed],
         valid_fraction,
-        record=lambda ran: entries.append(record(ran)),
+        record=lambda ran: entries.append(record(ran, found.params)),
     )
     test = significant_figures(run.test.zones["test"].p95)
-    return Tuned(job, found.params, found.figures, test, found.trials, walls, entries[0])
+    verdict: Verdict = "grid" if fixed is not None else "cut: too slow" if found.cut else "searched"
+    return Tuned(job, found.params, found.figures, test, found.trials, walls, entries[0], verdict)
+
+
+def parse_fixed(text: str) -> FixedSpec:
+    """A --fixed argument, family:unit=param=v1,v2,... or family:unit=recorded:<batch>, as its
+    spec.
+
+    Raises ValueError on a text of another shape.
+
+    >>> parse_fixed("local RBF:pointwise=neighbours=50,100").source
+    Grid(param='neighbours', values=(50, 100))
+    >>> parse_fixed("ResNet:pointwise=recorded:b1").source
+    Recorded(batch='b1')
+    """
+    head, _, source = text.partition("=")
+    family, colon, unit = head.partition(":")
+    if not (colon and source and unit in UNITS):
+        raise ValueError(f"--fixed {text!r}: want family:unit=param=v1,v2 or ...=recorded:<batch>")
+    if source.startswith("recorded:"):
+        return FixedSpec(family, unit, Recorded(source.removeprefix("recorded:")))
+    param, _, values = source.partition("=")
+    return FixedSpec(family, unit, Grid(param, tuple(_setting(v) for v in values.split(","))))
+
+
+def _setting(text: str) -> Setting:
+    """A value of a fixed list as the number it names, else as text."""
+    for kind in (int, float):
+        try:
+            return kind(text)
+        except ValueError:
+            continue
+    return text
+
+
+def fixed_spec_of(job: Job, specs: Sequence[FixedSpec]) -> FixedSpec | None:
+    """The spec of the job's family and unit, none when the job is searched."""
+    return next(
+        (s for s in specs if (s.family, s.unit) == (job.candidate.family, job.candidate.unit)),
+        None,
+    )
+
+
+def fixed_points(
+    spec: FixedSpec, job: Job, held: Mapping[str, Sequence[Outcome]]
+) -> tuple[Mapping[str, Setting], ...]:
+    """The points a spec holds for the job: one per value of a grid, or the best params the
+    job holds in the saved batch (held, by batch id).
+
+    Raises ValueError when the batch holds no tuned outcome of the job.
+    """
+    match spec.source:
+        case Grid(param=param, values=values):
+            return tuple({param: value} for value in values)
+        case Recorded(batch=batch):
+            for outcome in held.get(batch, ()):
+                if isinstance(outcome, Tuned) and outcome.job == job:
+                    return (dict(outcome.params),)
+            raise ValueError(f"batch {batch} holds no tuned outcome of {job}")
+        case _:
+            assert_never(spec.source)
+
+
+def fixed_seeds(family: str, seed: int, count: int) -> tuple[int, ...]:
+    """The seeds a fixed point is scored on: `count` from the seed for a network family, the
+    seed alone for any other."""
+    return tuple(seed + i for i in range(count)) if family in ("MLP", "ResNet") else (seed,)
 
 
 @dataclass(frozen=True)
@@ -420,6 +537,10 @@ def outcomes_from_json(text: str) -> tuple[Outcome, ...]:
         if fields["kind"] == "walled":
             found.append(Walled(job, fields["reason"]))
         else:
+            # A batch recorded before the verdicts (W-171) holds none: its searches ran whole.
+            verdict = fields.get("verdict", "searched")
+            if verdict not in get_args(Verdict):
+                raise ValueError(f"unknown verdict {verdict!r}")
             found.append(
                 Tuned(
                     job,
@@ -429,6 +550,7 @@ def outcomes_from_json(text: str) -> tuple[Outcome, ...]:
                     fields["trials"],
                     fields["walls"],
                     fields["entry"],
+                    verdict,
                 )
             )
     return tuple(found)
@@ -477,8 +599,10 @@ def _screen_tuned_test(outcomes: Sequence[Outcome], screen: Mapping[Job, float])
         match outcome:
             case Tuned():
                 tuned = (_math_cell(f"{outcome.folds:.2f}"), _math_cell(f"{outcome.test:.2f}"))
+                verdict = Text(f"{outcome.verdict}, {outcome.trials}")
             case Walled():
                 tuned = (Span(2, "c", "wall"),)
+                verdict = Text("--")
             case _:
                 assert_never(outcome)
         screen_cell = Text("--") if before is None else _math_cell(f"{before:.2f}")
@@ -490,10 +614,11 @@ def _screen_tuned_test(outcomes: Sequence[Outcome], screen: Mapping[Job, float])
                 screen_cell,
                 *tuned,
                 Text(f"${CEILING_TEX[(job.dataset, job.target)]}$"),
+                verdict,
             )
         )
     heads = ("Screen", "Tuned", "Test")
-    spec = "@{}lll*{4}{r}@{}"
+    spec = "@{}lll*{4}{r}l@{}"
     fitted = [Column("l", before="@{}"), Column("l"), Column("l"), *(Column("r") for _ in heads)]
     fitted.append(Column("r"))
     return make_table(
@@ -502,9 +627,12 @@ def _screen_tuned_test(outcomes: Sequence[Outcome], screen: Mapping[Job, float])
         "over its own hyperparameters: the significant figures kept at the 95th percentile of "
         "the error ($-\\log_{10}$), on the frozen folds at the screen and after the tuning, on "
         "the test curves for the best trial refitted, against the pair's data ceiling. A wall: "
-        "every trial ran past the time budget. The errors are measured in $M$ or $\\Dch$.",
-        (*fitted[:-1], replace(fitted[-1], after="@{}")),
-        (tuple(Text(h) for h in ("Pair", "Family", "Unit", *heads, "Ceiling")),),
+        "every trial ran past the time budget. The verdict of a candidate with the trials or "
+        "points it finished: searched, its search ran its trials inside the time budget; grid, "
+        "a fixed list of points was scored in place of a search; cut: too slow, the search "
+        "ended on the clock. The errors are measured in $M$ or $\\Dch$.",
+        (*fitted, replace(Column("l"), after="@{}")),
+        (tuple(Text(h) for h in ("Pair", "Family", "Unit", *heads, "Ceiling", "Verdict")),),
         tuple(rows),
         spec,
     )
@@ -518,7 +646,7 @@ def no_screen(table: Table) -> tuple[Table, ...]:
             columns=(*table.columns[:3], *table.columns[4:]),
             header=tuple((*row[:3], *row[4:]) for row in table.header),
             rows=tuple((*row[:3], *row[4:]) for row in table.rows),
-            small_spec="@{}lll*{3}{r}@{}",
+            small_spec="@{}lll*{3}{r}l@{}",
         ),
     )
 
@@ -545,7 +673,7 @@ def delta(table: Table) -> tuple[Table, ...]:
             columns=(*table.columns[:5], Column("r"), *table.columns[5:]),
             header=tuple((*row[:5], Text("$\\Delta$"), *row[5:]) for row in table.header),
             rows=tuple(widened(row) for row in table.rows),
-            small_spec="@{}lll*{5}{r}@{}",
+            small_spec="@{}lll*{5}{r}l@{}",
         ),
     )
 
@@ -623,6 +751,7 @@ def numbers(
                     f"{name}Test": f"{outcome.test:.2f}",
                     f"{name}Trials": f"{outcome.trials}",
                     f"{name}Walls": f"{outcome.walls}",
+                    f"{name}Verdict": outcome.verdict,
                 }
                 if ran:
                     macros[f"{name}BestTrial"] = f"{-max(ran)[1]}"
@@ -665,7 +794,7 @@ def _importances(
 ) -> dict[str, float]:
     """The fANOVA importance of each param a search varies, over its scored trials; none for a
     space of one param."""
-    space = space_of(job.candidate.family, job.candidate.unit)
+    space = space_of(job.candidate.family, job.candidate.unit, job.dataset)
     if len(space) < 2 or len(scored) < 2:
         return {}
     study = optuna.create_study(direction="maximize")
@@ -953,7 +1082,11 @@ def ranges_figure(
     neighbours_axes.set_xscale("log")
     _plain_log_ticks(neighbours_axes.xaxis, (50, 100, 200, 400))
     ranged: list[tuple[Axes, BaseDistribution]] = [
-        *((axes, KNOTS) for axes, _ in knots),
+        *(
+            (axes, space_of("k-NN", "curve-wise", dataset)["knots"])
+            for axes, chosen in knots
+            for dataset in sorted({p.job.dataset for p in chosen} or {"neutron_stars"})
+        ),
         (neighbours_axes, SPACES["local RBF"]["neighbours"]),
     ]
     if network_axes is not None:
@@ -1113,7 +1246,7 @@ def job_line(outcome: Outcome, done: int, total: int, elapsed: float) -> str:
         case Tuned():
             result = (
                 f"folds {outcome.folds:.2f}, test {outcome.test:.2f} figures, "
-                f"{outcome.walls} of {outcome.trials} trials walled"
+                f"{outcome.walls} of {outcome.trials} trials walled, {outcome.verdict}"
             )
         case Walled():
             result = f"wall, {outcome.reason}"
@@ -1141,15 +1274,18 @@ class Context:
     trials: int
     seconds: float
     log_level: str
+    budget: float | None = None
 
 
 @dataclass(frozen=True)
 class Work:
-    """One job with its pair, run in a worker process."""
+    """One job with its pair, run in a worker process; fixed holds the points it scores in place
+    of a search."""
 
     job: Job
     pair: Pair
     context: Context
+    fixed: Fixed | None = None
 
 
 def _is_tuning_stem(path: Path) -> bool:
@@ -1258,6 +1394,7 @@ def _run_tuning(
         trials=args.trials,
         seconds=args.minutes * 60.0,
         log_level=log_level,
+        budget=None if args.budget_minutes is None else args.budget_minutes * 60.0,
     )
     batch.ledger.mkdir(parents=True, exist_ok=True)
     found = jobs(short_list(read_ledger(batch.ledger), args.screen_batch, args.within))
@@ -1269,8 +1406,25 @@ def _run_tuning(
         batch.id,
         batch.journal,
     )
+    specs = tuple(parse_fixed(text) for text in args.fixed)
+    held = {
+        spec.source.batch: outcomes_from_json(
+            outcomes_path(args.state, SECTION, spec.source.batch).read_text()
+        )
+        for spec in specs
+        if isinstance(spec.source, Recorded)
+    }
+
+    def fixed_of(job: Job) -> Fixed | None:
+        spec = fixed_spec_of(job, specs)
+        if spec is None:
+            return None
+        seeds = fixed_seeds(job.candidate.family, training.seed, args.fixed_seeds)
+        return Fixed(fixed_points(spec, job, held), seeds)
+
     works = [
-        partial(tune_job, Work(job, by_key[(job.dataset, job.target)], context)) for job in found
+        partial(tune_job, Work(job, by_key[(job.dataset, job.target)], context, fixed_of(job)))
+        for job in found
     ]
     started = time.monotonic()
     finished: dict[int, Outcome] = {}
@@ -1298,15 +1452,19 @@ def tune_job(work: Work) -> Outcome:
     job, context = work.job, work.context
     candidate = job.candidate
     batch = context.batch
-    study = open_study(study_name(batch.id, job), batch.journal)
+    # A fixed list has no trials to journal: its study lives in memory.
+    study = (
+        open_study(study_name(batch.id, job), batch.journal)
+        if work.fixed is None
+        else optuna.create_study(direction="maximize")
+    )
     study.sampler = optuna.samplers.TPESampler(seed=context.training.seed)
 
-    def record(run: Run) -> str:
+    def record(run: Run, best: Mapping[str, Setting]) -> str:
         """Write the best params' run as a ledger entry and name it."""
-        best = study.best_params
         settings: dict[str, Setting] = {
             "unit": candidate.unit,
-            "trials": context.trials,
+            "trials": context.trials if work.fixed is None else len(work.fixed.points),
             **asdict(context.knobs),
             **best,
         }
@@ -1330,13 +1488,15 @@ def tune_job(work: Work) -> Outcome:
         lambda params: tuned_fitter(
             candidate, work.pair.space, context.knobs, context.training, params
         ),
-        space_of(candidate.family, candidate.unit),
+        space_of(candidate.family, candidate.unit, job.dataset),
         context.trials,
         context.training.seed,
         context.training.valid_fraction,
         context.seconds,
         study,
         record,
+        context.budget,
+        work.fixed,
     )
 
 
@@ -1385,6 +1545,24 @@ def _arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--trials", type=int, required=True, help="trials per job")
     parser.add_argument("--minutes", type=float, required=True, help="the wall of one fit")
     parser.add_argument("--workers", type=int, required=True, help="jobs at once")
+    parser.add_argument(
+        "--budget-minutes",
+        type=float,
+        help="the time budget of one search: no trial starts past it (none: no budget)",
+    )
+    parser.add_argument(
+        "--fixed",
+        action="append",
+        default=[],
+        help="family:unit=param=v1,v2 or family:unit=recorded:<batch>: score that candidate's "
+        "fixed points in place of a search (repeatable)",
+    )
+    parser.add_argument(
+        "--fixed-seeds",
+        type=int,
+        default=1,
+        help="the seeds of a fixed point of a network family, counted from the config's seed",
+    )
     parser.add_argument("--batch", help="fit nothing; rebuild the table from this saved batch")
     parser.add_argument(
         "--recover",

@@ -6,11 +6,19 @@ import numpy as np
 import optuna
 import pytest
 import torch
-from optuna.distributions import FloatDistribution
+from optuna.distributions import FloatDistribution, IntDistribution
 from threadpoolctl import threadpool_info
 
 from paperlib.design import Design
-from paperlib.search import SPACES, NoCompletedTrial, Searched, search, space_of
+from paperlib.search import (
+    SPACES,
+    NoCompletedTrial,
+    Searched,
+    evaluate,
+    fold_figures,
+    search,
+    space_of,
+)
 
 pytestmark = pytest.mark.model
 
@@ -66,11 +74,19 @@ def test_every_family_of_the_screen_has_a_space() -> None:
 
 
 def test_a_curve_wise_candidate_also_tunes_the_spline_knots() -> None:
-    assert "knots" in space_of("k-NN", "curve-wise")
+    assert "knots" in space_of("k-NN", "curve-wise", "neutron_stars")
 
 
 def test_a_pointwise_candidate_has_no_spline_knots() -> None:
-    assert "knots" not in space_of("k-NN", "pointwise")
+    assert "knots" not in space_of("k-NN", "pointwise", "black_holes")
+
+
+def test_space_of_widens_the_knots_for_black_holes() -> None:
+    highs = [
+        cast(IntDistribution, space_of("k-NN", "curve-wise", dataset)["knots"]).high
+        for dataset in ("black_holes", "neutron_stars")
+    ]
+    assert highs == [384, 24]
 
 
 def test_one_seed_gives_one_search() -> None:
@@ -160,7 +176,49 @@ def test_the_best_params_come_from_the_trials_that_did_not_raise() -> None:
     assert cast(Searched, found).params != raised[0]
 
 
+def test_search_stops_asking_trials_past_its_seconds() -> None:
+    now = [0.0]
+
+    def ticking(params):
+        now[0] += 10.0
+        return scaled(params)
+
+    found = search(
+        ticking,
+        SPACE,
+        40,
+        TOY,
+        "mass",
+        seed=0,
+        valid_fraction=0.34,
+        seconds=25.0,
+        clock=lambda: now[0],
+    )
+    assert (found.trials, cast(Searched, found).cut) == (3, True)
+
+
 def test_a_search_counts_its_failed_trials() -> None:
     family, _ = raising_second([])
     found = search(family, SPACE, 4, TOY, "mass", seed=0, valid_fraction=0.34)
     assert found.failed == 1
+
+
+def seeded(params):
+    """A toy family whose error moves with the seed; a scale of 0.4 raises."""
+
+    def fit(rows, seed):
+        if params["scale"] == 0.4:
+            raise FloatingPointError("loss is nan")
+        scale = params["scale"] + 0.05 * seed
+        return lambda x: (1.0 + scale) * (1.0 + 0.1 * x[:, 1] + x[:, 0])
+
+    return fit
+
+
+def test_evaluate_returns_the_best_of_the_given_points() -> None:
+    points = [{"scale": 0.3}, {"scale": 0.4}, {"scale": 0.1}]
+    first = fold_figures(TOY, "mass", seeded({"scale": 0.1}), 0, 0.34)
+    second = fold_figures(TOY, "mass", seeded({"scale": 0.1}), 1, 0.34)
+    found = evaluate(seeded, points, TOY, "mass", seeds=(0, 1), valid_fraction=0.34)
+    expected = Searched(params={"scale": 0.1}, figures=(first + second) / 2, trials=3, failed=1)
+    assert found == expected

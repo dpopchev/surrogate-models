@@ -3,7 +3,7 @@
 import json
 import shutil
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, cast
@@ -23,6 +23,7 @@ from tune_survivors import (
     SECTION,
     SECTION_TOML,
     SHAPES,
+    Fixed,
     Job,
     PrecisionSection,
     ShortList,
@@ -31,13 +32,18 @@ from tune_survivors import (
     Walled,
     Work,
     analysis,
+    fixed_points,
+    fixed_seeds,
+    fixed_spec_of,
     history_figure,
+    job_line,
     jobs,
     journal_points,
     main,
     numbers,
     outcomes_from_json,
     outcomes_to_json,
+    parse_fixed,
     range_ends,
     ranges_figure,
     recovered,
@@ -58,7 +64,7 @@ from paperlib.config import PaperConfig, load_section
 from paperlib.design import Design
 from paperlib.harness import Run, Timing
 from paperlib.plots import NOTATION_TEX, PlotStyle, apply_style
-from paperlib.runs import RunMetadata, entry_from_run
+from paperlib.runs import RunMetadata, Setting, entry_from_run
 from paperlib.scorecard import Scorecard
 from paperlib.tables import from_json, render
 
@@ -101,12 +107,17 @@ def slow_or_not(params):
     return slow if params["slow"] else truth
 
 
+def entry_of(run: Run, params: Mapping[str, Setting]) -> str:
+    """A toy record: every run is the entry "entry"."""
+    return "entry"
+
+
 def tuned_toy(first_slow: bool, then_slow: bool):
     """The outcome of a two-trial toy job whose trials are slow as given, walled at 0.05 s."""
     study = optuna.create_study(direction="maximize")
     study.enqueue_trial({"slow": first_slow})
     study.enqueue_trial({"slow": then_slow})
-    return run_job(JOB, TOY, slow_or_not, SLOW_OR_NOT, 2, 0, 0.34, 0.05, study, lambda run: "entry")
+    return run_job(JOB, TOY, slow_or_not, SLOW_OR_NOT, 2, 0, 0.34, 0.05, study, entry_of)
 
 
 @pytest.mark.model
@@ -117,6 +128,113 @@ def test_a_trial_past_the_wall_fails_and_the_job_goes_on() -> None:
 @pytest.mark.model
 def test_a_job_every_trial_of_which_meets_the_wall_is_walled() -> None:
     assert isinstance(tuned_toy(first_slow=True, then_slow=True), Walled)
+
+
+def toy_verdict(budget: float | None, fixed: Fixed | None = None) -> Tuned:
+    """The outcome of a three-trial toy job under a time budget (seconds) or a fixed list."""
+    study = optuna.create_study(direction="maximize")
+    found = run_job(
+        JOB,
+        TOY,
+        slow_or_not,
+        SLOW_OR_NOT,
+        3,
+        0,
+        0.34,
+        5.0,
+        study,
+        entry_of,
+        budget=budget,
+        fixed=fixed,
+    )
+    return cast(Tuned, found)
+
+
+@pytest.mark.model
+def test_a_cut_search_is_recorded_with_its_verdict() -> None:
+    found = toy_verdict(budget=0.0)
+    assert (found.verdict, found.trials) == ("cut: too slow", 1)
+
+
+@pytest.mark.model
+def test_a_search_inside_its_budget_is_recorded_as_searched() -> None:
+    assert toy_verdict(budget=600.0).verdict == "searched"
+
+
+@pytest.mark.model
+def test_a_fixed_list_is_recorded_with_the_grid_verdict() -> None:
+    points = ({"slow": False}, {"slow": False})
+    found = toy_verdict(budget=None, fixed=Fixed(points, (0, 1)))
+    assert (found.verdict, found.trials) == ("grid", 2)
+
+
+@pytest.mark.model
+def test_an_outcome_recorded_without_a_verdict_reads_as_searched() -> None:
+    old = (
+        '[{"kind": "tuned", "job": {"dataset": "toy", "target": "mass", "candidate": '
+        '{"family": "k-NN", "unit": "pointwise"}}, "params": {}, "folds": 1.0, "test": 1.0, '
+        '"trials": 2, "walls": 0, "entry": "e"}]'
+    )
+    (found,) = outcomes_from_json(old)
+    assert cast(Tuned, found).verdict == "searched"
+
+
+@pytest.mark.edge
+def test_a_verdict_survives_the_saved_batch() -> None:
+    outcomes = (Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 4, 0, "e", "grid"),)
+    assert outcomes_from_json(outcomes_to_json(outcomes)) == outcomes
+
+
+@pytest.mark.functional
+def test_a_fixed_grid_reads_one_point_per_value() -> None:
+    spec = parse_fixed("local RBF:pointwise=neighbours=50,100,200")
+    assert fixed_points(spec, NS_MASS_RBF, {}) == (
+        {"neighbours": 50},
+        {"neighbours": 100},
+        {"neighbours": 200},
+    )
+
+
+@pytest.mark.functional
+def test_a_recorded_point_is_the_best_params_of_the_job_in_that_batch() -> None:
+    spec = parse_fixed("local RBF:pointwise=recorded:old")
+    held = {"old": (Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 2, 0, "e"),)}
+    assert fixed_points(spec, NS_MASS_RBF, held) == ({"neighbours": 80},)
+
+
+@pytest.mark.functional
+def test_a_fixed_spec_matches_its_family_and_unit_only() -> None:
+    specs = (parse_fixed("local RBF:pointwise=neighbours=50"),)
+    assert (fixed_spec_of(NS_MASS_RBF, specs), fixed_spec_of(NS_MASS_RBF_CW, specs)) == (
+        specs[0],
+        None,
+    )
+
+
+@pytest.mark.functional
+@pytest.mark.parametrize(("family", "seeds"), [("ResNet", (7, 8, 9)), ("local RBF", (7,))])
+def test_a_network_fixed_point_is_scored_on_several_seeds(
+    family: str, seeds: tuple[int, ...]
+) -> None:
+    assert fixed_seeds(family, 7, 3) == seeds
+
+
+@pytest.mark.view
+def test_the_job_line_shows_the_verdict() -> None:
+    outcome = Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 4, 0, "e", "cut: too slow")
+    assert "cut: too slow" in job_line(outcome, 1, 2, 60.0)
+
+
+@pytest.mark.view
+def test_the_tuning_table_shows_the_verdict() -> None:
+    outcomes = [Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 4, 0, "e", "cut: too slow")]
+    assert "cut: too slow" in tuning_table(outcomes, {NS_MASS_RBF: 3.28})
+
+
+@pytest.mark.view
+def test_the_tuning_numbers_carry_the_verdict_of_each_job() -> None:
+    outcomes = [Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 4, 0, "e", "grid")]
+    assert numbers(outcomes, [], {})["tunNsMassRbfPointwiseVerdict"] == "grid"
 
 
 def spread_at(p95: float) -> Spread:
@@ -262,6 +380,7 @@ def test_tuning_numbers_name_each_candidate() -> None:
         "tunNsMassRbfPointwiseTest": "3.30",
         "tunNsMassRbfPointwiseTrials": "2",
         "tunNsMassRbfPointwiseWalls": "1",
+        "tunNsMassRbfPointwiseVerdict": "searched",
         "tunNsMassRbfPointwiseBestTrial": "1",
         "tunNsMassRbfPointwiseNeighbours": "80",
     }

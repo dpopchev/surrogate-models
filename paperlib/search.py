@@ -8,7 +8,8 @@ is a callable that turns one trial's parameters into a harness fitter.
 """
 
 import logging
-from collections.abc import Callable, Mapping
+import time
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, assert_never, get_args
 
@@ -68,6 +69,9 @@ SPACES: Mapping[str, Space] = {
 
 # The curve-wise unit's cubic spline knots along s, ends included (the screen ran 8).
 KNOTS = IntDistribution(6, 24)
+# A black-hole curve holds about 5700 rows against a neutron-star curve's 6 at the fewest, and
+# its best knots sat at the top of KNOTS (W-068), so its range runs wider.
+BLACK_HOLE_KNOTS = IntDistribution(6, 384, log=True)
 
 
 @dataclass(frozen=True)
@@ -79,6 +83,7 @@ class Searched:
     figures: float
     trials: int
     failed: int
+    cut: bool = False
 
 
 @dataclass(frozen=True)
@@ -96,14 +101,16 @@ SearchResult = Searched | NoCompletedTrial
 # --- pure functions ---------------------------------------------------------------------------
 
 
-def space_of(family: str, unit: Unit) -> Space:
-    """The space a candidate -- a family in one unit of prediction -- is searched over: a
-    curve-wise one also searches its spline's knots."""
+def space_of(family: str, unit: Unit, dataset: str) -> Space:
+    """The space a candidate -- a family in one unit of prediction -- is searched over on one
+    dataset: a curve-wise one also searches its spline's knots, over the wider black-hole range
+    on black_holes."""
     match unit:
         case "pointwise":
             return SPACES[family]
         case "curve-wise":
-            return {**SPACES[family], "knots": KNOTS}
+            knots = BLACK_HOLE_KNOTS if dataset == "black_holes" else KNOTS
+            return {**SPACES[family], "knots": knots}
         case _:
             assert_never(unit)
 
@@ -117,17 +124,26 @@ def search(
     seed: int,
     valid_fraction: float,
     study: optuna.Study | None = None,
+    seconds: float | None = None,
+    clock: Callable[[], float] = time.perf_counter,
 ) -> SearchResult:
     """Run `budget` trials of the family over its space on the design's frozen folds, in the
     given study (a journal one, for the dashboard) or an in-memory one sampled from the seed.
     The ask / tell loop is the trial's boundary: a fit that raises fails only its trial (told
     FAIL, logged), as a nan score does; the search runs its whole budget. NoCompletedTrial when
-    the study holds no completed trial."""
+    the study holds no completed trial. With `seconds`, the loop ends before asking a trial
+    once the clock has passed it since the start (the first trial always runs): the trials
+    reported are those run, and a Searched says it was cut."""
     if study is None:
         sampler = optuna.samplers.TPESampler(seed=seed)
         study = optuna.create_study(direction="maximize", sampler=sampler)
+    start = clock()
     numbers: list[int] = []
-    for _ in range(budget):
+    cut = False
+    for index in range(budget):
+        if seconds is not None and index > 0 and clock() - start > seconds:
+            cut = True
+            break
         trial = study.ask(dict(space))
         numbers.append(trial.number)
         try:
@@ -139,10 +155,41 @@ def search(
     states = {trial.number: trial.state for trial in study.get_trials(deepcopy=False)}
     failed = sum(states[number] == TrialState.FAIL for number in numbers)
     if TrialState.COMPLETE not in states.values():
-        return NoCompletedTrial(trials=budget, failed=failed)
+        return NoCompletedTrial(trials=len(numbers), failed=failed)
     return Searched(
-        params=study.best_params, figures=study.best_value, trials=budget, failed=failed
+        params=study.best_params,
+        figures=study.best_value,
+        trials=len(numbers),
+        failed=failed,
+        cut=cut,
     )
+
+
+def evaluate(
+    family: TrialFitter,
+    points: Sequence[dict[str, Any]],
+    design: Design,
+    target: TargetForm,
+    seeds: Sequence[int],
+    valid_fraction: float,
+) -> SearchResult:
+    """Score a fixed list of points in place of a search: each point's figures are the mean of
+    its fold figures over the seeds. A point whose fit raises fails alone (logged); the best
+    point is a Searched with the points run as its trials, NoCompletedTrial when all failed."""
+    scored: list[tuple[float, dict[str, Any]]] = []
+    for index, point in enumerate(points):
+        try:
+            fitter = family(point)
+            figures = [fold_figures(design, target, fitter, s, valid_fraction) for s in seeds]
+        except Exception as error:
+            logger.warning("point %d failed: %s", index, error)
+            continue
+        scored.append((float(np.mean(figures)), point))
+    failed = len(points) - len(scored)
+    if not scored:
+        return NoCompletedTrial(trials=len(points), failed=failed)
+    best_figures, best_point = max(scored, key=lambda pair: pair[0])
+    return Searched(params=best_point, figures=best_figures, trials=len(points), failed=failed)
 
 
 def fold_figures(

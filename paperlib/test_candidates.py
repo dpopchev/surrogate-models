@@ -101,7 +101,7 @@ def _lowest(dist: BaseDistribution) -> Any:
 def test_every_candidate_s_searched_params_predict_the_toy_s_test_curves(
     candidate: Candidate,
 ) -> None:
-    params = lowest(space_of(candidate.family, candidate.unit))
+    params = lowest(space_of(candidate.family, candidate.unit, "neutron_stars"))
     fitter = tuned_fitter(candidate, SPACE, KNOBS, TRAINING, params)
     (run,) = harness(WIDE, "mass", fitter, seeds=[0], valid_fraction=0.34)
     assert np.isfinite(run.predictions).all()
