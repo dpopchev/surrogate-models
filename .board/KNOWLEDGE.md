@@ -23,10 +23,7 @@
 - 2026-11-14 T-457: standing: p95 across-curve ceilings (across neighbouring curves): NS M 4.1 figures (1.36e-4 M_sun at median 1.75, 1.70e-4 at M_max 2.19), NS D 2.4 (1.56e-3 dex); BH M 7.1 (3.05e-7 M_sun), D 6.0 (4.40e-7 dex), at the existence edge -> E-006 target per pair supersedes: T-436#12
 - 2026-11-14 T-457: standing: worst NS mass curves short, low-mass, beta 0.4-2.4, lambda \~4 -> E-006 error map, H2; every prepared D > 0; the 1004 NS rows below 1e-5 open 110 of 1611 curves at low rho_c -> floor dropped (W-063) supersedes: T-436#6
 - 2026-11-14 W-170: fact: edge held (batch 01a1dbc6): BH M and D all 4 candidates; NS M pointwise RBF only (curve-wise worst -4.60); NS D none, edge p95 <= 0 -> W-173 margin: BH one step, NS zero supersedes: W-170#1, W-170#2, W-170#3, W-170#4
-- 2026-11-15 W-171: fact: batch 01a1dbf7, 2 h 17 m, none walled, test vs ceiling: NS M RBF cw 3.58/4.1, NS D RBF cw 1.13/2.4, BH M GPR cw 6.76/7.1, BH D RBF cw 5.12/6.0; BH knots 378-381 of 384 -> BH within one figure, NS D 1.3 short
-- 2026-11-15 W-171: fact: in W-171#1 -> none
-- 2026-11-15 W-171: fact: in W-171#1 -> none
-- 2026-11-15 W-172: fact: 4h57m: fam 2h27 tun 2h11 pipe 50s ext 4m26 prec 14m; NS M 3.58/4.11 D 1.13/2.44, BH M 6.76/7.07 D 5.12/5.99 -> inside the 8 h arrow
+- 2026-11-15 E-018: fact: tuned winners 01a1dbf7 test vs ceiling: NS M RBF cw 3.58/4.11, NS D RBF cw 1.13/2.44, BH M GPR cw 6.76/7.07, BH D RBF cw 5.12/5.99; BH knots 378-381/384; rebuild 4h57m -> BH within one figure, NS D 1.3 short supersedes: W-171#1, W-171#2, W-171#3, W-172#1
 - 2026-11-15 W-173: fact: answered by the developer 2026-11-15: warn inside the measured margin, as filed -> W-173 runs on its criterion supersedes: W-173#1
 
 ## Open questions
