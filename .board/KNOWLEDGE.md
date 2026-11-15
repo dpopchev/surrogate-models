@@ -46,3 +46,4 @@
 - 2026-11-14 E-018: W-169 lane findings filed standalone todo: W-177 (the zones run refusals untested), W-178 (the ceilings reader stated in five places)
 - 2026-11-15 E-018: T-450 lane finding filed standalone todo: W-183
 - 2026-11-15 E-018: T-452 lane finding filed standalone todo: W-184 (the neutron-star warned verdict untested)
+- 2026-11-15 E-018: W-173 run failed (0 BH warned): bug W-185 amends W-173; T-454 ref finding -> T-456 (6)
