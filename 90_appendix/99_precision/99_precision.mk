@@ -19,7 +19,7 @@ KNOBS_FLAGS   += --tuning "$(TUNING_KNOBS)"
 KNOBS_DEPS    += 90_appendix/99_precision/99_precision.mk
 # The recorded batch (T-206, 2026-10-10): make tuning rebuilds the table from its outcomes in
 # seconds; TUNING_BATCH= (empty) runs the whole tuning again (about 33 hours).
-TUNING_BATCH  ?= 01a1dbf7-ffe2-7687-95a4-b342566ab163
+TUNING_BATCH  ?= 01a1dd21-1a15-703d-941d-478699fa226c
 
 # The script stores the table and numbers as JSON under $(STATE)/99_precision/ and still writes
 # the figures; render_assets.py writes the table and numbers assets from the JSON. One grouped
@@ -74,7 +74,7 @@ PRECISION_KNOBS   := --k 8 --neighbours 100 --knots 8 --residual-neighbours 100 
 PRECISION_PAIRS   ?=
 # The recorded batch (T-212, 2026-11-11): make precision rebuilds the figure and macros from its
 # outcomes in seconds; PRECISION_BATCH= (empty) runs the whole regime again (about 22 minutes).
-PRECISION_BATCH   ?= 01a1cc48-ef02-731a-a429-8911759c81a9
+PRECISION_BATCH   ?= 01a1dd9d-ca2b-7742-b693-9c83b78fb043
 PRECISION_DIR     := $(ASSETS)/99_precision
 PRECISION_ASSETS  := $(PRECISION_DIR)/99_precision_fig_precision.tex
 # The pairs stamp (W-161): holds the PRECISION_PAIRS of the run that built the assets. Its rule
