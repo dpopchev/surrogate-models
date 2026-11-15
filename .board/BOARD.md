@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-019 > W-195 > T-488   | blocked: 0 | todo roots: 13 | done: 567 | pruned: 101
+open path: E-019 > W-195 > T-489   | blocked: 0 | todo roots: 13 | done: 568 | pruned: 101
 
 ## Tree
 
@@ -14,7 +14,7 @@ E-019         [doing]    The main text carries the results and the appendix only
   W-192  issue  [done]     The zone and tuning tables stand in the results section -- T-483 [done], T-484 [done]
   W-193  issue  [done]     The pipeline section states the search, its hypotheses and its gates -- T-485 [done], T-486 [done]
   W-194  issue  [done]     The relative-error subsection shows the ceilings of both datasets -- T-487 [done]
-  W-195  spike  [doing]    Which appendix content stays, moves or goes -- T-488 [doing]   <- ACTIVE LEAF, T-489 [todo]
+  W-195  spike  [doing]    Which appendix content stays, moves or goes -- T-488 [done], T-489 [doing]   <- ACTIVE LEAF
   W-196  issue  [todo]     The appendix is no longer than the main text -- T-490 [todo], T-491 [todo]
   W-197  issue  [todo]     No review mark is left in the article -- T-492 [todo], T-493 [todo]
 E-020         [todo]     A rerun fits only what changed
@@ -1177,8 +1177,8 @@ flowchart TD
   E019 --> W194["W-194 issue done: The relative-error subsection shows the ceilings of both datasets"]
   W194 --> T487["T-487 done: Show the two ceilings figures where the ceiling is defined -> 40_pipeline/42_error_metric/42_error_metric.tex"]
   E019 --> W195["W-195 spike doing: Which appendix content stays, moves or goes"]
-  W195 --> T488["T-488 doing: List the floats and pages of each appendix section -> local/scratch/appendix_inventory.md -- ACTIVE LEAF"]
-  W195 --> T489["T-489 todo: Record the appendix decision -> W-195 spike.decision"]
+  W195 --> T488["T-488 done: List the floats and pages of each appendix section -> local/scratch/appendix_inventory.md"]
+  W195 --> T489["T-489 doing: Record the appendix decision -> W-195 spike.decision -- ACTIVE LEAF"]
   E019 --> W196["W-196 issue todo: The appendix is no longer than the main text"]
   W196 --> T490["T-490 todo: Print the pages of the main text and the appendix test-first -> paperlib/tools/page_count.py"]
   W196 --> T491["T-491 todo: Cut the appendix to the decided list -> 90_appendix/90_appendix.tex"]
@@ -1238,7 +1238,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E019,W195,T488 doing
-  class W187,T474,W188,T476,W189,T477,T478,T479,W191,T482,W192,T483,T484,W193,T485,T486,W194,T487 done
-  class W061,T118,T489,W196,T490,T491,W197,T492,T493,E020,W181,T467,W183,T469,W190,T480,T481,W198,T494,T495,T496,W199,T497,T498,W200,T499,T500,T501,W201,T502,T503,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W182,T468,W184,T470,W186,T473,W202,T504,W203,T505 todo
+  class E019,W195,T489 doing
+  class W187,T474,W188,T476,W189,T477,T478,T479,W191,T482,W192,T483,T484,W193,T485,T486,W194,T487,T488 done
+  class W061,T118,W196,T490,T491,W197,T492,T493,E020,W181,T467,W183,T469,W190,T480,T481,W198,T494,T495,T496,W199,T497,T498,W200,T499,T500,T501,W201,T502,T503,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W182,T468,W184,T470,W186,T473,W202,T504,W203,T505 todo
 ```
