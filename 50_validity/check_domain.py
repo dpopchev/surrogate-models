@@ -2,9 +2,10 @@
 
 Per map -- black holes in the (beta, r_h) plane, neutron stars in the (beta, lambda) plane and along
 one curve of rho_c -- a regular grid of probe queries goes through predict of paperlib/final.py: an
-answered probe is a filled mark, a refused one an open mark with an arrow to its nearest valid
-input. The numbers are the probes answered and refused per map and the share of the test rows that
-lie inside the domain, which must be all of them.
+answered probe is a filled mark, a warned one (beyond the sampled couplings, inside the margin of
+the domain) a triangle, a refused one an open mark with an arrow to its nearest valid input. The
+numbers are the probes answered, warned and refused per map, the margin in steps and the share of
+the test rows that lie inside the domain, which must be all of them.
 """
 
 import argparse
@@ -25,7 +26,7 @@ from pydantic import BaseModel, ConfigDict
 
 from paperlib.config import NOTATION_TEX, PaperConfig, load_config, load_section
 from paperlib.design import BLACK_HOLES, NEUTRON_STARS, design
-from paperlib.domain import BlackHoleDomain, Domain, Inside, NeutronStarDomain, check
+from paperlib.domain import BlackHoleDomain, Domain, Inside, NeutronStarDomain, Warned, check
 from paperlib.eda import number_tex, text_width_size
 from paperlib.final import (
     BLACK_HOLE_COLUMNS,
@@ -91,12 +92,14 @@ class MapInput:
 @dataclass(frozen=True)
 class Probe:
     """One query: its input row by column, whether the surrogate answered it, the prediction
-    when it did and the nearest valid input when it did not."""
+    when it did and the nearest valid input when it did not; a warned probe lies beyond the
+    sampled couplings inside the margin, neither answered nor refused."""
 
     x: Mapping[str, float]
     answered: bool
     value: float | None
     nearest: Mapping[str, float] | None
+    warned: bool = False
 
 
 @dataclass(frozen=True)
@@ -136,16 +139,19 @@ def _axis(low: float, high: float, floor: float | None = None) -> np.ndarray:
 def _probes(
     surrogate: FinalSurrogate, domain: Domain, columns: tuple[str, ...], rows: np.ndarray
 ) -> tuple[Probe, ...]:
-    """The probe of every row, answered or refused by predict."""
+    """The probe of every row: answered or refused by predict, warned by the domain check."""
     answers = predict(surrogate, domain, rows)
-    return tuple(
-        Probe(dict(zip(columns, map(float, row), strict=True)), True, answer, None)
-        if not isinstance(answer, Refused)
-        else Probe(
-            dict(zip(columns, map(float, row), strict=True)), False, None, dict(answer.nearest)
-        )
-        for row, answer in zip(rows, answers, strict=True)
-    )
+    probes: list[Probe] = []
+    for row, answer in zip(rows, answers, strict=True):
+        x = dict(zip(columns, map(float, row), strict=True))
+        verdict = check(domain, x)
+        if isinstance(verdict, Warned):
+            probes.append(Probe(x, False, None, dict(verdict.nearest), warned=True))
+        elif isinstance(answer, Refused):
+            probes.append(Probe(x, False, None, dict(answer.nearest)))
+        else:
+            probes.append(Probe(x, True, answer, None))
+    return tuple(probes)
 
 
 def _black_hole_probes(found: MapInput) -> tuple[Probe, ...]:
@@ -252,10 +258,13 @@ def numbers(found: Sequence[MapEvidence]) -> dict[str, str]:
         tag = "Bh" if isinstance(evidence.domain, BlackHoleDomain) else "Ns"
         probes = evidence.probes + evidence.curve_probes
         answered = sum(p.answered for p in probes)
+        warned = sum(p.warned for p in probes)
         share = 100.0 * evidence.test_inside / max(evidence.test_rows, 1)
         macros |= {
             f"validity{tag}Answered": str(answered),
-            f"validity{tag}Refused": str(len(probes) - answered),
+            f"validity{tag}Warned": str(warned),
+            f"validity{tag}Refused": str(len(probes) - answered - warned),
+            f"validity{tag}MarginSteps": f"{evidence.domain.margin:g}",
             f"validity{tag}TestRows": str(evidence.test_rows),
             f"validity{tag}TestInside": number_tex(share),
         }
@@ -269,7 +278,8 @@ CAPTION = (
     "existence edge $r_{h,\\min}(\\beta)$ of the sampled curves. Centre: neutron stars in the "
     "$(\\beta, \\lambda)$ plane, the sampled keys. Right: the stable range of $\\rhoc$ along one "
     "curve, up to its maximum mass. A regular grid of probe queries goes through the surrogate: "
-    "an answered probe is a filled mark, a refused one an open mark%s."
+    "an answered probe is a filled mark, a warned one beyond the sampled couplings a triangle, a "
+    "refused one an open mark%s."
 )
 ARROWS = " with an arrow to its nearest valid input"
 
@@ -302,25 +312,30 @@ def _marks(
     color: tuple[float, float, float],
     arrows: bool,
 ) -> None:
-    """The answered probes as filled marks, the refused as open marks, each with its arrow to the
-    nearest valid input when arrows are drawn."""
+    """The answered probes as filled marks, the warned as triangles, the refused as open marks,
+    each refused one with its arrow to the nearest valid input when arrows are drawn."""
     size = mark_size(style, 14.0)
-    for answered in (True, False):
-        chosen = [p for p in probes if p.answered == answered]
-        points = np.array([[p.x[place[0]], p.x[place[1]]] for p in chosen]).reshape(-1, 2)
+    kinds = (
+        ("answered", lambda p: p.answered, "o", color, color),
+        ("warned", lambda p: p.warned, "^", color, "0.25"),
+        ("refused", lambda p: not p.answered and not p.warned, "o", "none", "0.25"),
+    )
+    for label, member, marker, face, edge in kinds:
+        points = np.array([[p.x[place[0]], p.x[place[1]]] for p in probes if member(p)])
         ax.scatter(
-            points[:, 0],
-            points[:, 1],
+            points.reshape(-1, 2)[:, 0],
+            points.reshape(-1, 2)[:, 1],
             s=size,
-            facecolors=color if answered else "none",
-            edgecolors=color if answered else "0.25",
+            marker=marker,
+            facecolors=face,
+            edgecolors=edge,
             linewidths=line_width(style, 0.8),
-            label="answered" if answered else "refused",
+            label=label,
             zorder=3,
         )
     if arrows:
         for p in probes:
-            if p.nearest is not None:
+            if p.nearest is not None and not p.warned:
                 ax.annotate(
                     "",
                     xy=(p.nearest[place[0]], p.nearest[place[1]]),
@@ -367,6 +382,8 @@ def _curve_panel(ax: Axes, found: MapEvidence, style: PlotStyle, arrows: bool) -
         here = float(np.log10(p.x["rho_c"]))
         if p.answered:
             drawn.append(Probe({"x": here, "y": float(p.value or 0.0)}, True, p.value, None))
+        elif p.warned:
+            drawn.append(Probe({"x": here, "y": base}, False, None, None, warned=True))
         else:
             assert p.nearest is not None
             edge = float(np.log10(p.nearest["rho_c"]))
