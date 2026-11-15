@@ -1,11 +1,8 @@
 # The black-hole data appendix -- which BH EDA figures and tables eda_black_holes.py renders; placed by the text.
 figures = [
-  "univariate_continuous",  # r_h, M, D, D/M raw and log10, one bar per grid value
-  "mass_radius",            # M against r_h, one line per beta
-  "charge_target",          # M against log10 D and log10 D/M, by beta
-  "existence_edge",         # each beta curve's r_h range, r_h,min marked
+  "mass_radius",            # M against r_h, one line per beta, placed in Section 3.3
 ]
-tables = ["univariate", "charge_correlation", "split_strategies"]
+tables = ["split_strategies"]
 
 # Which variant of each black-hole data appendix figure the paper places; `make figures` draws them all
 # side by side under build/sections/92_black_holes/figures/ to pick from (W-111).
