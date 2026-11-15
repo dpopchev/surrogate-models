@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-018 > W-174 > T-455   | blocked: 0 | todo roots: 13 | done: 541 | pruned: 101
+open path: E-018 > W-174   | blocked: 0 | todo roots: 13 | done: 543 | pruned: 101
 
 ## Tree
 
@@ -11,7 +11,7 @@ E-018         [doing]    The pipeline regenerates both maps with every candidate
   W-171  issue  [done]     The tuning records a verdict per candidate under a time budget -- T-445 [done], T-446 [done], T-447 [done], T-448 [done], T-449 [done]
   W-172  issue  [done]     make surrogates regenerates the surrogates rung by rung and prints the time of each -- T-450 [done], T-451 [done]
   W-173  issue  [done]     The saved surrogate answers beyond the sampled couplings only inside the measured margin -- T-452 [done], T-453 [done], T-454 [done]
-  W-174  issue  [doing]    The article reports the zones, the cut candidates and the restated goal -- T-455 [doing]   <- ACTIVE LEAF, T-456 [todo]
+  W-174  issue  [doing]    The article reports the zones, the cut candidates and the restated goal -- T-455 [done], T-456 [done]
   W-175  issue  [done]     make zones counts the slope-sign violations of every tuned candidate per zone -- T-458 [done], T-459 [done]
   W-185  bug    [todo]     The black-hole surrogate answers no probe with a warning inside its margin   (filed during W-173) -- T-471 [todo], T-472 [todo]
 W-061  spike  [todo]     (standalone) Which real references replace the placeholder citations -- T-118 [todo]
@@ -1117,8 +1117,8 @@ flowchart TD
   W173 --> T453["T-453 done: Derive the margin of each map from the extrapolation batch test-first -> paperlib/zones.py and 40_pipeline/41_algorithm/build_surrogates.py"]
   W173 --> T454["T-454 done: Show the warned probes in the validity section -> 50_validity/check_domain.py and 50_validity/50_validity.tex"]
   E018 --> W174["W-174 issue doing: The article reports the zones, the cut candidates and the restated goal"]
-  W174 --> T455["T-455 doing: Write the zone table and the verdicts as assets test-first -> 90_appendix/96_optimization/score_zones.py -- ACTIVE LEAF"]
-  W174 --> T456["T-456 todo: Restate the goal and the budget sentences -> 10_abstract/10_abstract.tex, 20_introduction/20_introduction.tex and 40_pipeline/41_algorithm/41_algorithm.tex"]
+  W174 --> T455["T-455 done: Write the zone table and the verdicts as assets test-first -> 90_appendix/96_optimization/score_zones.py"]
+  W174 --> T456["T-456 done: Restate the goal and the budget sentences -> 10_abstract/10_abstract.tex, 20_introduction/20_introduction.tex and 40_pipeline/41_algorithm/41_algorithm.tex"]
   E018 --> W175["W-175 issue done: make zones counts the slope-sign violations of every tuned candidate per zone"]
   W175 --> T458["T-458 done: Write the slope-sign count test-first -> paperlib/zones.py"]
   W175 --> T459["T-459 done: Print the slope-sign counts in the zones run test-first -> 90_appendix/96_optimization/score_zones.py"]
@@ -1158,7 +1158,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E018,W174,T455 doing
-  class W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,W175,T458,T459 done
-  class T456,W185,T471,T472,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468,W183,T469,W184,T470,W186,T473 todo
+  class E018,W174 doing
+  class W169,T440,T441,W170,T442,T443,T444,W171,T445,T446,T447,T448,T449,W172,T450,T451,W173,T452,T453,T454,T455,T456,W175,T458,T459 done
+  class W185,T471,T472,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W181,T467,W182,T468,W183,T469,W184,T470,W186,T473 todo
 ```

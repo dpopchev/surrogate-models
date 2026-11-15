@@ -16,6 +16,7 @@ from paperlib.ceilings import Spread
 from paperlib.harness import Run, Timing
 from paperlib.runs import RunMetadata, entry_from_run, entry_name, entry_to_json
 from paperlib.scorecard import Scorecard
+from paperlib.tables import Cell, Text, from_json
 
 BATCH = "toy-batch"
 ENTRY = "toy-entry"
@@ -26,6 +27,9 @@ LAST_ROW_ERROR = 0.1
 # The factor of the true mass the flipped row is predicted with: far below its neighbour.
 FLIPPED = 0.5
 KNOBS = ["--batch", BATCH, "--bh-edge", "0.005", "--ns-edge", "0.05"]
+EXTRAPOLATION = "toy-extrapolation"
+# The p95 figures of the toy refit's edge curves, 0.9 below its interior's 3.4: the margin holds.
+EDGE_P95 = 2.5
 
 
 def write_state(state: Path, ns: Path, flip: bool = False) -> None:
@@ -62,7 +66,8 @@ def write_state(state: Path, ns: Path, flip: bool = False) -> None:
         epochs=None,
     )
     entry = entry_from_run(run, meta)
-    for folder in ("ledger", "99_precision", "91_neutron_stars", "92_black_holes"):
+    folders = ("ledger", "99_precision", "96_optimization", "91_neutron_stars", "92_black_holes")
+    for folder in folders:
         (state / folder).mkdir(parents=True)
     write_checked(state / "ledger" / entry_name(entry), entry_to_json(entry))
     job = {
@@ -79,8 +84,24 @@ def write_state(state: Path, ns: Path, flip: bool = False) -> None:
         "trials": 1,
         "walls": 0,
         "entry": ENTRY,
+        "verdict": "grid",
     }
     write_checked(state / "99_precision" / f"{BATCH}.json", json.dumps([tuned]))
+    winner = {**job["candidate"], "dataset": "neutron_stars", "target": "mass", "params": {}}
+    write_checked(state / "99_precision" / "winners.json", json.dumps([winner]))
+    # The refit without the edge curves: its edge figures stand beside the refit's interior.
+    measured = {
+        **job,
+        **job["candidate"],
+        "params": {},
+        "kind": "measured",
+        "zones": {"edge": {"p95": EDGE_P95, "worst": 1.0}, "interior": {"p95": 3.4, "worst": 2.0}},
+        "fit_seconds": 1.0,
+        "predict_seconds": 1.0,
+    }
+    write_checked(
+        state / "96_optimization" / f"{EXTRAPOLATION}-extrapolation.json", json.dumps([measured])
+    )
     for folder, found in (("91_neutron_stars", 4.1), ("92_black_holes", 7.1)):
         write_checked(
             state / folder / "reachable_figures.json", json.dumps({"mass": found, "charge": 2.4})
@@ -121,3 +142,36 @@ def test_zones_run_prints_the_slope_violations_per_zone(
         True,
         {"interior": [1, 14], "edge": [0, 0], "physical": [0, 0]},
     )
+
+
+def cell_text(cell: Cell) -> str:
+    """The text a cell of the stored table prints."""
+    return cell.tex if isinstance(cell, Text) else getattr(cell, "mantissa", "")
+
+
+@pytest.mark.functional
+def test_zone_table_holds_one_row_per_candidate_with_its_verdict(
+    tmp_path: Path, toy_inputs: Callable[[Path], tuple[Path, Path, Path]]
+) -> None:
+    ns, bh, split = toy_inputs(tmp_path)
+    state = tmp_path / "state"
+    write_state(state, ns)
+    main(
+        [str(ns), str(bh), str(split), str(state), *KNOBS, "--extrapolation-batch", EXTRAPOLATION],
+        lambda _: None,
+    )
+    stored = from_json((state / "96_optimization" / "tables" / "zones.json").read_text())
+    assert [tuple(cell_text(c) for c in row) for row in stored.rows] == [
+        (
+            "NS $M$",
+            "local RBF",
+            "curve-wise",
+            "1.49",
+            "2.50",
+            "1.00",
+            "1.02",
+            "0/14",
+            "$\\nsEdaCeilMFigures$",
+            "grid",
+        )
+    ]
