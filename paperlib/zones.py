@@ -26,6 +26,15 @@ class ZoneFigures:
 
 
 @dataclass(frozen=True)
+class SlopeSteps:
+    """The counted steps of a zone and those of them a prediction reverses or leaves flat."""
+
+    reversed: int
+    flat: int
+    steps: int
+
+
+@dataclass(frozen=True)
 class EdgeHeldOut:
     """The figures of the edge and interior zones of a fit made without the edge, and the
     seconds its fit and its prediction took."""
@@ -86,27 +95,30 @@ def slope_violations(
     groups: np.ndarray,
     along: np.ndarray,
     masks: Mapping[str, np.ndarray],
-) -> dict[str, tuple[int, int]]:
-    """Per zone the pair (violations, steps) over the steps of each curve in the order of `along`.
+) -> dict[str, SlopeSteps]:
+    """Per zone the reversed, flat and counted steps over the steps of each curve in the order
+    of `along`.
 
     A step is two neighbouring rows of one curve, both in the zone; one whose true difference is
-    zero is not counted; a violation is a counted step whose predicted difference has another
-    sign than the true one, zero included.
+    zero is not counted; a counted step is flat when its predicted difference is zero and
+    reversed when it has the other sign than the true one.
     """
-    found = {name: (0, 0) for name in masks}
+    found = {name: SlopeSteps(0, 0, 0) for name in masks}
     for group in np.unique(groups):
         rows = np.flatnonzero(groups == group)
         rows = rows[np.argsort(along[rows], kind="stable")]
         true_step = np.diff(y_true[rows])
         pred_step = np.diff(y_pred[rows])
         counted = true_step != 0.0
-        wrong = counted & (np.sign(pred_step) != np.sign(true_step))
+        flat = counted & (pred_step == 0.0)
+        reversed_ = counted & ~flat & (np.sign(pred_step) != np.sign(true_step))
         for name, mask in masks.items():
             both = mask[rows][:-1] & mask[rows][1:]
-            violations, steps = found[name]
-            found[name] = (
-                violations + int((wrong & both).sum()),
-                steps + int((counted & both).sum()),
+            before = found[name]
+            found[name] = SlopeSteps(
+                before.reversed + int((reversed_ & both).sum()),
+                before.flat + int((flat & both).sum()),
+                before.steps + int((counted & both).sum()),
             )
     return found
 

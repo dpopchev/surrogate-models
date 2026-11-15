@@ -6,6 +6,7 @@ import pytest
 from paperlib.design import Design
 from paperlib.harness import FitRows, Predictor
 from paperlib.zones import (
+    SlopeSteps,
     curve_position,
     edge_held_out,
     margin_steps,
@@ -103,7 +104,21 @@ def test_slope_violations_count_the_steps_against_the_data_per_zone() -> None:
         "none": np.zeros(10, dtype=bool),
     }
     found = slope_violations(y_true, y_pred, GROUPS, ALONG, masks)
-    assert found == {"interior": (1, 4), "edge": (1, 3), "none": (0, 0)}
+    assert found == {
+        "interior": SlopeSteps(reversed=1, flat=0, steps=4),
+        "edge": SlopeSteps(reversed=0, flat=1, steps=3),
+        "none": SlopeSteps(reversed=0, flat=0, steps=0),
+    }
+
+
+def test_slope_count_separates_a_flat_step_from_a_reversed_one() -> None:
+    # One curve of five rows in the order of the row index; the truth rises, the prediction
+    # rises, stays flat, falls, then rises.
+    y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    y_pred = np.array([1.0, 2.0, 2.0, 1.0, 2.0])
+    groups = np.zeros(5, dtype=int)
+    found = slope_violations(y_true, y_pred, groups, np.arange(5.0), {"all": np.ones(5, bool)})
+    assert found == {"all": SlopeSteps(reversed=1, flat=1, steps=4)}
 
 
 def test_margin_is_one_step_only_when_the_edge_holds() -> None:

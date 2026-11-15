@@ -44,6 +44,7 @@ from paperlib.tables import Cell, Column, Plain, Table, Text, make_table
 from paperlib.tools.render_assets import store_section
 from paperlib.zones import (
     Side,
+    SlopeSteps,
     ZoneFigures,
     curve_position,
     margin_steps,
@@ -86,7 +87,7 @@ class Zoned:
     unit: str
     entry: str
     zones: Mapping[str, ZoneFigures | None]
-    slopes: Mapping[str, tuple[int, int]]
+    slopes: Mapping[str, SlopeSteps]
     decades: Mapping[int, Mapping[str, float]]
     ceiling: float
 
@@ -101,15 +102,22 @@ def figures_text(found: ZoneFigures | None) -> str:
     return f"p95 {found.p95:.2f} worst {found.worst:.2f}"
 
 
-def slopes_text(violations: int, steps: int) -> str:
-    """A zone's slope count as "<violations>/<steps>", or n/a for a zone without a step."""
-    return f"{violations}/{steps}" if steps else "n/a"
+def slopes_text(reversed_steps: int, steps: int) -> str:
+    """A zone's slope count as "<reversed>/<steps>", or n/a for a zone without a step."""
+    return f"{reversed_steps}/{steps}" if steps else "n/a"
+
+
+def zone_slopes_text(found: SlopeSteps) -> str:
+    """A zone's slope count with its flat steps: "<reversed>/<steps> flat <flat>"."""
+    if not found.steps:
+        return "n/a"
+    return f"{slopes_text(found.reversed, found.steps)} flat {found.flat}"
 
 
 def line(zoned: Zoned) -> str:
     """The printed line of one pair and candidate."""
     zones = ", ".join(
-        f"{name} {figures_text(found)} slopes {slopes_text(*zoned.slopes[name])}"
+        f"{name} {figures_text(found)} slopes {zone_slopes_text(zoned.slopes[name])}"
         for name, found in zoned.zones.items()
     )
     return (
@@ -128,7 +136,7 @@ def score(
     fraction: float,
 ) -> tuple[
     Mapping[str, ZoneFigures | None],
-    Mapping[str, tuple[int, int]],
+    Mapping[str, SlopeSteps],
     Mapping[int, Mapping[str, float]],
 ]:
     """The zone figures, the slope violations per zone and the per-decade spread of the entry's
@@ -171,11 +179,12 @@ TABLE_CAPTION = (
     "95th percentile of the error ($-\\log_{10}$) on the interior test curves and at the "
     "physical edge, from the refit of the tuning; on the edge curves from a refit made without "
     "them, at the 95th percentile and at the worst row; the steps of all test "
-    "curves, each counted once, whose predicted slope has another sign than the data "
-    "(violations over steps); the pair's data ceiling; and the verdict of the tuning. A wall: "
-    "the refit ran past the time budget."
+    "curves, each counted once, whose predicted slope has the other sign than the data "
+    "(reversed over steps) and, in the next column, the flat steps, whose predicted difference "
+    "is zero where the data move, counted apart from a reversal; the pair's data ceiling; and "
+    "the verdict of the tuning. A wall: the refit ran past the time budget."
 )
-HEADS = ("Pair", "Family", "Unit", "Interior", "Edge", "Edge worst", "Physical", "Slopes")
+HEADS = ("Pair", "Family", "Unit", "Interior", "Edge", "Edge worst", "Physical", "Slopes", "Flat")
 
 
 def _figure(found: ZoneFigures | None, worst: bool = False) -> Cell:
@@ -203,8 +212,9 @@ def zone_table(
         edge = (Text("--"), Text("--")) if key not in refits else _edge_cells(refits[key])
         # The physical zone overlaps the interior and edge zones, which partition the test rows.
         partition = [zoned.slopes[name] for name in ("interior", "edge")]
-        violations = sum(v for v, _ in partition)
-        steps = sum(s for _, s in partition)
+        reversed_steps = sum(p.reversed for p in partition)
+        flat = sum(p.flat for p in partition)
+        steps = sum(p.steps for p in partition)
         rows.append(
             (
                 Text(pair_tex(zoned.dataset, zoned.target)),
@@ -213,7 +223,8 @@ def zone_table(
                 _figure(zoned.zones["interior"]),
                 *edge,
                 _figure(zoned.zones["physical"]),
-                Text(slopes_text(violations, steps)),
+                Text(slopes_text(reversed_steps, steps)),
+                Text(str(flat) if steps else "n/a"),
                 Text(f"${CEILING_TEX[zoned.dataset, zoned.target]}$"),
                 Text(verdicts[key]),
             )
@@ -222,11 +233,11 @@ def zone_table(
         Column("l", before="@{}"),
         Column("l"),
         Column("l"),
-        *(Column("r") for _ in range(6)),
+        *(Column("r") for _ in range(7)),
         Column("l", after="@{}"),
     )
     header = (tuple(Text(h) for h in (*HEADS, "Ceiling", "Verdict")),)
-    return make_table("zones", TABLE_CAPTION, columns, header, tuple(rows), "@{}lll*{6}{r}l@{}")
+    return make_table("zones", TABLE_CAPTION, columns, header, tuple(rows), "@{}lll*{7}{r}l@{}")
 
 
 def zone_numbers(
