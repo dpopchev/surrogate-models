@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-019 > W-196   | blocked: 0 | todo roots: 14 | done: 581 | pruned: 101
+open path: E-019   | blocked: 0 | todo roots: 14 | done: 582 | pruned: 101
 
 ## Tree
 
@@ -15,7 +15,7 @@ E-019         [doing]    The main text carries the results and the appendix only
   W-193  issue  [done]     The pipeline section states the search, its hypotheses and its gates -- T-485 [done], T-486 [done]
   W-194  issue  [done]     The relative-error subsection shows the ceilings of both datasets -- T-487 [done]
   W-195  spike  [done]     Which appendix content stays, moves or goes -- T-488 [done], T-489 [done]
-  W-196  issue  [doing]    The appendix is no longer than the main text -- T-490 [done], T-491 [done], T-507 [done], T-508 [done], T-509 [done], T-510 [done], T-511 [done], T-512 [done], T-513 [done], T-514 [done], T-515 [done]
+  W-196  issue  [done]     The appendix is no longer than the main text -- T-490 [done], T-491 [done], T-507 [done], T-508 [done], T-509 [done], T-510 [done], T-511 [done], T-512 [done], T-513 [done], T-514 [done], T-515 [done]
   W-197  issue  [todo]     No review mark is left in the article -- T-492 [todo], T-493 [todo]
 E-020         [todo]     A rerun fits only what changed
   W-181  bug    [todo]     A recovered tuning batch loses the verdict of each candidate   (filed during T-448) -- T-467 [todo]
@@ -1180,7 +1180,7 @@ flowchart TD
   E019 --> W195["W-195 spike done: Which appendix content stays, moves or goes"]
   W195 --> T488["T-488 done: List the floats and pages of each appendix section -> local/scratch/appendix_inventory.md"]
   W195 --> T489["T-489 done: Record the appendix decision -> W-195 spike.decision"]
-  E019 --> W196["W-196 issue doing: The appendix is no longer than the main text"]
+  E019 --> W196["W-196 issue done: The appendix is no longer than the main text"]
   W196 --> T490["T-490 done: Print the pages of the main text and the appendix test-first -> paperlib/tools/page_count.py"]
   W196 --> T491["T-491 done: Cut the neutron-star analysis to its decided floats -> 90_appendix/91_neutron_stars/91_neutron_stars.tex"]
   W196 --> T507["T-507 done: Cut the black-hole analysis to its decided floats -> 90_appendix/92_black_holes/92_black_holes.tex"]
@@ -1250,7 +1250,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E019,W196 doing
-  class W187,T474,W188,T476,W189,T477,T478,T479,W191,T482,W192,T483,T484,W193,T485,T486,W194,T487,W195,T488,T489,T490,T491,T507,T508,T509,T510,T511,T512,T513,T514,T515 done
+  class E019 doing
+  class W187,T474,W188,T476,W189,T477,T478,T479,W191,T482,W192,T483,T484,W193,T485,T486,W194,T487,W195,T488,T489,W196,T490,T491,T507,T508,T509,T510,T511,T512,T513,T514,T515 done
   class W061,T118,W197,T492,T493,E020,W181,T467,W183,T469,W190,T480,T481,W198,T494,T495,T496,W199,T497,T498,W200,T499,T500,T501,W201,T502,T503,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W182,T468,W184,T470,W186,T473,W202,T504,W203,T505,W204,T506 todo
 ```
