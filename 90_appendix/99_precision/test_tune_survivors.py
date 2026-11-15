@@ -331,6 +331,15 @@ def test_winners_are_the_best_tuned_outcome_per_pair() -> None:
 
 
 @pytest.mark.view
+def test_tuning_caption_names_the_time_budget() -> None:
+    outcomes = [Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 2, 0, "entry")]
+    table = tuning_table(outcomes, {NS_MASS_RBF: 3.28})
+    prose = table + (tune_survivors.__doc__ or "")
+    found = {phrase for phrase in ("knobTuningBudgetMinutes", "same budget") if phrase in prose}
+    assert found == {"knobTuningBudgetMinutes"}
+
+
+@pytest.mark.view
 def test_the_tuning_table_holds_one_row_per_job() -> None:
     outcomes = [
         Tuned(NS_MASS_RBF, {"neighbours": 80}, 3.4, 3.3, 2, 0, "entry"),

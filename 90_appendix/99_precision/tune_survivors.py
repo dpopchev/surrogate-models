@@ -1,6 +1,7 @@
 """The tuning behind the tuning and precision appendix (W-068): every candidate on the
 short list of the family screen (the family screen appendix) searched over its own
-hyperparameters with the same budget of trials.
+hyperparameters under a time budget per search (the knobTuningBudgetMinutes macro); a search
+ends searched, cut: too slow or grid.
 
 One job per pair and short-listed candidate runs paperlib/search.py's search on the full design,
 its trials scored on the frozen folds only; the best trial's params are then refitted once
@@ -623,10 +624,11 @@ def _screen_tuned_test(outcomes: Sequence[Outcome], screen: Mapping[Job, float])
     fitted.append(Column("r"))
     return make_table(
         "tuning",
-        "Each short-listed candidate of \\cref{tab:families} after the same budget of trials "
-        "over its own hyperparameters: the significant figures kept at the 95th percentile of "
-        "the error ($-\\log_{10}$), on the frozen folds at the screen and after the tuning, on "
-        "the test curves for the best trial refitted, against the pair's data ceiling. A wall: "
+        "Each short-listed candidate of \\cref{tab:families} after a search of at most "
+        "$\\knobTuningBudgetMinutes$ minutes over its own hyperparameters: the significant "
+        "figures kept at the 95th percentile of the error ($-\\log_{10}$), on the frozen folds "
+        "at the screen and after the tuning, on the test curves for the best trial refitted, "
+        "against the pair's data ceiling. A wall: "
         "every trial ran past the time budget. The verdict of a candidate with the trials or "
         "points it finished: searched, its search ran its trials inside the time budget; grid, "
         "a fixed list of points was scored in place of a search; cut: too slow, the search "
