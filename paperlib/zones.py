@@ -80,6 +80,37 @@ def zone_figures(
     return figures
 
 
+def slope_violations(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    groups: np.ndarray,
+    along: np.ndarray,
+    masks: Mapping[str, np.ndarray],
+) -> dict[str, tuple[int, int]]:
+    """Per zone the pair (violations, steps) over the steps of each curve in the order of `along`.
+
+    A step is two neighbouring rows of one curve, both in the zone; one whose true difference is
+    zero is not counted; a violation is a counted step whose predicted difference has another
+    sign than the true one, zero included.
+    """
+    found = {name: (0, 0) for name in masks}
+    for group in np.unique(groups):
+        rows = np.flatnonzero(groups == group)
+        rows = rows[np.argsort(along[rows], kind="stable")]
+        true_step = np.diff(y_true[rows])
+        pred_step = np.diff(y_pred[rows])
+        counted = true_step != 0.0
+        wrong = counted & (np.sign(pred_step) != np.sign(true_step))
+        for name, mask in masks.items():
+            both = mask[rows][:-1] & mask[rows][1:]
+            violations, steps = found[name]
+            found[name] = (
+                violations + int((wrong & both).sum()),
+                steps + int((counted & both).sum()),
+            )
+    return found
+
+
 def margin_steps(
     edge_p95: float, edge_worst: float, interior_p95: float, within: float = 1.0
 ) -> int:
