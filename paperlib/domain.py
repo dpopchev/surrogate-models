@@ -5,6 +5,9 @@ and up to the end of the curve. A neutron-star curve of fixed (beta, lambda) is 
 smallest rho_c up to its last row, where the prepared table is cut at the maximum mass. Between
 sampled curves an edge is interpolated linearly in the curve keys; outside the sampled keys
 nothing is interpolated. A query outside is refused with the reason and the nearest valid input.
+A domain with a margin (W-173), counted in steps of the sampled coupling grid, answers a physically
+valid query beyond the sampled couplings by at most the margin with a warning; there the physical
+edge is the linear continuation of the edge of the two outermost sampled curves.
 """
 
 from collections.abc import Mapping
@@ -28,6 +31,7 @@ class BlackHoleDomain:
     betas: tuple[float, ...]
     r_min: tuple[float, ...]
     r_max: tuple[float, ...]
+    margin: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -37,6 +41,7 @@ class NeutronStarDomain:
     keys: tuple[tuple[float, float], ...]
     rho_min: tuple[float, ...]
     rho_max: tuple[float, ...]
+    margin: float = 0.0
 
 
 Domain = BlackHoleDomain | NeutronStarDomain
@@ -55,7 +60,17 @@ class Outside:
     nearest: Mapping[str, float]
 
 
-Verdict = Inside | Outside
+@dataclass(frozen=True)
+class Warned:
+    """The query lies beyond the sampled couplings, inside the margin: steps of the coupling grid
+    beyond them, nearest the closest sampled input."""
+
+    reason: Literal["coupling range"]
+    steps: float
+    nearest: Mapping[str, float]
+
+
+Verdict = Inside | Outside | Warned
 
 
 # --- smart constructors -----------------------------------------------------------------------
@@ -109,19 +124,43 @@ def check(domain: Domain, x: Mapping[str, float]) -> Verdict:
             assert_never(domain)
 
 
+def _spacing(values: np.ndarray) -> float:
+    """The median spacing of the sampled values of one coupling; 0 when fewer than two."""
+    distinct = np.unique(values)
+    return float(np.median(np.diff(distinct))) if len(distinct) > 1 else 0.0
+
+
+def _steps(excess: float, spacing: float) -> float:
+    """How many grid steps an excess is; infinite where the grid has no step."""
+    if excess == 0.0:
+        return 0.0
+    return excess / spacing if spacing > 0.0 else float("inf")
+
+
 def _check_black_hole(domain: BlackHoleDomain, x: Mapping[str, float]) -> Verdict:
     beta, r_h = x["beta"], x["r_h"]
     beta_in = float(np.clip(beta, domain.betas[0], domain.betas[-1]))
     low = float(np.interp(beta_in, domain.betas, domain.r_min))
     high = float(np.interp(beta_in, domain.betas, domain.r_max))
     nearest = {"beta": beta_in, "r_h": float(np.clip(r_h, low, high))}
+    steps = _steps(abs(beta - beta_in), _spacing(np.array(domain.betas)))
     if beta_in != beta:
-        return Outside("coupling range", nearest)
+        if steps > domain.margin + TOLERANCE:
+            return Outside("coupling range", nearest)
+        low += _edge_slope(domain, beta > beta_in) * (beta - beta_in)
     if r_h < low - TOLERANCE:
         return Outside("existence edge", nearest)
     if r_h > high + TOLERANCE:
         return Outside("sampled range", nearest)
-    return Inside()
+    return Warned("coupling range", steps, nearest) if beta_in != beta else Inside()
+
+
+def _edge_slope(domain: BlackHoleDomain, upper: bool) -> float:
+    """The slope of the existence edge between the two outermost curves on one side."""
+    if len(domain.betas) < 2:
+        return 0.0
+    i, j = (-2, -1) if upper else (0, 1)
+    return (domain.r_min[j] - domain.r_min[i]) / (domain.betas[j] - domain.betas[i])
 
 
 def _check_neutron_star(domain: NeutronStarDomain, x: Mapping[str, float]) -> Verdict:
@@ -137,13 +176,45 @@ def _check_neutron_star(domain: NeutronStarDomain, x: Mapping[str, float]) -> Ve
         low, high = domain.rho_min[i], domain.rho_max[i]
     nearest = {"beta": beta_in, "lambda": lam_in, "rho_c": float(np.clip(rho, low, high))}
     if (beta_in, lam_in) != (beta, lam):
-        in_box = _in_box(keys, beta, lam)
-        return Outside("sampled range" if in_box else "coupling range", nearest)
+        if _in_box(keys, beta, lam):
+            return Outside("sampled range", nearest)
+        return _extrapolated_neutron_star(domain, keys, (beta, lam), rho, nearest)
     if rho < low - TOLERANCE:
         return Outside("sampled range", nearest)
     if rho > high + TOLERANCE:
         return Outside("stable branch", nearest)
     return Inside()
+
+
+def _extrapolated_neutron_star(
+    domain: NeutronStarDomain,
+    keys: np.ndarray,
+    couplings: tuple[float, float],
+    rho: float,
+    nearest: dict[str, float],
+) -> Verdict:
+    """The verdict beyond the box of the sampled keys: the stable edge continues as the plane
+    through the sampled edges, the margin counts the steps of the coarser coupling."""
+    excess = np.array([couplings[0] - nearest["beta"], couplings[1] - nearest["lambda"]])
+    steps = max(
+        _steps(abs(excess[0]), _spacing(keys[:, 0])), _steps(abs(excess[1]), _spacing(keys[:, 1]))
+    )
+    if steps > domain.margin + TOLERANCE:
+        return Outside("coupling range", nearest)
+    here = stable_edge(domain, nearest["beta"], nearest["lambda"])
+    low = here[0] + float(_plane_slope(keys, np.array(domain.rho_min)) @ excess)
+    high = here[1] + float(_plane_slope(keys, np.array(domain.rho_max)) @ excess)
+    if rho < low - TOLERANCE:
+        return Outside("sampled range", nearest)
+    if rho > high + TOLERANCE:
+        return Outside("stable branch", nearest)
+    return Warned("coupling range", steps, nearest)
+
+
+def _plane_slope(keys: np.ndarray, values: np.ndarray) -> np.ndarray:
+    """The gradient of the least-squares plane of an edge over the sampled couplings."""
+    design = np.column_stack([keys, np.ones(len(keys))])
+    return np.asarray(np.linalg.lstsq(design, values, rcond=None)[0][:2])
 
 
 def _in_box(keys: np.ndarray, beta: float, lam: float) -> bool:
