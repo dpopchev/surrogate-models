@@ -170,10 +170,10 @@ TABLE_CAPTION = (
     "Every tuned candidate of \\cref{tab:tuning} per zone: the significant figures kept at the "
     "95th percentile of the error ($-\\log_{10}$) on the interior test curves and at the "
     "physical edge, from the refit of the tuning; on the edge curves from a refit made without "
-    "them, at the 95th percentile and at the worst row; the steps of the test curves, all "
-    "zones together, whose predicted slope has another sign than the data (violations over "
-    "steps); the pair's data ceiling; and the verdict of the tuning. A wall: the refit ran "
-    "past the time budget."
+    "them, at the 95th percentile and at the worst row; the steps of all test "
+    "curves, each counted once, whose predicted slope has another sign than the data "
+    "(violations over steps); the pair's data ceiling; and the verdict of the tuning. A wall: "
+    "the refit ran past the time budget."
 )
 HEADS = ("Pair", "Family", "Unit", "Interior", "Edge", "Edge worst", "Physical", "Slopes")
 
@@ -201,8 +201,10 @@ def zone_table(
     for zoned in found:
         key = (zoned.dataset, zoned.target, zoned.family, zoned.unit)
         edge = (Text("--"), Text("--")) if key not in refits else _edge_cells(refits[key])
-        violations = sum(v for v, _ in zoned.slopes.values())
-        steps = sum(s for _, s in zoned.slopes.values())
+        # The physical zone overlaps the interior and edge zones, which partition the test rows.
+        partition = [zoned.slopes[name] for name in ("interior", "edge")]
+        violations = sum(v for v, _ in partition)
+        steps = sum(s for _, s in partition)
         rows.append(
             (
                 Text(pair_tex(zoned.dataset, zoned.target)),
