@@ -26,6 +26,9 @@
 - 2026-11-14 W-170: fact: black_holes mass: edge p95 2.73-3.80 vs interior 2.73-3.78, worst 1.85-2.15 -> all four hold, W-173's margin keeps the winner
 - 2026-11-14 W-170: fact: neutron_stars charge: edge p95 RBF -0.01/-0.05, ResNet -0.48, k-NN -0.48, worst all negative (-0.14 to -0.88), interior 0.48-1.81 -> no candidate holds, W-173's margin fails them all
 - 2026-11-14 W-170: fact: neutron_stars mass: pointwise RBF edge p95 2.70, worst 1.92, interior 3.43 holds; curve-wise RBF edge 2.64, worst -4.60, interior 3.66 fails -> W-173's margin must not admit curve-wise RBF on mass
+- 2026-11-15 W-171: fact: black_holes mass: winner GPR curve-wise 6.83 folds, 6.76 test against 7.1; RBF searched 6.33, XGBoost searched 2.73, RBF pointwise grid 3.34 -> knots 378 of 384 lift 3.8 to 6.8
+- 2026-11-15 W-171: fact: neutron_stars charge: winner local RBF curve-wise 1.26 folds, 1.13 test against 2.4; k-NN searched 0.44, RBF pointwise grid 1.18, ResNet grid 0.98 -> about 1.1 figures short
+- 2026-11-15 W-171: fact: neutron_stars mass: winner local RBF curve-wise 3.41 folds, 3.58 test against ceiling 4.1; verdicts RBF pointwise grid 3.32, curve-wise searched -> within one figure
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)

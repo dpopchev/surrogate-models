@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-018 > W-171 > T-449   | blocked: 0 | todo roots: 6 | done: 529 | pruned: 101
+open path: E-018 > W-171   | blocked: 0 | todo roots: 6 | done: 530 | pruned: 101
 
 ## Tree
 
@@ -8,7 +8,7 @@ open path: E-018 > W-171 > T-449   | blocked: 0 | todo roots: 6 | done: 529 | pr
 E-018         [doing]    The pipeline regenerates both maps with every candidate scored per zone and every cut reported
   W-169  issue  [done]     make zones prints every tuned candidate per zone from the recorded batches -- T-440 [done], T-441 [done]
   W-170  issue  [done]     make extrapolation scores every tuned candidate on the edge curves it was fitted without -- T-442 [done], T-443 [done], T-444 [done]
-  W-171  issue  [doing]    The tuning records a verdict per candidate under a time budget -- T-445 [done], T-446 [done], T-447 [done], T-448 [done], T-449 [doing]   <- ACTIVE LEAF
+  W-171  issue  [doing]    The tuning records a verdict per candidate under a time budget -- T-445 [done], T-446 [done], T-447 [done], T-448 [done], T-449 [done]
   W-172  issue  [todo]     make surrogates regenerates the surrogates rung by rung and prints the time of each -- T-450 [todo], T-451 [todo]
   W-173  issue  [todo]     The saved surrogate answers beyond the sampled couplings only inside the measured margin -- T-452 [todo], T-453 [todo], T-454 [todo]
   W-174  issue  [todo]     The article reports the zones, the cut candidates and the restated goal -- T-455 [todo], T-456 [todo]
@@ -1100,7 +1100,7 @@ flowchart TD
   W171 --> T446["T-446 done: Score a fixed list of points in place of a search test-first -> paperlib/search.py"]
   W171 --> T447["T-447 done: Widen the black-hole knots range test-first -> paperlib/search.py"]
   W171 --> T448["T-448 done: Record the verdict of each candidate in the tuning run test-first -> 90_appendix/99_precision/tune_survivors.py and 90_appendix/99_precision/99_precision.mk"]
-  W171 --> T449["T-449 doing: Run the tuning under the gates -> TUNING_BATCH pinned in 90_appendix/99_precision/99_precision.mk -- ACTIVE LEAF"]
+  W171 --> T449["T-449 done: Run the tuning under the gates -> TUNING_BATCH pinned in 90_appendix/99_precision/99_precision.mk"]
   E018 --> W172["W-172 issue todo: make surrogates regenerates the surrogates rung by rung and prints the time of each"]
   W172 --> T450["T-450 todo: Write the rung chain test-first -> paperlib/tools/regenerate.py and make surrogates"]
   W172 --> T451["T-451 todo: Run the chain end to end -> the regenerated batches pinned in 90_appendix/98_families/98_families.mk, 90_appendix/99_precision/99_precision.mk and 90_appendix/96_optimization/96_optimization.mk"]
@@ -1133,7 +1133,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E018,W171,T449 doing
-  class W169,T440,T441,W170,T442,T443,T444,T445,T446,T447,T448 done
+  class E018,W171 doing
+  class W169,T440,T441,W170,T442,T443,T444,T445,T446,T447,T448,T449 done
   class W172,T450,T451,W173,T452,T453,T454,W174,T455,T456,W175,T458,T459,W061,T118,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463 todo
 ```
