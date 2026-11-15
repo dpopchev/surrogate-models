@@ -1,6 +1,6 @@
 # Board -- surrogate-models
 record: local
-open path: E-019 > W-192 > T-483   | blocked: 0 | todo roots: 12 | done: 559 | pruned: 101
+open path: E-019 > W-192   | blocked: 0 | todo roots: 12 | done: 561 | pruned: 101
 
 ## Tree
 
@@ -11,7 +11,7 @@ E-019         [doing]    The main text carries the results and the appendix only
   W-188  bug    [done]     The Slopes column of the zone table counts the physical-edge steps twice -- T-476 [done]
   W-189  issue  [done]     The zone table shows reversed and flat steps apart -- T-477 [done], T-478 [done], T-479 [done]
   W-191  issue  [done]     The framing question of the hypotheses appendix states the E-018 goal -- T-482 [done]
-  W-192  issue  [doing]    The zone and tuning tables stand in the results section -- T-483 [doing]   <- ACTIVE LEAF, T-484 [todo]
+  W-192  issue  [doing]    The zone and tuning tables stand in the results section -- T-483 [done], T-484 [done]
   W-193  issue  [todo]     The pipeline section states the search, its hypotheses and its gates -- T-485 [todo], T-486 [todo]
   W-194  issue  [todo]     The relative-error subsection shows the ceilings of both datasets -- T-487 [todo]
   W-195  spike  [todo]     Which appendix content stays, moves or goes -- T-488 [todo], T-489 [todo]
@@ -1168,8 +1168,8 @@ flowchart TD
   E019 --> W191["W-191 issue done: The framing question of the hypotheses appendix states the E-018 goal"]
   W191 --> T482["T-482 done: Restate the framing question -> 90_appendix/94_hypotheses/94_hypotheses.tex"]
   E019 --> W192["W-192 issue doing: The zone and tuning tables stand in the results section"]
-  W192 --> T483["T-483 doing: Move the zone and tuning tables into the results section -> 60_results/60_results.tex -- ACTIVE LEAF"]
-  W192 --> T484["T-484 todo: Write the paragraph that reads the two tables -> 60_results/60_results.tex"]
+  W192 --> T483["T-483 done: Move the zone and tuning tables into the results section -> 60_results/60_results.tex"]
+  W192 --> T484["T-484 done: Write the paragraph that reads the two tables -> 60_results/60_results.tex"]
   E019 --> W193["W-193 issue todo: The pipeline section states the search, its hypotheses and its gates"]
   W193 --> T485["T-485 todo: Move the hypotheses section into the pipeline section -> 40_pipeline/43_search/43_search.tex"]
   W193 --> T486["T-486 todo: State the four gates and how each hypothesis held -> 40_pipeline/43_search/43_search.tex"]
@@ -1235,7 +1235,7 @@ flowchart TD
   classDef done fill:#e6ffed,stroke:#2b8a3e,color:#000;
   classDef todo fill:#f8f9fa,stroke:#868e96,color:#000;
   classDef pruned fill:#f1f3f5,stroke:#adb5bd,color:#000;
-  class E019,W192,T483 doing
-  class W187,T474,W188,T476,W189,T477,T478,T479,W191,T482 done
-  class W061,T118,T484,W193,T485,T486,W194,T487,W195,T488,T489,W196,T490,T491,W197,T492,T493,E020,W181,T467,W183,T469,W190,T480,T481,W198,T494,T495,T496,W199,T497,T498,W200,T499,T500,T501,W201,T502,T503,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W182,T468,W184,T470,W186,T473,W202,T504 todo
+  class E019,W192 doing
+  class W187,T474,W188,T476,W189,T477,T478,T479,W191,T482,T483,T484 done
+  class W061,T118,W193,T485,T486,W194,T487,W195,T488,T489,W196,T490,T491,W197,T492,T493,E020,W181,T467,W183,T469,W190,T480,T481,W198,T494,T495,T496,W199,T497,T498,W200,T499,T500,T501,W201,T502,T503,W167,T438,W168,T439,W176,T460,T461,W177,T462,T464,W178,T463,W179,T465,W180,T466,W182,T468,W184,T470,W186,T473,W202,T504 todo
 ```
