@@ -649,7 +649,7 @@ def test_the_next_round_runs_each_pair_s_survivors_at_the_next_budget() -> None:
 def test_shipped_section_toml_selects_the_papers_picks() -> None:
     expected = FamiliesSection.model_validate(
         {
-            "figures": ["parity", "errors", "scaling"],
+            "figures": ["scaling"],
             "variants": {
                 "parity": "parity",
                 "errors": "scatter_profiles",

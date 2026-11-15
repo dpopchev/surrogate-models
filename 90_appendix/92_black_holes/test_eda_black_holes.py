@@ -334,8 +334,8 @@ def test_split_strategies_score_every_strategy_in_order() -> None:
 def test_shipped_section_toml_selects_the_papers_picks() -> None:
     expected = BlackHolesSection.model_validate(
         {
-            "figures": ["univariate_continuous", "mass_radius", "charge_target", "existence_edge"],
-            "tables": ["univariate", "charge_correlation", "split_strategies"],
+            "figures": ["mass_radius"],
+            "tables": ["split_strategies"],
             "variants": {
                 "mass_radius": "inset",
                 "univariate_continuous": "histograms",
