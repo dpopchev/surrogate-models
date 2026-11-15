@@ -163,7 +163,36 @@ def test_numbers_count_the_warned_probes() -> None:
         macros["validityBhRefused"],
         macros["validityBhMarginSteps"],
     )
-    assert counts == ("37", "10", "34", "1")
+    assert counts == ("37", "20", "42", "1")
+
+
+def fine_black_holes() -> pd.DataFrame:
+    """Eleven beta curves of step 0.1 over 0 to 1, each with two r_h rows."""
+    return pd.DataFrame(
+        [
+            {"beta": 0.1 * i, "r_h": 1.0 + 0.1 * i + 0.5 * j, "M": 1.0}
+            for i in range(11)
+            for j in (0, 1)
+        ]
+    )
+
+
+def warned_probes(margin: float) -> int:
+    """How many probes of a fine-grid black-hole map with this margin the grid warns."""
+    table = fine_black_holes()
+    found = MapInput(
+        "black_holes",
+        table,
+        replace(make_black_hole_domain(table), margin=margin),
+        toy_surrogate("black_holes"),
+        np.ones(len(table), dtype=bool),
+    )
+    return int(numbers(run((found,)))["validityBhWarned"])
+
+
+@pytest.mark.model
+def test_grid_probes_inside_the_margin() -> None:
+    assert (warned_probes(1.0) > 0, warned_probes(0.0)) == (True, 0)
 
 
 @pytest.mark.model
