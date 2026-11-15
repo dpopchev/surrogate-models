@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from score_zones import Zoned, main, zone_table
+from score_zones import Zoned, line, main, zone_table
 
 from paperlib.batches import write_checked
 from paperlib.ceilings import Spread
@@ -17,7 +17,7 @@ from paperlib.harness import Run, Timing
 from paperlib.runs import RunMetadata, entry_from_run, entry_name, entry_to_json
 from paperlib.scorecard import Scorecard
 from paperlib.tables import Cell, Text, from_json
-from paperlib.zones import ZoneFigures
+from paperlib.zones import SlopeSteps, ZoneFigures
 
 BATCH = "toy-batch"
 ENTRY = "toy-entry"
@@ -121,8 +121,9 @@ def test_zones_run_prints_one_line_per_candidate(
     saved = json.loads((state / "96_optimization" / "zones.json").read_text())
     assert (said, saved[0]["zones"]["physical"]) == (
         [
-            "neutron_stars mass local RBF curve-wise: interior p95 1.49 worst 1.00 slopes 0/14, "
-            "edge n/a slopes n/a, physical p95 1.02 worst 1.00 slopes n/a, ceiling 4.10"
+            "neutron_stars mass local RBF curve-wise: interior p95 1.49 worst 1.00 "
+            "slopes 0/14 flat 0, edge n/a slopes n/a, "
+            "physical p95 1.02 worst 1.00 slopes n/a, ceiling 4.10"
         ],
         {"p95": pytest.approx(1.02, abs=0.005), "worst": pytest.approx(1.0)},
     )
@@ -138,10 +139,11 @@ def test_zones_run_prints_the_slope_violations_per_zone(
     said: list[str] = []
     main([str(ns), str(bh), str(split), str(state), *KNOBS], said.append)
     saved = json.loads((state / "96_optimization" / "zones.json").read_text())
-    printed = "worst" in said[0] and "slopes 1/14, edge n/a slopes n/a" in said[0]
+    printed = "worst" in said[0] and "slopes 1/14 flat 0, edge n/a slopes n/a" in said[0]
+    zero = {"reversed": 0, "flat": 0, "steps": 0}
     assert (printed, saved[0]["slopes"]) == (
         True,
-        {"interior": [1, 14], "edge": [0, 0], "physical": [0, 0]},
+        {"interior": {"reversed": 1, "flat": 0, "steps": 14}, "edge": zero, "physical": zero},
     )
 
 
@@ -172,6 +174,7 @@ def test_zone_table_holds_one_row_per_candidate_with_its_verdict(
             "1.00",
             "1.02",
             "0/14",
+            "0",
             "$\\nsEdaCeilMFigures$",
             "grid",
         )
@@ -189,10 +192,40 @@ def test_slopes_column_counts_a_physical_edge_step_once() -> None:
         unit="pointwise",
         entry="toy",
         zones={"interior": figures, "edge": None, "physical": figures},
-        slopes={"interior": (4, 100), "edge": (0, 10), "physical": (4, 5)},
+        slopes={
+            "interior": SlopeSteps(4, 0, 100),
+            "edge": SlopeSteps(0, 0, 10),
+            "physical": SlopeSteps(4, 0, 5),
+        },
         decades={},
         ceiling=3.0,
     )
     key = ("neutron_stars", "mass", "local RBF", "pointwise")
     table = zone_table([zoned], {}, {key: "grid"})
     assert cell_text(table.rows[0][7]) == "4/110"
+
+
+@pytest.mark.functional
+def test_zone_table_shows_the_flat_steps_apart() -> None:
+    """The reversed steps stand over the steps, the flat steps beside them, each step once."""
+    figures = ZoneFigures(p95=3.0, worst=2.0)
+    zoned = Zoned(
+        dataset="black_holes",
+        target="mass",
+        family="XGBoost",
+        unit="pointwise",
+        entry="toy",
+        zones={"interior": figures, "edge": None, "physical": figures},
+        slopes={
+            "interior": SlopeSteps(2, 90, 100),
+            "edge": SlopeSteps(0, 10, 20),
+            "physical": SlopeSteps(1, 5, 8),
+        },
+        decades={},
+        ceiling=3.0,
+    )
+    key = ("black_holes", "mass", "XGBoost", "pointwise")
+    table = zone_table([zoned], {}, {key: "grid"})
+    shown = (cell_text(table.rows[0][7]), cell_text(table.rows[0][8]))
+    printed = "slopes 2/100 flat 90" in line(zoned)
+    assert (shown, printed) == (("2/120", "100"), True)
