@@ -28,6 +28,7 @@
 - 2026-11-15 E-019: open: length target assumed -- a main text of about 18 to 20 pages, an appendix no longer than it; which venue, and does it cap the main text? (developer)
 - 2026-11-15 E-020: open: a job is reused when its pair, candidate, parameters, seed and data are unchanged, a code change needs REFIT= -- or should the key hold a digest of the family's code? (developer)
 - 2026-11-15 W-017: open: is the lambda column of the neutron-star dataset the Gauss-Bonnet coupling of the action, and in which units? (supervisors; review mark of 34_neutron_stars.tex line 9)
+- 2026-11-15 W-202: open: which fix -- abbreviate the units and tighten the columns (the default of T-504), fold Flat into the Slopes cell, move Edge worst to the text, or scale the table to the text width? (developer, when ordered; W-192 moves the table into the main text)
 
 ## Decisions
 - 2026-11-15 E-019: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 8 hours) (developer, 2026-11-15)
@@ -35,4 +36,4 @@
 - 2026-11-15 E-020: plan agreed (developer: plan, 2026-11-15): a rerun reuses every recorded fit and evaluation whose inputs are unchanged, the family screen first; W-181, W-183, W-190 adopted; worked after E-019
 
 ## Deviations
-- none recorded
+- 2026-11-15 E-019: W-189 criterion run finding filed standalone todo: W-202 bug (the zone table is 154 pt wider than the text block)
