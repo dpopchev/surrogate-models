@@ -331,14 +331,9 @@ def test_a_dying_round_leaves_the_outcomes_of_its_finished_jobs(
 
 @pytest.mark.functional
 def test_main_wrappers_include_the_picked_variant_files(ran: Path) -> None:
+    """The shipped toml selects no figure, so the run writes no figure wrapper."""
     folder = ran / "assets" / SECTION
-    included = {
-        name: f"{{{SECTION}_fig_{name}_{variant}}}"
-        for name, variant in (("scaling", "figures_and_seconds"),)
-    }
-    assert all(
-        included[name] in (folder / f"{SECTION}_fig_{name}.tex").read_text() for name in included
-    )
+    assert sorted(p.name for p in folder.glob("*_fig_*")) == []
 
 
 @pytest.mark.functional
@@ -645,7 +640,7 @@ def test_the_next_round_runs_each_pair_s_survivors_at_the_next_budget() -> None:
 def test_shipped_section_toml_selects_the_papers_picks() -> None:
     expected = FamiliesSection.model_validate(
         {
-            "figures": ["scaling"],
+            "figures": [],
             "variants": {
                 "parity": "parity",
                 "errors": "scatter_profiles",
