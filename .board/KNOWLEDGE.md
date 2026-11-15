@@ -27,19 +27,20 @@
 - 2026-11-15 W-171: fact: in W-171#1 -> none
 - 2026-11-15 W-171: fact: in W-171#1 -> none
 - 2026-11-15 W-172: fact: 4h57m: fam 2h27 tun 2h11 pipe 50s ext 4m26 prec 14m; NS M 3.58/4.11 D 1.13/2.44, BH M 6.76/7.07 D 5.12/5.99 -> inside the 8 h arrow
+- 2026-11-15 W-173: fact: answered by the developer 2026-11-15: warn inside the measured margin, as filed -> W-173 runs on its criterion supersedes: W-173#1
 
 ## Open questions
 - 2026-10-05 W-017: T-041: open: beta first-order, lambda second-order self-interaction? M_max 2.19 vs NS bound? (supervisors)
 - 2026-11-10 W-136: open: per-module make prerequisites are left out -- every asset keeps depending on every paperlib module; file them if a rebuild after a paperlib edit gets too slow? (proposed to the developer, 2026-11-10)
 - 2026-11-14 E-018: open: make extrapolation's interior figures differ from make zones (NS charge RBF pw 1.70 vs 1.07, ResNet 0.48 vs 1.44): fewer curves or another fit? -> settle before W-174
 - 2026-11-14 W-093: open: NS-charge ResNet run planned as W-171; float64, L-BFGS and H2 stay untested on networks (precision_options.py warns) -- file them for the ResNet if it leads a zone after W-171, else drop? (developer, re-aim after W-171) supersedes: W-093#1
-- 2026-11-14 W-173: open: beyond the sampled couplings, answer with a warning inside the measured margin (the criterion as filed, the agent's suggestion) or keep refusing and only report the measurement? decided by the developer at the re-aim before W-173, on the edge figures of W-170
 
 ## Decisions
-- 2026-11-14 E-018: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 8 hours) (developer, 2026-11-14)
 - 2026-11-14 E-018: goal (developer, 2026-11-14): surrogates that minimize the relative error over the whole dataset, extrapolate well and keep the physics, with feedback on the parameters; agent's reading: extrapolation across the couplings, never past a physical edge; replaces E-014's goal
 - 2026-11-14 E-018: physics gate (developer, 2026-11-14: file): AC7 -> W-175, make zones counts per zone the steps whose predicted slope sign differs from the data; a sign check on D is void under the log target; the zone table of W-174 shows the counts (T-455 amended, W-174 depends on W-175)
 - 2026-11-14 E-018: plan agreed 2026-11-14 (developer: file): W-169 to W-174; a search's run time becomes a recorded verdict, reversing W-121's prune reason; the pointwise local RBF and the NS-charge ResNet go on fixed points, not dropped
+- 2026-11-15 E-018: burn: the re-aim and the next pick are the coordinator's until every work item is done with its criterion verified, or pruned; a developer moment prints [HALT] and ends the goal (stop after 6 hours) (developer, 2026-11-15) supersedes: E-018#d4
+- 2026-11-15 W-173: margin (developer, 2026-11-15: resume): answer beyond the sampled couplings with a warning inside the measured margin, as filed -- BH one grid step, NS zero (W-170)
 
 ## Deviations
 - 2026-11-14 E-018: T-442 lane finding (edge_held_out no-edge refusal untested) folded into standalone W-177 as T-464, W-177 widened to the refusals of the zone scoring
