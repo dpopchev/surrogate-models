@@ -10,6 +10,7 @@ from paperlib.zones import (
     edge_held_out,
     margin_steps,
     physical_edge,
+    slope_violations,
     zone_figures,
     zone_masks,
 )
@@ -88,6 +89,21 @@ def test_zone_figures_report_p95_and_worst_row_per_zone() -> None:
         "physical": (1.02, 1.0),
         "empty": None,
     }
+
+
+def test_slope_violations_count_the_steps_against_the_data_per_zone() -> None:
+    # In the order of ALONG, curve 0 is rows 1, 2, 4, 3, 0 (interior) and curve 1 is rows 5 to 9
+    # (edge). True curve 0 rises each step; its prediction flips the third step.
+    # True curve 1 rises, with a zero step in the middle; its prediction is flat on the last rise.
+    y_true = np.array([5.0, 1.0, 2.0, 4.0, 3.0, 1.0, 2.0, 2.0, 3.0, 4.0])
+    y_pred = np.array([3.0, 1.0, 2.0, 2.0, 3.0, 1.0, 2.0, 3.0, 3.0, 4.0])
+    masks = {
+        "interior": GROUPS == 0,
+        "edge": GROUPS == 1,
+        "none": np.zeros(10, dtype=bool),
+    }
+    found = slope_violations(y_true, y_pred, GROUPS, ALONG, masks)
+    assert found == {"interior": (1, 4), "edge": (1, 3), "none": (0, 0)}
 
 
 def test_margin_is_one_step_only_when_the_edge_holds() -> None:
