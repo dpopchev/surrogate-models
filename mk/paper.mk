@@ -181,6 +181,13 @@ paper-verify: compile ## Compile a copy of the upload folder in isolation
 	@test -f $(PAPER_VERIFY)/main.pdf
 	$(call log_done,$(PAPER_DIR)/ compiles on its own -- $(PAPER_VERIFY)/main.pdf)
 
+# The pages of the main text and of the appendix, read from the aux file of the clean-room compile.
+PAGE_COUNT := paperlib/tools/page_count.py
+
+.PHONY: pages
+pages: ## Print the pages of the main text and the appendix of the last compile
+	@$(RUN) python $(PAGE_COUNT) $(PAPER_VERIFY)/main.aux
+
 # Overleaf, free plan, one project: open it, Upload, drag in every file of
 # $(PAPER_DIR)/ (same names overwrite), then delete by hand the files the run
 # lists as removed. The list of the last run is machine-local and outside
